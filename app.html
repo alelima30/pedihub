@@ -2178,7 +2178,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.28ccf4';
+const VERSAO_APP = 'v9.7f938c';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -11375,6 +11375,15 @@ function pintarSalao(){
          nao um botao. Esta tela so liga e desliga.
          (Sem crase e sem acento: comentario dentro de template literal.) -->
     <div class="sub-tela" data-sub="notificacoes">
+    <div class="card" id="cartaoAvisosCelular" style="margin-bottom:16px">
+      <h3 class="secao" style="margin-top:0">Avisos no celular</h3>
+      <p class="secao-sub">O celular toca, como no WhatsApp, quando chega horário
+        novo pelo link, quando uma cliente cancela e quando entra pedido.
+        <b>Não gasta nenhuma mensagem do seu plano.</b> Cada pessoa da equipe
+        liga no próprio celular — pelo sino, lá no alto.</p>
+      <p id="estadoAvisosCelular" class="secao-sub" style="margin:8px 0 12px"></p>
+      <button type="button" class="btn btn-p" onclick="abrirAvisosCelular()">Avisos neste celular</button>
+    </div>
     <div class="card">
       <h3 class="secao" style="margin-top:0">Mensagens da agenda</h3>
       <p class="secao-sub">Para o cliente: a confirmação e o lembrete antes
@@ -11590,6 +11599,7 @@ const horasDoDia = (sel, val) => {
 };
 
 function pintarNotificacoes(soVisibilidade){
+  if(!soVisibilidade) pintarEstadoAvisosCelular();
   const marcar = (id, v) => { const e = document.getElementById(id); if(e) e.checked = !!v; };
   const escolher = (id, v) => { const e = document.getElementById(id); if(e) e.value = String(v); };
 
@@ -18399,6 +18409,213 @@ function contaDoSino(d){
     + (d.avisos || []).length;
 }
 
+/* ── AVISOS NO CELULAR (59_push.sql) ──────────────────────────────────────
+   O celular toca com o AgendaPro fechado: horário novo pelo link, horário
+   cancelado pela cliente, pedido novo. É o Web Push do navegador — não passa
+   pela Meta e não gasta a franquia de mensagens.
+
+   Cada PESSOA liga no PRÓPRIO aparelho, e por isso a porta de entrada é o
+   sino (que toda a equipe vê) e não só Meu negócio (que é da gestão).
+
+   O caminho de ligar, nesta ordem, porque cada passo depende do anterior:
+     1. permissão do navegador (só pode ser pedida num toque — o navegador
+        recusa pedido feito sozinho, ao abrir a página);
+     2. a chave pública do correio, do banco (o worker a cria na 1ª volta);
+     3. a inscrição no serviço de push do navegador (Google/Apple/Mozilla);
+     4. o endereço e as chaves do aparelho, gravados no banco para ESTA
+        pessoa e ESTE salão.
+   Quem envia é o servidor. A tela nunca manda aviso nenhum. */
+const AvisosCelular = {
+  suportado(){
+    return NA_NUVEM && 'serviceWorker' in navigator && 'PushManager' in window
+      && 'Notification' in window && location.protocol === 'https:'
+      || (NA_NUVEM && 'serviceWorker' in navigator && 'PushManager' in window
+          && 'Notification' in window && /^(localhost|127\.0\.0\.1)$/.test(location.hostname));
+  },
+  instalado(){
+    return (window.matchMedia && matchMedia('(display-mode: standalone)').matches)
+      || navigator.standalone === true;
+  },
+  // iPhone e iPad só recebem push com o app na tela de início (iOS 16.4+).
+  iphone(){ return /iPhone|iPad|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); },
+  iphoneSemInstalar(){ return NA_NUVEM && this.iphone() && !this.instalado(); },
+  rotulo(){
+    const u = navigator.userAgent;
+    const aparelho = /iPhone/.test(u) ? 'iPhone' : /iPad/.test(u) ? 'iPad'
+      : /Android/.test(u) ? 'Celular Android' : 'Computador';
+    const nav = /EdgA?\//.test(u) ? 'Edge' : /SamsungBrowser/.test(u) ? 'Samsung Internet'
+      : /Firefox|FxiOS/.test(u) ? 'Firefox' : /CriOS|Chrome/.test(u) ? 'Chrome'
+      : /Safari/.test(u) ? 'Safari' : 'navegador';
+    return aparelho + ' · ' + nav;
+  },
+  async registro(){
+    // Até 8 s: num celular lento o service worker demora a ficar pronto.
+    return Promise.race([navigator.serviceWorker.ready,
+      new Promise((_, n) => setTimeout(() => n(new Error('O app ainda está carregando. Tente de novo.')), 8000))]);
+  },
+  async inscricao(){
+    try{ return await (await this.registro()).pushManager.getSubscription(); }
+    catch(e){ return null; }
+  },
+  // Ligado = este navegador inscrito E gravado para esta pessoa neste salão.
+  async ligadoAqui(){
+    if(!this.suportado() || Notification.permission !== 'granted') return false;
+    const sub = await this.inscricao();
+    if(!sub) return false;
+    try{ return (await Dados.chamar('push_ligado',
+      { p_salao: salaoAtual, p_endpoint: sub.endpoint })) === true; }
+    catch(e){ return false; }
+  },
+  chaveEmBytes(b64){
+    const s = atob(b64.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(b64.length / 4) * 4, '='));
+    return Uint8Array.from(s, c => c.charCodeAt(0));
+  },
+  async ligar(){
+    const perm = await Notification.requestPermission();
+    if(perm !== 'granted') throw Object.assign(new Error('permissao'), { permissao: perm });
+    let chave = await Dados.chamar('push_chave_publica', {});
+    if(Array.isArray(chave)) chave = chave[0];
+    if(!chave) throw new Error('O correio dos avisos ainda está sendo preparado pelo servidor. '
+      + 'Tente de novo em um minuto.');
+    const reg = await this.registro();
+    const opcoes = { userVisibleOnly: true, applicationServerKey: this.chaveEmBytes(chave) };
+    let sub;
+    try{ sub = await reg.pushManager.subscribe(opcoes); }
+    catch(e){
+      // Inscrição antiga, feita com outra chave: sai e entra de novo.
+      const velha = await reg.pushManager.getSubscription();
+      if(!velha) throw e;
+      await velha.unsubscribe();
+      sub = await reg.pushManager.subscribe(opcoes);
+    }
+    const j = sub.toJSON();
+    await Dados.chamar('push_registrar', { p_salao: salaoAtual, p_endpoint: j.endpoint,
+      p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_rotulo: this.rotulo() });
+  },
+  async desligar(){
+    const sub = await this.inscricao();
+    if(!sub) return;
+    await Dados.chamar('push_remover', { p_endpoint: sub.endpoint });
+    /* A inscrição do navegador vale para TODOS os salões desta pessoa. Só sai
+       de vez quando não sobrou salão nenhum usando: o `push_remover` tira
+       deste aparelho em todos, então pode sair. */
+    try{ await sub.unsubscribe(); }catch(e){}
+  },
+};
+
+async function pintarEstadoAvisosCelular(){
+  const el = document.getElementById('estadoAvisosCelular');
+  if(!el) return;
+  if(!NA_NUVEM){ el.textContent = 'Disponível no app de verdade, não na demonstração.'; return; }
+  if(AvisosCelular.iphoneSemInstalar()){
+    el.innerHTML = 'Neste iPhone, primeiro instale o AgendaPro na tela de início.'; return;
+  }
+  if(!AvisosCelular.suportado()){ el.textContent = 'Este navegador não recebe avisos.'; return; }
+  el.innerHTML = (await AvisosCelular.ligadoAqui())
+    ? '<b>Ligado neste aparelho.</b>' : 'Desligado neste aparelho.';
+}
+
+async function abrirAvisosCelular(){
+  if(!NA_NUVEM){
+    abrirModal('Avisos no celular', `<p style="font-size:14px">Os avisos no celular funcionam
+      no app de verdade, com a sua conta. Na demonstração não há servidor para enviar.</p>`,
+      [['Fechar', 'fecharModal()']]);
+    return;
+  }
+  if(AvisosCelular.iphoneSemInstalar()){
+    abrirModal('Avisos no iPhone', `
+      <p style="font-size:14px">No iPhone, os avisos só chegam com o AgendaPro
+        <b>instalado na tela de início</b>. É rápido:</p>
+      <ol style="font-size:14px;margin:10px 0 0 18px;line-height:1.7">
+        <li>Abra o AgendaPro no <b>Safari</b>.</li>
+        <li>Toque no botão <b>Compartilhar</b> (o quadrado com a seta para cima).</li>
+        <li>Toque em <b>Adicionar à Tela de Início</b> e em <b>Adicionar</b>.</li>
+        <li>Abra o AgendaPro pelo ícone novo, toque no sino e em <b>Avisos no celular</b>.</li>
+      </ol>
+      <p style="font-size:13px;color:var(--txt2);margin-top:10px">Precisa do iOS 16.4 ou mais novo.</p>`,
+      [['Entendi', 'fecharModal()', 'btn-p']]);
+    return;
+  }
+  if(!AvisosCelular.suportado()){
+    abrirModal('Avisos no celular', `<p style="font-size:14px">Este navegador não recebe
+      avisos. No Android, use o <b>Chrome</b>; no computador, Chrome, Edge ou Firefox.</p>`,
+      [['Fechar', 'fecharModal()']]);
+    return;
+  }
+  abrirModal('Avisos no celular', '<p style="font-size:14px">Conferindo este aparelho…</p>', []);
+  const ligado = await AvisosCelular.ligadoAqui();
+  let lista = [];
+  try{ lista = await Dados.chamar('push_meus_aparelhos', { p_salao: salaoAtual }) || []; }catch(e){}
+  const negado = Notification.permission === 'denied';
+  const meus = lista.length ? `
+    <div class="linha-fina" style="margin:14px 0"></div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:6px">Seus aparelhos com aviso ligado neste salão:</p>
+    ${lista.map(x => `<div class="avc-ap" style="display:flex;align-items:center;gap:10px;padding:6px 0">
+        <span style="flex:1;font-size:14px">${escapar(x.rotulo || 'Aparelho')}</span>
+        <button type="button" class="btn btn-peq" onclick="tirarAparelhoAviso('${escapar(x.id)}')">Remover</button>
+      </div>`).join('')}` : '';
+  abrirModal('Avisos no celular', `
+    <p style="font-size:14px">O celular toca quando chega <b>horário novo pelo link</b>,
+      quando uma <b>cliente cancela</b> e quando entra <b>pedido</b> — mesmo com o AgendaPro fechado.</p>
+    <div class="aviso ok" style="margin-top:12px"><b>Não gasta nenhuma mensagem do plano.</b>
+      É um aviso do próprio celular, não do WhatsApp.</div>
+    ${negado ? `<div class="aviso atencao" style="margin-top:12px" id="avcNegado"><b>Os avisos estão bloqueados
+      neste navegador.</b> Para liberar: toque no cadeado ao lado do endereço do site →
+      <b>Permissões</b> → <b>Notificações</b> → <b>Permitir</b>. Depois volte aqui.</div>` : ''}
+    <p style="font-size:14px;margin-top:14px" id="avcEstado">${ligado
+      ? '<b>Ligado neste aparelho.</b>' : 'Desligado neste aparelho.'}</p>
+    ${meus}`,
+    ligado
+      ? [['Desligar neste aparelho', 'desligarAvisosCelular()'],
+         ['Mandar um aviso de teste', 'testarAvisosCelular()', 'btn-p']]
+      : negado ? [['Fechar', 'fecharModal()']]
+      : [['Agora não', 'fecharModal()'], ['Ligar avisos neste aparelho', 'ligarAvisosCelular()', 'btn-p']]);
+}
+
+function ligarAvisosCelular(){
+  return umaVez('push-ligar', ['Ligar avisos neste aparelho', 'Ligando…'], async () => {
+    try{ await AvisosCelular.ligar(); }
+    catch(e){
+      if(e.permissao === 'denied'){ await abrirAvisosCelular(); return; }
+      if(e.permissao){ alert('Sem a permissão do celular, o aviso não consegue tocar. '
+        + 'Toque em Ligar de novo e escolha Permitir.'); return; }
+      alert('Não consegui ligar os avisos.\n\n' + (e.message || e));
+      return;
+    }
+    await abrirAvisosCelular();
+    pintarEstadoAvisosCelular();
+  });
+}
+
+function desligarAvisosCelular(){
+  return umaVez('push-desligar', ['Desligar neste aparelho', 'Desligando…'], async () => {
+    try{ await AvisosCelular.desligar(); }
+    catch(e){ alert('Não consegui desligar.\n\n' + (e.message || e)); return; }
+    await abrirAvisosCelular();
+    pintarEstadoAvisosCelular();
+  });
+}
+
+function testarAvisosCelular(){
+  return umaVez('push-teste', ['Mandar um aviso de teste', 'Mandando…'], async () => {
+    try{ await Dados.chamar('push_testar', { p_salao: salaoAtual }); }
+    catch(e){ alert('Não consegui pedir o teste.\n\n' + (e.message || e)); return; }
+    const el = document.getElementById('avcEstado');
+    if(el) el.innerHTML = '<b>Ligado neste aparelho.</b> Teste pedido: o aviso chega em até '
+      + '<b>30 segundos</b>. Se não chegar, confira se o celular não está no modo Não perturbe.';
+  });
+}
+
+function tirarAparelhoAviso(id){
+  return umaVez('push-tirar:' + id, ['Remover', 'Removendo…'], async () => {
+    try{ await Dados.chamar('push_remover_aparelho', { p_id: id }); }
+    catch(e){ alert('Não consegui remover.\n\n' + (e.message || e)); return; }
+    await abrirAvisosCelular();
+    pintarEstadoAvisosCelular();
+  });
+}
+
 function desenharSino(){
   const bt = document.getElementById('btSino');
   if(!bt) return;
@@ -18428,7 +18645,10 @@ function desenharSino(){
         <button type="button" class="btn btn-peq" onclick="marcarAvisoLido('${escapar(a.id)}')">Marcar como lido</button>
       </div>`).join('')}
     ${!linhas.length && !avisos.length ? `<div class="sino-vazio" id="sinoVazio"><b>Tudo em dia</b>
-        Nada esperando por você agora. Quando algo pedir sua atenção, aparece aqui.</div>` : ''}`;
+        Nada esperando por você agora. Quando algo pedir sua atenção, aparece aqui.</div>` : ''}
+    ${AvisosCelular.suportado() || AvisosCelular.iphoneSemInstalar() ? `<button type="button" class="sino-item" id="sinoAvisosCelular"
+        onclick="fecharSino(); abrirAvisosCelular()"><span class="sino-ic">${ico('sino')}</span>
+        <span><b>Avisos no celular</b><small>Receba horário novo e cancelamento na tela do celular</small></span></button>` : ''}`;
   painel._linhas = linhas;
 }
 

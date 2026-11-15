@@ -1268,6 +1268,24 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or has_function_privilege('anon', 'public.mudar_fuso(uuid,text)', 'execute')
               then 'cole a parte 2 de novo (58_fuso)' else '' end
   union all
+  /* Os avisos no celular (59): aparelhos, fila e gatilhos; o endereço de
+     cada aparelho é segredo e a fila é só do worker. */
+  select 77, 'Avisos no celular (push), sem gastar a franquia',
+         case when to_regclass('public.push_aparelhos') is null
+                or to_regprocedure('public.push_proxima(integer)') is null
+                or not exists (select 1 from pg_trigger where tgname = 'tg_push_agendamento'
+                                 and tgrelid = 'public.agendamentos'::regclass)
+                or has_table_privilege('authenticated', 'public.push_aparelhos', 'select')
+                or has_function_privilege('authenticated', 'public.push_proxima(integer)', 'execute')
+              then 'FALTA' else 'certo' end,
+         case when to_regclass('public.push_aparelhos') is null
+                or to_regprocedure('public.push_proxima(integer)') is null
+                or not exists (select 1 from pg_trigger where tgname = 'tg_push_agendamento'
+                                 and tgrelid = 'public.agendamentos'::regclass)
+                or has_table_privilege('authenticated', 'public.push_aparelhos', 'select')
+                or has_function_privilege('authenticated', 'public.push_proxima(integer)', 'execute')
+              then 'cole a parte 2 de novo (59_push)' else '' end
+  union all
   /* A loja pelo link e os pacotes no Relatórios (55). */
   select 70, 'Relatórios: loja pelo link e pacotes',
          case when to_regprocedure('public.relatorio_vendas(uuid,date,date)') is null

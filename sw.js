@@ -16,7 +16,7 @@
 /* Sobe a cada correção publicada, e tem que andar junto com o VERSAO_APP do
    app.html: o carimbo na lateral mostra aquele, e dois números divergentes
    fariam a tela afirmar uma versão que não é a que está servindo. */
-const VERSAO = 'agendapro-v9.28ccf4';
+const VERSAO = 'agendapro-v9.7f938c';
 
 const ESSENCIAIS = [
   './',
@@ -101,5 +101,46 @@ self.addEventListener('fetch', ev => {
       }
       throw e;
     }
+  })());
+});
+
+/* ── O AVISO NO CELULAR (59_push.sql) ─────────────────────────────────────
+   O recado chega cifrado do servidor e o navegador já entrega aberto aqui.
+   Vem só o que a tela de bloqueio mostra: título, uma linha e para onde ir.
+
+   ⚠ TODO push PRECISA mostrar uma notificação. Push recebido sem nada na
+   tela é lido pelo Chrome como abuso, e ele passa a mostrar sozinho "Este
+   site foi atualizado em segundo plano" — e o Safari cancela a inscrição.
+   Por isso o recado ilegível vira um aviso genérico, e não silêncio. */
+self.addEventListener('push', ev => {
+  let r = {};
+  try{ r = ev.data ? ev.data.json() : {}; }catch(e){ r = {}; }
+  const titulo = String(r.titulo || 'AgendaPro').slice(0, 80);
+  ev.waitUntil(self.registration.showNotification(titulo, {
+    body: String(r.corpo || 'Novidade na sua agenda.').slice(0, 200),
+    icon: './icones/icone-192.png',
+    badge: './icones/icone-192.png',
+    tag: String(r.tag || 'agendapro'),
+    data: { url: typeof r.url === 'string' && r.url.startsWith('./') ? r.url : './app.html' },
+    vibrate: [180, 80, 180],
+  }));
+});
+
+/* Tocou no aviso: volta para o AgendaPro que já está aberto (e vai para a
+   tela certa), ou abre um novo. Só endereço DESTE site — o `url` vem do
+   banco, e mesmo assim nada que comece fora de './' é aceito acima. */
+self.addEventListener('notificationclick', ev => {
+  ev.notification.close();
+  const alvo = new URL((ev.notification.data && ev.notification.data.url) || './app.html',
+                       self.registration.scope).href;
+  ev.waitUntil((async () => {
+    const abertas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for(const c of abertas){
+      if(c.url.includes('/app.html')){
+        try{ await c.focus(); }catch(e){}
+        try{ return await c.navigate(alvo); }catch(e){ return; }
+      }
+    }
+    return self.clients.openWindow(alvo);
   })());
 });

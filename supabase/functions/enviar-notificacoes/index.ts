@@ -34,6 +34,10 @@
    salões cuja hora chegou) e despacha o que está vencendo.
    =========================================================================== */
 
+/* Os avisos no celular (59_push.sql). Não dependem do WhatsApp: rodam antes
+   da checagem das credenciais da Meta, e nunca contam na franquia. */
+import { gerarChaves, enviar as enviarPush } from './webpush.js';
+
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const WA_TOKEN     = Deno.env.get('WHATSAPP_TOKEN');
@@ -158,6 +162,48 @@ function iguais(a: string, b: string): boolean {
   return dif === 0;
 }
 
+/* ── O CORREIO DOS AVISOS NO CELULAR ──────────────────────────────────────
+   As chaves VAPID nascem UMA vez, aqui, na primeira volta, e moram no banco
+   (push_config) — nunca no navegador, nunca em variável que alguém precisa
+   configurar. O banco se recusa a sobrescrever: se duas voltas gerarem ao
+   mesmo tempo, vale a primeira e a segunda lê a que ficou. */
+let chavesPush: { publica: string; privadaJwk: JsonWebKey; contato: string } | null = null;
+async function chavesDoCorreio() {
+  if (chavesPush) return chavesPush;
+  let c = await rpc('push_config_ler', {});
+  if (!c) c = await rpc('push_config_gravar', { p_chaves: await gerarChaves() });
+  chavesPush = c;
+  return c;
+}
+
+type AvisoPush = { id: number; titulo: string; corpo: string; url: string;
+                   endpoint: string; p256dh: string; auth: string };
+
+async function despacharAvisos() {
+  let enviados = 0, falhas = 0;
+  const ate = Date.now() + 4_000;          // o resto da volta é do WhatsApp
+  /* As chaves primeiro, mesmo com a fila vazia: o painel precisa da pública
+     para o PRIMEIRO aparelho ligar o aviso — sem ela não há inscrição, e sem
+     inscrição a fila nunca teria nada. Depois da primeira volta, fica na
+     memória da função e não custa nada. */
+  const chaves = await chavesDoCorreio();
+  let lote = await rpc('push_proxima', { p_lote: 10 }) as AvisoPush[];
+  while (lote && lote.length) {
+    for (const a of lote) {
+      const r = await enviarPush(chaves, a,
+        { titulo: a.titulo, corpo: a.corpo, url: a.url, tag: 'agendapro-' + a.id });
+      await rpc('push_resultado', { p_id: a.id, p_ok: r.ok, p_codigo: r.ok ? null : r.codigo });
+      if (r.ok) enviados++;
+      else { falhas++; console.error('enviar-notificacoes: aviso no celular falhou', r.codigo); }
+    }
+    if (Date.now() > ate) break;
+    lote = await rpc('push_proxima', { p_lote: 10 }) as AvisoPush[];
+  }
+  if (enviados || falhas)
+    console.log('enviar-notificacoes avisos', JSON.stringify({ enviados, falhas }));
+  return { enviados, falhas };
+}
+
 Deno.serve(async (req) => {
   /* ⚠ A PORTA É O SEGREDO, E ELA FECHA SEM ELE.
 
@@ -178,6 +224,17 @@ Deno.serve(async (req) => {
   if (!iguais(req.headers.get('x-cron-segredo') ?? '', SEGREDO)) {
     return new Response(JSON.stringify({ erro: 'não autorizado' }), {
       status: 401, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+  }
+
+  /* ── OS AVISOS NO CELULAR, PRIMEIRO ────────────────────────────────────
+     Antes do WhatsApp, e sem depender dele: o salão sem a Meta configurada
+     continua recebendo o aviso de horário novo no celular. Erro aqui não
+     derruba a volta do WhatsApp — é registrado e a vida segue. */
+  let avisos = { enviados: 0, falhas: 0 };
+  try { avisos = await despacharAvisos(); }
+  catch (e) {
+    console.error('enviar-notificacoes: avisos no celular falharam:',
+      String((e as Error).message).slice(0, 300));
   }
 
   /* ⚠ SEM CREDENCIAL, NÃO SE INVENTA ENVIO.
