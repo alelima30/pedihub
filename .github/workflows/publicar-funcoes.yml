@@ -38,6 +38,11 @@ on:
       - 'supabase/functions/cancelar-cartao/**'
       - 'supabase/functions/adicional/**'
       - 'supabase/functions/saude/**'
+      # O próprio robô: consertar a publicação já publica de novo. Foi o caso do
+      # `--yes`, que a ferramenta do Supabase passou a exigir fora do terminal
+      # ("Confirmation required ... Nothing was changed") — a função nova
+      # ficou sem ir ao ar, e os avisos no celular, sem as chaves.
+      - '.github/workflows/publicar-funcoes.yml'
       # Texto de ajuda (MODELOS.md, README.md) não é código: mudar não publica.
       - '!supabase/functions/**/*.md'
 
@@ -70,42 +75,42 @@ jobs:
       # x-cron-segredo, conferido dentro da função, que recusa tudo se o
       # segredo CRON_SEGREDO não estiver configurado.
       - name: enviar-notificacoes
-        run: supabase functions deploy enviar-notificacoes --project-ref "$PROJETO" --no-verify-jwt
+        run: supabase functions deploy enviar-notificacoes --project-ref "$PROJETO" --yes --no-verify-jwt
 
       # O retorno da Meta (entregue, lido, falhou). SEM verificação de JWT, de
       # propósito: a Meta chama sem token do Supabase — quem guarda a porta é a
       # assinatura com o META_APP_SECRET, conferida dentro da função.
       - name: status-whatsapp
-        run: supabase functions deploy status-whatsapp --project-ref "$PROJETO" --no-verify-jwt
+        run: supabase functions deploy status-whatsapp --project-ref "$PROJETO" --yes --no-verify-jwt
 
       # As campanhas (promoção, aniversário). Só mandam quando há campanha.
       - name: enviar-campanha
-        run: supabase functions deploy enviar-campanha --project-ref "$PROJETO"
+        run: supabase functions deploy enviar-campanha --project-ref "$PROJETO" --yes
 
       # ── O PAGAMENTO PELO MERCADO PAGO (webhook-mp/README.md) ──────────────
       # Chamadas pelo painel, COM o token de sessão do dono: é ele que diz
       # quem está pedindo. Por isso a verificação de JWT fica LIGADA.
       - name: criar-cobranca
-        run: supabase functions deploy criar-cobranca --project-ref "$PROJETO"
+        run: supabase functions deploy criar-cobranca --project-ref "$PROJETO" --yes
       - name: assinar-cartao
-        run: supabase functions deploy assinar-cartao --project-ref "$PROJETO"
+        run: supabase functions deploy assinar-cartao --project-ref "$PROJETO" --yes
       - name: cancelar-cartao
-        run: supabase functions deploy cancelar-cartao --project-ref "$PROJETO"
+        run: supabase functions deploy cancelar-cartao --project-ref "$PROJETO" --yes
       # Os módulos adicionais (o Crediário): muda o valor do cartão no Mercado
       # Pago junto com o banco. Com verificação de JWT, como as do painel.
       - name: adicional
-        run: supabase functions deploy adicional --project-ref "$PROJETO"
+        run: supabase functions deploy adicional --project-ref "$PROJETO" --yes
 
       # O aviso de pagamento. SEM verificação de JWT, de propósito: o Mercado
       # Pago chama sem token do Supabase — quem guarda a porta é a assinatura
       # HMAC com o MP_WEBHOOK_SECRET, conferida dentro da função, que recusa
       # tudo se o segredo não estiver configurado. Só ESTA das quatro.
       - name: webhook-mp
-        run: supabase functions deploy webhook-mp --project-ref "$PROJETO" --no-verify-jwt
+        run: supabase functions deploy webhook-mp --project-ref "$PROJETO" --yes --no-verify-jwt
 
       # O check-up do sistema (saude/README.md), que o UptimeRobot visita. SEM
       # verificação de JWT, de propósito: o monitor não tem token do Supabase.
       # A resposta não leva dado de ninguém — só "ok" ou "problema" e as chaves
       # do que está errado —, e o banco só deixa o service_role perguntar.
       - name: saude
-        run: supabase functions deploy saude --project-ref "$PROJETO" --no-verify-jwt
+        run: supabase functions deploy saude --project-ref "$PROJETO" --yes --no-verify-jwt
