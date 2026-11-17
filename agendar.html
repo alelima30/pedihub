@@ -1496,6 +1496,51 @@ async function abrirSalaoDaNuvem(slug){
      termina de marcar. Pedir agora é ter a resposta na mão na hora certa. */
   carregarPoliticaDeConfirmacao();
   carregarCuponsDoSalao();
+  contarVisita(slug);
+}
+
+/* ── A VISITA, SÓ COMO NÚMERO (60_dashboard.sql) ──────────────────────────
+   O Ranking do salão mostra quantas pessoas abriram o link e de onde vieram.
+   Este aparelho guarda um código aleatório (não é nome, telefone nem conta)
+   só para a mesma pessoa abrindo duas vezes no dia contar como uma; o banco
+   ainda o embaralha com o dia antes de guardar. Ninguém é identificado.
+   Não espera resposta e nunca atrapalha: visita é estatística. */
+function origemDaVisita(){
+  try{
+    const q = new URLSearchParams(location.search);
+    const utm = (q.get('utm_source') || q.get('origem') || '').toLowerCase();
+    const ua = navigator.userAgent || '';
+    let ref = '';
+    try{ ref = document.referrer ? new URL(document.referrer).hostname.toLowerCase() : ''; }catch(e){}
+    const tem = (...xs) => xs.some(x => utm.includes(x) || ref.includes(x));
+    if(tem('instagram') || /Instagram/i.test(ua)) return 'instagram';
+    if(tem('whatsapp', 'wa.me')) return 'whatsapp';
+    if(tem('facebook', 'fb.com', 'fb.me') || /FBAN|FBAV|FB_IAB/.test(ua)) return 'facebook';
+    if(tem('tiktok')) return 'tiktok';
+    if(tem('google')) return 'google';
+    if(ref && ref !== location.hostname) return 'outro';
+    return 'direto';
+  }catch(e){ return 'direto'; }
+}
+function codigoDoAparelho(){
+  const CHAVE = 'agendapro.visitante';
+  try{
+    let c = localStorage.getItem(CHAVE);
+    if(!c || !/^[A-Za-z0-9_-]{16,64}$/.test(c)){
+      const b = new Uint8Array(18);
+      crypto.getRandomValues(b);
+      c = btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      localStorage.setItem(CHAVE, c);
+    }
+    return c;
+  }catch(e){ return null; }
+}
+function contarVisita(slug){
+  if(!NA_NUVEM || !slug) return;
+  const c = codigoDoAparelho();
+  if(!c) return;
+  Dados.chamar('registrar_visita', { p_slug: slug, p_visitante: c, p_origem: origemDaVisita() })
+    .catch(e => console.info('[AgendaPro] visita:', e.message));
 }
 
 /* A pergunta sobre horários é feita UMA vez por combinação de

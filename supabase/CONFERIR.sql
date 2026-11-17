@@ -1286,6 +1286,19 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or has_function_privilege('authenticated', 'public.push_proxima(integer)', 'execute')
               then 'cole a parte 2 de novo (59_push)' else '' end
   union all
+  /* O Ranking (60): a função do dashboard e as visitas do link, só números. */
+  select 78, 'Ranking: clientes, profissionais e visitas do link',
+         case when to_regprocedure('public.dashboard(uuid,date,date)') is null
+                or to_regclass('public.link_visitas') is null
+                or has_function_privilege('anon', 'public.dashboard(uuid,date,date)', 'execute')
+                or has_table_privilege('authenticated', 'public.link_visitas', 'select')
+              then 'FALTA' else 'certo' end,
+         case when to_regprocedure('public.dashboard(uuid,date,date)') is null
+                or to_regclass('public.link_visitas') is null
+                or has_function_privilege('anon', 'public.dashboard(uuid,date,date)', 'execute')
+                or has_table_privilege('authenticated', 'public.link_visitas', 'select')
+              then 'cole a parte 2 de novo (60_dashboard)' else '' end
+  union all
   /* A loja pelo link e os pacotes no Relatórios (55). */
   select 70, 'Relatórios: loja pelo link e pacotes',
          case when to_regprocedure('public.relatorio_vendas(uuid,date,date)') is null

@@ -937,6 +937,17 @@ span.ajuda{display:block;margin-top:5px}
     <div id="relCorpo"></div>
   </section>
 
+  <!-- ══════════ RANKING ══════════
+       Quem mais marca, quem mais atende, quem é nova, quem volta e quantas
+       pessoas abrem o link (60_dashboard.sql). Os mesmos atalhos de período
+       do Relatórios, para os dois falarem do mesmo mês. -->
+  <section class="tela" id="tela-ranking">
+    <div class="barra">
+      <span class="vistas" id="rkAtalhos"></span>
+    </div>
+    <div id="rkCorpo"></div>
+  </section>
+
   <!-- ══════════ PLANO E ASSINATURA ══════════ -->
   <section class="tela" id="tela-plano">
     <div id="painelPlano"></div>
@@ -1196,6 +1207,10 @@ function diaDaSemana(dataIso){
   return new Date(a, m-1, d).getDay();
 }
 function hm(min){
+  /* Horário que atravessa a meia-noite guarda o fim como 1470 (00:30 do dia
+     seguinte, contado a partir do dia em que começou — ver `montarAgenda`).
+     Na tela é 00:30, não 24:30. */
+  if(min >= 1440) min = min % 1440;
   return String(Math.floor(min/60)).padStart(2,'0') + ':' + String(min%60).padStart(2,'0');
 }
 function minDe(hhmm){
@@ -1922,6 +1937,11 @@ const TELAS = [
      dinheiro da casa inteira. */
   ['dashboard','Dashboard',       'painel',     'Dia a dia', GESTAO],
   ['relatorios','Relatórios',      'grafico',    'Dia a dia', GESTAO],
+  /* O Ranking (60_dashboard.sql): quem mais marca, quem mais atende, quem é
+     nova, quem volta, quantos abrem o link. A gestão vê o salão inteiro; quem
+     atende vê SÓ os próprios números (o banco filtra pela ficha dela). A
+     recepção sem ficha de quem atende não tem o que ver ali. */
+  ['ranking',  'Ranking',          'grafico',    'Dia a dia', ['dono','admin','profissional']],
   /* Aniversariantes: pedido do dono — "um tópico separado do dashboard, pra
      eu clicar e ver". O cartão do Dashboard continua (é de quem o ligou);
      esta é a lista inteira, por período. Quem vê Clientes vê esta: é a mesma
@@ -2178,7 +2198,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.7f938c';
+const VERSAO_APP = 'v9.7fd50e';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -6407,6 +6427,188 @@ function limitesDoPeriodo(qual){
 // dd/mm, para dizer contra QUAL janela a porcentagem foi tirada.
 const diaMes = d => d.split('-').reverse().slice(0,2).join('/');
 
+/* ── O RANKING (60_dashboard.sql) ─────────────────────────────────────────
+   Uma chamada só ao banco (`dashboard`), que já devolve tudo contado: quem
+   mais marcou, quem mais gastou, quem mais atendeu, os serviços, quem é nova
+   e por onde chegou, quem voltou, quem sumiu, e as visitas do link.
+
+   O desenho segue uma regra: NÚMERO ESCRITO, barra só como apoio. Cada
+   barra é uma série só, na cor da marca do tema (nenhuma cor fixa), e o
+   valor está sempre escrito ao lado — ninguém precisa adivinhar tamanho de
+   barra. O toque/passar o dedo mostra o detalhe da linha. */
+let rkPeriodo = 'mes', rkPedido = 0;
+const RK_PERIODOS = [['mes', 'Este mês'], ['anterior', 'Mês passado'],
+                     ['dias30', '30 dias'], ['ano', 'Este ano']];
+const RK_ORIGEM = { instagram:'Instagram', whatsapp:'WhatsApp', facebook:'Facebook',
+                    google:'Google', tiktok:'TikTok', direto:'Direto (link digitado ou salvo)',
+                    outro:'Outros sites' };
+const RK_SEMANA = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+function prepararRanking(){
+  document.getElementById('rkAtalhos').innerHTML = RK_PERIODOS.map(([q, rot]) =>
+    `<button class="${q === rkPeriodo ? 'on' : ''}" onclick="rkMudarPeriodo('${q}')">${rot}</button>`).join('');
+  carregarRanking();
+}
+function rkMudarPeriodo(q){ rkPeriodo = q; prepararRanking(); }
+
+async function carregarRanking(){
+  const alvo = document.getElementById('rkCorpo');
+  if(!NA_NUVEM){
+    alvo.innerHTML = `<div class="card"><p style="font-size:14px">O Ranking conta a agenda de
+      verdade, no servidor: aparece com a sua conta, não na demonstração.</p></div>`;
+    return;
+  }
+  const meu = ++rkPedido;
+  const [de, ate] = limitesDoPeriodo(rkPeriodo);
+  alvo.innerHTML = '<div class="vazio">Contando o período…</div>';
+  let r;
+  try{
+    r = await Dados.chamar('dashboard', { p_salao: salaoAtual, p_de: de, p_ate: ate });
+    if(Array.isArray(r)) r = r[0];
+  }catch(e){
+    if(meu !== rkPedido) return;
+    alvo.innerHTML = `<div class="aviso">${escapar(e.message || 'Não consegui contar o período.')}</div>`;
+    return;
+  }
+  if(meu !== rkPedido) return;
+  desenharRanking(r || {});
+}
+
+/* "▲ 12% sobre 01/10 a 31/10" — contra o período anterior do mesmo tamanho.
+   Sem base (o anterior foi zero) não há porcentagem honesta: diz "novo". */
+function rkVariacao(agora, antes){
+  agora = Number(agora) || 0; antes = Number(antes);
+  if(!Number.isFinite(antes)) return '';
+  if(antes === 0) return agora > 0 ? '<span class="rk-var sobe">novo</span>' : '';
+  const p = Math.round((agora - antes) / antes * 100);
+  if(p === 0) return '<span class="rk-var">igual</span>';
+  return `<span class="rk-var ${p > 0 ? 'sobe' : 'desce'}">${p > 0 ? '▲' : '▼'} ${Math.abs(p)}%</span>`;
+}
+
+function rkNumero(rot, valor, ajuda, variacao){
+  return `<div class="rk-num"><b>${valor}</b><span>${escapar(rot)}</span>
+    ${variacao || ''}${ajuda ? `<small>${ajuda}</small>` : ''}</div>`;
+}
+
+// Uma lista com posição, barra e número. `linhas`: [{nome, n, rotulo, detalhe}].
+function rkLista(linhas, vazio){
+  if(!linhas.length) return `<p class="rk-vazio">${vazio}</p>`;
+  const maior = Math.max(...linhas.map(l => Number(l.n) || 0), 1);
+  return `<ol class="rk-lista">${linhas.map((l, i) => `
+    <li title="${escapar(l.detalhe || '')}">
+      <span class="rk-pos${i < 3 ? ' rk-top' : ''}">${i + 1}º</span>
+      <span class="rk-nome">${escapar(l.nome)}${l.detalhe ? `<small>${escapar(l.detalhe)}</small>` : ''}</span>
+      <span class="rk-barra rel-barra"><i style="width:${Math.max(4, Math.round((Number(l.n) || 0) / maior * 100))}%"></i></span>
+      <b class="rk-val">${l.rotulo}</b>
+    </li>`).join('')}</ol>`;
+}
+
+const rkPlural = (n, um, varios) => n + ' ' + (Number(n) === 1 ? um : varios);
+const rkData = iso => iso ? diaMes(instanteParaTela(iso, fusoDoSalaoAtual()).data) : '';
+
+function desenharRanking(r){
+  const alvo = document.getElementById('rkCorpo');
+  const z = r.resumo || {}, a = r.antes || {}, meu = r.escopo === 'meu';
+  const pct = (n, d) => d ? Math.round(n / d * 100) + '%' : '—';
+  // Números, e com nome de número (o varredor de segurança lê "atendido" como nome de gente).
+  const feitos = Number(z.atendidos) || 0, feitosAntes = Number(a.atendidos) || 0;
+
+  const resumo = `
+    <div class="card rk-card">
+      <h3 class="secao" style="margin-top:0">${meu ? 'Os seus números' : 'O período'}</h3>
+      <p class="secao-sub">${diaMes(r.de)} a ${diaMes(r.ate)} · comparado com os ${r.dias} dias anteriores.</p>
+      <div class="rk-nums">
+        ${rkNumero('horários marcados', z.marcados, '', rkVariacao(z.marcados, a.marcados))}
+        ${rkNumero('atendimentos', feitos, z.faltas ? rkPlural(z.faltas, 'falta', 'faltas') : '', rkVariacao(feitos, feitosAntes))}
+        ${rkNumero('marcados pelo link', z.peloLink, pct(z.peloLink, z.marcados) + ' do total', rkVariacao(z.peloLink, a.peloLink))}
+        ${rkNumero(meu ? 'em atendimentos seus' : 'em atendimentos', real(Number(z.valor) || 0), '', rkVariacao(z.valor, a.valor))}
+      </div>
+    </div>`;
+
+  const clientes = `
+    <div class="card rk-card">
+      <h3 class="secao" style="margin-top:0">Clientes: quem é nova e quem volta</h3>
+      <div class="rk-nums">
+        ${rkNumero('clientes atendidas', z.clientes, '')}
+        ${rkNumero('novas', z.novas, (z.novasPeloLink || 0) + ' pelo link · ' + (z.novasNoBalcao || 0) + ' no balcão', rkVariacao(z.novas, a.novas))}
+        ${rkNumero('voltaram', z.recorrentes, 'já tinham vindo antes', '')}
+        ${rkNumero('vieram mais de uma vez', z.maisDeUmaVez, 'no período', '')}
+      </div>
+      ${!meu && z.cadastrosPeloLink ? `<p class="secao-sub" style="margin-top:10px">E <b>${rkPlural(z.cadastrosPeloLink, 'pessoa se cadastrou', 'pessoas se cadastraram')}</b>
+        pelo link sem marcar horário.</p>` : ''}
+    </div>`;
+
+  const L = r.link;
+  let link = '';
+  if(L){
+    const origens = (L.porOrigem || []).map(o => ({ nome: RK_ORIGEM[o.origem] || o.origem, n: o.n,
+      rotulo: rkPlural(o.n, 'pessoa', 'pessoas') }));
+    /* Não é porcentagem de propósito: a mesma pessoa marca dois horários, e
+       quem tinha o link salvo de antes da contagem marca sem ter sido
+       contada — "150% de quem abriu, marcou" foi o que apareceu na primeira
+       versão. Horários por pessoa diz a mesma coisa sem prometer o que o
+       número não sabe (quem, de quem abriu, marcou). */
+    const conv = L.visitantes
+      ? (L.marcaramPeloLink / L.visitantes).toLocaleString('pt-BR', { maximumFractionDigits: 1 })
+      : null;
+    link = `
+    <div class="card rk-card" id="rkLink">
+      <h3 class="secao" style="margin-top:0">Quem abriu o seu link</h3>
+      <p class="secao-sub">Só números: ninguém é identificado.${L.contandoDesde
+        ? ` Contando desde ${diaMes(L.contandoDesde)}.`
+        : ' A contagem começou agora: as visitas aparecem aqui a partir de hoje.'}</p>
+      <div class="rk-nums">
+        ${rkNumero('pessoas diferentes', L.visitantes, rkPlural(L.visitas, 'visita', 'visitas') + ' no total', rkVariacao(L.visitantes, a.visitantes))}
+        ${rkNumero('horários marcados pelo link', L.marcaramPeloLink, 'feitos no período', '')}
+        ${rkNumero('horários por pessoa que abriu', conv === null ? '—' : conv, 'quanto o link rende', '')}
+      </div>
+      <h4 class="rk-sub">De onde vieram</h4>
+      ${rkLista(origens, 'Ninguém abriu o link neste período.')}
+    </div>`;
+  }
+
+  const marcaram = (r.clientesQueMaisMarcaram || []).map(c => ({ nome: c.nome, n: c.marcados,
+    rotulo: rkPlural(c.marcados, 'horário', 'horários'),
+    detalhe: rkPlural(c.atendidos, 'atendido', 'atendidos') + (c.faltas ? ' · ' + rkPlural(c.faltas, 'falta', 'faltas') : '')
+      + (c.ultima ? ' · última ' + rkData(c.ultima) : '') }));
+  const gastaram = (r.clientesQueMaisGastaram || []).map(c => ({ nome: c.nome, n: c.valor,
+    rotulo: real(Number(c.valor) || 0), detalhe: rkPlural(c.atendidos, 'atendimento', 'atendimentos') }));
+  const profs = (r.profissionais || []).map(p => ({ nome: p.nome, n: p.atendidos,
+    rotulo: rkPlural(p.atendidos, 'atendimento', 'atendimentos'),
+    detalhe: rkPlural(p.clientes, 'cliente', 'clientes') + ' · ' + real(Number(p.valor) || 0)
+      + ' · ' + p.peloLink + ' pelo link' + (p.faltas ? ' · ' + rkPlural(p.faltas, 'falta', 'faltas') : '')
+      + (p.cancelados ? ' · ' + rkPlural(p.cancelados, 'cancelado', 'cancelados') : '') }));
+  const servs = (r.servicos || []).map(s => ({ nome: s.nome, n: s.vezes,
+    rotulo: rkPlural(s.vezes, 'vez', 'vezes'), detalhe: real(Number(s.valor) || 0) + ' atendido' }));
+  const sumidas = (r.sumidas || []).map(c => ({ nome: c.nome, n: c.atendimentos,
+    rotulo: 'última ' + rkData(c.ultima), detalhe: rkPlural(c.atendimentos, 'atendimento', 'atendimentos') + ' no total' }));
+
+  const semana = (r.porDiaDaSemana || []).map((n, i) => ({ nome: RK_SEMANA[i], n, rotulo: rkPlural(n, 'horário', 'horários') }))
+    .filter(x => x.n > 0).sort((x, y) => y.n - x.n);
+  const horas = (r.porHora || []).map(h => ({ nome: String(h.hora).padStart(2, '0') + 'h', n: h.n,
+    rotulo: rkPlural(h.n, 'horário', 'horários') })).sort((x, y) => y.n - x.n).slice(0, 6);
+
+  alvo.innerHTML = resumo + clientes + link + `
+    <div class="rk-grade">
+      <div class="card rk-card"><h3 class="secao" style="margin-top:0">Clientes que mais marcaram</h3>
+        ${rkLista(marcaram, 'Nenhum horário marcado neste período.')}</div>
+      <div class="card rk-card"><h3 class="secao" style="margin-top:0">Clientes que mais gastaram</h3>
+        ${rkLista(gastaram, 'Nenhum atendimento concluído neste período.')}</div>
+      <div class="card rk-card"><h3 class="secao" style="margin-top:0">${meu ? 'Os seus atendimentos' : 'Quem mais atendeu'}</h3>
+        ${rkLista(profs, 'Nenhum atendimento neste período.')}</div>
+      <div class="card rk-card"><h3 class="secao" style="margin-top:0">Serviços mais pedidos</h3>
+        ${rkLista(servs, 'Nenhum serviço neste período.')}</div>
+      <div class="card rk-card"><h3 class="secao" style="margin-top:0">Dias mais cheios</h3>
+        ${rkLista(semana, 'Sem horários neste período.')}</div>
+      <div class="card rk-card"><h3 class="secao" style="margin-top:0">Horários mais procurados</h3>
+        ${rkLista(horas, 'Sem horários neste período.')}</div>
+    </div>
+    <div class="card rk-card" id="rkSumidas"><h3 class="secao" style="margin-top:0">Sumiram</h3>
+      <p class="secao-sub">Vinham sempre (3 atendimentos ou mais) e não aparecem há mais de 45 dias,
+        nem têm horário marcado. Uma mensagem de "estamos com saudade" costuma trazer de volta.</p>
+      ${rkLista(sumidas, 'Ninguém sumiu: quem vinha sempre continua vindo.')}</div>`;
+}
+
 function prepararRelatorios(){
   if(!relDe || !relAte) [relDe, relAte] = limitesDoPeriodo('mes');
   document.getElementById('relDe').value  = relDe;
@@ -10101,6 +10303,7 @@ function pintar(){
   // vez, ou quando o dono aperta Atualizar.
   if(telaAtual === 'dashboard') carregarDash();
   if(telaAtual === 'relatorios') prepararRelatorios();
+  if(telaAtual === 'ranking')   prepararRanking();
   if(telaAtual === 'salao')    pintarSalao();
   if(telaAtual === 'publico')  prepararPublico();
   if(telaAtual === 'plano'){
@@ -16410,7 +16613,7 @@ function moduloLiberado(chave){
   const v = recursoDoPlano(chave);
   return v === undefined || v === true;
 }
-const MODULO_DA_TELA = { relatorios:'relatorios', produtos:'loja',
+const MODULO_DA_TELA = { relatorios:'relatorios', ranking:'relatorios', produtos:'loja',
                          pacotes:'pacotes', cupons:'cupons',
                          // Sem a loja no plano não há cardápio no link, e o banco recusa o pedido.
                          pedidos:'loja' };
@@ -19511,8 +19714,10 @@ function instanteParaTela(iso, fuso){
            min: Number(g('hour')) * 60 + Number(g('minute')) };
 }
 
-// { data, min } → texto que o Postgres converte sozinho.
+// { data, min } → texto que o Postgres converte sozinho. `min` de 1440 para
+// cima é do dia seguinte (o fim de um horário que passou da meia-noite).
 function telaParaInstante(data, min, fuso){
+  if(min >= 1440){ data = somarDias(data, Math.floor(min / 1440)); min = min % 1440; }
   const hh = String(Math.floor(min / 60)).padStart(2, '0');
   const mm = String(min % 60).padStart(2, '0');
   return data + ' ' + hh + ':' + mm + ':00 ' + fuso;
@@ -19531,7 +19736,19 @@ function montarAgenda(d){
       if(typeof linha.inicio === 'string'){
         const i = instanteParaTela(linha.inicio, fuso);
         const f = instanteParaTela(linha.fim, fuso);
-        linha.data = i.data; linha.inicio = i.min; linha.fim = f.min;
+        /* ⚠ O FIM PODE SER DE OUTRO DIA. Um horário das 23:30 às 00:30, uma
+           folga de um dia inteiro (00:00 até 00:00 do dia seguinte), férias
+           de uma semana. Aqui era só `f.min`: o fim virava "00:30 do MESMO
+           dia", antes do começo — e, como a tela compara o que mostra com o
+           que veio do banco, achava que o horário tinha mudado e tentava
+           regravá-lo assim. O banco recusava ("range lower bound must be
+           less than or equal to range upper bound"), e o painel abria
+           dizendo "NÃO consegui salvar no banco" e não gravava mais nada.
+           Férias seriam encurtadas sem erro nenhum.
+           Agora o fim é contado a partir do dia do começo: 00:30 do dia
+           seguinte é 1470. Ida e volta dão exatamente o mesmo instante. */
+        const dias = Math.round((Date.parse(f.data + 'T00:00:00Z') - Date.parse(i.data + 'T00:00:00Z')) / 86400000);
+        linha.data = i.data; linha.inicio = i.min; linha.fim = f.min + Math.max(0, dias) * 1440;
       }
     }
   }

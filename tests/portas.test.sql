@@ -58,6 +58,10 @@ insert into porta_aberta values
   ('conferir_cupom',          'a prévia do cupom na tela de confirmar e na loja'),
   ('usar_cupom_no_pedido',    'o pedido da loja com cupom: registra o uso, que conta no limite'),
   ('salao_tem_cupom',         'sim ou não por lugar, para não mostrar o campo à toa'),
+  -- O contador de visitas do link (60_dashboard). Só ESCREVE uma linha
+  -- anônima (md5 de salão + dia + código aleatório do aparelho), não lê nada
+  -- e não devolve nada; teto de 5000 por salão por dia.
+  ('registrar_visita',        'conta a visita da página da cliente, sem dado pessoal'),
 
   -- Caminhos por TOKEN: quem tem o link tem o direito, e o token é o segredo.
   ('cancelar_agendamento',    'link de cancelar, mandado à cliente'),

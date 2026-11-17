@@ -224,8 +224,8 @@ const abrir = async (sessao, sufixo = '') => {
 const pg1 = await abrir(T.d.sessao(), '?oferta=1');
 const cadeados = await pg1.evaluate(() =>
   [...document.querySelectorAll('#abas .aba.aba-travada')].map(b => b.dataset.chave).sort());
-igual('Grátis: cadeado em Cupons, Pacotes, Produtos e Relatórios', cadeados,
-  ['cupons', 'pacotes', 'produtos', 'relatorios']);
+igual('Grátis: cadeado em Cupons, Pacotes, Produtos, Ranking e Relatórios', cadeados,
+  ['cupons', 'pacotes', 'produtos', 'ranking', 'relatorios']);
 const telaTravada = async (p, k) => {
   await p.evaluate(k => irPara(k), k);
   await p.waitForTimeout(700);

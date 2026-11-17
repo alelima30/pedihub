@@ -5339,3 +5339,34 @@ label.pedido-chave{ font-weight:600 }
 .pk-motivo{ margin:8px 0 0; font-size:13px; font-weight:600; color:var(--er-500) }
 .pk-erro{ margin:12px 0 0; font-size:13.5px; font-weight:600; color:var(--er-500) }
 .pk-lista{ margin:8px 0 10px; padding-left:20px; line-height:1.6 }
+
+/* ── O Ranking (60_dashboard.sql) ─────────────────────────────────────────
+   Só tokens do tema: a barra é a .rel-barra do Relatórios (cor da marca),
+   o texto usa as tintas de texto, e a seta de subir/descer usa as cores de
+   estado que o tema já define (--ok, --erro), sempre com o ▲/▼ escrito. */
+.rk-card{ margin-bottom:16px }
+.rk-nums{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-top:10px }
+.rk-num{ display:flex; flex-direction:column; gap:2px; padding:12px 14px; border:1px solid var(--borda);
+         border-radius:var(--r); background:var(--painel2) }
+.rk-num b{ font-size:22px; color:var(--txt); font-variant-numeric:tabular-nums; line-height:1.15 }
+.rk-num span{ font-size:13px; color:var(--txt2) }
+.rk-num small{ font-size:12px; color:var(--txt3) }
+.rk-var{ font-size:12px; font-weight:600; color:var(--txt2) }
+.rk-var.sobe{ color:var(--ok) }
+.rk-var.desce{ color:var(--erro) }
+.rk-grade{ display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:0 16px }
+.rk-sub{ font-size:14px; margin:16px 0 6px; color:var(--txt) }
+.rk-vazio{ font-size:13.5px; color:var(--txt2); margin:8px 0 0 }
+.rk-lista{ list-style:none; margin:8px 0 0; padding:0 }
+.rk-lista li{ display:grid; grid-template-columns:30px minmax(0, 1fr) minmax(50px, 90px) auto;
+              align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--borda) }
+.rk-lista li:first-child{ border-top:0 }
+.rk-pos{ font-size:13px; color:var(--txt3); font-variant-numeric:tabular-nums }
+.rk-pos.rk-top{ color:var(--marca); font-weight:700 }
+.rk-nome{ font-size:14px; color:var(--txt); min-width:0; overflow-wrap:anywhere }
+.rk-nome small{ display:block; font-size:12px; color:var(--txt3) }
+.rk-val{ font-size:13.5px; color:var(--txt); white-space:nowrap; font-variant-numeric:tabular-nums }
+@media (max-width: 480px){
+  .rk-lista li{ grid-template-columns:28px minmax(0, 1fr) auto }
+  .rk-barra{ grid-column:2 / -1; grid-row:2 }
+}
