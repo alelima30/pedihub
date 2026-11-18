@@ -512,18 +512,31 @@ end $$;
 
 insert into public.assinaturas (salao_id, plano, status, trial_ate)
 values ('aaaaaaaa-0000-0000-0000-000000000009', 'trial', 'trial',
-        current_date + 7);
+        current_date + 30);
 
+-- O teste grátis é de 2 profissionais (61_teste_30_dias): o primeiro e o
+-- segundo entram; o terceiro esbarra no banco.
 insert into public.profissionais (id, salao_id, nome) values
   ('bbbbbbbb-0000-0000-0000-000000000009',
    'aaaaaaaa-0000-0000-0000-000000000009', 'Único');
 do $$ begin perform t_ok('o primeiro profissional entra no teste grátis'); end $$;
 
 do $$
+declare n int;
+begin
+  insert into public.profissionais (salao_id, nome)
+  values ('aaaaaaaa-0000-0000-0000-000000000009', 'Segundo');
+  get diagnostics n = row_count;
+  if n = 1 then perform t_ok('o segundo também: o teste grátis é de 2 profissionais');
+  else perform t_falha('o teste grátis recusou a segunda pessoa');
+  end if;
+end $$;
+
+do $$
 begin
   if recusado($q$insert into public.profissionais (salao_id, nome)
-                 values ('aaaaaaaa-0000-0000-0000-000000000009', 'Segundo')$q$)
-  then perform t_ok('o segundo é RECUSADO PELO BANCO, não pela tela');
+                 values ('aaaaaaaa-0000-0000-0000-000000000009', 'Terceiro')$q$)
+  then perform t_ok('o terceiro é RECUSADO PELO BANCO, não pela tela');
   else perform t_falha('DEIXOU passar do limite do plano — receita vazando');
   end if;
 end $$;
@@ -543,16 +556,16 @@ begin
 end $$;
 
 -- Subir de plano libera de verdade.
-update public.assinaturas set plano = 'duo', status = 'ativa', trial_ate = null
+update public.assinaturas set plano = 'time', status = 'ativa', trial_ate = null
  where salao_id = 'aaaaaaaa-0000-0000-0000-000000000009';
 
 do $$
 declare n int;
 begin
   insert into public.profissionais (salao_id, nome)
-  values ('aaaaaaaa-0000-0000-0000-000000000009', 'Segundo de verdade');
+  values ('aaaaaaaa-0000-0000-0000-000000000009', 'Terceiro de verdade');
   get diagnostics n = row_count;
-  if n = 1 then perform t_ok('assinando o Duo, o segundo profissional entra');
+  if n = 1 then perform t_ok('assinando o Time, o terceiro profissional entra');
   else perform t_falha('trocar de plano não liberou a vaga');
   end if;
 end $$;
@@ -560,9 +573,9 @@ end $$;
 do $$
 begin
   if recusado($q$insert into public.profissionais (salao_id, nome)
-                 values ('aaaaaaaa-0000-0000-0000-000000000009', 'Terceiro')$q$)
-  then perform t_ok('mas o terceiro esbarra no limite do Duo');
-  else perform t_falha('o Duo aceitou 3 profissionais');
+                 values ('aaaaaaaa-0000-0000-0000-000000000009', 'Quarto')$q$)
+  then perform t_ok('mas o quarto esbarra no limite do Time');
+  else perform t_falha('o Time aceitou 4 profissionais');
   end if;
 end $$;
 

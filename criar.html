@@ -11,7 +11,7 @@
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Criar conta — AgendaPro</title>
-<meta name="description" content="Crie seu link de agendamento e teste 7 dias grátis, sem cartão." />
+<meta name="description" content="Crie seu link de agendamento e teste 30 dias grátis, sem cartão." />
 <meta name="theme-color" content="#FFFFFF" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" type="image/png" href="icones/icone-192.png" />
@@ -515,9 +515,9 @@ let bd = null;
 })();
 
 const PLANOS = [
-  {codigo:'trial',      nome:'Teste grátis', quem:'Para conhecer',    max:1,  preco:0,
+  {codigo:'trial',      nome:'Teste grátis', quem:'Para conhecer',    max:2,  preco:0,
    ic:'<span data-ico="presente"></span>',
-   recursos:['1 profissional','Tudo liberado por 7 dias','Sem cartão de crédito',
+   recursos:['Até 2 profissionais','Tudo liberado por 30 dias','Sem cartão de crédito',
              'Depois vira o plano Grátis','Configuração em 5 min']},
   {codigo:'gratuito',   nome:'Grátis',       quem:'Para conhecer',    max:1,  preco:0,
    ic:'<span data-ico="casa"></span>',
@@ -1101,17 +1101,17 @@ function textoDoTeste(nomeSalao, assinatura){
   if(assinatura && assinatura.status !== 'trial'){
     return `<b>${esc(nomeSalao)}</b> está no ar.`
       + `<span class="teste-gratis" id="quadroTeste"><b>Você está no plano Grátis.</b> `
-      + `O teste grátis de 7 dias é um por pessoa, e este WhatsApp ou e-mail já o usou.<br>`
+      + `O teste grátis de 30 dias é um por pessoa, e este WhatsApp ou e-mail já o usou.<br>`
       + `A agenda, as clientes e o link funcionam normalmente. Para liberar tudo, escolha um plano em `
       + `<b>Meu plano</b>, dentro do painel.</span>`;
   }
   const ate = assinatura && assinatura.trialAte
     ? new Date(String(assinatura.trialAte).slice(0, 10) + 'T12:00:00').toLocaleDateString('pt-BR')
-    : new Date(Date.now() + 7 * 864e5).toLocaleDateString('pt-BR');
+    : new Date(Date.now() + 30 * 864e5).toLocaleDateString('pt-BR');
   return `<b>${esc(nomeSalao)}</b> está no ar.`
-    + `<span class="teste-gratis" id="quadroTeste"><b>Você está no Teste grátis: 7 dias com tudo liberado</b>, `
+    + `<span class="teste-gratis" id="quadroTeste"><b>Você está no Teste grátis: 30 dias com tudo liberado, para até 2 profissionais</b>, `
     + `até ${ate}. Sem cartão e sem cobrança.<br>`
-    + `Depois dos 7 dias, você escolhe um plano — ou continua no plano <b>Grátis</b>, com a agenda, `
+    + `Depois dos 30 dias, você escolhe um plano — ou continua no plano <b>Grátis</b>, com a agenda, `
     + `as clientes e o link simples.</span>`;
 }
 

@@ -99,8 +99,8 @@ igual('no banco: a primeira ganhou o teste; a segunda, com o mesmo e-mail (ponto
 const { ctx, p } = await painel(B.d);
 await passo(p, 1);
 const aviso = await texto(p, '#pdAvisoGratis');
-verdade('o passo 1 diz que o salão está no Grátis, e que o teste de 7 dias é um por pessoa',
-  /Este salão está no plano Grátis/.test(aviso) && /teste grátis de 7 dias/.test(aviso) && /um por pessoa/.test(aviso), aviso);
+verdade('o passo 1 diz que o salão está no Grátis, e que o teste de 30 dias é um por pessoa',
+  /Este salão está no plano Grátis/.test(aviso) && /teste grátis de 30 dias/.test(aviso) && /um por pessoa/.test(aviso), aviso);
 verdade('   com os limites do plano: 1 profissional, até 5 serviços, sem produtos',
   /1 profissional/.test(aviso) && /até 5 serviços/.test(aviso) && /sem produtos/.test(aviso), aviso);
 

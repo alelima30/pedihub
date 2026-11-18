@@ -514,11 +514,12 @@ begin;
     else perform t_falha('assinatura não nasceu em trial');
     end if;
 
-    -- Sete dias contados no relógio do SALÃO (o fuso dele), e não no do
-    -- servidor: depois das 21h em Brasília o servidor já está no dia seguinte.
+    -- Trinta dias (61_teste_30_dias) contados no relógio do SALÃO (o fuso
+    -- dele), e não no do servidor: depois das 21h em Brasília o servidor já
+    -- está no dia seguinte.
     if (select trial_ate from public.assinaturas where salao_id = r.salao_id)
-       = (now() at time zone 'America/Sao_Paulo')::date + 7
-    then perform t_ok('o teste tem prazo de 7 dias, no dia do salão');
+       = (now() at time zone 'America/Sao_Paulo')::date + 30
+    then perform t_ok('o teste tem prazo de 30 dias, no dia do salão');
     else perform t_falha('prazo do teste saiu errado');
     end if;
 
@@ -528,11 +529,17 @@ begin;
     else perform t_falha('perdeu de onde veio o cliente');
     end if;
 
-    -- E o limite do trial vale desde o primeiro minuto.
+    -- E o limite do trial vale desde o primeiro minuto: 2 profissionais (o
+    -- dono, que já entra como o primeiro, e mais um), e o terceiro não.
+    if not recusado(format($q$insert into public.profissionais (salao_id, nome)
+                              values (%L, 'Segundo barbeiro')$q$, r.salao_id))
+    then perform t_ok('o teste grátis aceita a segunda pessoa');
+    else perform t_falha('o trial recusou o segundo profissional');
+    end if;
     if recusado(format($q$insert into public.profissionais (salao_id, nome)
-                          values (%L, 'Segundo barbeiro')$q$, r.salao_id))
-    then perform t_ok('o teste grátis já nasce limitado a 1 profissional');
-    else perform t_falha('o trial aceitou o segundo profissional');
+                          values (%L, 'Terceiro barbeiro')$q$, r.salao_id))
+    then perform t_ok('e já nasce limitado a 2 profissionais');
+    else perform t_falha('o trial aceitou o terceiro profissional');
     end if;
   end $$;
 
@@ -552,7 +559,7 @@ begin;
   declare a record;
   begin
     select * into a from public.minha_assinatura limit 1;
-    if a.dias_de_teste = 7 and a.max_profissionais = 1 and a.profissionais_ativos = 1
+    if a.dias_de_teste = 30 and a.max_profissionais = 2 and a.profissionais_ativos = 2
     then perform t_ok('a vista mostra plano, uso e dias de teste restantes');
     else perform t_falha(format('vista trouxe dias=%s max=%s usados=%s',
       a.dias_de_teste, a.max_profissionais, a.profissionais_ativos));

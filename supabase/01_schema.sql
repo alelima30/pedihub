@@ -156,7 +156,7 @@ insert into public.planos
   (codigo, nome, max_profissionais, preco_mes, ordem, recursos) values
   ('gratuito',  'Grátis',       1,  0.00, 0,
      '{"agendamentos_mes":40,"lembrete_whatsapp":false,"agenda_online":true}'),
-  ('trial',     'Teste grátis', 1,  0.00, 1,
+  ('trial',     'Teste grátis', 2,  0.00, 1,
      '{"lembrete_whatsapp":true,"agenda_online":true}'),
   ('individual','Essencial',    1, 97.00, 2,
      '{"lembrete_whatsapp":true,"agenda_online":true}'),

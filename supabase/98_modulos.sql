@@ -10627,6 +10627,76 @@ grant execute on function public.registrar_visita(text, text, text) to anon, aut
 revoke all on function public.dashboard(uuid, date, date) from public, anon;
 grant execute on function public.dashboard(uuid, date, date) to authenticated;
 
+update public.planos
+   set max_profissionais = 2,
+       recursos = recursos || jsonb_build_object(
+         'max_clientes', 1000, 'max_servicos', 100, 'max_produtos', 100,
+         'mensagens_mes', 100)
+ where codigo = 'trial';
+create or replace function public.criar_salao(
+  p_nome_salao   text,
+  p_tipo         text default 'salao',
+  p_slug         text default null,
+  p_telefone     text default null,
+  p_documento    text default null,
+  p_origem       text default null,
+  p_indicado_por text default null
+)
+returns table (salao_id uuid, slug text)
+language plpgsql security definer set search_path = public as $$
+declare
+  v_perfil uuid := auth.uid();
+  v_slug   text;
+  v_salao  uuid;
+  v_dias   int := 30;
+begin
+  if v_perfil is null then
+    raise exception 'Faça login antes de criar o salão.'
+      using errcode = 'insufficient_privilege';
+  end if;
+  if not exists (select 1 from public.perfis where id = v_perfil) then
+    raise exception 'Complete seu cadastro antes de criar o salão.'
+      using errcode = 'foreign_key_violation';
+  end if;
+  if length(btrim(coalesce(p_nome_salao,''))) < 2 then
+    raise exception 'Dê um nome ao estabelecimento.'
+      using errcode = 'check_violation';
+  end if;
+  if (select count(*) from public.vinculos
+       where perfil_id = v_perfil and papel = 'dono') >= 10 then
+    raise exception 'Você já tem 10 estabelecimentos. Fale com a gente para abrir mais.'
+      using errcode = 'check_violation';
+  end if;
+  v_slug := coalesce(nullif(btrim(p_slug), ''), public.sugerir_slug(p_nome_salao));
+  v_slug := public.virar_slug(v_slug);
+  if not public.slug_disponivel(v_slug) then
+    v_slug := public.sugerir_slug(v_slug);
+  end if;
+  insert into public.saloes (slug, nome, tipo, telefone, whatsapp, status)
+  values (v_slug, btrim(p_nome_salao),
+          coalesce(nullif(p_tipo,''), 'salao'),
+          p_telefone, p_telefone, 'ativo')
+  returning id into v_salao;
+  insert into public.assinaturas
+    (salao_id, plano, status, trial_ate, origem, indicado_por)
+  values (v_salao, 'trial', 'trial',
+          (now() at time zone coalesce((select s.fuso from public.saloes s where s.id = v_salao),
+                                       'America/Sao_Paulo'))::date + v_dias,
+          p_origem, p_indicado_por);
+  insert into public.vinculos (perfil_id, salao_id, papel, status)
+  values (v_perfil, v_salao, 'dono', 'ativo');
+  insert into public.profissionais (salao_id, perfil_id, nome, comissao_pct)
+  select v_salao, v_perfil, p.nome, 100 from public.perfis p where p.id = v_perfil;
+  if p_documento is not null and btrim(p_documento) <> '' then
+    insert into public.documentos_cobranca (salao_id, documento)
+    values (v_salao, regexp_replace(p_documento, '\D', '', 'g'));
+  end if;
+  return query select v_salao, v_slug;
+end $$;
+revoke all on function public.criar_salao(text,text,text,text,text,text,text) from public;
+grant execute on function public.criar_salao(text,text,text,text,text,text,text)
+  to authenticated;
+
 alter table public.agendamentos
   add column if not exists gerenciar_token uuid not null default gen_random_uuid();
 alter table public.lista_espera

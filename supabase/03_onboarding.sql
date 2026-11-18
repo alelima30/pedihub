@@ -109,7 +109,7 @@ declare
   v_perfil uuid := auth.uid();
   v_slug   text;
   v_salao  uuid;
-  v_dias   int := 7;                      -- duração do teste grátis
+  v_dias   int := 30;                     -- duração do teste grátis (61_teste_30_dias)
 begin
   if v_perfil is null then
     raise exception 'Faça login antes de criar o salão.'
@@ -151,8 +151,8 @@ begin
   insert into public.assinaturas
     (salao_id, plano, status, trial_ate, origem, indicado_por)
   /* O "hoje" do teste é o do SALÃO, e não o do servidor (UTC). Depois das
-     21h em Brasília o servidor já está no dia seguinte, e o teste de 7 dias
-     nascia com 8 — a tela dizia "faltam 8 dias" logo depois de prometer 7. */
+     21h em Brasília o servidor já está no dia seguinte, e o teste nascia
+     com um dia a mais do que a tela prometia. */
   values (v_salao, 'trial', 'trial',
           (now() at time zone coalesce((select s.fuso from public.saloes s where s.id = v_salao),
                                        'America/Sao_Paulo'))::date + v_dias,

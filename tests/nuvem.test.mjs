@@ -77,17 +77,22 @@ dizer(!!slug && slug.startsWith('barbearia-os-meninos-da-vila'),
 const assin = await dono.lista('minha_assinatura', {});
 dizer(assin.length === 1 && assin[0].status === 'trial',
   'a assinatura nasce em teste grátis');
-dizer(Number(assin[0].profissionais_ativos) === 1 && Number(assin[0].max_profissionais) === 1,
-  'e já mostra 1 de 1 profissional');
+dizer(Number(assin[0].profissionais_ativos) === 1 && Number(assin[0].max_profissionais) === 2,
+  'e já mostra 1 de 2 profissionais (o teste grátis é de 2: 61_teste_30_dias)');
 
 // ── O limite do plano, do lado do JavaScript ──────────────────────────────
 secao('O limite do plano barra mesmo vindo da tela');
 {
+  const segundo = await dono.inserir('profissionais',
+    { salaoId, nome: 'Segundo barbeiro', comissaoPct: 40 });
+  dizer(!!segundo && !!segundo.id, 'o segundo profissional entra no teste grátis');
   const erro = await recusa(() => dono.inserir('profissionais',
-    { salaoId, nome: 'Segundo barbeiro', comissaoPct: 40 }));
+    { salaoId, nome: 'Terceiro barbeiro', comissaoPct: 40 }));
   dizer(!!erro && /plano|profissional/i.test(erro),
-    'o segundo profissional é recusado, com mensagem legível');
+    'o terceiro é recusado, com mensagem legível');
   if(erro) console.log('      banco disse: ' + erro.slice(0,90));
+  // O resto do arquivo é de um salão com o dono só na agenda.
+  if(segundo && segundo.id) await dono.apagar('profissionais', segundo.id);
 }
 
 // ── Cadastro do catálogo ──────────────────────────────────────────────────
@@ -292,8 +297,9 @@ secao('A ponte entre o `bd` da tela e o banco');
 
   // E o erro do banco NÃO some.
   const ruim = JSON.parse(JSON.stringify(final));
-  ruim.profissionais.push({ id: crypto.randomUUID(), salaoId,
-    nome: 'Barbeiro além do plano', comissaoPct: 40, ativo: true });
+  // Dois a mais: o teste grátis cabe 2, então o terceiro é o que passa do plano.
+  for(const nome of ['Segundo barbeiro', 'Barbeiro além do plano'])
+    ruim.profissionais.push({ id: crypto.randomUUID(), salaoId, nome, comissaoPct: 40, ativo: true });
   const erro = await recusa(() => dono.subir(final, ruim));
   dizer(!!erro && /plano/i.test(erro),
     'erro do banco sobe até a tela, não fica engolido');

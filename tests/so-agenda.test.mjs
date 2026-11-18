@@ -17,8 +17,9 @@
      1. Sem aba Caixa, sem "Abrir comanda", sem a escolha no passo a passo e
         no Meu negócio — e o salão gravado como "Só a agenda" no BANCO, que é o
         que faz o atendimento concluído virar faturamento.
-     2. O teste grátis (1 profissional): o passo a passo não oferece "quem
-        mais atende", e o "+ Profissional" avisa antes, dizendo os planos.
+     2. O teste grátis (2 profissionais, 61_teste_30_dias): o passo a passo
+        oferece "quem mais atende"; na 3ª pessoa, o "+ Profissional" avisa
+        antes, dizendo os planos maiores.
      3. O relatório: a dona fora da comissão a pagar.
      4. No link: os obrigatórios marcados, "encerrado", e "Remarcado".
    =========================================================================== */
@@ -101,9 +102,9 @@ secao('1) O passo a passo: sem "quem mais atende", e sem a escolha da comanda');
   }
   igual('chega no passo 5, "Sua equipe"', await passoDe(), '5');
   const t5 = await p.evaluate(() => document.body.innerText);
-  verdade('não oferece "Quem mais atende?" — o teste grátis tem 1 profissional', !/Quem mais atende/.test(t5));
+  verdade('oferece "Quem mais atende?" — o teste grátis é de 2 profissionais', /Quem mais atende/i.test(t5));
   const aviso = await p.evaluate(() => (document.getElementById('pdEquipeLimite') || {}).innerText || '');
-  verdade('e diz em que plano cabe mais gente', /Dupla/.test(aviso) && /Salão/.test(aviso) && /plano maior/.test(aviso), aviso);
+  verdade('e sem aviso de limite: ainda cabe uma pessoa', !/plano maior/.test(aviso), aviso);
   for(let i = 0; i < 2; i++){
     await p.getByRole('button', { name: 'Próximo →' }).filter({ visible: true }).first().click();
     await p.waitForTimeout(900);
@@ -168,13 +169,17 @@ await dona.inserir('agendamento_servicos', { agendamentoId: ag.id, servicoId: co
   await p.evaluate(() => salvarCadastroSalao()); await p.waitForTimeout(1500);
   igual('e salvar o Meu negócio não religa a comanda',
     (await um(`select cfg->>'usaComanda' as v from public.saloes where id=$1`, [SALAO])).v, 'false');
-  // + Profissional no limite: o aviso, antes da ficha.
+  // + Profissional no limite: o aviso, antes da ficha. O teste grátis cabe 2:
+  // a segunda pessoa entra pelo banco, e o limite chega na terceira.
+  await banco.query(`insert into public.profissionais (salao_id, nome) values ($1, 'Segunda pessoa')`, [SALAO]);
+  await p.reload(); await p.waitForTimeout(3500);
+  await p.evaluate(() => { const w = document.getElementById('primeiroDia'); if(w) w.hidden = true; });
   await p.evaluate(() => irPara('equipe')); await p.waitForTimeout(900);
   await p.getByRole('button', { name: '+ Profissional' }).click(); await p.waitForTimeout(700);
   const m = await p.evaluate(() => ({ titulo: (document.getElementById('modalTitulo') || {}).textContent,
     corpo: (document.getElementById('modalCorpo') || {}).innerText || '', ficha: !!document.getElementById('qNome') }));
   verdade('"+ Profissional" no limite avisa antes, sem abrir a ficha',
-    m.titulo === 'Mais gente na equipe' && !m.ficha && /Dupla/.test(m.corpo), JSON.stringify(m));
+    m.titulo === 'Mais gente na equipe' && !m.ficha && /Time/.test(m.corpo), JSON.stringify(m));
   await p.evaluate(() => fecharModal());
   await fechar();
 }
@@ -213,14 +218,16 @@ secao('3b) A tela do Plano: o que inclui, quanto resta, e a saída a 90%');
     && /✓\s*Procedimentos com passo a passo/.test(t)
     && /✓\s*Lembretes da equipe sobre cada cliente/.test(t), t.slice(0, 900));
   verdade('as mensagens dizem quantas restam no mês', /Restam\s*\d+\s*mensagens neste mês/.test(t), t.slice(0, 600));
-  verdade('a equipe cheia no plano de 1 não assusta: diz em que plano cabe mais gente',
-    !/chegou ao limite/.test(t) && /plano maior/.test(t) && /Dupla/.test(t), t.slice(0, 700));
+  verdade('a equipe cheia (2 de 2 no teste) não assusta: diz em que plano cabe mais gente',
+    !/chegou ao limite/.test(t) && /plano maior/.test(t) && /Time/.test(t), t.slice(0, 700));
   const a90 = await p.evaluate(() => avisoDeMensagens({ usado: 91, teto: 100, tetoSalao: null }));
   verdade('a 90% das mensagens, o aviso oferece comprar mais (pelo WhatsApp do suporte)',
     /91%/.test(a90) && /Comprar mais mensagens/.test(a90) && /wa\.me\/5511963659620/.test(a90), a90.slice(0, 400));
   const a80 = await p.evaluate(() => avisoDeMensagens({ usado: 85, teto: 100, tetoSalao: null }));
   verdade('a 85% ainda não oferece compra', !/Comprar mais mensagens/.test(a80), a80.slice(0, 300));
   await fechar();
+  // A segunda pessoa sai: o resto do arquivo (o link) é de uma profissional só.
+  await banco.query(`delete from public.profissionais where salao_id = $1 and nome = 'Segunda pessoa'`, [SALAO]);
 }
 
 secao('4) ?comanda=1 religa só naquela aba');

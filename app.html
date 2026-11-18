@@ -2198,7 +2198,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.7fd50e';
+const VERSAO_APP = 'v9.c04901';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -17017,9 +17017,12 @@ function pintarPlano(){
         ${fora.length > 1 ? 'não recebem' : 'não recebe'} agendamento novo
         enquanto o plano cobrir ${limite}. Desative outra pessoa para abrir a
         vaga, ou ${COMO_CRESCER}.</div>` : ''}
-      ${cheio && !fora.length && !mesCheio ? (limite <= 1
+      ${cheio && !fora.length && !mesCheio ? (limite <= 1 || (p && p.codigo === 'trial')
         // Plano de 1 profissional com a dona na agenda não é "limite
-        // estourado": é o tamanho do plano. Diz onde cabe mais gente.
+        // estourado": é o tamanho do plano. Diz onde cabe mais gente. O
+        // teste grátis (2 profissionais, 61_teste_30_dias) também: quem está
+        // experimentando e encheu a equipe precisa saber onde cabe mais, e
+        // não levar um aviso amarelo de quem estourou o que paga.
         ? `<div class="aviso info" style="margin-top:13px;margin-bottom:0">${textoDoLimiteDeEquipe()}</div>`
         : `<div class="aviso atencao" style="margin-top:13px;margin-bottom:0">
         <b>Você chegou ao limite do plano.</b><br>
@@ -20920,7 +20923,7 @@ function pdAvisoDoPlano(){
   return `<div class="aviso info" id="pdAvisoGratis" style="margin-bottom:14px">
       <b>Este salão está no plano Grátis</b>, que é para conhecer o sistema:
       ${escapar(partes.join(', '))} — sem produtos, pacotes nem mensagens no WhatsApp.<br>
-      O teste grátis de 7 dias, com tudo liberado, é <b>um por pessoa</b>: se este WhatsApp
+      O teste grátis de 30 dias, com tudo liberado, é <b>um por pessoa</b>: se este WhatsApp
       ou e-mail já usou o teste, o salão novo começa no Grátis. Para liberar tudo, escolha
       um plano em <b>Plano</b>, no menu.
       ${OFERTA_DE_PLANO ? `<div class="pd-faixa" style="margin-top:8px"><button type="button" class="btn btn-peq"

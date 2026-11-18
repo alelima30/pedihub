@@ -279,8 +279,21 @@ await porCores({});
       bemVindo:'bemVindo', convite:'convite', agendar:'letraAgendar' },
     Object.fromEntries(DE_BAIXO_NA_PREVIA.map(k => [k, k])));
   for(const [k, sel] of Object.entries(TOQUES)){
-    await p.evaluate(() => { document.querySelectorAll('.ap-alvo').forEach(e => e.classList.remove('ap-alvo')); window.scrollTo(0, 0); });
-    await p.locator(`#previaFone [data-cfg="${k}"]`).first().click({ force: true });
+    /* ⚠ A ROLAGEM DO TOQUE ANTERIOR AINDA PODE ESTAR ANDANDO. `irParaConfig`
+       rola com `behavior:'smooth'`; o `scrollTo(0, 0)` logo em seguida e o
+       clique por coordenada saíam com a página ainda em movimento, e o
+       clique caía fora do elemento — "aceso:false" de vez em quando, sem
+       defeito na tela. Agora: espera a página PARAR em 0, traz o pedaço da
+       prévia para a vista (o celular desenhado rola por dentro) e só então
+       toca. */
+    await p.evaluate(() => { document.querySelectorAll('.ap-alvo').forEach(e => e.classList.remove('ap-alvo'));
+      window.scrollTo({ top: 0, behavior: 'instant' }); });
+    await p.waitForFunction(() => new Promise(ok => { const y = scrollY;
+      requestAnimationFrame(() => requestAnimationFrame(() => ok(scrollY === 0 && y === 0))); }), null, { timeout: 5000 }).catch(() => {});
+    const alvo = p.locator(`#previaFone [data-cfg="${k}"]`).first();
+    await alvo.scrollIntoViewIfNeeded().catch(() => {});
+    await p.waitForTimeout(120);
+    await alvo.click({ force: true });
     // Até a linha acender e a rolagem chegar nela (no CI, 800 ms fixos não bastavam).
     await p.waitForFunction(c => { const l = document.querySelector(`.ap-controles .cor-linha[data-chave="${c}"]`);
       const b = l && l.getBoundingClientRect();

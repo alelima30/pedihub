@@ -1299,6 +1299,17 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or has_table_privilege('authenticated', 'public.link_visitas', 'select')
               then 'cole a parte 2 de novo (60_dashboard)' else '' end
   union all
+  /* O teste grátis de 30 dias, com 2 profissionais (61). */
+  select 79, 'Teste grátis: 30 dias e 2 profissionais',
+         case when coalesce((select max_profissionais from public.planos where codigo = 'trial'), 0) < 2
+                or not exists (select 1 from pg_proc where proname = 'criar_salao'
+                                 and prosrc like '%v_dias   int := 30;%')
+              then 'FALTA' else 'certo' end,
+         case when coalesce((select max_profissionais from public.planos where codigo = 'trial'), 0) < 2
+                or not exists (select 1 from pg_proc where proname = 'criar_salao'
+                                 and prosrc like '%v_dias   int := 30;%')
+              then 'cole a parte 2 de novo (61_teste_30_dias)' else '' end
+  union all
   /* A loja pelo link e os pacotes no Relatórios (55). */
   select 70, 'Relatórios: loja pelo link e pacotes',
          case when to_regprocedure('public.relatorio_vendas(uuid,date,date)') is null

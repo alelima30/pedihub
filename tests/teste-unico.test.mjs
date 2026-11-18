@@ -59,15 +59,15 @@ async function cadastrar({ nome, email, salao, zap }){
 
 console.log('\nA primeira vez');
 const a = await cadastrar({ nome: 'Rita Moraes', email: EMAIL, salao: 'Studio Rita ' + marca, zap: ZAP });
-verdade('o quadro diz Teste grátis, 7 dias, até quando — e sem cobrança',
-  /Teste grátis/.test(a.quadro) && /7 dias/.test(a.quadro) && /\d{2}\/\d{2}\/\d{4}/.test(a.quadro) && /sem cobrança/i.test(a.quadro),
+verdade('o quadro diz Teste grátis, 30 dias, até quando — e sem cobrança',
+  /Teste grátis/.test(a.quadro) && /30 dias/.test(a.quadro) && /\d{2}\/\d{2}\/\d{4}/.test(a.quadro) && /sem cobrança/i.test(a.quadro),
   a.quadro);
 /* No dia do SALÃO, como o criar_salao() grava (03_onboarding). Com o dia do
    servidor (UTC), o teste reprovava das 21h à meia-noite de Brasília: o
    banco dizia 28/10 — certo para quem está no Brasil — e o teste esperava 29. */
-const esperado = new Date(Date.now() + 7 * 864e5)
+const esperado = new Date(Date.now() + 30 * 864e5)
   .toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-verdade('com a data que o banco gravou (hoje + 7)', a.quadro.includes(esperado), a.quadro);
+verdade('com a data que o banco gravou (hoje + 30)', a.quadro.includes(esperado), a.quadro);
 verdade('sem erro de JavaScript', a.p.erros.length === 0, a.p.erros.join(' | '));
 await a.ctx.close();
 
@@ -76,7 +76,7 @@ const b = await cadastrar({ nome: 'Rita M', email: 'outra-' + marca + '@exemplo.
 verdade('o quadro diz que é o plano Grátis', /plano Grátis/.test(b.quadro), b.quadro);
 verdade('e por quê: o teste é um por pessoa, e este WhatsApp ou e-mail já o usou',
   /um por pessoa/.test(b.quadro) && /já o usou/.test(b.quadro), b.quadro);
-verdade('sem prometer "7 dias com tudo liberado" nem data de teste',
+verdade('sem prometer "30 dias com tudo liberado" nem data de teste',
   !/tudo liberado/.test(b.quadro) && !/\d{2}\/\d{2}\/\d{4}/.test(b.quadro), b.quadro);
 verdade('e aponta por onde seguir (Meu plano)', /Meu plano/.test(b.quadro), b.quadro);
 verdade('sem erro de JavaScript', b.p.erros.length === 0, b.p.erros.join(' | '));

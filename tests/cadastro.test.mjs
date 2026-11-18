@@ -170,13 +170,13 @@ console.log('\nO funil inteiro');
   igual('chega no passo 3', await passoAtual(p), 3);
   verdade('e entrega o link pronto',
     (await p.textContent('#linkFinal')).includes('salao=studio-prado'));
-  verdade('dizendo o que acontece depois dos 7 dias',
+  verdade('dizendo o que acontece depois dos 30 dias',
     (await p.textContent('#textoPronto')).toLowerCase().includes('plano grátis'));
   /* "Quando termino o cadastro não aparece que plano estou, não diz que tenho
      direito a 7 dias grátis" — agora é um quadro, com a data. */
   const quadro = await p.textContent('#quadroTeste').catch(() => '');
-  verdade('e um quadro diz o plano (Teste grátis), os 7 dias e até quando',
-    /Teste grátis/.test(quadro) && /7 dias/.test(quadro) && /\d{2}\/\d{2}\/\d{4}/.test(quadro) && /sem cobrança/i.test(quadro),
+  verdade('e um quadro diz o plano (Teste grátis), os 30 dias, as 2 profissionais e até quando',
+    /Teste grátis/.test(quadro) && /30 dias/.test(quadro) && /2 profissionais/.test(quadro) && /\d{2}\/\d{2}\/\d{4}/.test(quadro) && /sem cobrança/i.test(quadro),
     quadro);
 
   verdade('e, na demonstração, o rodapé avisa que nada vai para servidor',
