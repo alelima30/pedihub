@@ -1310,6 +1310,24 @@ with conferencia(ordem, item, veredito, detalhe) as (
                                  and prosrc like '%v_dias   int := 30;%')
               then 'cole a parte 2 de novo (61_teste_30_dias)' else '' end
   union all
+  /* A ficha do serviço para a cliente (62): a coluna, o gatilho que limpa,
+     e a entrega ao link aberta, com as peças de dentro fechadas. */
+  select 80, 'Ficha do serviço (Como funciona) no link',
+         case when not exists (select 1 from information_schema.columns
+                                where table_schema = 'public' and table_name = 'servicos' and column_name = 'ficha')
+                or to_regprocedure('public.fichas_dos_servicos(text)') is null
+                or not has_function_privilege('anon', 'public.fichas_dos_servicos(text)', 'execute')
+                or has_function_privilege('anon', 'public.ficha_limpa(jsonb)', 'execute')
+                or not exists (select 1 from pg_trigger where tgname = 'tg_servico_ficha')
+              then 'FALTA' else 'certo' end,
+         case when not exists (select 1 from information_schema.columns
+                                where table_schema = 'public' and table_name = 'servicos' and column_name = 'ficha')
+                or to_regprocedure('public.fichas_dos_servicos(text)') is null
+                or not has_function_privilege('anon', 'public.fichas_dos_servicos(text)', 'execute')
+                or has_function_privilege('anon', 'public.ficha_limpa(jsonb)', 'execute')
+                or not exists (select 1 from pg_trigger where tgname = 'tg_servico_ficha')
+              then 'cole a parte 2 de novo (62_ficha_servico)' else '' end
+  union all
   /* A loja pelo link e os pacotes no Relatórios (55). */
   select 70, 'Relatórios: loja pelo link e pacotes',
          case when to_regprocedure('public.relatorio_vendas(uuid,date,date)') is null

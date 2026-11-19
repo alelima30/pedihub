@@ -10697,6 +10697,96 @@ revoke all on function public.criar_salao(text,text,text,text,text,text,text) fr
 grant execute on function public.criar_salao(text,text,text,text,text,text,text)
   to authenticated;
 
+alter table public.servicos add column if not exists ficha jsonb;
+do $$ begin
+  alter table public.servicos add constraint servicos_ficha_formato
+    check (ficha is null or (jsonb_typeof(ficha) = 'object'
+                             and octet_length(ficha::text) <= 16000));
+exception when duplicate_object then null; end $$;
+create or replace function public.ficha_texto(p jsonb, p_max int)
+returns text language sql immutable set search_path = public as $$
+  select nullif(left(btrim(p #>> '{}'), p_max), '')
+   where p is not null and jsonb_typeof(p) = 'string'
+$$;
+create or replace function public.ficha_limpa(p jsonb)
+returns jsonb language plpgsql immutable set search_path = public as $$
+declare
+  r jsonb := '{}'::jsonb;
+  v text;
+  lista jsonb;
+  item jsonb;
+  k text;
+  maximo int;
+begin
+  if p is null or jsonb_typeof(p) <> 'object' then return null; end if;
+  foreach k in array array['explicacao','naoInclui','dura','manutencao',
+                           'cuidadosAntes','cuidadosDepois'] loop
+    maximo := case k when 'explicacao' then 1200
+                     when 'dura' then 40 when 'manutencao' then 40
+                     else 500 end;
+    v := public.ficha_texto(p -> k, maximo);
+    if v is not null then r := r || jsonb_build_object(k, v); end if;
+  end loop;
+  lista := '[]'::jsonb;
+  if jsonb_typeof(p -> 'inclui') = 'array' then
+    for item in select x from jsonb_array_elements(p -> 'inclui') x loop
+      v := public.ficha_texto(item, 120);
+      if v is not null and jsonb_array_length(lista) < 15 then
+        lista := lista || to_jsonb(v);
+      end if;
+    end loop;
+  end if;
+  if jsonb_array_length(lista) > 0 then r := r || jsonb_build_object('inclui', lista); end if;
+  lista := '[]'::jsonb;
+  if jsonb_typeof(p -> 'duvidas') = 'array' then
+    for item in select x from jsonb_array_elements(p -> 'duvidas') x loop
+      if jsonb_typeof(item) = 'object'
+         and public.ficha_texto(item -> 'p', 150) is not null
+         and public.ficha_texto(item -> 'r', 600) is not null
+         and jsonb_array_length(lista) < 8 then
+        lista := lista || jsonb_build_object('p', public.ficha_texto(item -> 'p', 150),
+                                             'r', public.ficha_texto(item -> 'r', 600));
+      end if;
+    end loop;
+  end if;
+  if jsonb_array_length(lista) > 0 then r := r || jsonb_build_object('duvidas', lista); end if;
+  v := public.ficha_texto(p -> 'compararCom', 40);
+  if v ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    r := r || jsonb_build_object('compararCom', lower(v));
+  end if;
+  if r = '{}'::jsonb then return null; end if;
+  return r;
+end $$;
+create or replace function public.tg_servico_ficha()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.ficha := public.ficha_limpa(new.ficha);
+  if new.ficha ? 'compararCom' and (
+       (new.ficha->>'compararCom')::uuid = new.id
+       or not exists (select 1 from public.servicos s
+                       where s.id = (new.ficha->>'compararCom')::uuid
+                         and s.salao_id = new.salao_id)) then
+    new.ficha := nullif(new.ficha - 'compararCom', '{}'::jsonb);
+  end if;
+  return new;
+end $$;
+drop trigger if exists tg_servico_ficha on public.servicos;
+create trigger tg_servico_ficha before insert or update of ficha on public.servicos
+  for each row execute function public.tg_servico_ficha();
+create or replace function public.fichas_dos_servicos(p_slug text)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_object_agg(v.id, v.ficha), '{}'::jsonb)
+    from public.servicos v
+    join public.saloes s on s.id = v.salao_id
+   where s.slug = p_slug and s.status = 'ativo'
+     and v.ativo and v.aceita_online and v.ficha is not null
+$$;
+revoke all on function public.ficha_texto(jsonb, int) from public, anon, authenticated;
+revoke all on function public.ficha_limpa(jsonb) from public, anon, authenticated;
+revoke all on function public.tg_servico_ficha() from public, anon, authenticated;
+revoke all on function public.fichas_dos_servicos(text) from public;
+grant execute on function public.fichas_dos_servicos(text) to anon, authenticated;
+
 alter table public.agendamentos
   add column if not exists gerenciar_token uuid not null default gen_random_uuid();
 alter table public.lista_espera

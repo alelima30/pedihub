@@ -989,6 +989,18 @@ const Nuvem = {
     return v && v.salao ? v : null;
   },
 
+  /* ── A FICHA DE CADA SERVIÇO (62_ficha_servico.sql) ─────────────────────
+     O que é, o que está incluso, as dúvidas: o texto que o dono escreveu para
+     a cliente ler. Vem à parte da vitrine, num objeto { id do serviço: ficha },
+     e só dos serviços que o link já mostra. Banco que ainda não recebeu o 62
+     responde erro — e a página segue sem fichas, como era antes. */
+  async fichasDosServicos(slug){
+    const r = await rest('rpc/fichas_dos_servicos', {
+      method: 'POST', body: JSON.stringify({ p_slug: slug }) });
+    const v = Array.isArray(r) ? r[0] : r;
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  },
+
   /* ── O FUSO DO SALÃO, AGORA (58_fuso.sql) ───────────────────────────────
      Uma coluna de uma linha. O painel pergunta a cada sincronização porque
      ele ESCREVE os horários com o fuso que tem na memória ('14:00 America/

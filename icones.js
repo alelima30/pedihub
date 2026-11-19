@@ -69,6 +69,7 @@ const D = {
   presente:   '<rect x="3" y="9" width="18" height="11.5" rx="2"/><path d="M3 13.5h18M12 9v11.5"/><path d="M12 9S10.5 3.5 8 4.5 9.5 9 12 9Zm0 0s1.5-5.5 4-4.5S14.5 9 12 9Z"/>',
   info:       '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.2"/>',
   alerta:     '<path d="M12 4.5 3 19.5h18Z"/><path d="M12 10v4M12 17.2v.2"/>',
+  duvida:     '<circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.2 1-1.2 1.9v.4M12 16.8v.2"/>',
   /* Pix: um losango de quatro pontas, o desenho genérico de "transferência
      instantânea" — sem imitar a marca registrada. Dinheiro: a cédula. */
   pix:        '<path d="M12 3.5l3.2 3.2-3.2 3.2-3.2-3.2zM12 14.1l3.2 3.2-3.2 3.2-3.2-3.2zM3.5 12l3.2-3.2 3.2 3.2-3.2 3.2zM14.1 12l3.2-3.2 3.2 3.2-3.2 3.2z"/>',

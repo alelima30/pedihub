@@ -2198,7 +2198,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.c04901';
+const VERSAO_APP = 'v9.4f5470';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -9058,6 +9058,8 @@ function abrirServico(sid){
         passo. Quem atende vê ao abrir o horário; a cliente não vê.</span>
       ${procedimentosDoServico(s)}</div>
 
+    ${campoDaFicha(s)}
+
     <label class="serv-op" style="border:1px solid var(--borda);border-radius:9px">
       <input type="checkbox" id="sAtivo" ${!s || s.ativo ? 'checked' : ''}>
       <span class="i"><span class="n">Ativo</span>
@@ -9508,6 +9510,260 @@ function guardarParesDoServico(servicoId){
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   A FICHA DO SERVIÇO PARA A CLIENTE (62_ficha_servico.sql)
+
+   "Nos serviços cada serviço tem um lugar de explicação, o que está incluso."
+   O "Como fazer" logo acima é da EQUIPE; isto aqui é o contrário: é o que a
+   cliente lê no link antes de marcar. Tudo opcional — serviço sem ficha
+   continua aparecendo como sempre.
+
+   ⚠ OS MODELOS SÃO PONTO DE PARTIDA, NÃO PROMESSA. Trazem explicação geral,
+   sem preço e sem garantia; tempos aparecem como "em média". O dono confere e
+   ajusta ao jeito dele antes de salvar — a tela diz isso ao lado do botão.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const MODELOS_FICHA = [
+  { nome:'Alongamento em gel', grupo:'Unhas', palavras:['gel','alongamento'], ficha:{
+    explicacao:'Gel moldado sobre a unha (ou sobre um molde) e secado na cabine de LED. Deixa a unha alongada, firme e com brilho, no formato que você escolher.',
+    inclui:['Remoção do esmalte anterior','Cutilagem e preparo da unha','Alongamento no formato escolhido','Esmaltação em gel'],
+    naoInclui:'Decoração e pedrarias, cobradas à parte.',
+    dura:'3 a 4 semanas', manutencao:'a cada 21 dias, em média',
+    cuidadosAntes:'Se puder, venha sem esmalte.',
+    cuidadosDepois:'Use luvas para lavar louça e produtos de limpeza, e evite usar as unhas como ferramenta.',
+    duvidas:[{p:'Estraga a unha natural?', r:'Feito e retirado do jeito certo, não. Por isso a retirada é sempre feita no salão.'},
+             {p:'Posso tirar em casa?', r:'Não é indicado: arrancar o gel leva junto camadas da unha natural.'}] } },
+  { nome:'Fibra de vidro', grupo:'Unhas', palavras:['fibra'], ficha:{
+    explicacao:'Fios de fibra de vidro aplicados sobre a unha e cobertos com gel. É a técnica que deixa a unha alongada com aparência mais fina e natural.',
+    inclui:['Remoção do esmalte anterior','Cutilagem e preparo da unha','Alongamento em fibra','Esmaltação em gel'],
+    naoInclui:'Decoração e pedrarias, cobradas à parte.',
+    dura:'3 a 4 semanas', manutencao:'a cada 21 dias, em média',
+    cuidadosDepois:'Use luvas para lavar louça e evite usar as unhas como ferramenta.',
+    duvidas:[{p:'Qual a diferença para o gel?', r:'A fibra costuma ficar mais fina e natural; o gel, um pouco mais firme. Na avaliação a profissional indica a melhor para a sua unha.'}] } },
+  { nome:'Acrílico', grupo:'Unhas', palavras:['acrilico','acrílico'], ficha:{
+    explicacao:'Mistura de pó e líquido acrílico modelada sobre a unha. É a opção mais resistente, indicada para quem usa muito as mãos.',
+    inclui:['Remoção do esmalte anterior','Cutilagem e preparo da unha','Alongamento em acrílico','Esmaltação'],
+    naoInclui:'Decoração e pedrarias, cobradas à parte.',
+    dura:'3 a 4 semanas', manutencao:'a cada 15 a 21 dias',
+    cuidadosDepois:'Evite usar as unhas como ferramenta e procure o salão se alguma descolar.' } },
+  { nome:'Banho de gel', grupo:'Unhas', palavras:['banho'], ficha:{
+    explicacao:'Camada de gel aplicada sobre a sua unha natural, sem alongar. Deixa a unha mais forte e o esmalte dura bem mais.',
+    inclui:['Cutilagem e preparo da unha','Camada de gel sobre a unha natural','Esmaltação em gel'],
+    dura:'2 a 3 semanas', manutencao:'a cada 15 a 21 dias',
+    duvidas:[{p:'Banho de gel alonga a unha?', r:'Não. Ele protege e fortalece a unha no tamanho que ela já tem. Para alongar, o serviço é o alongamento.'}] } },
+  { nome:'Blindagem', grupo:'Unhas', palavras:['blindagem'], ficha:{
+    explicacao:'Camada protetora aplicada sobre a unha natural para fortalecer e ajudar no crescimento de unhas fracas ou que descascam.',
+    inclui:['Cutilagem e preparo da unha','Aplicação da blindagem','Esmaltação'],
+    dura:'2 a 3 semanas', manutencao:'a cada 15 a 21 dias' } },
+  { nome:'Manicure', grupo:'Unhas', palavras:['manicure','mao','mão','maos','mãos'], ficha:{
+    explicacao:'Cuidado completo das unhas das mãos: lixamento, cutilagem e esmaltação.',
+    inclui:['Remoção do esmalte anterior','Lixamento e formato','Cutilagem','Esmaltação'],
+    dura:'7 a 10 dias, em média' } },
+  { nome:'Pedicure', grupo:'Unhas', palavras:['pedicure','pe','pé','pes','pés'], ficha:{
+    explicacao:'Cuidado completo das unhas dos pés: lixamento, cutilagem e esmaltação.',
+    inclui:['Remoção do esmalte anterior','Lixamento e formato','Cutilagem','Esmaltação'],
+    dura:'2 a 3 semanas, em média' } },
+  { nome:'Design de sobrancelha', grupo:'Sobrancelha', palavras:['sobrancelha','design'], ficha:{
+    explicacao:'Desenho da sobrancelha de acordo com o formato do seu rosto, com retirada dos fios fora do desenho.',
+    inclui:['Avaliação do formato do rosto','Desenho da sobrancelha','Retirada dos fios'],
+    manutencao:'a cada 15 a 20 dias',
+    cuidadosDepois:'Evite maquiagem e sol direto na região nas primeiras horas.' } },
+  { nome:'Henna na sobrancelha', grupo:'Sobrancelha', palavras:['henna'], ficha:{
+    explicacao:'Pigmento natural aplicado nos fios e na pele para preencher falhas e deixar a sobrancelha mais marcada.',
+    inclui:['Design da sobrancelha','Aplicação da henna'],
+    dura:'na pele, 5 a 7 dias; nos fios, até 3 semanas',
+    cuidadosDepois:'Evite molhar, esfoliar e passar maquiagem na região nas primeiras 24 horas.' } },
+  { nome:'Cílios fio a fio', grupo:'Cílios', palavras:['cilios','cílios','extensao','extensão','fio a fio'], ficha:{
+    explicacao:'Um fio sintético colado em cada cílio natural. Alonga e dá volume com efeito natural, sem precisar de rímel.',
+    inclui:['Avaliação e escolha do efeito','Aplicação fio a fio'],
+    dura:'3 a 4 semanas', manutencao:'a cada 15 a 21 dias',
+    cuidadosAntes:'Venha sem maquiagem nos olhos.',
+    cuidadosDepois:'Não molhe nas primeiras 24 horas e evite demaquilante oleoso.' } },
+  { nome:'Volume russo', grupo:'Cílios', palavras:['volume','russo'], ficha:{
+    explicacao:'Vários fios bem finos em leque aplicados em cada cílio natural. O resultado é mais cheio e marcante que o fio a fio.',
+    inclui:['Avaliação e escolha do efeito','Aplicação em volume'],
+    dura:'3 a 4 semanas', manutencao:'a cada 15 a 21 dias',
+    cuidadosAntes:'Venha sem maquiagem nos olhos.',
+    cuidadosDepois:'Não molhe nas primeiras 24 horas e evite demaquilante oleoso.' } },
+  { nome:'Progressiva', grupo:'Cabelo', palavras:['progressiva','alisamento'], ficha:{
+    explicacao:'Tratamento que reduz o volume e o frizz e deixa o cabelo liso ou mais alinhado.',
+    inclui:['Avaliação dos fios','Lavagem','Aplicação do produto','Escova e prancha'],
+    dura:'3 a 4 meses, em média',
+    cuidadosDepois:'Siga as orientações do salão sobre quando lavar e use shampoo sem sal.',
+    duvidas:[{p:'Posso fazer se tenho química no cabelo?', r:'Depende da química. A profissional avalia os fios antes de começar.'}] } },
+  { nome:'Botox capilar', grupo:'Cabelo', palavras:['botox'], ficha:{
+    explicacao:'Tratamento de reposição que ajuda a reduzir o frizz e devolve brilho e maciez aos fios.',
+    inclui:['Avaliação dos fios','Lavagem','Aplicação do tratamento','Escova'],
+    dura:'cerca de 1 mês' } },
+  { nome:'Hidratação', grupo:'Cabelo', palavras:['hidratacao','hidratação','tratamento'], ficha:{
+    explicacao:'Tratamento que repõe a água dos fios, deixando o cabelo mais macio e com brilho.',
+    inclui:['Lavagem','Aplicação da máscara de tratamento','Finalização'] } },
+  { nome:'Coloração', grupo:'Cabelo', palavras:['coloracao','coloração','tintura','luzes','mechas'], ficha:{
+    explicacao:'Mudança ou retoque da cor dos fios, com a cor escolhida junto com a profissional.',
+    inclui:['Avaliação dos fios e da cor desejada','Aplicação da cor','Lavagem e finalização'],
+    cuidadosDepois:'Use shampoo para cabelos coloridos e evite piscina nos primeiros dias.',
+    duvidas:[{p:'Precisa de teste de mecha?', r:'Para mudanças grandes de cor, a profissional pode pedir um teste antes.'}] } },
+  { nome:'Corte masculino', grupo:'Barbearia', palavras:['corte','degrade','degradê','masculino'], ficha:{
+    explicacao:'Corte de acordo com o estilo que você quer, na máquina e na tesoura.',
+    inclui:['Conversa sobre o estilo','Corte','Acabamento na navalha','Finalização'],
+    manutencao:'a cada 15 a 30 dias' } },
+  { nome:'Barba', grupo:'Barbearia', palavras:['barba'], ficha:{
+    explicacao:'Desenho e acabamento da barba com toalha quente e navalha.',
+    inclui:['Toalha quente','Desenho da barba','Acabamento na navalha','Hidratação'] } },
+  { nome:'Limpeza de pele', grupo:'Estética', palavras:['limpeza','pele'], ficha:{
+    explicacao:'Limpeza profunda que remove cravos e impurezas e deixa a pele mais uniforme.',
+    inclui:['Higienização','Esfoliação','Extração de cravos','Máscara calmante','Protetor solar'],
+    manutencao:'a cada 30 dias, em média',
+    cuidadosDepois:'Evite sol e maquiagem no mesmo dia e use protetor solar.' } },
+  { nome:'Depilação com cera', grupo:'Depilação', palavras:['depilacao','depilação','cera'], ficha:{
+    explicacao:'Remoção dos pelos pela raiz com cera.',
+    inclui:['Higienização da região','Aplicação da cera','Loção calmante'],
+    dura:'3 a 4 semanas',
+    cuidadosAntes:'Os pelos precisam ter pelo menos meio centímetro.',
+    cuidadosDepois:'Evite sol, piscina e roupas apertadas na região no mesmo dia.' } },
+];
+
+/* Os modelos que combinam com o nome do serviço vêm primeiro. */
+function modelosParaServico(nome){
+  const n = ' ' + semAcentoPainel(nome) + ' ';
+  const casa = m => m.palavras.some(p => n.includes(' ' + semAcentoPainel(p)));
+  return [...MODELOS_FICHA.filter(casa), ...MODELOS_FICHA.filter(m => !casa(m))]
+    .map(m => ({ m, combina: casa(m) }));
+}
+function semAcentoPainel(t){
+  return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+const fichaTxt = (v, max) => typeof v === 'string' ? v.trim().slice(0, max) : '';
+
+function campoDaFicha(s){
+  const f = (s && s.ficha && typeof s.ficha === 'object') ? s.ficha : {};
+  const outros = (bd.servicos || []).filter(x => x.salaoId === salaoAtual && (!s || x.id !== s.id));
+  const duvidas = Array.isArray(f.duvidas) && f.duvidas.length ? f.duvidas : [];
+  const sugeridos = modelosParaServico(s ? s.nome : '');
+  return `
+    <details class="ficha-cx" id="fichaCx" ${s && s.ficha ? 'open' : ''}>
+      <summary><span class="ficha-cx-tit">Explicação para a cliente</span>
+        <span class="opcional">· aparece no link</span></summary>
+      <p class="ficha-cx-sub">O que é, o que está incluso e as dúvidas comuns. A cliente vê
+        tocando no serviço, e no botão <b>Como funciona</b> do link. Tudo opcional.</p>
+
+      <div class="campo"><label for="fModelo">Começar de um modelo pronto</label>
+        <select id="fModelo" onchange="usarModeloDeFicha(this.value)">
+          <option value="">Escolher um modelo…</option>
+          ${sugeridos.map(({ m, combina }) => `<option value="${escapar(m.nome)}">${
+            escapar(m.nome)}${combina ? ' · combina com este serviço' : ''}</option>`).join('')}
+        </select>
+        <span class="ficha-cx-dica">Os modelos são um ponto de partida: confira e ajuste ao seu
+          jeito de trabalhar antes de salvar.</span></div>
+
+      <div class="campo"><label for="fExp">O que é</label>
+        <textarea id="fExp" rows="3" maxlength="1200"
+          placeholder="Ex.: Gel moldado sobre a unha e secado na cabine de LED. Deixa a unha alongada, firme e com brilho.">${
+          escapar(fichaTxt(f.explicacao, 1200))}</textarea></div>
+
+      <div class="campo"><label for="fInc">O que está incluso
+          <span class="opcional">· um por linha</span></label>
+        <textarea id="fInc" rows="4"
+          placeholder="Remoção do esmalte anterior&#10;Cutilagem&#10;Esmaltação em gel">${
+          escapar((Array.isArray(f.inclui) ? f.inclui : []).join('\n'))}</textarea></div>
+
+      <div class="campo"><label for="fNao">Não está incluso</label>
+        <input id="fNao" maxlength="500" value="${escapar(fichaTxt(f.naoInclui, 500))}"
+          placeholder="Ex.: Decoração e pedrarias, cobradas à parte"></div>
+
+      <div class="dupla">
+        <div class="campo"><label for="fDura">Quanto dura</label>
+          <input id="fDura" maxlength="40" value="${escapar(fichaTxt(f.dura, 40))}"
+            placeholder="3 a 4 semanas"></div>
+        <div class="campo"><label for="fMan">Manutenção</label>
+          <input id="fMan" maxlength="40" value="${escapar(fichaTxt(f.manutencao, 40))}"
+            placeholder="a cada 21 dias"></div>
+      </div>
+
+      <div class="campo"><label for="fAntes">Cuidados antes</label>
+        <input id="fAntes" maxlength="500" value="${escapar(fichaTxt(f.cuidadosAntes, 500))}"
+          placeholder="Ex.: Venha sem esmalte"></div>
+      <div class="campo"><label for="fDepois">Cuidados depois</label>
+        <input id="fDepois" maxlength="500" value="${escapar(fichaTxt(f.cuidadosDepois, 500))}"
+          placeholder="Ex.: Use luvas para lavar louça"></div>
+
+      <div class="campo"><label>Dúvidas comuns</label>
+        <div id="fDuvidas">${duvidas.map(linhaDeDuvida).join('')}</div>
+        <button type="button" class="btn btn-peq" onclick="maisUmaDuvida()">+ Adicionar dúvida</button></div>
+
+      ${outros.length ? `<div class="campo"><label for="fComparar">Comparar com outro serviço</label>
+        <select id="fComparar">
+          <option value="">Não comparar</option>
+          ${outros.map(x => `<option value="${escapar(x.id)}"${f.compararCom === x.id ? ' selected' : ''}>${
+            escapar(x.nome)}</option>`).join('')}
+        </select>
+        <span class="ficha-cx-dica">Ex.: gel com fibra. A cliente vê uma tabela lado a lado
+          com o tempo, quanto dura e o que cada um inclui.</span></div>` : ''}
+    </details>`;
+}
+
+function linhaDeDuvida(d){
+  d = d || {};
+  return `<div class="ficha-duv-linha">
+      <input class="fDuvP" maxlength="150" placeholder="Pergunta. Ex.: Estraga a unha?"
+             value="${escapar(fichaTxt(d.p, 150))}">
+      <textarea class="fDuvR" rows="2" maxlength="600" placeholder="Resposta">${
+        escapar(fichaTxt(d.r, 600))}</textarea>
+      <button type="button" class="btn btn-peq" onclick="this.parentNode.remove()">Remover</button>
+    </div>`;
+}
+function maisUmaDuvida(d){
+  const cx = document.getElementById('fDuvidas');
+  if(!cx || cx.children.length >= 8) return;
+  cx.insertAdjacentHTML('beforeend', linhaDeDuvida(d));
+}
+
+function usarModeloDeFicha(nome){
+  const m = MODELOS_FICHA.find(x => x.nome === nome);
+  const sel = document.getElementById('fModelo');
+  if(!m) return;
+  const ja = ['fExp','fInc','fNao','fDura','fMan','fAntes','fDepois']
+    .some(i => (document.getElementById(i).value || '').trim());
+  if(ja && !confirm('Trocar o que já está escrito pelo modelo "' + m.nome + '"?')){
+    if(sel) sel.value = ''; return;
+  }
+  const f = m.ficha;
+  document.getElementById('fExp').value = f.explicacao || '';
+  document.getElementById('fInc').value = (f.inclui || []).join('\n');
+  document.getElementById('fNao').value = f.naoInclui || '';
+  document.getElementById('fDura').value = f.dura || '';
+  document.getElementById('fMan').value = f.manutencao || '';
+  document.getElementById('fAntes').value = f.cuidadosAntes || '';
+  document.getElementById('fDepois').value = f.cuidadosDepois || '';
+  document.getElementById('fDuvidas').innerHTML = '';
+  (f.duvidas || []).forEach(maisUmaDuvida);
+  if(sel) sel.value = '';
+}
+
+/* O que vai para o banco. Nulo quando não há nada — o banco faria o mesmo
+   (ficha_limpa), mas assim o modo local fica igual à nuvem. */
+function fichaDoFormulario(){
+  const v = i => (document.getElementById(i) || {}).value || '';
+  const f = {};
+  const put = (k, val, max) => { const t = String(val).trim().slice(0, max); if(t) f[k] = t; };
+  put('explicacao', v('fExp'), 1200);
+  put('naoInclui', v('fNao'), 500);
+  put('dura', v('fDura'), 40);
+  put('manutencao', v('fMan'), 40);
+  put('cuidadosAntes', v('fAntes'), 500);
+  put('cuidadosDepois', v('fDepois'), 500);
+  const inc = v('fInc').split('\n').map(x => x.trim().slice(0, 120)).filter(Boolean).slice(0, 15);
+  if(inc.length) f.inclui = inc;
+  const duv = [...document.querySelectorAll('#fDuvidas .ficha-duv-linha')].map(l => ({
+    p: (l.querySelector('.fDuvP').value || '').trim().slice(0, 150),
+    r: (l.querySelector('.fDuvR').value || '').trim().slice(0, 600),
+  })).filter(d => d.p && d.r).slice(0, 8);
+  if(duv.length) f.duvidas = duv;
+  const cmp = v('fComparar');
+  if(cmp && Object.keys(f).length) f.compararCom = cmp;
+  return Object.keys(f).length ? f : null;
+}
+
 async function salvarServico(sid){
   const nome = (document.getElementById('sNome').value || '').trim();
   const dur = parseInt(document.getElementById('sDur').value, 10);
@@ -9570,6 +9826,10 @@ async function salvarServico(sid){
      41_ficha_equipe.sql a gravação inteira cairia por uma coluna vazia. */
   const proc = (document.getElementById('sProc').value || '').trim();
   if(proc || (sid && (acharServico(sid) || {}).procedimento)) dados.procedimento = proc || null;
+  /* A ficha da cliente (62_ficha_servico.sql), pelo mesmo motivo: só vai
+     quando há ficha, ou quando havia e foi apagada. */
+  const ficha = fichaDoFormulario();
+  if(ficha || (sid && (acharServico(sid) || {}).ficha)) dados.ficha = ficha;
   if(sid) Object.assign(acharServico(sid), dados);
   else bd.servicos.push({id:alvoId, salaoId:salaoAtual, ...dados});
 
@@ -21987,6 +22247,7 @@ const PD_RECURSO = {
   loja:      ['a loja no link', '<b>Meu negócio → Dados → Produtos à venda</b>'],
   mensagens: ['as mensagens', '<b>Meu negócio → Notificações</b>'],
   equipe:    ['o convite da equipe', '<b>Equipe → Convidar alguém</b>'],
+  ficha:     ['a explicação dos serviços', '<b>Serviços → abrir o serviço → Explicação para a cliente</b>'],
 };
 function pdRecursoDepois(chave, sim){
   if(sim) pdRecursosDepois.add(chave); else pdRecursosDepois.delete(chave);
@@ -22087,11 +22348,70 @@ function pdIrParaPagamento(){
   pdDesenhar();
 }
 
+/* ── A explicação dos serviços, no passo a passo (62_ficha_servico.sql) ────
+   "Colocar no passo a passo." Um cartão em Mais recursos: diz o que é, mostra
+   quantos serviços já têm explicação e, para os que ainda não têm, oferece os
+   modelos prontos que combinam com o nome — um toque preenche todos.
+
+   ⚠ O TOQUE É DO DONO, e o texto continua dele: o modelo é ponto de partida,
+   e o cartão diz onde conferir e ajustar cada um. Nada é preenchido sozinho.
+   Serviço que JÁ tem explicação nunca é sobrescrito. */
+function modeloQueCombina(nome){
+  const r = modelosParaServico(nome)[0];
+  return r && r.combina ? r.m : null;
+}
+function pdServicosParaModelo(){
+  return servsAtivos().filter(s => !s.ficha)
+    .map(s => [s, modeloQueCombina(s.nome)]).filter(([, m]) => m);
+}
+function pdCorpoFicha(){
+  const svs = servsAtivos();
+  if(!svs.length) return `<p class="ajuda">Cadastre um serviço primeiro. Depois a explicação
+      fica em ${PD_RECURSO.ficha[1]}.</p>`;
+  const com = svs.filter(s => s.ficha).length;
+  const pares = pdServicosParaModelo();
+  const primeiro = svs.find(s => !s.ficha) || svs[0];
+  const quais = pares.slice(0, 6).map(([s]) => '<b>' + escapar(s.nome) + '</b>').join(', ')
+    + (pares.length > 6 ? ' e mais ' + (pares.length - 6) : '');
+  return `
+    ${com ? `<p class="ajuda" id="pdFichaFeitas"><span class="pd-rec-ok">✓ ${com} de ${svs.length} ${
+        svs.length === 1 ? 'serviço' : 'serviços'} com explicação</span></p>` : ''}
+    ${pares.length ? `<p class="ajuda">Tenho modelo pronto para ${quais}.</p>
+      <div class="pd-faixa"><button type="button" class="btn btn-peq btn-p" id="pdFichaModelos"
+        onclick="pdFichasDosModelos()">Usar os modelos prontos</button></div>
+      <p class="ajuda">Os modelos são um ponto de partida: depois confira e ajuste cada um em
+        ${PD_RECURSO.ficha[1]}.</p>` : ''}
+    <div class="pd-faixa"><button type="button" class="btn btn-peq" id="pdFichaEscrever"
+      onclick="pdEscreverFicha('${escapar(primeiro.id)}')">${
+        com ? 'Escrever em outro serviço' : 'Escrever num serviço'}</button></div>`;
+}
+function pdFichasDosModelos(){
+  const pares = pdServicosParaModelo();
+  if(!pares.length) return;
+  // Uma cópia por serviço: o mesmo objeto em dois serviços seria uma ficha só.
+  for(const [s, m] of pares) s.ficha = JSON.parse(JSON.stringify(m.ficha));
+  salvar();
+  pdDesenhar();
+}
+function pdEscreverFicha(id){
+  pdAbrirJanela(() => {
+    abrirServico(id);
+    const cx = document.getElementById('fichaCx');
+    if(cx){ cx.open = true; cx.scrollIntoView({ block: 'start' }); }
+  });
+}
+
 function pdDesenharRecursos(){
   const sl = acharSalao(salaoAtual) || {};
   const cfg = sl.cfg || {};
   const plano = 'Não está no seu plano agora — veja em <b>Plano</b>.';
   const cartoes = [];
+
+  // A explicação dos serviços (62_ficha_servico.sql)
+  cartoes.push(pdCartaoRecurso('ficha', 'Explique seus serviços para a cliente',
+    'O que é, o que está incluso, quanto dura e as dúvidas comuns. A cliente vê no link, '
+    + 'em <b>Como funciona</b>, antes de marcar — e chega sabendo o que vai fazer.',
+    pdCorpoFicha()));
 
   // O pacote
   const pacotes = pacotesDoSalao().filter(p => !p.arquivadoEm).length;
