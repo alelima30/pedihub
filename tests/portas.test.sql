@@ -65,6 +65,7 @@ insert into porta_aberta values
   -- A ficha do serviço (62_ficha_servico). Devolve só o texto que o dono
   -- escreveu PARA a cliente ler, e só dos serviços que o link já mostra.
   ('fichas_dos_servicos',     'o que é cada serviço e o que está incluso, no link'),
+  ('duvidas_da_casa',         'as dúvidas frequentes que o dono escreveu, no link'),
 
   -- Caminhos por TOKEN: quem tem o link tem o direito, e o token é o segredo.
   ('cancelar_agendamento',    'link de cancelar, mandado à cliente'),

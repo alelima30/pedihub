@@ -2198,7 +2198,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.df4991';
+const VERSAO_APP = 'v9.2d4908';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -9645,7 +9645,7 @@ function campoDaFicha(s){
       <summary><span class="ficha-cx-tit">Explicação para a cliente</span>
         <span class="opcional">· aparece no link</span></summary>
       <p class="ficha-cx-sub">O que é, o que está incluso e as dúvidas comuns. A cliente vê
-        tocando no serviço, e no botão <b>Como funciona</b> do link. Tudo opcional.</p>
+        tocando no serviço, e no botão <b>Dúvidas</b> do link. Tudo opcional.</p>
 
       <div class="campo"><label for="fModelo">Começar de um modelo pronto</label>
         <select id="fModelo" onchange="usarModeloDeFicha(this.value)">
@@ -9700,6 +9700,75 @@ function campoDaFicha(s){
         <span class="ficha-cx-dica">Ex.: gel com fibra. A cliente vê uma tabela lado a lado
           com o tempo, quanto dura e o que cada um inclui.</span></div>` : ''}
     </details>`;
+}
+
+/* ── AS DÚVIDAS FREQUENTES DA CASA (63_duvidas_casa.sql) ──────────────────
+   "Um lugar para o profissional colocar as dúvidas mais frequentes, exemplo:
+   como funciona a unha em gel? Aí o profissional vai escrever tudo." Uma
+   lista de {p, r} em cfg.duvidas; o banco peneira de novo na entrega. */
+const DUVIDA_P_MAX = 150, DUVIDA_R_MAX = 2000, DUVIDAS_MAX = 20;
+function duvidasDoCfg(sl){
+  const d = ((sl && sl.cfg) || {}).duvidas;
+  return (Array.isArray(d) ? d : []).filter(x => x && typeof x === 'object').slice(0, DUVIDAS_MAX);
+}
+function linhaDuvidaCasa(d){
+  d = d || {};
+  return `<div class="duv-ed-linha">
+      <div class="duv-ed-topo">
+        <input class="dcP" maxlength="${DUVIDA_P_MAX}" aria-label="Pergunta"
+               placeholder="Título da dúvida. Ex.: Como funciona a unha em gel?"
+               value="${escapar(fichaTxt(d.p, DUVIDA_P_MAX))}">
+        <button type="button" class="btn btn-peq" aria-label="Remover esta dúvida"
+                onclick="this.closest('.duv-ed-linha').remove()">Remover</button>
+      </div>
+      <textarea class="dcR" rows="4" maxlength="${DUVIDA_R_MAX}" aria-label="Resposta"
+        placeholder="Escreva a resposta com tudo o que a cliente precisa saber">${
+        escapar(fichaTxt(d.r, DUVIDA_R_MAX))}</textarea>
+    </div>`;
+}
+function maisDuvidaCasa(pergunta){
+  const cx = document.getElementById('duvidasCasa');
+  if(!cx) return;
+  if(cx.children.length >= DUVIDAS_MAX){
+    alert('Cabem até ' + DUVIDAS_MAX + ' dúvidas.'); return;
+  }
+  cx.insertAdjacentHTML('beforeend', linhaDuvidaCasa({ p: pergunta || '' }));
+  const nova = cx.lastElementChild;
+  const campo = nova && nova.querySelector(pergunta ? '.dcR' : '.dcP');
+  if(campo) campo.focus();
+}
+/* O que vai para o cfg. `undefined` quando o editor não está na tela. */
+function duvidasDaTela(){
+  const cx = document.getElementById('duvidasCasa');
+  if(!cx) return undefined;
+  return [...cx.querySelectorAll('.duv-ed-linha')].map(l => ({
+      p: fichaTxt(l.querySelector('.dcP').value, DUVIDA_P_MAX),
+      r: fichaTxt(l.querySelector('.dcR').value, DUVIDA_R_MAX),
+    })).filter(d => d.p && d.r).slice(0, DUVIDAS_MAX);
+}
+/* Ideias de pergunta: só o TÍTULO — a resposta é sempre do dono, porque é
+   sobre a casa dele. Primeiro as dos serviços que ele tem, depois as gerais
+   do tipo de negócio. As que ele já escreveu não aparecem de novo. */
+function sugestoesDeDuvida(sl){
+  const ja = new Set(duvidasDoCfg(sl).map(d => semAcentoPainel(String(d.p || '')).trim()));
+  const dosServicos = servsAtivos().slice(0, 3).map(x => 'Como funciona ' + x.nome + '?');
+  const porTipo = {
+    barbearia: ['Precisa agendar ou atende por ordem de chegada?', 'Atendem criança?',
+                'Quanto tempo leva o corte?', 'Posso escolher o barbeiro?'],
+    manicure:  ['Qual a diferença entre gel, fibra e acrílico?', 'Quanto tempo dura a unha em gel?',
+                'Preciso tirar o esmalte antes?', 'Como é feita a manutenção?'],
+    salao:     ['Qual a diferença entre gel, fibra e acrílico?', 'Preciso ir de cabelo lavado?',
+                'Quanto tempo dura a progressiva?', 'Atendem criança?'],
+    estetica:  ['Preciso de avaliação antes?', 'Quantas sessões são necessárias?',
+                'Quais os cuidados depois do procedimento?'],
+  }[sl.tipo] || ['Como funciona o primeiro atendimento?', 'Quais os cuidados depois?'];
+  const gerais = ['Preciso chegar com antecedência?', 'Como cancelar ou remarcar?',
+                  'Quais as formas de pagamento?', 'Tem estacionamento?'];
+  const vistas = new Set();
+  return [...dosServicos, ...porTipo, ...gerais].filter(p => {
+    const k = semAcentoPainel(p).trim();
+    return !ja.has(k) && !vistas.has(k) && vistas.add(k);
+  }).slice(0, 10);
 }
 
 function linhaDeDuvida(d){
@@ -11009,6 +11078,23 @@ function pintarSalao(){
         <input id="cInsta" maxlength="60" autocapitalize="off" spellcheck="false"
                value="${escapar((sl.cfg || {}).instagram ? '@' + (sl.cfg || {}).instagram : '')}"
                placeholder="@seusalao"></div>
+
+      <!-- AS DUVIDAS FREQUENTES DA CASA (63_duvidas_casa.sql). Cada uma vira
+           uma moldura com titulo no botao Duvidas do link. Gravadas pelo mesmo
+           Salvar dados, em cfg.duvidas. (Sem crase: template literal.) -->
+      <div class="linha-fina" style="margin:18px 0"></div>
+      <h3 class="secao" id="secaoDuvidas">Dúvidas frequentes</h3>
+      <p class="secao-sub">Aparecem no botão <b>Dúvidas</b> da sua página, cada
+        uma numa moldura com o título. Escreva a pergunta e responda do seu
+        jeito, com tudo o que a cliente precisa saber. Sem resposta, a dúvida
+        não aparece.</p>
+      <div id="duvidasCasa">${duvidasDoCfg(sl).map(linhaDuvidaCasa).join('')}</div>
+      <p class="ajuda" style="margin:10px 0 0">Ideias de perguntas — toque para adicionar:</p>
+      <div class="duv-ed-sug" id="duvidasSug">${sugestoesDeDuvida(sl).map(p => `
+        <button type="button" class="ficha-chip" onclick="maisDuvidaCasa(this.textContent)"
+          >${escapar(p)}</button>`).join('')}</div>
+      <button type="button" class="btn btn-peq" id="btMaisDuvida"
+              onclick="maisDuvidaCasa('')">+ Adicionar dúvida</button>
 
       <!-- ══════════ OS DOIS MODULOS DA CASA ══════════
            A pergunta mais larga de todas, e por isso a PRIMEIRA: ela decide o
@@ -16499,6 +16585,8 @@ function salvarCadastroSalao(){
                                    sinal: sinalParaGravar() })
       : (sl.cfg || {}).pagamentos || null,
     sobre: v('cSobre').slice(0, 600) || null,
+    /* ⚠ Sem o editor na tela, fica o que já estava: `undefined` não apaga. */
+    ...(duvidasDaTela() !== undefined ? { duvidas: duvidasDaTela() } : {}),
     instagram: instagramLimpo(v('cInsta')) || null,
     tetoOnlinePct:    aparar(v('cTetoPct'),    10, 100, 70),
     tetoOnlineRajada: aparar(v('cTetoRajada'),  1, 100, 10),
@@ -22383,7 +22471,12 @@ function pdCorpoFicha(){
         ${PD_RECURSO.ficha[1]}.</p>` : ''}
     <div class="pd-faixa"><button type="button" class="btn btn-peq" id="pdFichaEscrever"
       onclick="pdEscreverFicha('${escapar(primeiro.id)}')">${
-        com ? 'Escrever em outro serviço' : 'Escrever num serviço'}</button></div>`;
+        com ? 'Escrever em outro serviço' : 'Escrever num serviço'}</button></div>
+    <p class="ajuda">E as perguntas da casa, como <i>"Como funciona a unha em gel?"</i> ou
+      <i>"Atendem criança?"</i>, você escreve em <b>Meu negócio → Dúvidas frequentes</b>.</p>
+    <div class="pd-faixa"><button type="button" class="btn btn-peq" id="pdDuvidasCasa"
+      onclick="pdIrParaDuvidas()">${duvidasDoCfg(acharSalao(salaoAtual) || {}).length
+        ? 'Ver as dúvidas frequentes' : 'Escrever as dúvidas frequentes'}</button></div>`;
 }
 function pdFichasDosModelos(){
   const pares = pdServicosParaModelo();
@@ -22392,6 +22485,16 @@ function pdFichasDosModelos(){
   for(const [s, m] of pares) s.ficha = JSON.parse(JSON.stringify(m.ficha));
   salvar();
   pdDesenhar();
+}
+/* Fecha o assistente e leva para Meu negócio → Dúvidas frequentes. */
+function pdIrParaDuvidas(){
+  pdFechar(false);
+  irPara('salao');
+  trocarAbaSalao('dados');
+  setTimeout(() => {
+    const alvo = document.getElementById('secaoDuvidas');
+    if(alvo) alvo.scrollIntoView({ block: 'start' });
+  }, 60);
 }
 function pdEscreverFicha(id){
   pdAbrirJanela(() => {
@@ -22410,7 +22513,7 @@ function pdDesenharRecursos(){
   // A explicação dos serviços (62_ficha_servico.sql)
   cartoes.push(pdCartaoRecurso('ficha', 'Explique seus serviços para a cliente',
     'O que é, o que está incluso, quanto dura e as dúvidas comuns. A cliente vê no link, '
-    + 'em <b>Como funciona</b>, antes de marcar — e chega sabendo o que vai fazer.',
+    + 'em <b>Dúvidas</b>, antes de marcar — e chega sabendo o que vai fazer.',
     pdCorpoFicha()));
 
   // O pacote

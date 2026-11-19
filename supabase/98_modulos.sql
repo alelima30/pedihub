@@ -10787,6 +10787,35 @@ revoke all on function public.tg_servico_ficha() from public, anon, authenticate
 revoke all on function public.fichas_dos_servicos(text) from public;
 grant execute on function public.fichas_dos_servicos(text) to anon, authenticated;
 
+create or replace function public.duvidas_limpas(p jsonb)
+returns jsonb language sql immutable set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object('p', x.p, 'r', x.r) order by x.n), '[]'::jsonb)
+    from (
+      select n,
+             nullif(left(btrim(e ->> 'p'), 150), '')  as p,
+             nullif(left(btrim(e ->> 'r'), 2000), '') as r
+        from jsonb_array_elements(case when jsonb_typeof(p) = 'array' then p
+                                       else '[]'::jsonb end) with ordinality as t(e, n)
+       where jsonb_typeof(e) = 'object'
+         and jsonb_typeof(e -> 'p') = 'string'
+         and jsonb_typeof(e -> 'r') = 'string'
+         and nullif(btrim(e ->> 'p'), '') is not null
+         and nullif(btrim(e ->> 'r'), '') is not null
+       order by n
+       limit 20
+    ) x
+$$;
+create or replace function public.duvidas_da_casa(p_slug text)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select jsonb_build_object('duvidas',
+    coalesce((select public.duvidas_limpas(s.cfg -> 'duvidas')
+                from public.saloes s
+               where s.slug = p_slug and s.status = 'ativo'), '[]'::jsonb))
+$$;
+revoke all on function public.duvidas_limpas(jsonb) from public, anon, authenticated;
+revoke all on function public.duvidas_da_casa(text) from public;
+grant execute on function public.duvidas_da_casa(text) to anon, authenticated;
+
 alter table public.agendamentos
   add column if not exists gerenciar_token uuid not null default gen_random_uuid();
 alter table public.lista_espera

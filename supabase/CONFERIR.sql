@@ -1328,6 +1328,20 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or not exists (select 1 from pg_trigger where tgname = 'tg_servico_ficha')
               then 'cole a parte 2 de novo (62_ficha_servico)' else '' end
   union all
+  /* As dúvidas frequentes da casa (63): a entrega ao link aberta, a peneira
+     fechada. */
+  select 81, 'Dúvidas frequentes da casa no link',
+         case when to_regprocedure('public.duvidas_da_casa(text)') is null
+                or not has_function_privilege('anon', 'public.duvidas_da_casa(text)', 'execute')
+                or to_regprocedure('public.duvidas_limpas(jsonb)') is null
+                or has_function_privilege('anon', 'public.duvidas_limpas(jsonb)', 'execute')
+              then 'FALTA' else 'certo' end,
+         case when to_regprocedure('public.duvidas_da_casa(text)') is null
+                or not has_function_privilege('anon', 'public.duvidas_da_casa(text)', 'execute')
+                or to_regprocedure('public.duvidas_limpas(jsonb)') is null
+                or has_function_privilege('anon', 'public.duvidas_limpas(jsonb)', 'execute')
+              then 'cole a parte 2 de novo (63_duvidas_casa)' else '' end
+  union all
   /* A loja pelo link e os pacotes no Relatórios (55). */
   select 70, 'Relatórios: loja pelo link e pacotes',
          case when to_regprocedure('public.relatorio_vendas(uuid,date,date)') is null

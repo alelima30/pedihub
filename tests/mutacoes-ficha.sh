@@ -14,23 +14,25 @@ export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST=${PGHOST:-/tmp} PGPORT=${PGPORT:-5444} PGUSER=${PGUSER:-postgres}
 BANCO=${PGBANCO:-app}
 
-ARQS="app.html agendar.html supabase/62_ficha_servico.sql"
+ARQS="app.html agendar.html supabase/62_ficha_servico.sql supabase/63_duvidas_casa.sql"
 for a in $ARQS; do cp "$a" "/tmp/mfi-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mfi-$(basename "$a")" "$a"; done
   psql -q -d "$BANCO" -f supabase/62_ficha_servico.sql >/dev/null 2>&1
+  psql -q -d "$BANCO" -f supabase/63_duvidas_casa.sql >/dev/null 2>&1
   bash versao.sh >/dev/null 2>&1
 }
 trap restaurar EXIT
 
 # O teste do banco roda numa transação desfeita no fim: não deixa rastro.
 SQLT=/tmp/mfi-sql.sql
-printf 'begin;\n\\i tests/00_ajuda.sql\n\\i tests/ficha_servico.test.sql\nrollback;\n' > "$SQLT"
+printf 'begin;\n\\i tests/00_ajuda.sql\n\\i tests/ficha_servico.test.sql\n\\i tests/duvidas_casa.test.sql\nrollback;\n' > "$SQLT"
 
 viva=0; morta=0; perdida=0
 rodar(){
   bash versao.sh >/dev/null 2>&1
   psql -q -d "$BANCO" -f supabase/62_ficha_servico.sql >/dev/null 2>&1
+  psql -q -d "$BANCO" -f supabase/63_duvidas_casa.sql >/dev/null 2>&1
   local falhou=0
   psql -q -v ON_ERROR_STOP=1 -d "$BANCO" -f "$SQLT" >/tmp/mfi-saida.txt 2>&1 || falhou=1
   grep -q '✗' /tmp/mfi-saida.txt && falhou=1
@@ -117,12 +119,8 @@ troca app.html \
 
 echo "10. o convite lista serviço sem ficha"
 troca agendar.html \
-  "  const svs = servicosComFicha();
-  if(!svs.length) return '';
-  const nomes = svs.slice(0, 4);" \
-  "  const svs = servicosComFicha();
-  if(!svs.length) return '';
-  const nomes = servicosDoSalao().slice(0, 4);" \
+  "  const nomes = svs.slice(0, 4);" \
+  "  const nomes = servicosDoSalao().slice(0, 4);" \
   && rodar "a cliente toca e não abre nada"
 
 echo "11. o modelo do passo a passo passa por cima do que a dona escreveu"
@@ -132,6 +130,43 @@ troca app.html \
   "  return servsAtivos()
     .map(s => [s, modeloQueCombina(s.nome)]).filter(([, m]) => m);" \
   && rodar "o texto da dona some trocado pelo modelo"
+
+echo "12. as dúvidas de salão suspenso continuam no ar"
+troca supabase/63_duvidas_casa.sql \
+  "               where s.slug = p_slug and s.status = 'ativo'), '[]'::jsonb))" \
+  "               where s.slug = p_slug), '[]'::jsonb))" \
+  && rodar "salão fora do ar continua publicando as dúvidas"
+
+echo "13. a dúvida sem resposta vai para o link"
+troca supabase/63_duvidas_casa.sql \
+  "         and nullif(btrim(e ->> 'r'), '') is not null
+" \
+  "" \
+  && rodar "moldura vazia na página da cliente"
+
+echo "14. a resposta da dona sem escapar"
+troca agendar.html \
+  "        <div class=\"duv-resposta\">\${escapar(d.r).replace(/\\n/g, '<br>')}</div>" \
+  "        <div class=\"duv-resposta\">\${d.r.replace(/\\n/g, '<br>')}</div>" \
+  && rodar "HTML da resposta roda na página da cliente"
+
+echo "15. o painel não grava as dúvidas"
+troca app.html \
+  "    ...(duvidasDaTela() !== undefined ? { duvidas: duvidasDaTela() } : {})," \
+  "" \
+  && rodar "a dona escreve e nada vai para o link"
+
+echo "16. o botão Dúvidas só com ficha de serviço"
+troca agendar.html \
+  "  if(temDuvidas()){" \
+  "  if(servicosComFicha().length){" \
+  && rodar "quem só escreveu as dúvidas da casa não vê o botão"
+
+echo "17. a cliente compara um serviço com ele mesmo"
+troca agendar.html \
+  "  if(a === b){" \
+  "  if(false){" \
+  && rodar "comparação de um serviço com ele mesmo"
 
 echo
 echo "$morta morreram, $viva sobreviveram, $perdida não rodaram"

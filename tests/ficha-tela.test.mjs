@@ -11,7 +11,10 @@
      6. o texto do dono é escapado; nada vaza da tela em 360px;
      7. sem ficha nenhuma, a página é a de sempre;
      8. no passo a passo, o cartão oferece os modelos e não passa por cima
-        do que a dona já escreveu.
+        do que a dona já escreveu;
+     9. as DÚVIDAS FREQUENTES da casa (63_duvidas_casa.sql): a dona escreve
+        em Meu negócio, cada uma vira uma moldura com título no botão
+        "Dúvidas" do link; e a cliente compara os dois serviços que quiser.
    ═══════════════════════════════════════════════════════════════════════════ */
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -130,7 +133,7 @@ await banco.query(`update public.servicos set ficha = ficha || jsonb_build_objec
 secao('3. No link, no celular');
 const c = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:360, height:780 } } });
 const rotulos = await c.$$eval('#capaInfo .recurso-rot', xs => xs.map(x => x.textContent.trim()));
-e('o botão "Como funciona" está na fileira — ' + JSON.stringify(rotulos), rotulos.includes('Como funciona'));
+e('o botão "Dúvidas" está na fileira — ' + JSON.stringify(rotulos), rotulos.includes('Dúvidas') && !rotulos.includes('Como funciona'));
 e('o convite "Primeira vez aqui?" aparece', await c.locator('.ficha-convite').isVisible());
 const chips = await c.$$eval('.ficha-chip', xs => xs.map(x => x.textContent.trim()));
 e('com os serviços que têm ficha — ' + JSON.stringify(chips),
@@ -200,10 +203,10 @@ const tab = await c.locator('.folha').innerText();
 e('a comparação mostra os dois', /Alongamento em gel ou Fibra de vidro\?/.test(tab), tab.slice(0, 200));
 e('com o que cada um inclui', /Alongamento em fibra/.test(tab) && /Alongamento no formato escolhido/.test(tab));
 await c.evaluate(() => fecharFolha(true));
-await c.locator('#capaInfo .recurso', { hasText: 'Como funciona' }).click();
+await c.locator('#capaInfo .recurso', { hasText: 'Dúvidas' }).click();
 await c.waitForTimeout(600);
 const lista = await c.locator('.folha').innerText();
-e('"Como funciona" lista os serviços com ficha', /Alongamento em gel/.test(lista) && /Fibra de vidro/.test(lista) && !/Manicure simples/.test(lista));
+e('"Dúvidas" lista os serviços com ficha', /Alongamento em gel/.test(lista) && /Fibra de vidro/.test(lista) && !/Manicure simples/.test(lista));
 e('e oferece a comparação no topo', await c.locator('.folha .ficha-item-comparar').count() === 1);
 await c.locator('.folha .ficha-item', { hasText: 'Fibra de vidro' }).last().click();
 await c.waitForTimeout(600);
@@ -225,7 +228,7 @@ await c.context().close();
 secao('7. Sem ficha nenhuma, a página é a de sempre');
 await banco.query(`update public.servicos set ficha = null where salao_id = $1`, [SALAO]);
 const c2 = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:390, height:844 } } });
-e('sem botão "Como funciona"', await c2.locator('#capaInfo .recurso', { hasText: 'Como funciona' }).count() === 0);
+e('sem botão "Dúvidas"', await c2.locator('#capaInfo .recurso', { hasText: 'Dúvidas' }).count() === 0);
 e('sem convite', await c2.locator('.ficha-convite').count() === 0);
 e('sem atalho nos cartões', await c2.locator('.sv-cartao-ficha').count() === 0);
 await c2.context().close();
@@ -264,6 +267,107 @@ e('"Escrever" abre o serviço com a explicação aberta',
   await pd.evaluate(() => !!document.getElementById('fichaCx') && document.getElementById('fichaCx').open
     && document.getElementById('primeiroDia').hidden));
 await pd.context().close();
+
+/* ═══════════════════════════════════ 9 ══ */
+secao('9. As dúvidas frequentes da casa');
+await banco.query(`update public.servicos set ficha = null where salao_id = $1`, [SALAO]);
+const ds = await abrir('/app.html', dona.sessao());
+await ds.evaluate(() => { irPara('salao'); trocarAbaSalao('dados'); });
+await ds.waitForTimeout(500);
+e('Meu negócio tem "Dúvidas frequentes"', await ds.locator('#secaoDuvidas').isVisible());
+const sugs = await ds.$$eval('#duvidasSug .ficha-chip', xs => xs.map(x => x.textContent.trim()));
+e('com ideias de perguntas — ' + sugs.slice(0, 3).join(' | '),
+  sugs.includes('Como funciona Alongamento em gel?') && sugs.includes('Qual a diferença entre gel, fibra e acrílico?'));
+await ds.locator('#duvidasSug .ficha-chip', { hasText: 'Qual a diferença entre gel, fibra e acrílico?' }).click();
+e('tocar na ideia cria a moldura com o título pronto',
+  await ds.locator('#duvidasCasa .duv-ed-linha .dcP').last().inputValue() === 'Qual a diferença entre gel, fibra e acrílico?');
+e('e o cursor já vai para a resposta', await ds.evaluate(() => document.activeElement.classList.contains('dcR')));
+await ds.locator('#duvidasCasa .dcR').last().fill('O gel é mais flexível.\nA fibra é mais resistente.');
+await ds.click('#btMaisDuvida');
+await ds.locator('#duvidasCasa .dcP').last().fill('Como funciona a unha em <b>gel</b>?');
+await ds.locator('#duvidasCasa .dcR').last().fill('<img src=x onerror="window.__invadiu=2">Primeiro preparamos a unha.');
+await ds.click('#btMaisDuvida');
+await ds.locator('#duvidasCasa .dcP').last().fill('Pergunta sem resposta');
+await ds.setViewportSize({ width: 360, height: 780 });
+await ds.waitForTimeout(300);
+e('no celular, nada sai da moldura de cada dúvida', await ds.evaluate(() => [...document.querySelectorAll('.duv-ed-linha')]
+  .every(l => { const L = l.getBoundingClientRect();
+    return [...l.querySelectorAll('input, textarea, button')].every(x => x.getBoundingClientRect().right <= L.right + 0.5); })));
+await ds.click('button:has-text("Salvar dados")');
+await ds.waitForTimeout(3500);
+const cfgD = (await um(`select cfg -> 'duvidas' d from public.saloes where id = $1`, [SALAO])).d;
+e('salvar gravou as dúvidas no banco — ' + JSON.stringify(cfgD).slice(0, 90),
+  Array.isArray(cfgD) && cfgD.length === 2 && cfgD[0].p.startsWith('Qual a diferença'));
+e('a pergunta sem resposta não foi', Array.isArray(cfgD) && !cfgD.some(d => d.p === 'Pergunta sem resposta'));
+e('o resto do Meu negócio ficou como estava',
+  (await um(`select cfg ->> 'sobre' s from public.saloes where id = $1`, [SALAO])).s === 'Studio de unhas.');
+await ds.context().close();
+
+// A entrega pública, como a cliente recebe.
+const anon = aba();
+const entregue = await anon.duvidasDaCasa(SLUG);
+e('a porta pública entrega as duas, só pergunta e resposta',
+  entregue.length === 2 && entregue.every(d => Object.keys(d).sort().join() === 'p,r'), JSON.stringify(entregue));
+// Lixo gravado direto no cfg: o banco peneira na entrega.
+await banco.query(`update public.saloes set cfg = jsonb_set(cfg, '{duvidas}', cfg->'duvidas' || $2::jsonb) where id = $1`,
+  [SALAO, JSON.stringify([{ p: 'Só pergunta' }, 7, { p: 'x'.repeat(400), r: 'longa', segredo: 'não' }])]);
+const peneirado = await anon.duvidasDaCasa(SLUG);
+e('o banco peneira: sem resposta e não-objeto ficam de fora, título com teto, chave estranha some',
+  peneirado.length === 3 && peneirado[2].p.length === 150 && !('segredo' in peneirado[2]), JSON.stringify(peneirado).slice(0, 200));
+await banco.query(`update public.saloes set status = 'suspenso' where id = $1`, [SALAO]);
+e('salão fora do ar não entrega nada', (await anon.duvidasDaCasa(SLUG)).length === 0);
+await banco.query(`update public.saloes set status = 'ativo' where id = $1`, [SALAO]);
+await banco.query(`update public.saloes set cfg = jsonb_set(cfg, '{duvidas}', (cfg->'duvidas') - 2 - 3 - 4) where id = $1`, [SALAO]);
+
+const d = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:360, height:780 } } });
+const rotD = await d.$$eval('#capaInfo .recurso-rot', xs => xs.map(x => x.textContent.trim()));
+e('só com as dúvidas da casa (nenhuma ficha), o botão "Dúvidas" aparece — ' + rotD.join(' · '),
+  rotD.join() === 'Pagamentos,Horários,Dúvidas,Informações');
+const chipsD = await d.$$eval('.ficha-convite .ficha-chip', xs => xs.map(x => x.textContent.trim()));
+e('o "Primeira vez aqui?" mostra as perguntas — ' + JSON.stringify(chipsD),
+  chipsD.length === 2 && chipsD[1] === 'Como funciona a unha em <b>gel</b>?');
+await d.locator('.ficha-convite .ficha-chip').nth(1).click();
+await d.waitForTimeout(600);
+const molduras = await d.$$eval('.folha .duv-moldura', ms => ms.map(m => ({
+  t: m.querySelector('.duv-titulo').textContent, aberta: m.open })));
+e('a folha "Dúvidas" tem uma moldura por pergunta — ' + JSON.stringify(molduras),
+  molduras.length === 2 && molduras[0].t.startsWith('Qual a diferença'));
+e('e abre já com a pergunta tocada aberta', molduras[1] && molduras[1].aberta && !molduras[0].aberta);
+const respD = await d.locator('.folha .duv-moldura').nth(1).locator('.duv-resposta').innerText();
+e('o HTML da dona aparece como texto', respD.includes('<img src=x') && molduras[1].t.includes('<b>gel</b>'));
+e('e não roda', await d.evaluate(() => window.__invadiu === undefined && !document.querySelector('.folha img, .folha b')));
+await d.locator('.folha .duv-moldura').nth(0).locator('summary').click();
+const resp0 = await d.locator('.folha .duv-moldura').nth(0).locator('.duv-resposta').innerText();
+e('tocar no título abre a resposta, com as quebras de linha', d && /flexível\.\nA fibra/.test(resp0), JSON.stringify(resp0));
+e('a folha cabe na largura', await d.evaluate(() => document.querySelector('.folha').scrollWidth <= document.querySelector('.folha').clientWidth + 1));
+e('sem ficha de serviço, não há comparar', await d.locator('.folha .duv-comparar').count() === 0);
+await d.context().close();
+
+// Com as fichas de volta: dúvidas da casa + comparar o par que a cliente quiser.
+await banco.query(`update public.servicos set ficha = '{"explicacao":"Gel","inclui":["Preparo","Gel"],"dura":"3 semanas"}' where id = $1`, [GEL]);
+await banco.query(`update public.servicos set ficha = '{"explicacao":"Fibra","inclui":["Preparo","Fibra"]}' where id = $1`, [FIBRA]);
+await banco.query(`update public.servicos set ficha = '{"explicacao":"Mão"}' where id = $1`, [MANI]);
+const d2 = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:360, height:780 } } });
+await d2.locator('#capaInfo .recurso', { hasText: 'Dúvidas' }).click();
+await d2.waitForTimeout(600);
+const txtD2 = await d2.locator('.folha').innerText();
+e('a folha junta as dúvidas da casa, o comparar e cada serviço',
+  /Qual a diferença/.test(txtD2) && /COMPARE OS SERVIÇOS/i.test(txtD2) && /COMO FUNCIONA CADA SERVIÇO/i.test(txtD2), txtD2.slice(0, 300));
+e('a primeira dúvida já vem aberta', await d2.evaluate(() => document.querySelector('.folha .duv-moldura').open));
+await d2.selectOption('#duvCompA', MANI);
+await d2.selectOption('#duvCompB', FIBRA);
+await d2.click('.duv-comparar .boas-b2');
+await d2.waitForTimeout(600);
+const tabD = await d2.locator('.folha').innerText();
+e('a cliente compara o par que escolheu', /Manicure simples ou Fibra de vidro\?/.test(tabD), tabD.slice(0, 120));
+await d2.evaluate(() => { fecharFolha(true); abrirFolha('duvidas'); });
+await d2.waitForTimeout(500);
+await d2.selectOption('#duvCompA', GEL);
+await d2.selectOption('#duvCompB', GEL);
+await d2.click('.duv-comparar .boas-b2');
+await d2.waitForTimeout(400);
+e('o mesmo serviço dos dois lados não abre comparação', await d2.locator('.folha[data-folha="duvidas"]').count() === 1);
+await d2.context().close();
 
 e('nenhum erro de JavaScript', erros.length === 0, erros.slice(0, 3).join(' | '));
 

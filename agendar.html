@@ -1449,6 +1449,13 @@ async function abrirSalaoDaNuvem(slug){
                       new Promise(r => setTimeout(() => r({}), 4000))])
       : Promise.resolve({}))
     .catch(e => { console.info('[AgendaPro] fichas dos serviços:', e.message); return {}; });
+  /* As dúvidas da casa (63_duvidas_casa.sql): mesma regra das fichas — correm
+     junto com a vitrine, e falhar ou demorar nunca segura a agenda. */
+  const duvidasChegando = (Dados.duvidasDaCasa
+      ? Promise.race([Dados.duvidasDaCasa(slug),
+                      new Promise(r => setTimeout(() => r([]), 4000))])
+      : Promise.resolve([]))
+    .catch(e => { console.info('[AgendaPro] dúvidas da casa:', e.message); return []; });
   try{
     v = await Dados.vitrine(slug);
   }catch(e){
@@ -1469,6 +1476,7 @@ async function abrirSalaoDaNuvem(slug){
   clearTimeout(acender);
   bd = bdDaVitrine(v);
   FICHAS = await fichasChegando;
+  DUVIDAS_CASA = await duvidasChegando;
   entrarNoSalao(slug);
   /* Os pacotes dela, se houver sessão guardada. Não bloqueia a abertura da
      página: chega quando chegar.
@@ -5106,11 +5114,12 @@ function desenharInfoDaCasa(){
   if(pag)  botoes.push(['pagamentos', 'cartao',  'Pagamentos']);
   if(func) botoes.push(['horarios',   'relogio', 'Horários']);
   if(extra || botoes.length) botoes.push(['informacoes', 'info', 'Informações']);
-  /* "Como funciona" (62_ficha_servico.sql): só quando o dono escreveu a ficha
-     de algum serviço. Entra antes de Informações, que fecha a fileira. */
-  if(servicosComFicha().length){
+  /* "Dúvidas" (62 e 63): as dúvidas frequentes da casa e a ficha de cada
+     serviço, num botão só. Aparece quando o dono escreveu alguma das duas.
+     Entra antes de Informações, que fecha a fileira. */
+  if(temDuvidas()){
     const i = botoes.findIndex(b => b[0] === 'informacoes');
-    botoes.splice(i < 0 ? botoes.length : i, 0, ['comofunciona', 'duvida', 'Como funciona']);
+    botoes.splice(i < 0 ? botoes.length : i, 0, ['duvidas', 'duvida', 'Dúvidas']);
   }
 
   alvo.innerHTML = !botoes.length ? '' : `
@@ -5169,7 +5178,7 @@ function abrirFolha(qual, origem){
   const miolo = qual === 'horarios'   ? folhaHorarios()
               : qual === 'pagamentos' ? folhaPagamentos()
               : qual === 'sinal'      ? folhaSinal()
-              : qual === 'comofunciona' ? folhaComoFunciona()
+              : tipo === 'duvidas' || tipo === 'comofunciona' ? folhaDuvidas(a1)
               : tipo === 'ficha'      ? folhaFicha(a1)
               : tipo === 'comparar'   ? folhaComparar(a1, a2)
               : folhaInformacoes();
@@ -5237,6 +5246,21 @@ const cabecaDaFolha = (ico, titulo, sub) => `
    ⚠ NENHUMA COR ESCRITA AQUI: as classes usam as variáveis do tema.
    ═══════════════════════════════════════════════════════════════════════════ */
 let FICHAS = {};
+/* As dúvidas frequentes da casa (63_duvidas_casa.sql): [{p, r}], o que o
+   dono escreveu em Meu salão → Dúvidas frequentes. */
+let DUVIDAS_CASA = [];
+
+/* A lista peneirada de novo aqui: no modo de demonstração ela vem do cfg do
+   salão, sem passar pelo banco. */
+function duvidasDaCasa(){
+  const cru = (Array.isArray(DUVIDAS_CASA) && DUVIDAS_CASA.length) ? DUVIDAS_CASA
+            : ((salao && salao.cfg) || {}).duvidas;
+  return (Array.isArray(cru) ? cru : [])
+    .filter(d => d && typeof d === 'object')
+    .map(d => ({ p: textoDaFicha(d.p, 150), r: textoDaFicha(d.r, 2000) }))
+    .filter(d => d.p && d.r).slice(0, 20);
+}
+const temDuvidas = () => duvidasDaCasa().length > 0 || servicosComFicha().length > 0;
 
 const textoDaFicha = (v, max) => typeof v === 'string' && v.trim()
   ? v.trim().slice(0, max) : '';
@@ -5288,17 +5312,26 @@ function atalhoDaFicha(s){
 
 function conviteComoFunciona(){
   const svs = servicosComFicha();
-  if(!svs.length) return '';
+  const duv = duvidasDaCasa();
+  if(!svs.length && !duv.length) return '';
   const nomes = svs.slice(0, 4);
+  /* Sem ficha de serviço, os atalhos são as próprias perguntas da casa: cada
+     uma abre a folha de Dúvidas já com a resposta aberta. */
+  const chips = nomes.length
+    ? nomes.map(x => `
+        <button type="button" class="ficha-chip"
+                onclick="abrirFolha('ficha:${escapar(x.id)}', this)">${escapar(x.nome)}</button>`).join('')
+    : duv.slice(0, 3).map((d, i) => `
+        <button type="button" class="ficha-chip"
+                onclick="abrirFolha('duvidas:${i}', this)">${escapar(d.p)}</button>`).join('');
   return `
     <div class="ficha-convite">
       <b>Primeira vez aqui?</b>
-      <p>Conheça nossos serviços e como funciona cada um antes de agendar.</p>
-      <div class="ficha-chips">${nomes.map(x => `
-        <button type="button" class="ficha-chip"
-                onclick="abrirFolha('ficha:${escapar(x.id)}', this)">${escapar(x.nome)}</button>`).join('')}</div>
-      <button type="button" class="ficha-ver" onclick="abrirFolha('comofunciona', this)">
-        Ver como funciona <span data-ico="direita"></span></button>
+      <p>${svs.length ? 'Conheça nossos serviços e tire suas dúvidas antes de agendar.'
+                      : 'Tire suas dúvidas antes de agendar.'}</p>
+      <div class="ficha-chips">${chips}</div>
+      <button type="button" class="ficha-ver" onclick="abrirFolha('duvidas', this)">
+        Ver as dúvidas <span data-ico="direita"></span></button>
     </div>`;
 }
 
@@ -5311,25 +5344,51 @@ function precoDaFicha(s){
     ? 'a partir de ' + real(s.precoMin) : real(s.preco);
 }
 
-function folhaComoFunciona(){
+/* A folha "Dúvidas": primeiro as perguntas da casa, cada uma na sua
+   moldura; depois o lugar de comparar dois serviços; por fim a ficha de cada
+   serviço. Cada parte só aparece se tiver o que mostrar. `aberta` é o índice
+   da pergunta que já vem aberta (o atalho do convite). */
+function folhaDuvidas(aberta){
+  const duv = duvidasDaCasa();
   const svs = servicosComFicha();
-  if(!svs.length) return '';
+  if(!duv.length && !svs.length) return '';
+  const abrir = /^\d+$/.test(String(aberta ?? '')) ? Number(aberta) : (duv.length ? 0 : -1);
   const pares = svs.map(s => [s, parParaComparar(s.id)]).filter(([, o]) => o);
   const vistos = new Set();
   const comparar = pares.filter(([a, b]) => {
     const k = [a.id, b.id].sort().join();
     return !vistos.has(k) && vistos.add(k);
   });
-  return cabecaDaFolha('duvida', 'Como funciona',
-                       'Toque em um serviço para saber tudo antes de agendar')
-    + comparar.map(([a, b]) => `
+  const partes = [cabecaDaFolha('duvida', 'Dúvidas',
+                                'Tudo o que você precisa saber antes de agendar')];
+  if(duv.length) partes.push(`<div class="duv-lista">${duv.map((d, i) => `
+      <details class="duv-moldura"${i === abrir ? ' open' : ''}>
+        <summary><span class="duv-titulo">${escapar(d.p)}</span>
+          <span class="duv-seta" data-ico="baixo" aria-hidden="true"></span></summary>
+        <div class="duv-resposta">${escapar(d.r).replace(/\n/g, '<br>')}</div>
+      </details>`).join('')}</div>`);
+  /* O lugar de comparar: os pares que o dono ligou viram atalhos, e com dois
+     ou mais serviços explicados a cliente monta o par que quiser. */
+  if(svs.length >= 2){
+    const opcoes = (sel) => svs.map((s, i) => `<option value="${escapar(s.id)}"${
+      i === sel ? ' selected' : ''}>${escapar(s.nome)}</option>`).join('');
+    partes.push(`<div class="ficha-grupo">Compare os serviços</div>
+      ${comparar.map(([a, b]) => `
       <button type="button" class="ficha-item ficha-item-comparar"
               onclick="abrirFolha('comparar:${escapar(a.id)}:${escapar(b.id)}', this)">
         <span class="ficha-item-txt"><b>${escapar(a.nome)} ou ${escapar(b.nome)}?</b>
           <small>Compare e descubra o ideal para você</small></span>
-        <span class="ficha-item-ir" data-ico="direita"></span></button>`).join('')
+        <span class="ficha-item-ir" data-ico="direita"></span></button>`).join('')}
+      <div class="duv-comparar">
+        <select id="duvCompA" aria-label="Primeiro serviço">${opcoes(0)}</select>
+        <span class="duv-x">ou</span>
+        <select id="duvCompB" aria-label="Segundo serviço">${opcoes(1)}</select>
+        <button type="button" class="boas-b2" onclick="compararEscolhidos(this)">Comparar</button>
+      </div>`);
+  }
+  if(svs.length) partes.push(`<div class="ficha-grupo">Como funciona cada serviço</div>`
     + agruparPorCategoria(svs, 'Serviços').map(({ rotulo, lista }) => `
-      <div class="ficha-grupo">${escapar(rotulo)}</div>
+      ${rotulo && rotulo !== 'Serviços' ? `<div class="duv-cat">${escapar(rotulo)}</div>` : ''}
       ${lista.map(s => {
         const f = fichaDe(s.id);
         const resumo = f.explicacao || f.inclui.join(' · ');
@@ -5339,7 +5398,21 @@ function folhaComoFunciona(){
           <span class="ficha-item-txt"><b>${escapar(s.nome)}</b>
             ${resumo ? `<small>${escapar(resumo)}</small>` : ''}</span>
           <span class="ficha-item-ir" data-ico="direita"></span></button>`;
-      }).join('')}`).join('');
+      }).join('')}`).join(''));
+  return partes.join('');
+}
+// O nome antigo continua respondendo: é a mesma folha.
+const folhaComoFunciona = () => folhaDuvidas();
+
+function compararEscolhidos(origem){
+  const a = (document.getElementById('duvCompA') || {}).value;
+  const b = (document.getElementById('duvCompB') || {}).value;
+  if(!a || !b) return;
+  if(a === b){
+    if(origem) origem.textContent = 'Escolha dois diferentes';
+    return;
+  }
+  abrirFolha('comparar:' + a + ':' + b, origem);
 }
 
 function folhaFicha(id){

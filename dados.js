@@ -1001,6 +1001,16 @@ const Nuvem = {
     return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
   },
 
+  /* As dúvidas frequentes da casa (63_duvidas_casa.sql): [{p, r}]. Vem num
+     objeto { duvidas: [...] } para não se confundir com "uma linha por
+     resultado"; aqui sai só a lista. */
+  async duvidasDaCasa(slug){
+    const r = await rest('rpc/duvidas_da_casa', {
+      method: 'POST', body: JSON.stringify({ p_slug: slug }) });
+    const v = Array.isArray(r) ? r[0] : r;
+    return v && Array.isArray(v.duvidas) ? v.duvidas : [];
+  },
+
   /* ── O FUSO DO SALÃO, AGORA (58_fuso.sql) ───────────────────────────────
      Uma coluna de uma linha. O painel pergunta a cada sincronização porque
      ele ESCREVE os horários com o fuso que tem na memória ('14:00 America/
