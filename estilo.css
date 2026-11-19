@@ -5375,11 +5375,22 @@ label.pedido-chave{ font-weight:600 }
    A FICHA DO SERVIÇO — "COMO FUNCIONA" (62_ficha_servico.sql)
    Só variáveis do tema: a ficha veste a cor de cada salão.
    ═══════════════════════════════════════════════════════════════════════════ */
-/* Com quatro atalhos, o rótulo pode quebrar em duas linhas: "Como funciona"
-   e "Informações" não cabem inteiros num quarto de celular. */
+/* Com quatro atalhos, o rótulo pode quebrar em duas linhas ("Como / funciona"),
+   mas NUNCA no meio da palavra. "Pagamento / s" e "Informaçõe / s" apareceram
+   num celular de verdade: a regra dos 370px acima deixa quebrar em qualquer
+   letra (overflow-wrap:anywhere), e num quarto de tela a palavra não cabia.
+
+   A letra se ajusta à largura do próprio botão (cqi = 1% dela): a palavra mais
+   comprida, "Informações", ocupa uns 6,6 vezes o tamanho da letra, e 14,5% da
+   largura deixa ela inteira com folga. Entre 9,5px e 13px: nunca some, nunca
+   fica maior que o rótulo dos três botões. */
 .recursos-4{ gap:8px }
-.recursos-4 .recurso{ padding:10px 4px; font-size:12px }
-.recursos-4 .recurso-rot{ white-space:normal; overflow:visible; text-overflow:clip; text-align:center }
+.recursos-4 .recurso{ padding:10px 3px; font-size:12px; container-type:inline-size }
+.recursos-4 .recurso-rot{
+  white-space:normal; overflow:visible; text-overflow:clip; text-align:center;
+  overflow-wrap:normal; word-break:keep-all; hyphens:manual;
+  font-size:11px; font-size:clamp(9.5px, 14.5cqi, 13px); line-height:1.15;
+}
 
 .sv-cartao-ficha{
   display:inline-block; margin-top:6px; font-size:12.5px; font-weight:600;

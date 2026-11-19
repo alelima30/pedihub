@@ -143,6 +143,36 @@ e('o da manicure (sem ficha) não tem', atalhos.some(([n, t]) => n.startsWith('M
 const largura = await c.evaluate(() => document.documentElement.scrollWidth);
 e('nada vaza da tela em 360px — ' + largura, largura <= 360);
 
+/* ═══════════════════════════════════ 3b ══ */
+secao('3b. Quatro atalhos: nenhuma palavra cortada ao meio');
+/* "Pagamento / s" e "Informaçõe / s" num celular de verdade. Com horário,
+   pagamento, apresentação e a ficha, a fileira tem os quatro botões. */
+await banco.query(`update public.saloes set cfg = coalesce(cfg, '{}'::jsonb) || $2::jsonb where id = $1`, [SALAO,
+  JSON.stringify({ funcionamento: { '1': [['09:00','18:00']], '2': [['09:00','18:00']] },
+                   pagamentos: { formas: ['pix', 'credito'] }, sobre: 'Studio de unhas.' })]);
+const palavrasInteiras = () => [...document.querySelectorAll('#capaInfo .recurso-rot')].map(el => {
+  const t = el.firstChild, txt = t.textContent, cortadas = [];
+  let i = 0;
+  for(const w of txt.split(/\s+/).filter(Boolean)){
+    const ini = txt.indexOf(w, i); i = ini + w.length;
+    const r = document.createRange(); r.setStart(t, ini); r.setEnd(t, ini + w.length);
+    const linhas = new Set([...r.getClientRects()].filter(x => x.width > 0).map(x => Math.round(x.top)));
+    if(linhas.size > 1) cortadas.push(w);
+  }
+  const botao = el.closest('.recurso');
+  return { rot: txt, cortadas, vaza: el.scrollWidth > botao.clientWidth + 1 };
+});
+for(const [larg, tipo] of [[320, 'salao'], [360, 'salao'], [390, 'salao'], [360, 'barbearia']]){
+  await banco.query(`update public.saloes set tipo = $2 where id = $1`, [SALAO, tipo]);
+  const q = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width: larg, height: 780 } } });
+  const r = await q.evaluate(palavrasInteiras);
+  e(`${larg}px (${tipo}): os quatro atalhos — ${r.map(x => x.rot).join(' · ')}`, r.length === 4, JSON.stringify(r));
+  e(`${larg}px (${tipo}): nenhuma palavra quebrada no meio`, r.every(x => !x.cortadas.length), JSON.stringify(r.filter(x => x.cortadas.length)));
+  e(`${larg}px (${tipo}): nenhum rótulo sai do botão`, r.every(x => !x.vaza), JSON.stringify(r.filter(x => x.vaza)));
+  await q.context().close();
+}
+await banco.query(`update public.saloes set tipo = 'salao' where id = $1`, [SALAO]);
+
 /* ═══════════════════════════════════ 4 ══ */
 secao('4. A ficha abre por cima');
 await c.locator('#capaServicos .sv-cartao', { hasText: 'Alongamento em gel' }).locator('.sv-cartao-ficha').click();
