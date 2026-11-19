@@ -14,7 +14,7 @@ export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST=${PGHOST:-/tmp} PGPORT=${PGPORT:-5444} PGUSER=${PGUSER:-postgres}
 BANCO=${PGBANCO:-app}
 
-ARQS="app.html agendar.html supabase/62_ficha_servico.sql supabase/63_duvidas_casa.sql"
+ARQS="app.html agendar.html estilo.css supabase/62_ficha_servico.sql supabase/63_duvidas_casa.sql"
 for a in $ARQS; do cp "$a" "/tmp/mfi-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mfi-$(basename "$a")" "$a"; done
@@ -167,6 +167,30 @@ troca agendar.html \
   "  if(a === b){" \
   "  if(false){" \
   && rodar "comparação de um serviço com ele mesmo"
+
+echo "18. o passo a passo salva a dúvida sem resposta"
+troca app.html \
+  "  if(!p || !r){" \
+  "  if(!p){" \
+  && rodar "moldura sem resposta pelo passo a passo"
+
+echo "19. o passo a passo ignora o título que a dona editou"
+troca app.html \
+  "  sl.cfg = Object.assign({}, sl.cfg, { duvidas: [...lista, { p, r }] });" \
+  "  sl.cfg = Object.assign({}, sl.cfg, { duvidas: [...lista, { p: 'Atendem criança?', r }] });" \
+  && rodar "a pergunta editada volta a ser a ideia pronta"
+
+echo "20. a seta do atalho cai sozinha na linha de baixo"
+troca agendar.html \
+  "'Como funciona'}&nbsp;→</span>\`;" \
+  "'Como funciona'} →</span>\`;" \
+  && rodar "a seta sozinha em cima do botão redondo"
+
+echo "21. o atalho passa por baixo do botão redondo"
+troca estilo.css \
+  '[data-moldura="elegante"] .sv-cartao-ficha{ display:block; margin-right:32px }' \
+  '' \
+  && rodar "o texto do atalho some atrás do botão"
 
 echo
 echo "$morta morreram, $viva sobreviveram, $perdida não rodaram"

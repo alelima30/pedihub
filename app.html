@@ -2198,7 +2198,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.2d4908';
+const VERSAO_APP = 'v9.70a035';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -9761,6 +9761,14 @@ function sugestoesDeDuvida(sl){
                 'Quanto tempo dura a progressiva?', 'Atendem criança?'],
     estetica:  ['Preciso de avaliação antes?', 'Quantas sessões são necessárias?',
                 'Quais os cuidados depois do procedimento?'],
+    clinica:   ['Precisa de avaliação antes?', 'Atendem por convênio?', 'Dói?',
+                'Quanto tempo dura a consulta?', 'Quais os cuidados depois?'],
+    tatuagem:  ['Dói?', 'Como faço o orçamento?', 'Quanto tempo leva para cicatrizar?',
+                'Quais os cuidados depois?', 'Preciso ser maior de idade?'],
+    pet:       ['Precisa estar com a vacina em dia?', 'Vocês buscam e levam o pet?',
+                'Quanto tempo leva o banho e tosa?', 'Atendem gatos?', 'Posso ficar esperando?'],
+    restaurante: ['Fazem entrega? Qual a taxa?', 'Quanto tempo demora a entrega?',
+                  'Posso retirar no local?', 'Aceitam encomenda?'],
   }[sl.tipo] || ['Como funciona o primeiro atendimento?', 'Quais os cuidados depois?'];
   const gerais = ['Preciso chegar com antecedência?', 'Como cancelar ou remarcar?',
                   'Quais as formas de pagamento?', 'Tem estacionamento?'];
@@ -22336,6 +22344,7 @@ const PD_RECURSO = {
   mensagens: ['as mensagens', '<b>Meu negócio → Notificações</b>'],
   equipe:    ['o convite da equipe', '<b>Equipe → Convidar alguém</b>'],
   ficha:     ['a explicação dos serviços', '<b>Serviços → abrir o serviço → Explicação para a cliente</b>'],
+  duvidas:   ['as dúvidas frequentes', '<b>Meu negócio → Dúvidas frequentes</b>'],
 };
 function pdRecursoDepois(chave, sim){
   if(sim) pdRecursosDepois.add(chave); else pdRecursosDepois.delete(chave);
@@ -22471,12 +22480,7 @@ function pdCorpoFicha(){
         ${PD_RECURSO.ficha[1]}.</p>` : ''}
     <div class="pd-faixa"><button type="button" class="btn btn-peq" id="pdFichaEscrever"
       onclick="pdEscreverFicha('${escapar(primeiro.id)}')">${
-        com ? 'Escrever em outro serviço' : 'Escrever num serviço'}</button></div>
-    <p class="ajuda">E as perguntas da casa, como <i>"Como funciona a unha em gel?"</i> ou
-      <i>"Atendem criança?"</i>, você escreve em <b>Meu negócio → Dúvidas frequentes</b>.</p>
-    <div class="pd-faixa"><button type="button" class="btn btn-peq" id="pdDuvidasCasa"
-      onclick="pdIrParaDuvidas()">${duvidasDoCfg(acharSalao(salaoAtual) || {}).length
-        ? 'Ver as dúvidas frequentes' : 'Escrever as dúvidas frequentes'}</button></div>`;
+        com ? 'Escrever em outro serviço' : 'Escrever num serviço'}</button></div>`;
 }
 function pdFichasDosModelos(){
   const pares = pdServicosParaModelo();
@@ -22485,6 +22489,59 @@ function pdFichasDosModelos(){
   for(const [s, m] of pares) s.ficha = JSON.parse(JSON.stringify(m.ficha));
   salvar();
   pdDesenhar();
+}
+/* ── As dúvidas frequentes, no passo a passo (63_duvidas_casa.sql) ────────
+   As ideias são só o TÍTULO, e o título é editável: a resposta é sempre do
+   dono. Uma dúvida por vez, gravada no mesmo cfg.duvidas de Meu negócio. */
+function pdCorpoDuvidas(){
+  const sl = acharSalao(salaoAtual) || {};
+  const ja = duvidasDoCfg(sl);
+  const ideias = sugestoesDeDuvida(sl).slice(0, 8);
+  return `
+    ${ja.length ? `<p class="ajuda" id="pdDuvFeitas"><span class="pd-rec-ok">✓ ${ja.length} ${
+        ja.length === 1 ? 'dúvida' : 'dúvidas'} no seu link</span></p>` : ''}
+    <div id="pdDuvEd"></div>
+    ${ideias.length ? `<p class="ajuda" style="margin-bottom:0">Ideias de perguntas — toque para escrever a resposta:</p>
+      <div class="duv-ed-sug" id="pdDuvIdeias">${ideias.map(p => `
+        <button type="button" class="ficha-chip" onclick="pdDuvidaIdeia(this.textContent)"
+          >${escapar(p)}</button>`).join('')}</div>` : ''}
+    <div class="pd-faixa">
+      <button type="button" class="btn btn-peq" id="pdDuvOutra" onclick="pdDuvidaIdeia('')">Escrever outra pergunta</button>
+      ${ja.length ? `<button type="button" class="btn btn-peq" id="pdDuvidasCasa"
+        onclick="pdIrParaDuvidas()">Ver e editar todas</button>` : ''}
+    </div>`;
+}
+function pdDuvidaIdeia(pergunta){
+  const ed = document.getElementById('pdDuvEd');
+  if(!ed) return;
+  ed.innerHTML = linhaDuvidaCasa({ p: pergunta || '' }).replace(
+    /<button type="button" class="btn btn-peq" aria-label="Remover esta dúvida"[\s\S]*?<\/button>/, '')
+    + `<div class="pd-faixa">
+        <button type="button" class="btn btn-peq btn-p" id="pdDuvSalvar" onclick="pdSalvarDuvida()">Salvar esta dúvida</button>
+        <button type="button" class="btn btn-peq" onclick="document.getElementById('pdDuvEd').innerHTML = ''">Cancelar</button>
+      </div>
+      <p class="ajuda" id="pdDuvAviso" role="status"></p>`;
+  const campo = ed.querySelector(pergunta ? '.dcR' : '.dcP');
+  if(campo) campo.focus();
+}
+function pdSalvarDuvida(){
+  const sl = acharSalao(salaoAtual);
+  const ed = document.getElementById('pdDuvEd');
+  if(!sl || !ed) return;
+  const p = fichaTxt(ed.querySelector('.dcP').value, DUVIDA_P_MAX);
+  const r = fichaTxt(ed.querySelector('.dcR').value, DUVIDA_R_MAX);
+  const aviso = document.getElementById('pdDuvAviso');
+  if(!p || !r){
+    if(aviso) aviso.textContent = !p ? 'Escreva a pergunta.' : 'Escreva a resposta — sem ela, a dúvida não aparece no link.';
+    return;
+  }
+  const lista = duvidasDoCfg(sl);
+  if(lista.length >= DUVIDAS_MAX){
+    if(aviso) aviso.textContent = 'Cabem até ' + DUVIDAS_MAX + ' dúvidas.';
+    return;
+  }
+  sl.cfg = Object.assign({}, sl.cfg, { duvidas: [...lista, { p, r }] });
+  pdGravar();
 }
 /* Fecha o assistente e leva para Meu negócio → Dúvidas frequentes. */
 function pdIrParaDuvidas(){
@@ -22515,6 +22572,12 @@ function pdDesenharRecursos(){
     'O que é, o que está incluso, quanto dura e as dúvidas comuns. A cliente vê no link, '
     + 'em <b>Dúvidas</b>, antes de marcar — e chega sabendo o que vai fazer.',
     pdCorpoFicha()));
+
+  // As dúvidas frequentes da casa (63_duvidas_casa.sql)
+  cartoes.push(pdCartaoRecurso('duvidas', 'Responda as dúvidas mais comuns',
+    'Toque numa pergunta, ajuste o título se quiser e escreva a resposta do seu jeito. '
+    + 'Cada uma vira uma moldura no botão <b>Dúvidas</b> do seu link.',
+    pdCorpoDuvidas()));
 
   // O pacote
   const pacotes = pacotesDoSalao().filter(p => !p.arquivadoEm).length;

@@ -5307,7 +5307,7 @@ function atalhoDaFicha(s){
   return `<span class="sv-cartao-ficha" role="link" tabindex="0"
       onclick="event.stopPropagation(); abrirFolha('ficha:${escapar(s.id)}', this)"
       onkeydown="if(event.key === 'Enter'){ event.stopPropagation(); event.preventDefault(); abrirFolha('ficha:${escapar(s.id)}', this) }"
-    >${f.inclui.length ? 'Ver o que está incluso' : 'Como funciona'} →</span>`;
+    >${f.inclui.length ? 'Ver o que está incluso' : 'Como funciona'}&nbsp;→</span>`;
 }
 
 function conviteComoFunciona(){

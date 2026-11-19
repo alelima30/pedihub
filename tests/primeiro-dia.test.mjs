@@ -1062,7 +1062,7 @@ await p.waitForTimeout(250);
 const rec = await p.evaluate(() => ({ titulo: document.getElementById('pdTitulo').textContent,
   cartoes: [...document.querySelectorAll('#pdCorpo .pd-rec')].map(c => c.dataset.rec) }));
 e('o passo 10 é "Mais recursos", com um cartão para cada: explicação dos serviços, pacote, sinal, loja, mensagens e equipe',
-  rec.titulo === 'Mais recursos' && JSON.stringify(rec.cartoes) === JSON.stringify(['ficha', 'pacote', 'sinal', 'loja', 'mensagens', 'equipe']),
+  rec.titulo === 'Mais recursos' && JSON.stringify(rec.cartoes) === JSON.stringify(['ficha', 'duvidas', 'pacote', 'sinal', 'loja', 'mensagens', 'equipe']),
   JSON.stringify(rec));
 
 // Depois: o cartão recolhe dizendo onde fica, e o "Pronto" lembra.

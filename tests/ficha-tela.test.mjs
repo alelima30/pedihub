@@ -176,6 +176,34 @@ for(const [larg, tipo] of [[320, 'salao'], [360, 'salao'], [390, 'salao'], [360,
 }
 await banco.query(`update public.saloes set tipo = 'salao' where id = $1`, [SALAO]);
 
+/* "Ver o que está incluso" com a seta caída na linha de baixo, em cima do
+   botão redondo do cartão "elegante" (print da Barbearia Lima). */
+secao('3c. O atalho do cartão: a seta nunca sozinha, nada por baixo do botão redondo');
+await banco.query(`update public.saloes set cfg = cfg || '{"moldura":"elegante"}'::jsonb where id = $1`, [SALAO]);
+const atalhoNoCartao = () => [...document.querySelectorAll('#capaServicos .sv-cartao')].map(c => {
+  const a = c.querySelector('.sv-cartao-ficha'), ir = c.querySelector('.sv-cartao-ir');
+  if(!a) return null;
+  const t = a.firstChild, txt = t.textContent;
+  const r = document.createRange();
+  const linhaDe = i => { r.setStart(t, i); r.setEnd(t, i + 1);
+    const q = [...r.getClientRects()].filter(x => x.width > 0)[0]; return q ? Math.round(q.top) : null; };
+  const seta = txt.lastIndexOf('→');
+  const antes = txt.slice(0, seta).replace(/\s+$/, '').length - 1;
+  const B = ir ? ir.getBoundingClientRect() : null;
+  const cobre = !!B && [...a.getClientRects()].some(q => q.right > B.left + 0.5 && q.left < B.right - 0.5
+                                                     && q.bottom > B.top + 0.5 && q.top < B.bottom - 0.5);
+  return { txt, sozinha: linhaDe(seta) !== linhaDe(antes), cobre, temBotao: !!ir };
+}).filter(Boolean);
+for(const larg of [320, 360, 390]){
+  const q = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width: larg, height: 780 } } });
+  const r = await q.evaluate(atalhoNoCartao);
+  e(`${larg}px (elegante): os cartões com explicação têm o atalho e o botão redondo`, r.length >= 2 && r.every(x => x.temBotao), JSON.stringify(r));
+  e(`${larg}px (elegante): a seta nunca cai sozinha na linha de baixo`, r.every(x => !x.sozinha), JSON.stringify(r));
+  e(`${larg}px (elegante): o atalho não passa por baixo do botão redondo`, r.every(x => !x.cobre), JSON.stringify(r));
+  await q.context().close();
+}
+await banco.query(`update public.saloes set cfg = cfg - 'moldura' where id = $1`, [SALAO]);
+
 /* ═══════════════════════════════════ 4 ══ */
 secao('4. A ficha abre por cima');
 await c.locator('#capaServicos .sv-cartao', { hasText: 'Alongamento em gel' }).locator('.sv-cartao-ficha').click();
@@ -266,7 +294,39 @@ await pd.waitForTimeout(600);
 e('"Escrever" abre o serviço com a explicação aberta',
   await pd.evaluate(() => !!document.getElementById('fichaCx') && document.getElementById('fichaCx').open
     && document.getElementById('primeiroDia').hidden));
+// As dúvidas da casa, no próprio passo a passo.
+await pd.evaluate(() => abrirPrimeiroDia(PD_PASSOS.findIndex(x => x.desenhar === pdDesenharRecursos) + 1));
+await pd.waitForTimeout(600);
+e('"Mais recursos" tem o cartão das dúvidas, logo depois da explicação',
+  await pd.evaluate(() => [...document.querySelectorAll('#pdCorpo .pd-rec')].map(c => c.dataset.rec).slice(0, 2).join() === 'ficha,duvidas'));
+const ideiasPd = await pd.$$eval('#pdDuvIdeias .ficha-chip', xs => xs.map(x => x.textContent.trim()));
+e('com ideias de perguntas — ' + ideiasPd.slice(0, 3).join(' | '), ideiasPd.includes('Qual a diferença entre gel, fibra e acrílico?'));
+await pd.locator('#pdDuvIdeias .ficha-chip', { hasText: 'Atendem criança?' }).click();
+e('tocar na ideia abre a pergunta numa caixa que dá para editar',
+  await pd.inputValue('#pdDuvEd .dcP') === 'Atendem criança?' && await pd.evaluate(() => document.activeElement.classList.contains('dcR')));
+await pd.click('#pdDuvSalvar');
+e('sem resposta não salva, e explica', /resposta/.test(await pd.locator('#pdDuvAviso').innerText()));
+await pd.fill('#pdDuvEd .dcP', 'Atendem criança de colo?');
+await pd.fill('#pdDuvEd .dcR', 'Sim, a partir de 2 anos.');
+await pd.click('#pdDuvSalvar');
+await pd.waitForTimeout(3500);
+const duvPd = (await um(`select cfg -> 'duvidas' d from public.saloes where id = $1`, [SALAO])).d;
+e('salvou com o título que a dona editou — ' + JSON.stringify(duvPd),
+  Array.isArray(duvPd) && duvPd.some(d => d.p === 'Atendem criança de colo?' && d.r === 'Sim, a partir de 2 anos.'));
+e('o cartão conta a dúvida', /1 dúvida no seu link/.test(await pd.locator('#pdCorpo .pd-rec[data-rec="duvidas"]').innerText()));
+await pd.click('#pdDuvidasCasa');
+await pd.waitForTimeout(700);
+e('"Ver e editar todas" leva para Meu negócio, com a dúvida editável',
+  await pd.evaluate(() => document.getElementById('primeiroDia').hidden
+    && [...document.querySelectorAll('#duvidasCasa .dcP')].some(i => i.value === 'Atendem criança de colo?')));
+// As ideias seguem o tipo de negócio.
+const porTipo = await pd.evaluate(() => Object.fromEntries(['clinica', 'tatuagem', 'pet', 'barbearia']
+  .map(t => [t, sugestoesDeDuvida({ tipo: t, cfg: {} })])));
+e('clínica, tatuagem, pet e barbearia têm ideias próprias',
+  porTipo.clinica.includes('Atendem por convênio?') && porTipo.tatuagem.includes('Quanto tempo leva para cicatrizar?')
+  && porTipo.pet.includes('Precisa estar com a vacina em dia?') && porTipo.barbearia.includes('Posso escolher o barbeiro?'), JSON.stringify(porTipo).slice(0, 300));
 await pd.context().close();
+await banco.query(`update public.saloes set cfg = cfg - 'duvidas' where id = $1`, [SALAO]);
 
 /* ═══════════════════════════════════ 9 ══ */
 secao('9. As dúvidas frequentes da casa');

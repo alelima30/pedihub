@@ -5397,6 +5397,10 @@ label.pedido-chave{ font-weight:600 }
   color:var(--ac-600); cursor:pointer; text-decoration:none;
 }
 .sv-cartao-ficha:hover, .sv-cartao-ficha:focus-visible{ text-decoration:underline }
+/* No cartão "elegante" o botão redondo flutua no canto de baixo: o atalho
+   ganha a mesma folga da linha da duração, para nunca passar por baixo dele.
+   E a seta vem presa à última palavra (&nbsp;), para nunca cair sozinha. */
+[data-moldura="elegante"] .sv-cartao-ficha{ display:block; margin-right:32px }
 
 .ficha-convite{
   margin:12px 0 0; padding:16px; border-radius:18px;
