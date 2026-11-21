@@ -2037,7 +2037,8 @@ const minhasTelas = () => {
                         // PediHub: sem agenda, serviços e pacotes de restaurante.
                         && !TELAS_DE_SALAO.includes(t[0]));
 };
-const TELAS_DE_SALAO = ['agenda', 'servicos', 'procedimentos', 'pacotes', 'pedidosloja'];
+// Cupons e Ranking saem até valerem para o pedido (hoje só contam a agenda e a loja de salão).
+const TELAS_DE_SALAO = ['agenda', 'servicos', 'procedimentos', 'pacotes', 'pedidosloja', 'cupons', 'ranking'];
 
 /* O nome da aba. No restaurante os produtos SÃO o cardápio — mesma tela,
    mesmo cadastro, outro nome. */
@@ -5755,7 +5756,7 @@ function pintarAniversarios(){
   resumo.innerHTML = `<p class="secao-sub" style="margin:0 0 12px">
     <b>${lista.length} ${lista.length === 1 ? 'aniversariante' : 'aniversariantes'}</b> ${titulo}.
     ${semData ? `${semData} ${semData === 1 ? 'ficha está' : 'fichas estão'} sem data de nascimento —
-      o link de agendamento pede, e dá para preencher na ficha, em Clientes.` : ''}</p>`;
+      dá para preencher na ficha, em Clientes.` : ''}</p>`;
 
   alvo.innerHTML = lista.length
     ? lista.map(linhaNiverTela).join('')
@@ -6833,14 +6834,9 @@ function desenharRelatorio(r){
      que o sistema perdeu o mês dele — quando quase sempre é comanda que
      ficou aberta, que é justamente o que ele precisa saber para consertar. */
   if(!at && !n(ag.marcados)){
-    alvo.innerHTML = comanda
-      ? `<div class="vazio"><b>Nenhuma comanda fechada neste período</b>
-      Só comanda FECHADA vira faturamento — é a data do fechamento que diz de
-      que mês é o dinheiro. Se você atendeu e recebeu mas não fechou a comanda,
-      ela ainda está aberta no Caixa, esperando.</div>`
-      : `<div class="vazio"><b>Nenhum atendimento concluído neste período</b>
-      O atendimento entra no faturamento quando você o marca como Concluído na
-      agenda.</div>`;
+    alvo.innerHTML = `<div class="vazio"><b>Nenhuma venda neste período</b>
+      O pedido entra no faturamento quando é marcado como Entregue, na tela de
+      Pedidos.${comanda ? ' A venda do balcão entra quando a comanda é fechada, no Caixa.' : ''}</div>`;
     return;
   }
 
@@ -6848,7 +6844,7 @@ function desenharRelatorio(r){
     <div class="kpis">
       <div class="kpi"><div class="v">${real(fat)}</div><div class="r">faturamento</div>
         ${variacao(fat, n(r.faturamentoAntes), r)}</div>
-      <div class="kpi"><div class="v">${at}</div><div class="r">${comanda ? 'comandas fechadas' : 'atendimentos concluídos'}</div></div>
+      <div class="kpi"><div class="v">${at}</div><div class="r">vendas</div></div>
       <div class="kpi"><div class="v">${real(at ? fat/at : 0)}</div><div class="r">ticket médio</div></div>
       ${temAPagar ? `<div class="kpi"><div class="v">${real(totalComissao)}</div><div class="r">comissões a pagar</div></div>` : ''}
       <div class="kpi"><div class="v">${real(n(r.descontos))}</div><div class="r">descontos dados</div></div>
@@ -6857,13 +6853,15 @@ function desenharRelatorio(r){
     <!-- O ÍNDICE: "deixar bem organizado de forma que todos entendam". Cada
          grupo responde uma pergunta, e o toque leva até ele. -->
     <nav class="rel-indice" id="relIndice" aria-label="Partes do relatório">
-      ${[['relGEquipe', 'Equipe'], ['relGDinheiro', 'Dinheiro'], ['relGVendas', 'Vendas'],
-         ['relGClientes', 'Clientes'], ['relGAgenda', 'Agenda']].map(([id, rot]) =>
+      ${[['relGDinheiro', 'Dinheiro'], ['relGVendas', 'Vendas'],
+         ['relGClientes', 'Clientes']].map(([id, rot]) =>
         `<button type="button" onclick="document.getElementById('${id}').scrollIntoView({ behavior:'smooth', block:'start' })">${rot}</button>`).join('')}
     </nav>
     <p class="rel-guia">Tudo aqui conta o período escolhido acima. Cada parte responde uma pergunta:
-      quanto cada pessoa vai receber, como o dinheiro entrou, o que foi vendido, quem veio e como foi a agenda.</p>
+      como o dinheiro entrou, o que foi vendido e quem pediu. Conta o pedido entregue e a venda do balcão.</p>
 
+    <!-- PediHub: a comissao por profissional nao existe no restaurante. -->
+    <div style="display:none">
     <div class="rel-grupo" id="relGEquipe" role="heading" aria-level="2"><span>1</span> A equipe
       <small>Quanto cada pessoa vendeu e vai receber.</small></div>
     <h2 class="rel-secao">Comissão por profissional
@@ -6891,11 +6889,12 @@ function desenharRelatorio(r){
         <td style="text-align:right"><b>${real(totalComissao)}</b></td>
       </tr></tfoot>` : ''}</table></div>`
       : '<div class="vazio">Nenhum item com profissional no período.</div>'}
+    </div>
 
-    <div class="rel-grupo" id="relGDinheiro" role="heading" aria-level="2"><span>2</span> O dinheiro
+    <div class="rel-grupo" id="relGDinheiro" role="heading" aria-level="2"><span>1</span> O dinheiro
       <small>Por onde o dinheiro entrou, e o que ficou para receber.</small></div>
     <h2 class="rel-secao">Como o dinheiro entrou
-      <small>A taxa da maquininha vem junto: o restaurante recebe menos do que a
+      <small>A taxa da maquininha vem junto: o restaurante recebe menos do que o
              cliente pagou, e sem isso o faturamento mente sobre o que cai na
              conta.</small></h2>
     ${formas.length ? `<div class="tabela-rola"><table class="tabela"><thead><tr>
@@ -6916,13 +6915,13 @@ function desenharRelatorio(r){
 
     ${relatorioDoCrediario(r.crediario)}
 
-    <div class="rel-grupo" id="relGVendas" role="heading" aria-level="2"><span>3</span> O que foi vendido
-      <small>Serviços e produtos, a loja pelo link e os pacotes.</small></div>
+    <div class="rel-grupo" id="relGVendas" role="heading" aria-level="2"><span>2</span> O que foi vendido
+      <small>Os itens do cardápio, pelo link e no balcão.</small></div>
     <h2 class="rel-secao">O que mais saiu
-      <small>Os 12 que mais renderam. É o que decide preço, vitrine e o que
-             vale ter na cadeira.</small></h2>
+      <small>Os 12 que mais renderam. É o que decide preço, destaque no
+             cardápio e o que vale sempre ter pronto.</small></h2>
     ${servicos.length ? `<div class="tabela-rola"><table class="tabela"><thead><tr>
-        <th>Serviço ou produto</th><th style="text-align:right">Qtd</th>
+        <th>Item</th><th style="text-align:right">Qtd</th>
         <th style="text-align:right">Rendeu</th><th style="width:28%"></th>
       </tr></thead><tbody>
       ${servicos.map(s => {
@@ -6940,18 +6939,19 @@ function desenharRelatorio(r){
     ${relatorioDaLoja(r.vendas && r.vendas.loja)}
     ${relatorioDosPacotes(r.vendas && r.vendas.pacotes)}
 
-    <div class="rel-grupo" id="relGClientes" role="heading" aria-level="2"><span>4</span> As clientes
-      <small>Quem veio, e quantas eram novas.</small></div>
-    <h2 class="rel-secao">Quem passou pela casa
-      <small>Conta ${comanda ? 'pela comanda fechada' : 'pelo atendimento concluído'}, igual ao faturamento. Cliente nova é
-             a que não tinha nenhum atendimento pago aqui antes deste
-             período.</small></h2>
+    <div class="rel-grupo" id="relGClientes" role="heading" aria-level="2"><span>3</span> Os clientes
+      <small>Quem comprou, e quantos eram novos.</small></div>
+    <h2 class="rel-secao">Quem comprou
+      <small>Conta pela venda fechada, igual ao faturamento. Cliente novo é
+             o que não tinha nenhuma compra aqui antes deste período.</small></h2>
     <div class="kpis">
-      <div class="kpi"><div class="v">${n(cl.atendidas)}</div><div class="r">clientes atendidas</div></div>
-      <div class="kpi"><div class="v">${n(cl.novas)}</div><div class="r">delas, novas na casa</div></div>
-      <div class="kpi"><div class="v">${n(cl.atendidas) - n(cl.novas)}</div><div class="r">que já eram de casa</div></div>
+      <div class="kpi"><div class="v">${n(cl.atendidas)}</div><div class="r">clientes que compraram</div></div>
+      <div class="kpi"><div class="v">${n(cl.novas)}</div><div class="r">deles, novos na casa</div></div>
+      <div class="kpi"><div class="v">${n(cl.atendidas) - n(cl.novas)}</div><div class="r">que já eram da casa</div></div>
     </div>
 
+    <!-- PediHub: a agenda nao existe no restaurante. -->
+    <div style="display:none">
     <div class="rel-grupo" id="relGAgenda" role="heading" aria-level="2"><span>5</span> A agenda
       <small>O que foi marcado, feito, faltado e cancelado.</small></div>
     <h2 class="rel-secao">A agenda
@@ -6970,7 +6970,8 @@ function desenharRelatorio(r){
       <b>${real(n(ag.perdido))} em falta e cancelamento.</b>
       É o preço previsto do que não aconteceu. Quando esse número incomoda, o
       caminho costuma ser lembrete no dia anterior ou sinal na marcação.
-    </div>` : ''}`;
+    </div>` : ''}
+    </div>`;
 
   if(window.aplicarIcones) aplicarIcones();
   rotularTabelas();

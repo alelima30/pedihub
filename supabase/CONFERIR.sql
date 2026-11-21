@@ -1610,6 +1610,21 @@ with conferencia(ordem, item, veredito, detalhe) as (
              then 'cole o 00_tudo.sql de novo (41_ficha_equipe)'
            else '' end
   union all
+  /* PediHub (64 e 65): toda casa é restaurante, e o pedido entregue vira venda. */
+  select 82, 'Só restaurante, e o pedido entregue entra no caixa',
+         case when not exists (select 1 from pg_trigger where tgname = 'saloes_so_restaurante'
+                                 and tgrelid = 'public.saloes'::regclass)
+                or not exists (select 1 from pg_trigger where tgname = 'pedido_entregue_vira_venda'
+                                 and tgrelid = 'public.pedidos'::regclass)
+                or has_function_privilege('authenticated', 'public.pedido_vira_venda(uuid)', 'execute')
+              then 'FALTA' else 'certo' end,
+         case when not exists (select 1 from pg_trigger where tgname = 'saloes_so_restaurante'
+                                 and tgrelid = 'public.saloes'::regclass)
+                or not exists (select 1 from pg_trigger where tgname = 'pedido_entregue_vira_venda'
+                                 and tgrelid = 'public.pedidos'::regclass)
+                or has_function_privilege('authenticated', 'public.pedido_vira_venda(uuid)', 'execute')
+              then 'cole o 98_modulos.sql (64_so_restaurante e 65_pedido_vira_venda)' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um

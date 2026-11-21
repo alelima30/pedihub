@@ -114,7 +114,7 @@ begin
   perform t_verdade('criar_salao() não reclama mais de cadastro incompleto',
                     v_slug is not null);
   perform t_texto('e o apelido do link sai do nome do restaurante',
-                  v_slug, 'salao-novo');
+                  v_slug, 'restaurante-novo');
 end $$;
 
 select t_ok('conta: tudo conferido');
