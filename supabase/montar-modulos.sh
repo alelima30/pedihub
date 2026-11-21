@@ -164,6 +164,7 @@ partes.append(limpar(open('supabase/63_duvidas_casa.sql', encoding='utf-8').read
 partes.append(limpar(open('supabase/64_so_restaurante.sql', encoding='utf-8').read()))
 partes.append(limpar(open('supabase/65_pedido_vira_venda.sql', encoding='utf-8').read()))
 partes.append(limpar(open('supabase/66_planos_pedihub.sql', encoding='utf-8').read()))
+partes.append(limpar(open('supabase/67_complementos.sql', encoding='utf-8').read()))
 
 # ⚠ E O 09_cliente.sql POR ÚLTIMO, porque é dele o `agendar()` que vale.
 #

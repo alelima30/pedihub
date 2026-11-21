@@ -10,7 +10,7 @@
      salao pode querer o agendamento dentro do proprio site. -->
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PediHub — Agenda do restaurante</title>
+<title>PediHub — Pedidos do restaurante</title>
 <meta name="description" content="Pedidos, cardápio, entregas, caixa e relatórios para restaurante, lanchonete, pizzaria e delivery." />
 <meta name="theme-color" content="#FFFFFF" />
 <!-- PWA: instalável no celular e no computador -->
@@ -2210,7 +2210,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.70a035';
+const VERSAO_APP = 'v9.fa7d70';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23162,6 +23162,13 @@ function iniciar(){
      o `iniciar()` roda de novo quando o nome ou o tipo muda, e não pode
      arrancar a pessoa da tela em que ela está). O relógio dos pedidos liga
      aqui e fica — ele mesmo pergunta, a cada volta, se ainda é restaurante. */
+  /* Os atalhos do app instalado (manifest: #pedidos, #produtos) abrem a aba
+     certa — uma vez por carga, como o abrir em Pedidos. */
+  const abaDoAtalho = (location.hash || '').slice(1);
+  if(abaDoAtalho && !window.__atalhoUsado && minhasTelas().some(t => t[0] === abaDoAtalho)){
+    window.__atalhoUsado = true;
+    if(abaDoAtalho !== telaAtual) irPara(abaDoAtalho);
+  }
   if(restaurantePainel()){
     ligarRelogioDosPedidos();
     if(!pedidosAbriuUmaVez && telaAtual === 'agenda'){ pedidosAbriuUmaVez = true; irPara('pedidos'); }

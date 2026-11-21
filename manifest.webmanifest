@@ -1,16 +1,16 @@
 {
-  "name": "PediHub — Agenda para restaurante e barbearia",
+  "name": "PediHub — Cardápio e pedidos para restaurante",
   "short_name": "PediHub",
-  "description": "Agenda, clientes, comissão e relatórios para restaurante de beleza, barbearia e estética.",
+  "description": "Cardápio no link, pedidos, entrega, caixa e relatórios para restaurante, lanchonete, pizzaria e delivery. Sem comissão por pedido.",
   "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#F5F8F8",
-  "theme_color": "#FFFFFF",
+  "background_color": "#1C1917",
+  "theme_color": "#1C1917",
   "lang": "pt-BR",
   "dir": "ltr",
-  "categories": ["business", "productivity", "lifestyle"],
+  "categories": ["business", "food", "productivity"],
   "icons": [
     { "src": "icones/icone-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icones/icone-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "any" },
@@ -18,16 +18,16 @@
   ],
   "shortcuts": [
     {
-      "name": "Agenda de hoje",
-      "short_name": "Agenda",
-      "url": "./app.html#agenda",
-      "description": "Abre direto na agenda do dia"
+      "name": "Pedidos",
+      "short_name": "Pedidos",
+      "url": "./app.html#pedidos",
+      "description": "Abre direto na tela de pedidos"
     },
     {
-      "name": "Novo agendamento",
-      "short_name": "Agendar",
-      "url": "./app.html#novo",
-      "description": "Marca um atendimento agora"
+      "name": "Cardápio",
+      "short_name": "Cardápio",
+      "url": "./app.html#produtos",
+      "description": "Abre o cadastro do cardápio"
     }
   ]
 }
