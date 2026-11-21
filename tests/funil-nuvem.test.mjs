@@ -85,7 +85,8 @@ await p.waitForTimeout(400);
 igual('a conta passa do passo 1', await passoAtual(p), 2);
 
 await digitar(p, '#fSalao', NOMESALAO);
-await p.selectOption('#fTipo', { index: 1 });
+// PediHub: o tipo já vem 'restaurante', escondido (não há o que escolher).
+  await p.evaluate(() => document.getElementById('fTipo').value = 'restaurante');
 await digitar(p, '#fZap', '51998876655');
 await p.waitForTimeout(200);
 
@@ -117,7 +118,7 @@ await p.waitForTimeout(4000);
 igual('o cadastro chega ao passo 3', await passoAtual(p), 3);
 const link = await p.textContent('#linkFinal');
 verdade('e entrega o link da cliente com o apelido do restaurante',
-  /agendar\.html\?salao=studio-funil-/.test(link));
+  /cardapio\.html\?salao=studio-funil-/.test(link));
 /* O rodapé de demonstração ("nada é enviado para servidor nenhum") aparecia
    aqui, no fim do cadastro de verdade — logo depois de a conta ser criada no
    servidor. */
@@ -149,7 +150,8 @@ await digitar(r, '#fSenha', SENHA);
 await r.click('button.grande:has-text("Continuar")');
 await r.waitForTimeout(400);
 await digitar(r, '#fSalao', NOMESALAO + ' II');
-await r.selectOption('#fTipo', { index: 1 });
+// PediHub: o tipo já vem 'restaurante', escondido (não há o que escolher).
+  await r.evaluate(() => document.getElementById('fTipo').value = 'restaurante');
 await digitar(r, '#fZap', '51998876600');
 await r.click('#btCriar');
 await r.waitForTimeout(2500);
@@ -197,16 +199,14 @@ verdade('e o painel mostra o restaurante desta pessoa, não outro',
    Depois ele é dispensado como "já fiz", porque o resto deste arquivo é
    sobre outra coisa e ele cobre a tela de propósito. A marca vai para o
    `cfg` do restaurante, no banco, e por isso atravessa os reloads lá embaixo. */
-verdade('o passo a passo do primeiro dia abre sozinho no restaurante recém-criado',
+/* PediHub: o assistente do primeiro dia é o do salão (serviços, jornada) e
+   NÃO abre no restaurante. Quem guia o começo é o quadro "Primeiros passos"
+   da tela de Pedidos (cardápio, entrega, horário). */
+verdade('o restaurante recém-criado abre em Pedidos, com os "Primeiros passos"',
   await q.evaluate(() => {
     const w = document.getElementById('primeiroDia');
-    return !!w && !w.hidden
-        && document.getElementById('pdContador').textContent === 'Passo 1 de 11';
+    return (!w || w.hidden) && telaAtual === 'pedidos';
   }));
-await q.evaluate(() => pdFechar(true));
-await q.waitForTimeout(2000);           // a marca subindo para o banco
-verdade('e sai da frente quando a dona diz que já fez',
-  await q.evaluate(() => document.getElementById('primeiroDia').hidden));
 
 /* ── O CAIXA E A JORNADA ──────────────────────────────────────────────────
    Aqui moravam os quatro `400`. Eles não derrubavam a tela: viravam lista
@@ -265,308 +265,10 @@ await q.waitForTimeout(800);
 verdade('e continua lá depois de recarregar, porque foi para o banco',
   (await q.textContent('body')).includes('Jucelia Barbosa'));
 
-/* ── A JORNADA DE TRABALHO ────────────────────────────────────────────────
-   Três defeitos moravam aqui ao mesmo tempo, todos por falta da tradução
-   entre `p.jornada` (o mapa da tela) e a tabela `jornadas` (uma linha por
-   faixa):
-
-     · a aba Equipe QUEBRAVA, lendo `p.jornada[d]` de quem não tinha jornada
-       — e uma aba que quebra parece uma aba que não existe, que foi como
-       este pedaço "sumiu";
-     · a agenda do dono abria sem horário de trabalho nenhum;
-     · e a jornada não tinha como ser salva, porque `jornada` é campo de tela
-       e era removido antes de subir.
-
-   O terceiro é o que custa dinheiro: sem linha em `jornadas`, a função
-   `horarios_livres()` não devolve nada, e o link que a cliente abre fica sem
-   um horário sequer. O dono configura a semana, salva, e continua invisível.
-   ──────────────────────────────────────────────────────────────────────── */
-await q.click('a:has-text("Equipe"), button:has-text("Equipe")');
-await q.waitForTimeout(700);
-igual('a aba Equipe abre sem quebrar', q.erros.length, 0);
-verdade('e mostra quem atende', (await q.textContent('body')).includes(NOME.split(' ')[0]));
-
-await q.click('#listaEquipe button:has-text("Editar")');
-await q.waitForTimeout(500);
-// Terça (2): entra 08:00, sai 12:00; volta 14:00, sai 18:00 — com almoço.
-await q.fill('#j2a', '08:00'); await q.fill('#j2b', '12:00');
-await q.fill('#j2c', '14:00'); await q.fill('#j2d', '18:00');
-/* ⚠ E TAMBÉM O DIA EM QUE ESTE TESTE VAI MARCAR.
-   A jornada acima é só de terça — ela existe para provar o ida-e-volta do
-   almoço, e isso continua valendo. Mas o agendamento lá embaixo é no dia de
-   HOJE, seja lá que dia a suíte rode. Sem jornada hoje, o profissional está
-   de FOLGA, e desde a Fase 1A folga é recusada: o painel oferece encaixe e o
-   teste lê a confirmação como se fosse erro.
-
-   Preencher os dois é o cenário honesto: um restaurante que trabalha na terça e
-   também hoje. (Se hoje for terça, preenche duas vezes e não faz mal.)
-
-   ⚠ E "hoje" é o dia DO RESTAURANTE, que é o que o painel usa para escolher o dia
-   da agenda. Aqui estava `new Date().getDay()` — o dia da semana do processo
-   Node, que roda em UTC na bancada e no CI. Com o restaurante em
-   America/Sao_Paulo, das 00:00 às 03:00 UTC os dois caem em dias
-   diferentes: a jornada era preenchida numa quarta e o painel marcava numa
-   terça, o profissional aparecia de folga, e cinco verificações reprovavam
-   falando de encaixe — três horas por dia de reprova que não era defeito de
-   ninguém. */
-const dowHoje = diaDaSemana(await q.evaluate(() => diaAtual));
-await q.fill('#j' + dowHoje + 'a', '08:00');
-await q.fill('#j' + dowHoje + 'b', '12:00');
-await q.fill('#j' + dowHoje + 'c', '14:00');
-await q.fill('#j' + dowHoje + 'd', '18:00');
-
-await q.click('button:has-text("Salvar")');
-await q.waitForTimeout(2500);
-igual('salvar a jornada não devolve erro', avisos.join(' | '), '');
-
-await q.reload();
-await q.waitForTimeout(3000);
-await q.click('a:has-text("Equipe"), button:has-text("Equipe")');
-await q.waitForTimeout(700);
-await q.click('#listaEquipe button:has-text("Editar")');
-await q.waitForTimeout(600);
-igual('a hora de entrar na terça voltou do banco', await q.inputValue('#j2a'), '08:00');
-igual('e a de sair também',                        await q.inputValue('#j2b'), '12:00');
-igual('o almoço no meio não se perde — volta às 14:00', await q.inputValue('#j2c'), '14:00');
-igual('e a saída da tarde',                        await q.inputValue('#j2d'), '18:00');
-
-/* ── MARCAR E BLOQUEAR PELO PAINEL ────────────────────────────────────────
-   O uso diário do lado do restaurante: a recepção anota alguém no balcão, e o dono
-   bloqueia a própria folga. Os dois estavam quebrados na nuvem, e falhavam
-   com a mensagem crua do Postgres:
-
-       column "data" of relation "bloqueios" does not exist
-
-   A tela pensa em `{data, minutos}`; o banco guarda dois `timestamptz`. Sem a
-   tradução, nada que o painel criasse na agenda chegava ao banco — só o link
-   da cliente marcava, porque ele passa por `agendar()`.
-
-   Este caso cobra a ida E A VOLTA. Só a ida não bastaria: converter na
-   gravação e errar na leitura mostraria o horário deslocado no dia seguinte,
-   que é pior do que não gravar — porque parece que funcionou.
-   ──────────────────────────────────────────────────────────────────────── */
-/* O modal do passo anterior ainda está aberto, e o fundo escuro dele
-   intercepta o clique na aba. Teste que trava por isso falha por cenário
-   errado, não por defeito. */
-const fecharModalAberto = () => q.evaluate(() => {
-  const f = document.getElementById('fundo');
-  if(f) f.classList.remove('on');
-});
-
-/* Sem serviço cadastrado, `abrirNovo()` mostra "Falta cadastro" em vez do
-   formulário — e está certo: não dá para marcar o que o restaurante não faz. */
-await fecharModalAberto();
-await q.click('a:has-text("Serviços"), button:has-text("Serviços")');
-await q.waitForTimeout(700);
-await q.click('button:has-text("+ Serviço")');
-await q.waitForTimeout(600);
-await q.fill('#sNome', 'Corte');
-await q.fill('#sPreco', '80');
-await q.click('#modalPe button:has-text("Salvar")');
-await q.waitForTimeout(2500);
-igual('cadastrar um serviço pelo painel não devolve erro', avisos.join(' | '), '');
-
-await fecharModalAberto();
-await q.click('a:has-text("Agenda"), button:has-text("Agenda")');
-await q.waitForTimeout(700);
-await q.click('button:has-text("+ Agendamento")');
-await q.waitForTimeout(700);
-await q.fill('#fNome', 'Cliente do Balcão');
-await q.fill('#fTel', '51988776655');
-await q.fill('#fInicio', '14:30');
-await q.evaluate(() => {
-  const c = document.querySelector('#modalCorpo input[type=checkbox]');
-  if(c && !c.checked) c.click();
-});
-await q.waitForTimeout(300);
-const diaMarcado = await q.inputValue('#fData');
-await q.click('#modalPe button:has-text("Agendar")');
-await q.waitForTimeout(2800);
-igual('marcar pelo painel não devolve erro', avisos.join(' | '), '');
-
-const marcados = await q.evaluate(() =>
-  (typeof bd !== 'undefined' && bd.agendamentos) ? bd.agendamentos.length : -1);
-igual('e existe uma marcação', marcados, 1);
-
-await q.reload();
-await q.waitForTimeout(3500);
-await q.click('a:has-text("Agenda"), button:has-text("Agenda")');
-await q.waitForTimeout(900);
-const voltou = await q.evaluate(() => {
-  const b = (typeof bd !== 'undefined' && bd.agendamentos) || [];
-  return b[0] ? { data: b[0].data, inicio: b[0].inicio, servicos: (b[0].servicos||[]).length } : null;
-});
-igual('depois de recarregar, o dia volta igual', voltou && voltou.data, diaMarcado);
-// 14:30 = 870 minutos desde a meia-noite. Se a conversão de fuso errar em uma
-// hora, este número vira 810 ou 930 — e é exatamente esse o erro que aparece
-// só no domingo em que o horário de verão vira.
-igual('e a HORA volta igual, sem deslocar o fuso', voltou && voltou.inicio, 870);
-igual('e o serviço do atendimento também voltou', voltou && voltou.servicos, 1);
-
-/* ── O CAIXA ──────────────────────────────────────────────────────────────
-   Três defeitos moravam aqui, e os três só apareciam na nuvem:
-
-     · a comanda gravava `data`, coluna que não existe (ela tem `aberta_em`);
-     · os itens e os pagamentos moram em tabelas filhas, e ninguém traduzia —
-       o Caixa abria sempre zerado;
-     · e o PostgREST devolve `numeric` como STRING, então somar concatenava:
-       `0 + '80.00' + '45.00'` é '080.0045.00'. Faturamento do dia, comissão e
-       total de comanda saem dessa conta.
-
-   O último é o que assusta: um sistema de restaurante que erra a conta do caixa não
-   tem serventia nenhuma, e ele erraria em silêncio, com número plausível na
-   tela. Por isso o teste confere o TIPO, não só o valor. */
-const agId = await q.evaluate(() =>
-  (typeof bd !== 'undefined' && bd.agendamentos[0] || {}).id);
-await q.evaluate(id => comandaDoAgendamento(id), agId);
-await q.waitForTimeout(2500);
-igual('abrir a comanda do atendimento não devolve erro', avisos.join(' | '), '');
-
-await q.reload();
-await q.waitForTimeout(3500);
-const caixa = await q.evaluate(() => {
-  const c = (typeof bd !== 'undefined' && bd.comandas[0]) || {};
-  const sub = (c.itens || []).reduce((s, i) => s + i.qtd * i.precoUnit, 0);
-  return { comandas: (bd.comandas || []).length, itens: (c.itens || []).length,
-           subtotal: sub, tipo: typeof sub, dia: c.data };
-});
-igual('a comanda sobreviveu ao recarregamento', caixa.comandas, 1);
-igual('com o item do atendimento dentro', caixa.itens, 1);
-igual('o subtotal é NÚMERO, não texto — senão a soma concatena', caixa.tipo, 'number');
-igual('e vale o preço do serviço', caixa.subtotal, 80);
-verdade('e o dia da comanda saiu de `aberta_em`', /^\d{4}-\d{2}-\d{2}$/.test(caixa.dia || ''));
-
-await fecharModalAberto();
-await q.click('a:has-text("Equipe"), button:has-text("Equipe")');
-await q.waitForTimeout(700);
-await q.click('#listaEquipe button:has-text("Bloquear horário")');
-await q.waitForTimeout(700);
-await q.fill('#bIni', '12:00');
-await q.fill('#bFim', '13:00');
-await q.click('#modalPe button:has-text("Bloquear"), #modalPe button:has-text("Salvar")');
-await q.waitForTimeout(2500);
-igual('bloquear um horário não devolve erro', avisos.join(' | '), '');
-igual('e o bloqueio existe',
-  await q.evaluate(() =>
-    (typeof bd !== 'undefined' && bd.bloqueios) ? bd.bloqueios.length : -1), 1);
-
-/* ── A FOTO DE QUEM ATENDE ────────────────────────────────────────────────
-   Imagem é o único pedaço do sistema que não passa pelo PostgREST: outro
-   serviço, outro caminho, corpo binário. A bancada não tinha nada disso, e
-   por isso TODA foto — logo, capa, serviço, profissional — vivia fora de
-   teste no modo nuvem. Agora ela tem um arremedo do Storage, e este caso
-   passa por ele de ponta a ponta: escolher, reduzir, enviar, gravar o
-   endereço, recarregar e continuar lá. */
-const PNG_4x4 = 'iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHElEQVQI12P4'
-              + '//8/AzYEEwAAKzQD/6Ac0AAAAABJRU5ErkJggg==';
-
-// Reabre o cadastro de quem atende: os casos acima fecharam o modal para
-// poder trocar de aba.
-await fecharModalAberto();
-await q.click('a:has-text("Equipe"), button:has-text("Equipe")');
-await q.waitForTimeout(700);
-await q.click('#listaEquipe button:has-text("Editar")');
-await q.waitForTimeout(700);
-await q.setInputFiles('#modalCorpo input[type=file]',
-  { name: 'rosto.png', mimeType: 'image/png', buffer: Buffer.from(PNG_4x4, 'base64') });
-await q.waitForTimeout(1200);
-verdade('a foto escolhida aparece na prévia antes de salvar',
-  await q.evaluate(() => !!document.querySelector('#previaProf img')));
-
-await q.click('#modalPe button:has-text("Salvar")');
-await q.waitForTimeout(3000);
-igual('salvar com foto não devolve erro', avisos.join(' | '), '');
-
-await q.reload();
-await q.waitForTimeout(3000);
-await q.click('a:has-text("Equipe"), button:has-text("Equipe")');
-await q.waitForTimeout(800);
-const rosto = await q.evaluate(() => {
-  const img = document.querySelector('#listaEquipe .eq-rosto img');
-  return img ? img.getAttribute('src') : null;
-});
-verdade('e continua lá depois de recarregar', !!rosto);
-/* O endereço tem que ser do servidor, não um `data:` de 200 KB. Uma base64
-   gravada na coluna funciona na tela do dono e faz a página da cliente
-   carregar um texto gigante por profissional — no 3G dela, isso é a
-   diferença entre abrir e desistir. */
-verdade('e é um endereço do servidor, não a imagem inteira dentro da coluna',
-  rosto && !rosto.startsWith('data:'));
-
-/* ══════════════════════════════════════════════════════════════════════════
-   A AGENDA TEM QUE SOBREVIVER AO SALVAMENTO
-
-   Relatado assim: "está dando bug na agenda quando acesso comanda e aperto
-   salvar ou mudo de dia". E era exatamente isso.
-
-   `salvar()` chamava `desmontarJornadas(bd)` e `desmontarAgenda(bd)` — no
-   objeto que a tela desenha. As duas mudam o formato NO LUGAR: `inicio`
-   deixa de ser minutos e vira instante ISO, `data` é apagada (não existe no
-   banco), a jornada vira linhas.
-
-   Então, ao fim de todo salvamento, a tela ficava segurando dados que ela
-   não sabe ler. A agenda esvaziava — a filtragem do dia procura `a.data`,
-   recém-apagada — e só voltava quando alguém recarregava a página. Por isso
-   "sumia e voltava", que é a pior forma de defeito: parece intermitente.
-
-   Medido, com um atendimento marcado no dia:
-
-       ANTES   1 cartão → salvar → 0 cartões, e o nome do cliente some
-       DEPOIS  1 cartão → salvar → 1 cartão
-
-   Nenhuma suíte pegava porque nenhuma salvava e DEPOIS olhava a agenda.
-   Esta olha.
-   ══════════════════════════════════════════════════════════════════════════ */
-console.log('\nA agenda depois de salvar, e depois de trocar de dia');
-
-await fecharModalAberto();
-await q.click('a:has-text("Agenda"), button:has-text("Agenda")');
-await q.waitForTimeout(900);
-
-/* Medido pelo DESENHO, não por dentro. O que quebrava era o formato na
-   memória, mas quem sofre é a agenda vazia — e um teste que espia variável
-   interna passa a proteger a implementação em vez do que a pessoa vê.
-
-   `top` em pixels é a prova de que a hora ainda é número: o cartão só tem
-   onde ser posto se `a.inicio` for minutos. Virando texto do banco, ou o
-   cartão some ou vai para o topo. */
-const naAgenda = () => q.evaluate(() => {
-  const cs = [...document.querySelectorAll('.grade .ag')];
-  return {
-    cartoes: cs.length,
-    posicionados: cs.filter(c => parseFloat(c.style.top) > 0).length,
-    texto: cs.map(c => c.textContent.replace(/\s+/g, ' ').trim()).join(' | '),
-  };
-});
-
-const antesDeSalvar = await naAgenda();
-verdade('há atendimento desenhado na agenda antes de salvar',
-  antesDeSalvar.cartoes > 0, JSON.stringify(antesDeSalvar));
-
-// Salvar QUALQUER coisa — o estrago não dependia do que foi salvo.
-await q.click('a:has-text("Meu negócio"), button:has-text("Meu negócio")');
-await q.waitForTimeout(900);
-await q.click('button:has-text("Salvar dados")');
-await q.waitForTimeout(2500);
-await q.click('a:has-text("Agenda"), button:has-text("Agenda")');
-await q.waitForTimeout(900);
-
-const depoisDeSalvar = await naAgenda();
-igual('depois de salvar, a agenda continua com os mesmos atendimentos',
-  depoisDeSalvar.cartoes, antesDeSalvar.cartoes);
-igual('cada um no horário certo da coluna, e não empilhado no topo',
-  depoisDeSalvar.posicionados, antesDeSalvar.posicionados);
-igual('com o mesmo conteúdo de antes — nome, horário, serviço',
-  depoisDeSalvar.texto, antesDeSalvar.texto);
-
-// E o segundo caminho do relato: trocar de dia depois de ter salvado.
-await q.click('.ag-nav button:has-text("›"), button:has-text("›")');
-await q.waitForTimeout(700);
-await q.click('.ag-nav button:has-text("‹"), button:has-text("‹")');
-await q.waitForTimeout(900);
-igual('e voltando ao dia de hoje, os atendimentos ainda estão lá',
-  (await naAgenda()).cartoes, antesDeSalvar.cartoes);
-igual('sem nenhum aviso de erro em nada disso', avisos.join(' | '), '');
+/* PediHub: daqui para baixo o funil testava a agenda do salão (jornada,
+   marcar, comanda do atendimento, bloqueio, foto de quem atende), que saiu.
+   O pedido do restaurante, de ponta a ponta, mora em complementos-tela,
+   pedido-balcao-tela e mesa-tela. */
 
 await nav.close();
 console.log('');

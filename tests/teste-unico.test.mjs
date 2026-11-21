@@ -47,7 +47,8 @@ async function cadastrar({ nome, email, salao, zap }){
   await p.click('button.grande:has-text("Continuar")');
   await p.waitForTimeout(300);
   await digitar(p, '#fSalao', salao);
-  await p.selectOption('#fTipo', { index: 1 });
+  // PediHub: o tipo já vem 'restaurante', escondido (não há o que escolher).
+  await p.evaluate(() => document.getElementById('fTipo').value = 'restaurante');
   await digitar(p, '#fZap', zap);
   await p.click('#btCriar');
   await p.waitForFunction(() => document.getElementById('textoPronto')

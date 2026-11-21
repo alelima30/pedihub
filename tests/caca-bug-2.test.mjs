@@ -58,7 +58,7 @@ console.log('\n1. "Copiar" o link diz "Copiado" — também quando a cópia resp
   const naArea = depois.copiado;
   diz(seguro, 'o teste roda em contexto seguro, onde a cópia é assíncrona (como no site)');
   diz(depois.texto === 'Copiado', 'o botão diz "Copiado"', 'veio ' + JSON.stringify(depois.texto));
-  diz(naArea === depois.link && /agendar\.html/.test(naArea), 'e o link foi mesmo para a área de transferência', naArea);
+  diz(naArea === depois.link && /cardapio\.html/.test(naArea), 'e o link foi mesmo para a área de transferência', naArea);
   diz(!erros.some(e => /Falha ao copiar|event|target/.test(e)), 'sem "Falha ao copiar" no console', erros.join(' | '));
   await ctx.close();
 }

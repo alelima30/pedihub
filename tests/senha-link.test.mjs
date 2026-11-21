@@ -197,7 +197,7 @@ secao('5. O link com código: abrir não gasta');
 
   await A.p.fill('#senha', NOVA); await A.p.fill('#senha2', NOVA);
   await A.p.click('#btSalvar');
-  await A.p.waitForURL(u => /agendar\.html\?salao=/.test(String(u)), { timeout: 8000 }).catch(() => {});
+  await A.p.waitForURL(u => /cardapio\.html\?salao=/.test(String(u)), { timeout: 8000 }).catch(() => {});
   await A.p.waitForTimeout(1500);
   igual('salvar gasta o código, troca a senha e volta para o restaurante, já dentro',
     [A.verifica.length, new URL(A.p.url()).pathname + new URL(A.p.url()).search,

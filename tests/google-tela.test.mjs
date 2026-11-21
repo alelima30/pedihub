@@ -147,7 +147,7 @@ secao('1. No link: o botão leva ao Google, com a volta para o restaurante');
   igual('com "ou com e-mail e senha" logo abaixo', await p.textContent('#caixaGoogle .ou-linha'), 'ou com e-mail e senha');
   await p.click('#btGoogle'); await p.waitForTimeout(800);
   verdade('vai ao Supabase com provider=google e a volta para ESTE restaurante',
-    pedidos.length >= 1 && /\/auth\/v1\/authorize\?provider=google&redirect_to=.*agendar\.html\?salao=/.test(pedidos[0])
+    pedidos.length >= 1 && /\/auth\/v1\/authorize\?provider=google&redirect_to=.*cardapio\.html\?salao=/.test(pedidos[0])
     && pedidos[0].includes('salao=' + SLUG + '&conta=google'), pedidos.join(' | '));
   await ctx.close();
 }
@@ -237,7 +237,8 @@ secao('6. O dono que entra com o Google cria o restaurante sem e-mail e senha');
     document.getElementById('fNome').value, location.hash]), [true, false, false, 'Karla Dona', '']);
   await p.click('button.grande:has-text("Continuar")'); await p.waitForTimeout(500);
   await p.fill('#fSalao', 'Studio Karla ' + m); await p.dispatchEvent('#fSalao', 'input');
-  await p.selectOption('#fTipo', { index: 1 });
+  // PediHub: o tipo já vem 'restaurante', escondido (não há o que escolher).
+  await p.evaluate(() => document.getElementById('fTipo').value = 'restaurante');
   await p.fill('#fZap', masc(tel('84'))); await p.dispatchEvent('#fZap', 'input');
   await p.click('#btCriar');
   await p.waitForFunction(() => /link/i.test((document.getElementById('linkFinal') || {}).textContent || ''), null, { timeout: 15000 }).catch(() => {});

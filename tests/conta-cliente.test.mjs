@@ -339,7 +339,7 @@ secao('10. Esqueci a senha e a confirmação voltam para o link');
   verdade('e a tela não diz se o e-mail existe', /Se houver conta com/.test(await aviso(p)));
   await p.evaluate(() => reenviarConfirmacaoCliente()); await p.waitForTimeout(600);
   verdade('o reenvio da confirmação também volta para o link', pedidos.some(u =>
-    /resend\?redirect_to=.*agendar\.html\?salao=/.test(u)), pedidos.join(' | '));
+    /resend\?redirect_to=.*cardapio\.html\?salao=/.test(u)), pedidos.join(' | '));
 
   secao('11. A 360px');
   await ctx.close();

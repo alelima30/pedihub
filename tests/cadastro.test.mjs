@@ -158,7 +158,8 @@ console.log('\nO funil inteiro');
   await preencherConta(p, { nome: 'Alessandro Prado',
     email: 'alessandro@studioprado.com.br', senha: 'minhasenhaboa' });
   await digitar(p, '#fSalao', 'Studio Prado');
-  await p.selectOption('#fTipo', { index: 1 });
+  // PediHub: o tipo já vem 'restaurante', escondido (não há o que escolher).
+  await p.evaluate(() => document.getElementById('fTipo').value = 'restaurante');
   await digitar(p, '#fZap', '51998876655');
   await p.waitForTimeout(200);
 
