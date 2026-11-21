@@ -1689,6 +1689,21 @@ with conferencia(ordem, item, veredito, detalhe) as (
                                 where table_name = 'pedidos' and column_name = 'origem')
               then 'cole o 98_modulos.sql (70_pedido_balcao)' else '' end
   union all
+  /* PediHub (71): mesas com QR, entregadores e fidelidade. */
+  select 87, 'Mesas, entregadores e fidelidade',
+         case when not exists (select 1 from information_schema.columns
+                                where table_name = 'pedidos' and column_name = 'mesa')
+                or to_regprocedure('public.acerto_entregadores(uuid,date,date)') is null
+                or to_regprocedure('public.pagamento_da_mesa(uuid,text)') is null
+                or pg_get_functiondef(to_regprocedure('public.registrar_pedido(uuid,jsonb,text)')) not like '%FIDELIDADE%'
+              then 'FALTA' else 'certo' end,
+         case when not exists (select 1 from information_schema.columns
+                                where table_name = 'pedidos' and column_name = 'mesa')
+                or to_regprocedure('public.acerto_entregadores(uuid,date,date)') is null
+                or to_regprocedure('public.pagamento_da_mesa(uuid,text)') is null
+                or pg_get_functiondef(to_regprocedure('public.registrar_pedido(uuid,jsonb,text)')) not like '%FIDELIDADE%'
+              then 'cole o 98_modulos.sql (71_mesas_entregadores_fidelidade)' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um
