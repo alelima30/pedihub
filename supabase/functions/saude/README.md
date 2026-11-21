@@ -3,7 +3,7 @@
 Endereço (público, sem login):
 
 ```
-https://TROQUE-PELO-ID-DO-PROJETO.supabase.co/functions/v1/saude
+https://iarmxniueeqntshhjxuw.supabase.co/functions/v1/saude
 ```
 
 - **200**: tudo certo (ou só "atenção", que não merece alerta).

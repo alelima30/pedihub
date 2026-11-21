@@ -7,9 +7,8 @@
 --   2. publicar as funções (GitHub → Actions → "Publicar as funções do
 --      WhatsApp" → Run workflow).
 --
--- ⚠ TROQUE DUAS COISAS: o TROQUE-PELO-ID-DO-PROJETO no endereço lá embaixo,
--- pelo ID do projeto PediHub no Supabase (Settings → General → Project ID);
--- e a frase 'TROQUE-PELA-FRASE-DO-CRON_SEGREDO' lá
+-- ⚠ TROQUE UMA COISA SÓ (o endereço do projeto PediHub já está certo):
+-- a frase 'TROQUE-PELA-FRASE-DO-CRON_SEGREDO' lá
 -- embaixo, pela MESMA frase que você guardou no segredo CRON_SEGREDO. As
 -- duas têm de ser iguais, letra por letra — é assim que a função sabe que
 -- quem a acordou foi o seu banco, e não um estranho.
@@ -47,7 +46,7 @@ select cron.schedule(
   '15 seconds',
   $cron$
   select net.http_post(
-    url     := 'https://TROQUE-PELO-ID-DO-PROJETO.supabase.co/functions/v1/enviar-notificacoes',
+    url     := 'https://iarmxniueeqntshhjxuw.supabase.co/functions/v1/enviar-notificacoes',
     headers := jsonb_build_object(
                  'Content-Type',   'application/json',
                  'x-cron-segredo', 'TROQUE-PELA-FRASE-DO-CRON_SEGREDO'),

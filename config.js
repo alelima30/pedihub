@@ -28,8 +28,8 @@
    =========================================================================== */
 
 window.PEDIHUB = {
-  url:   '',   // ← a Project URL do Supabase do PediHub
-  chave: '',   // ← a Publishable key do Supabase do PediHub
+  url:   'https://iarmxniueeqntshhjxuw.supabase.co',
+  chave: 'sb_publishable_VD7J1DerOZdIGEf2nHZcoA_3901z_ya',
 
   // Aparece no rodapé para você não se confundir entre ensaio e produção.
   ambiente: 'produção',

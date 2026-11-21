@@ -56,7 +56,7 @@ Em **Settings → API Keys** (ou **Settings → API**, em projetos antigos), cop
 - **Project URL**, que tem o formato `https://xxxxxxxx.supabase.co`
 - **Publishable key**, que começa com `sb_publishable_...`
 
-**Me mande esses dois valores**, e eu coloco no `config.js`. Os dois podem
+**Já feito:** esses dois valores estão no `config.js`. Os dois podem
 aparecer no site: não são segredo. Quem protege os dados são as regras dentro
 do banco.
 
@@ -78,12 +78,11 @@ a gente faz junto:
 - os **modelos de mensagem** agora se chamam `pedihub_...` e precisam ser
   aprovados na Meta (os textos estão em
   `supabase/functions/enviar-notificacoes/MODELOS.md`);
-- as funções do Supabase são publicadas pelo GitHub. No arquivo
-  `.github/workflows/publicar-funcoes.yml`, troque
-  `TROQUE-PELO-ID-DO-PROJETO` pelo **Project ID** do PediHub
-  (**Settings → General**);
-- o **`supabase/LIGAR-WHATSAPP.sql`** liga o envio automático. Nele você troca
-  o ID do projeto e a frase secreta, como está explicado no próprio arquivo.
+- as funções do Supabase são publicadas pelo GitHub, que já aponta para o
+  projeto do PediHub (`iarmxniueeqntshhjxuw`). Falta guardar o segredo
+  `SUPABASE_ACCESS_TOKEN` no repositório;
+- o **`supabase/LIGAR-WHATSAPP.sql`** liga o envio automático. Nele você só
+  troca a frase secreta, como está explicado no próprio arquivo.
 
 Pagamento da assinatura (Mercado Pago) e backup automático também ficam para
 essa etapa.
@@ -95,7 +94,7 @@ essa etapa.
 | | AgendaPro | PediHub |
 |---|---|---|
 | Projeto Supabase | o dele | **um novo, separado** |
-| Endereço do banco no `config.js` | preenchido | **vazio** até você mandar o novo |
+| Endereço do banco no `config.js` | o dele | **o do PediHub** (`iarmxniueeqntshhjxuw`) |
 | Nome em mensagens, modelos e travas internas | `agendapro` | `pedihub` |
 | Domínio | agendaprogestao.com.br | nenhum por enquanto (`alelima30.github.io/pedihub`) |
 
