@@ -64,6 +64,7 @@
 --   56_conta_excluida.sql    a cliente excluiu a conta: a marca na ficha e o aviso no sino
 --   57_plano_fechado.sql     a consulta do plano e do uso deixa de responder a quem é de fora
 --   58_fuso.sql              o fuso do salão: escolher, e trocar sem mexer em nenhum horário marcado
+--   64_so_restaurante.sql    no PediHub toda casa é restaurante (o tipo é travado no banco)
 --   59_push.sql              os avisos no celular (push): aparelhos, fila e gatilhos
 --   60_dashboard.sql         o Ranking: clientes, profissionais, novas e recorrentes, visitas do link
 --   61_teste_30_dias.sql     o teste grátis de 30 dias, com 2 profissionais
@@ -23507,3 +23508,43 @@ $$;
 revoke all on function public.duvidas_limpas(jsonb) from public, anon, authenticated;
 revoke all on function public.duvidas_da_casa(text) from public;
 grant execute on function public.duvidas_da_casa(text) to anon, authenticated;
+
+-- ###########################################################################
+-- ## 64_so_restaurante.sql
+-- ###########################################################################
+
+-- ===========================================================================
+-- 64_so_restaurante.sql — no PediHub, toda casa é restaurante
+--
+-- O PediHub nasceu do AgendaPro, que atende salão, barbearia, estética... e,
+-- como um tipo entre outros, o restaurante (37_pedidos). Aqui é o contrário:
+-- o sistema é SÓ de pedidos — restaurante, lanchonete, pizzaria, delivery.
+--
+-- Todo o modo Pedidos já pergunta `tipo = 'restaurante'` (o cardápio, a
+-- entrega, o andamento, `fazer_pedido`). Em vez de mexer em cada uma dessas
+-- perguntas, a casa simplesmente não consegue ser outra coisa:
+--
+--   · a coluna nasce 'restaurante';
+--   · o gatilho abaixo grava 'restaurante' em qualquer cadastro ou troca,
+--     venha de onde vier (a tela de cadastro, uma página antiga em cache, o
+--     `criar_salao()` com o padrão antigo 'salao');
+--   · e quem já existia vira restaurante agora.
+--
+-- Pode rodar mais de uma vez.
+-- ===========================================================================
+
+alter table public.saloes alter column tipo set default 'restaurante';
+
+create or replace function public.saloes_so_restaurante()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.tipo := 'restaurante';
+  return new;
+end $$;
+
+drop trigger if exists saloes_so_restaurante on public.saloes;
+create trigger saloes_so_restaurante
+  before insert or update of tipo on public.saloes
+  for each row execute function public.saloes_so_restaurante();
+
+update public.saloes set tipo = 'restaurante' where tipo is distinct from 'restaurante';

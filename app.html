@@ -688,7 +688,7 @@ span.ajuda{display:block;margin-top:5px}
   <div id="faixaPrimeiroDia" class="faixa-teste" style="display:none"></div>
 
   <!-- ══════════ AGENDA ══════════ -->
-  <section class="tela on" id="tela-agenda">
+  <section class="tela" id="tela-agenda">
     <!-- ══════════ AS VISTAS, COMO SUB-ABA ══════════
          Estavam espremidas dentro da faixa do topo, entre a data e o botao de
          marcar: tres assuntos diferentes na mesma linha — andar no tempo,
@@ -806,7 +806,7 @@ span.ajuda{display:block;margin-top:5px}
 
   <!-- ══════════ PRODUTOS ══════════ -->
   <!-- ══════════ PEDIDOS (restaurante) ══════════ -->
-  <section class="tela" id="tela-pedidos">
+  <section class="tela on" id="tela-pedidos">
     <div class="barra">
       <label class="check pedido-chave"><input type="checkbox" id="pdRecebendo"
              onchange="alternarRecebendo(this.checked)">
@@ -1152,7 +1152,7 @@ const DIAS = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
 let bd = null;          // banco em memória
 let salaoAtual = null;
 let diaAtual = hoje();
-let telaAtual = 'agenda';
+let telaAtual = 'pedidos';
 
 /* ── Utilidades de tempo ─────────────────────────────────────────────── */
 /* ⚠ "HOJE" É O DIA DO SALÃO, NÃO O DO APARELHO.
@@ -2029,8 +2029,11 @@ const minhasTelas = () => {
                         && (t[0] !== 'crediario' || crediarioNaAba())
                         && (restaurante || t[0] !== 'pedidos')
                         && (t[0] !== 'pedidosloja' || (!restaurante && lojaRecebePedidos()))
-                        && (!restaurante || t[0] !== 'procedimentos'));
+                        && (!restaurante || t[0] !== 'procedimentos')
+                        // PediHub: sem agenda, serviços e pacotes de salão.
+                        && !TELAS_DE_SALAO.includes(t[0]));
 };
+const TELAS_DE_SALAO = ['agenda', 'servicos', 'procedimentos', 'pacotes', 'pedidosloja'];
 
 /* O nome da aba. No restaurante os produtos SÃO o cardápio — mesma tela,
    mesmo cadastro, outro nome. */
@@ -2070,7 +2073,7 @@ function irPara(k){
      tela que o banco vai negar. Não é a trava — a trava é o RLS — é o que
      impede uma tela meio carregada quando o endereço vem de um atalho antigo
      ou de um clique programático. */
-  if(!minhasTelas().some(t => t[0] === k)) k = 'agenda';
+  if(!minhasTelas().some(t => t[0] === k)) k = 'pedidos';   // PediHub: a casa é Pedidos
   telaAtual = k;
   document.querySelectorAll('.tela').forEach(t => t.classList.remove('on'));
   document.getElementById('tela-' + k).classList.add('on');
@@ -10667,18 +10670,11 @@ function pintar(){
 /* Os tipos de negócio, num lugar só: esta lista é lida aqui, no seletor de
    "Meu negócio", e no primeiro passo do assistente. Duas listas divergindo
    fariam o assistente oferecer um tipo que o cadastro não aceita. */
+/* No PediHub toda casa é restaurante (64_so_restaurante.sql trava isso no
+   banco): o link é cardápio com entrega e retirada, e o painel tem a tela de
+   Pedidos (37_pedidos). Os tipos de salão do AgendaPro saíram. */
 const TIPOS_NEGOCIO = [
-  ['salao',     'Salão de beleza'],
-  ['barbearia', 'Barbearia'],
-  ['estetica',  'Estética'],
-  ['manicure',  'Manicure e pedicure'],
-  ['clinica',   'Clínica'],
-  ['tatuagem',  'Tatuagem'],
-  ['pet',       'Pet shop'],
-  /* Faz PEDIDO, e não agendamento: o link vira cardápio com entrega e
-     retirada, e o painel ganha a tela de Pedidos (37_pedidos). */
-  ['restaurante', 'Restaurante, pizzaria ou lanchonete'],
-  ['outro',     'Outro'],
+  ['restaurante', 'Restaurante, lanchonete, pizzaria ou delivery'],
 ];
 
 /* ── O HORÁRIO DA CIDADE DO SALÃO (58_fuso.sql) ───────────────────────────
@@ -11132,7 +11128,7 @@ function pintarSalao(){
            sintaxe e acontece antes de qualquer linha rodar. -->
 
       <div class="dupla">
-        <div>
+        <div style="display:none">
           <div class="secao" style="margin-bottom:8px">
             <span data-ico="tesoura" class="ic-pequeno"></span>Serviços e agendamento</div>
           <div class="regua" id="reguaModServico" role="group"
@@ -11141,7 +11137,7 @@ function pintarSalao(){
         </div>
         <div>
           <div class="secao" style="margin-bottom:8px">
-            <span data-ico="carrinho" class="ic-pequeno"></span>Produtos à venda</div>
+            <span data-ico="carrinho" class="ic-pequeno"></span>Cardápio no link</div>
           <div class="regua" id="reguaModLoja" role="group"
                aria-label="Mostrar produtos na página"
                style="justify-content:flex-start"></div>
@@ -15912,11 +15908,8 @@ async function salvarSenhaNova(){
 function usaServicosNoLink(sl){
   const s = sl || acharSalao(salaoAtual) || {};
   const v = (s.cfg || {}).usaServicos;
-  // No restaurante a agenda só existe ligada à mão — a mesma regra do link
-  // (`pedidos_da_casa().servicosTambem`).
-  if(s.tipo === 'restaurante') return v === true || String(v).trim().toLowerCase() === 'true';
-  if(v == null) return true;
-  return !NAO.includes(String(v).trim().toLowerCase());
+  // PediHub: só pedidos. Agendamento de serviço não existe no link.
+  return false;
 }
 function usaLojaNoLink(sl){
   const v = ((sl || acharSalao(salaoAtual) || {}).cfg || {}).loja;
@@ -16013,17 +16006,12 @@ function explicarModulos(){
   const alvo = document.getElementById('explicaModulos');
   if(!alvo) return;
   const s = modServicoEscolhido, l = modLojaEscolhida;
-  alvo.innerHTML =
-      (s && l) ? 'A sua página abre com os serviços e com a vitrine de '
-                 + 'produtos, e a cliente escolhe por onde começa.'
-    : (s && !l) ? 'A sua página abre só com os serviços e o agendamento. '
-                 + 'Nenhuma menção a produtos — nem botão, nem carrinho.'
-    : (!s && l) ? 'A sua página abre como loja: a vitrine de produtos e o '
-                 + 'pedido pelo WhatsApp. Ninguém consegue marcar horário '
-                 + 'por ela.'
-    : '<b>Os dois desligados:</b> a página vira um cartão de visita — nome, '
+  void s;   // PediHub: o agendamento não existe mais, só o cardápio.
+  alvo.innerHTML = l
+    ? 'O seu link abre com o cardápio, e o cliente faz o pedido por ele.'
+    : '<b>Cardápio desligado:</b> o link vira um cartão de visita — nome, '
       + 'foto, endereço e o botão do WhatsApp. Serve para publicar o link '
-      + 'enquanto você ainda monta o catálogo.';
+      + 'enquanto você ainda monta o cardápio.';
 
   /* Com a loja LIGADA, a frase acima promete a vitrine — e ela pode não vir.
      Pergunta com o que está digitado nos campos desta mesma aba, e não com o
@@ -16582,7 +16570,7 @@ function salvarCadastroSalao(){
        legítima nos dois, e com `||` desligar a loja gravaria `true` — o dono
        marcaria "Não", salvaria, e os produtos continuariam no link dele sem
        nada na tela explicando por quê. */
-    usaServicos: modServicoEscolhido ?? true,
+    usaServicos: false,   // PediHub: sem agendamento
     loja:        modLojaEscolhida    ?? true,
     /* ⚠ `undefined` NÃO APAGA: se o editor nem chegou a ser desenhado,
        o `Object.assign` mantém o que já estava gravado. `null` apaga, e é
@@ -22819,7 +22807,8 @@ let pedidosNovos = new Set();    // os que chegaram desde a última olhada
 let pedidoMexendo = null;
 let pedidosAbriuUmaVez = false;
 
-const restaurantePainel = () => ((acharSalao(salaoAtual) || {}).tipo === 'restaurante');
+// PediHub: toda casa é restaurante, inclusive na demonstração.
+const restaurantePainel = () => true;
 // "11965432100" → "(11) 96543-2100". Só para ler; o banco guarda os dígitos.
 function telefoneNaTela(d){
   const t = String(d || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '');

@@ -369,20 +369,14 @@ input.bom{border-color:rgba(21,128,61,.5)!important}
         <div class="erro-campo" id="e-fSalao" style="display:none"></div>
       </div>
 
-      <div class="campo">
+      <!-- PediHub: toda casa é restaurante (o banco trava isso no
+           64_so_restaurante.sql). O campo fica, escondido e já escolhido,
+           porque o resto do cadastro lê o fTipo. -->
+      <div class="campo" style="display:none">
         <label for="fTipo">Tipo de negócio <em>*</em></label>
         <div class="entrada sem-ic">
           <select id="fTipo" onchange="mudouTipo();validarCampo('fTipo')">
-            <option value="">Selecione</option>
-            <option value="salao">Salão de beleza</option>
-            <option value="barbearia">Barbearia</option>
-            <option value="manicure">Manicure e pedicure</option>
-            <option value="estetica">Estética</option>
-            <option value="clinica">Clínica</option>
-            <option value="tatuagem">Estúdio de tatuagem</option>
-            <option value="pet">Pet shop</option>
-            <option value="restaurante">Restaurante, pizzaria ou lanchonete</option>
-            <option value="outro">Outro</option>
+            <option value="restaurante" selected>Restaurante, lanchonete, pizzaria ou delivery</option>
           </select></div>
         <div class="ajuda" id="ajudaTipo">Define o vocabulário do sistema:
           barbearia diz "barbeiro", esmalteria diz "manicure".</div>

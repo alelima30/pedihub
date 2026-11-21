@@ -10816,6 +10816,19 @@ revoke all on function public.duvidas_limpas(jsonb) from public, anon, authentic
 revoke all on function public.duvidas_da_casa(text) from public;
 grant execute on function public.duvidas_da_casa(text) to anon, authenticated;
 
+alter table public.saloes alter column tipo set default 'restaurante';
+create or replace function public.saloes_so_restaurante()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.tipo := 'restaurante';
+  return new;
+end $$;
+drop trigger if exists saloes_so_restaurante on public.saloes;
+create trigger saloes_so_restaurante
+  before insert or update of tipo on public.saloes
+  for each row execute function public.saloes_so_restaurante();
+update public.saloes set tipo = 'restaurante' where tipo is distinct from 'restaurante';
+
 alter table public.agendamentos
   add column if not exists gerenciar_token uuid not null default gen_random_uuid();
 alter table public.lista_espera

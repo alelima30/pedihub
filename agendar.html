@@ -1694,8 +1694,8 @@ function moduloLigado(chave){
    plano não libera os pedidos: sem isso, o restaurante no Grátis abria uma
    "agenda" vazia no lugar do cardápio. Enquanto a resposta não chega, nada de
    agenda piscando na capa. */
-const casaFazServicos = () => ehRestaurante()
-  ? !!(pedidosCasa && pedidosCasa.servicosTambem) : moduloLigado('usaServicos');
+// PediHub: só pedidos — o link nunca oferece serviço nem agendamento.
+const casaFazServicos = () => false;
 const casaVendeProdutos = () => moduloLigado('loja');
 
 /* ⚠ A PENEIRA MORA NAS DUAS CONSULTAS, e não em cada tela que desenha.
