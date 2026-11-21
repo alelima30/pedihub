@@ -65,7 +65,9 @@ await d.chamar('salvar_opcoes_do_produto', { p_produto: pizza, p_grupos: [
   { nome:'Sabores', min:1, max:2, regra:'maior', opcoes:[
     { nome:'Calabresa', preco:'50' }, { nome:'Frango', preco:'55' }, { nome:'Camarão', preco:'80' }] },
   { nome:'Borda', min:0, max:1, regra:'soma', opcoes:[{ nome:'Catupiry', preco:'8' }] }] });
-ok('uma pizzaria com a pizza de sabores e borda, e um refrigerante simples');
+await d.inserir('cupons', { salaoId, codigo:'DEZ', tipo:'valor', valor:10, valeAgendamento:false,
+  valeProdutos:true, umPorCliente:true, ativo:true });
+ok('uma pizzaria com a pizza de sabores e borda, um refrigerante simples e o cupom DEZ');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
@@ -114,6 +116,12 @@ await c.evaluate(() => irPara('pedido'));
 await c.waitForTimeout(500);
 await c.evaluate(() => { escolherNoPedido('entrega', 'retirada'); escolherNoPedido('pagamento', 'pix');
   anotarPedido('nome', 'Maria'); anotarPedido('tel', '11999887766'); });
+await c.waitForTimeout(300);
+await c.fill('#pdCupom', 'dez');
+await c.click('.pd-cupom button');
+await c.waitForSelector('.pd-cupom.on', { timeout: 8000 });
+igual('o cupom entra na conta: 98 − 10 = R$ 88,00',
+  limpo(await c.textContent('.pd-total b')), 'R$ 88,00');
 await c.evaluate(() => confirmarPedido());
 await c.waitForTimeout(1500);
 const ped = await um(`select p.total::text total, (select string_agg(i.nome || '|' || i.preco || '|' || i.quantidade, ' ; ' order by i.ordem)
@@ -121,7 +129,7 @@ const ped = await um(`select p.total::text total, (select string_agg(i.nome || '
                         from public.pedidos p where p.salao_id = $1`, [salaoId]);
 verdade('o pedido foi gravado', !!ped, 'nenhum pedido no banco');
 if(ped){
-  igual('o total do banco bate com a tela (88 + 10)', ped.total, '98.00');
+  igual('o total do banco bate com a tela (88 + 10 − cupom de 10)', ped.total, '88.00');
   igual('os itens: a pizza com as opções e o preço da regra, e o refri',
     ped.itens, 'Refrigerante|10.00|1 ; Pizza grande — Sabores: ½ Calabresa, ½ Camarão · Borda: Catupiry|88.00|1');
 }

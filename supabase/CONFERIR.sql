@@ -1657,6 +1657,21 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or pg_get_functiondef(to_regprocedure('public.fazer_pedido(text,jsonb)')) not like '%preco_com_opcoes%'
               then 'cole o 98_modulos.sql (67_complementos)' else '' end
   union all
+  /* PediHub (68 e 69): o cupom no pedido e o esgotado com um toque. */
+  select 85, 'Cupom no pedido e esgotado com um toque',
+         case when not exists (select 1 from information_schema.columns
+                                where table_name = 'pedidos' and column_name = 'desconto')
+                or to_regprocedure('public.cupom_do_pedido_previa(text,text,numeric)') is null
+                or to_regprocedure('public.marcar_esgotado(uuid,boolean)') is null
+                or pg_get_functiondef(to_regprocedure('public.fazer_pedido(text,jsonb)')) not like '%cupom_do_pedido%'
+              then 'FALTA' else 'certo' end,
+         case when not exists (select 1 from information_schema.columns
+                                where table_name = 'pedidos' and column_name = 'desconto')
+                or to_regprocedure('public.cupom_do_pedido_previa(text,text,numeric)') is null
+                or to_regprocedure('public.marcar_esgotado(uuid,boolean)') is null
+                or pg_get_functiondef(to_regprocedure('public.fazer_pedido(text,jsonb)')) not like '%cupom_do_pedido%'
+              then 'cole o 98_modulos.sql (68_cupom_no_pedido e 69_esgotado)' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um

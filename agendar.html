@@ -2298,7 +2298,7 @@ function desenhar(){
                                bp.disabled = pedidoEnviando || !itensDoPedido().length || !pedidosAbertos();
                                bp.textContent = pedidoEnviando ? 'Mandando o pedido…'
                                  : !pedidosAbertos() ? 'Fechado agora'
-                                 : 'Confirmar pedido · ' + real(totalDoCarrinho() + (taxaDoPedido() || 0)); }
+                                 : 'Confirmar pedido · ' + real(totalDoPedido()); }
   if(tela === 'acompanhar')  { desenharAcompanhar(); trilhaAte(0); bp.textContent = 'Voltar ao início'; }
   if(tela === 'servico')     { desenharServicos();  trilhaAte(1);
                                bp.disabled = !escolha.servicos.length;
@@ -6283,6 +6283,8 @@ async function carregarPedidosDaCasa(){
   try{ opcoesCasa = await Dados.chamar('opcoes_da_casa', { p_slug: salao.slug }) || {}; }
   catch(e){ console.info('[PediHub] opcoes_da_casa:', e.message); opcoesCasa = {}; }
   lerCarrinhoOpcoes();
+  try{ casaTemCupom = !!(await Dados.chamar('casa_tem_cupom', { p_slug: salao.slug })); }
+  catch(e){ casaTemCupom = false; }
   const ult = meusPedidosGuardados()[0];
   if(ult){
     try{
@@ -6323,15 +6325,72 @@ function taxaDoPedido(){
 }
 const itensDoPedido = () => produtosDaLoja().filter(p => carrinho[p.id] > 0).concat(linhasComOpcoes());
 
+/* ── O CUPOM NO PEDIDO (68_cupom_no_pedido.sql) ─────────────────────────────
+   O campo só aparece se a casa tem cupom valendo (`casa_tem_cupom`). A conta
+   é PRÉVIA, do banco, sobre o subtotal; o `fazer_pedido()` refaz e confere
+   o "um por cliente" pelo WhatsApp. Mudou o carrinho, a prévia é refeita. */
+var casaTemCupom = false;
+let cupomPedido = null;        // { codigo, desconto, rotulo, base } aceito na prévia
+let cupomPedidoErro = '';
+let cupomConferindo = false;
+const descontoDoPedido = () => cupomPedido ? Math.min(Number(cupomPedido.desconto) || 0, totalDoCarrinho()) : 0;
+const totalDoPedido = () => totalDoCarrinho() - descontoDoPedido() + (taxaDoPedido() || 0);
+
+async function aplicarCupomNoPedido(){
+  const campo = document.getElementById('pdCupom');
+  const codigo = String(campo ? campo.value : '').trim();
+  if(!codigo){ cupomPedido = null; cupomPedidoErro = ''; desenhar(); return; }
+  cupomConferindo = true; cupomPedidoErro = ''; desenhar();
+  try{
+    const r = await Dados.chamar('cupom_do_pedido_previa',
+      { p_slug: salao.slug, p_codigo: codigo, p_subtotal: totalDoCarrinho() });
+    if(r && r.motivo){ cupomPedido = null; cupomPedidoErro = r.motivo; }
+    else cupomPedido = { codigo: r.codigo, desconto: Number(r.desconto), rotulo: r.rotulo, base: totalDoCarrinho() };
+  }catch(e){ cupomPedido = null; cupomPedidoErro = 'Não consegui conferir o cupom agora.'; }
+  cupomConferindo = false;
+  desenhar();
+}
+function tirarCupomDoPedido(){ cupomPedido = null; cupomPedidoErro = ''; desenhar(); }
+// O carrinho mudou depois do cupom aceito: refaz a prévia (10% de outro valor).
+function conferirCupomDoPedido(){
+  if(cupomPedido && !cupomConferindo && cupomPedido.base !== totalDoCarrinho()){
+    const codigo = cupomPedido.codigo;
+    cupomConferindo = true;
+    Dados.chamar('cupom_do_pedido_previa', { p_slug: salao.slug, p_codigo: codigo, p_subtotal: totalDoCarrinho() })
+      .then(r => { cupomPedido = r && !r.motivo
+          ? { codigo: r.codigo, desconto: Number(r.desconto), rotulo: r.rotulo, base: totalDoCarrinho() } : null;
+        cupomPedidoErro = r && r.motivo ? r.motivo : ''; })
+      .catch(() => {}).finally(() => { cupomConferindo = false; desenhar(); });
+  }
+}
+function campoDoCupomHtml(){
+  if(!casaTemCupom) return '';
+  if(cupomPedido) return `<div class="pd-cupom on">
+      <span>Cupom <b>${escapar(cupomPedido.codigo)}</b> (${escapar(cupomPedido.rotulo || '')}) aplicado</span>
+      <button type="button" class="link" onclick="tirarCupomDoPedido()">Tirar</button></div>`;
+  return `<div class="campo" style="margin-top:14px">
+      <label for="pdCupom">Tem um cupom?</label>
+      <div class="pd-cupom">
+        <input id="pdCupom" maxlength="30" autocapitalize="characters" placeholder="Código do cupom"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();aplicarCupomNoPedido()}">
+        <button type="button" class="btn btn-peq" onclick="aplicarCupomNoPedido()" ${cupomConferindo ? 'disabled' : ''}>
+          ${cupomConferindo ? 'Conferindo…' : 'Aplicar'}</button>
+      </div>
+      ${cupomPedidoErro ? `<p class="pd-alerta">${escapar(cupomPedidoErro)}</p>` : ''}
+    </div>`;
+}
+
 function contaDoPedidoHtml(){
   const sub = totalDoCarrinho(), taxa = taxaDoPedido(), c = pedidosCasa || {};
   const minimo = Number(c.minimo) || 0;
   const taxaEscrita = taxa === null ? 'escolha o bairro' : taxa ? real(taxa) : 'grátis';
   return `
     <div class="pd-linha"><span>Subtotal</span><b>${real(sub)}</b></div>
+    ${descontoDoPedido() ? `<div class="pd-linha pd-desconto"><span>Cupom ${escapar(cupomPedido.codigo)}</span>
+      <b>− ${real(descontoDoPedido())}</b></div>` : ''}
     ${formDoPedido().entrega === 'entrega' ? `<div class="pd-linha"><span>Taxa de entrega</span>
       <b>${taxaEscrita}</b></div>` : ''}
-    <div class="pd-linha pd-total"><span>Total</span><b>${real(sub + (taxa || 0))}</b></div>
+    <div class="pd-linha pd-total"><span>Total</span><b>${real(sub - descontoDoPedido() + (taxa || 0))}</b></div>
     ${minimo && sub < minimo ? `<p class="pd-alerta">O pedido mínimo é de ${real(minimo)}. Faltam
       ${real(minimo - sub)}.</p>` : ''}`;
 }
@@ -6341,12 +6400,13 @@ function atualizarContaDoPedido(){
   // O total do botão também: trocar o bairro muda a taxa.
   const bp = document.getElementById('btPrincipal');
   if(bp && tela === 'pedido' && !pedidoEnviando && pedidosAbertos())
-    bp.textContent = 'Confirmar pedido · ' + real(totalDoCarrinho() + (taxaDoPedido() || 0));
+    bp.textContent = 'Confirmar pedido · ' + real(totalDoPedido());
 }
 
 function desenharPedido(){
   const alvo = document.getElementById('pedidoCorpo');
   if(!alvo) return;
+  conferirCupomDoPedido();
   const itens = itensDoPedido(), f = formDoPedido(), c = pedidosCasa || {};
   if(!itens.length){
     alvo.innerHTML = `<div class="recado">O pedido está vazio. Escolha no cardápio o que vai pedir.
@@ -6419,6 +6479,7 @@ function desenharPedido(){
                 oninput="anotarPedido('obs', this.value)">${escapar(f.obs || '')}</textarea>
     </div>
 
+    ${campoDoCupomHtml()}
     <div class="pd-bloco" id="pedidoConta">${contaDoPedidoHtml()}</div>
     ${c.tempo ? `<p class="pista">Tempo estimado: ${escapar(c.tempo)}.</p>` : ''}
     ${pedidoErro ? `<div class="recado erro" role="alert">${escapar(pedidoErro)}</div>` : ''}`;
@@ -6456,6 +6517,7 @@ async function confirmarPedido(){
     r = await Dados.chamar('fazer_pedido', { p_slug: salao.slug, p_pedido: {
       nome: f.nome.trim(), telefone: f.tel, entrega: f.entrega, pagamento: f.pagamento,
       troco: f.pagamento === 'dinheiro' ? f.troco.trim() : '', observacao: f.obs.trim(),
+      cupom: cupomPedido ? cupomPedido.codigo : '',
       endereco: f.entrega === 'entrega' ? { rua: f.rua, numero: f.numero, complemento: f.complemento,
                                             bairro: f.bairro, referencia: f.referencia } : null,
       itens: itensDoPedido().map(p => ({ produto: p.produtoId || p.id, quantidade: carrinho[p.id],

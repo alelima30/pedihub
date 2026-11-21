@@ -68,6 +68,8 @@
 --   65_pedido_vira_venda.sql o pedido entregue vira venda: caixa, faturamento e relatórios
 --   66_planos_pedihub.sql    os planos do PediHub: Grátis, Essencial e Profissional
 --   67_complementos.sql      complementos e variações do cardápio: tamanho, borda, adicionais, meio a meio
+--   68_cupom_no_pedido.sql   o cupom de desconto no pedido do restaurante, sobre o subtotal
+--   69_esgotado.sql          marcar esgotado com um toque, por qualquer um da equipe
 --   59_push.sql              os avisos no celular (push): aparelhos, fila e gatilhos
 --   60_dashboard.sql         o Ranking: clientes, profissionais, novas e recorrentes, visitas do link
 --   61_teste_30_dias.sql     o teste grátis de 30 dias, com 2 profissionais
@@ -24006,7 +24008,209 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 4) FAZER O PEDIDO — o do 37, agora com as opções de cada item
+-- 4) FAZER O PEDIDO — a versão com as opções mora no 68_cupom_no_pedido.sql,
+--    que acrescenta o cupom. Uma definição só, no arquivo de número maior.
+-- ---------------------------------------------------------------------------
+
+revoke all on function public.grupos_do_produto(uuid) from public, anon, authenticated;
+revoke all on function public.opcoes_do_produto(uuid) from public, anon;
+grant execute on function public.opcoes_do_produto(uuid) to authenticated;
+revoke all on function public.salvar_opcoes_do_produto(uuid, jsonb) from public, anon;
+grant execute on function public.salvar_opcoes_do_produto(uuid, jsonb) to authenticated;
+revoke all on function public.opcoes_da_casa(text) from public;
+grant execute on function public.opcoes_da_casa(text) to anon, authenticated;
+revoke all on function public.preco_com_opcoes(uuid, numeric, jsonb) from public, anon, authenticated;
+
+-- ###########################################################################
+-- ## 68_cupom_no_pedido.sql
+-- ###########################################################################
+
+-- ===========================================================================
+-- 68_cupom_no_pedido.sql — o cupom de desconto no pedido do restaurante
+--
+-- O cupom (34_cupons) nasceu para o agendamento e a loja do salão, e calcula
+-- o desconto sobre o preço do CADASTRO do produto. No pedido do restaurante
+-- o item tem complementos (67): a pizza de base R$ 0 custa R$ 88 com os
+-- sabores. Então o cupom do pedido vale sobre o SUBTOTAL que o banco
+-- calculou, com as mesmas regras do cupom de sempre — ativo, validade,
+-- limite de usos, um por cliente (pelo WhatsApp) — e nunca sobre a taxa de
+-- entrega.
+--
+--   · pedidos ganha `cupom_codigo` e `desconto`; total = subtotal − desconto
+--     + entrega; o mínimo do pedido conta ANTES do desconto;
+--   · o uso fica em `cupom_usos` com o pedido; pedido CANCELADO devolve o uso
+--     (não conta no limite nem no "um por cliente");
+--   · a venda (65) leva o desconto para a comanda — caixa e relatórios batem;
+--   · no PediHub todo cupom vale para pedido: o gatilho marca vale_produtos.
+--
+-- Pode rodar mais de uma vez.
+-- ===========================================================================
+
+alter table public.pedidos add column if not exists cupom_codigo text;
+alter table public.pedidos add column if not exists desconto numeric(10,2) not null default 0
+  check (desconto >= 0);
+alter table public.cupom_usos add column if not exists pedido_id uuid
+  references public.pedidos(id) on delete cascade;
+
+/* No PediHub o cupom é de pedido. Quem cria pelo painel nem vê a escolha. */
+create or replace function public.cupom_vale_pedido()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.vale_produtos := true;
+  return new;
+end $$;
+drop trigger if exists cupom_vale_pedido on public.cupons;
+create trigger cupom_vale_pedido before insert or update on public.cupons
+  for each row execute function public.cupom_vale_pedido();
+update public.cupons set vale_produtos = true where not vale_produtos;
+
+-- ---------------------------------------------------------------------------
+-- 1) A CONTA DO CUPOM NO PEDIDO
+--    p_tel nulo = prévia (não pergunta "esse número já usou?", que seria uma
+--    porta para descobrir quem é cliente de quem).
+-- ---------------------------------------------------------------------------
+create or replace function public.cupom_do_pedido(
+  p_salao uuid, p_codigo text, p_subtotal numeric, p_tel text, p_travar boolean default false)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare
+  c      public.cupons%rowtype;
+  v_cod  text := upper(regexp_replace(coalesce(p_codigo, ''), '\s', '', 'g'));
+  v_tel  text := nullif(public.telefone_nacional(p_tel), '');
+  v_hoje date;
+  v_usos int;
+  v_desc numeric(10,2);
+begin
+  if not coalesce(public.recurso_bool(p_salao, 'cupons'), false) then
+    return jsonb_build_object('motivo', 'Este restaurante não está aceitando cupons agora.');
+  end if;
+  if v_cod = '' then
+    return jsonb_build_object('motivo', 'Digite o código do cupom.');
+  end if;
+  select * into c from public.cupons x where x.salao_id = p_salao and x.codigo = v_cod and x.ativo;
+  if not found then
+    return jsonb_build_object('motivo', 'Cupom não encontrado. Confira as letras e os números.');
+  end if;
+  if p_travar then perform 1 from public.cupons x where x.id = c.id for update; end if;
+
+  select (now() at time zone coalesce(s.fuso, 'America/Sao_Paulo'))::date into v_hoje
+    from public.saloes s where s.id = p_salao;
+  if c.inicio is not null and v_hoje < c.inicio then
+    return jsonb_build_object('motivo', 'Este cupom começa a valer em ' || to_char(c.inicio, 'DD/MM/YYYY') || '.');
+  end if;
+  if c.fim is not null and v_hoje > c.fim then
+    return jsonb_build_object('motivo', 'Este cupom venceu em ' || to_char(c.fim, 'DD/MM/YYYY') || '.');
+  end if;
+
+  -- Os usos que contam: os de pedido não cancelado (e os antigos, sem pedido).
+  if c.limite_total is not null then
+    select count(*) into v_usos from public.cupom_usos u
+      left join public.pedidos pe on pe.id = u.pedido_id
+     where u.cupom_id = c.id and (u.pedido_id is null or pe.status <> 'cancelado');
+    if v_usos >= c.limite_total then
+      return jsonb_build_object('motivo', 'Este cupom já foi usado o máximo de vezes.');
+    end if;
+  end if;
+  if c.um_por_cliente and v_tel is not null and exists (
+       select 1 from public.cupom_usos u left join public.pedidos pe on pe.id = u.pedido_id
+        where u.cupom_id = c.id and u.telefone = v_tel
+          and (u.pedido_id is null or pe.status <> 'cancelado')) then
+    return jsonb_build_object('motivo', 'Você já usou este cupom.');
+  end if;
+
+  if coalesce(p_subtotal, 0) <= 0 then
+    return jsonb_build_object('motivo', 'Escolha os itens antes de usar o cupom.');
+  end if;
+  v_desc := case when c.tipo = 'pct' then round(p_subtotal * c.valor / 100, 2)
+                 else least(c.valor, p_subtotal) end;
+  return jsonb_build_object('cupom_id', c.id, 'codigo', c.codigo, 'desconto', v_desc,
+    'rotulo', case when c.tipo = 'pct'
+                then replace(trim(trailing '.' from trim(trailing '0' from c.valor::text)), '.', ',') || '%'
+                else 'R$ ' || replace(to_char(c.valor, 'FM999999990.00'), '.', ',') end,
+    'motivo', null);
+end $$;
+
+-- A prévia, para o link: pelo apelido, sem telefone, e sem o id do cupom.
+create or replace function public.cupom_do_pedido_previa(p_slug text, p_codigo text, p_subtotal numeric)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare v_salao uuid; r jsonb;
+begin
+  select id into v_salao from public.saloes where slug = p_slug and status = 'ativo';
+  if v_salao is null then return jsonb_build_object('motivo', 'Estabelecimento não encontrado.'); end if;
+  r := public.cupom_do_pedido(v_salao, p_codigo, p_subtotal, null, false);
+  return r - 'cupom_id';
+end $$;
+
+/* O link pergunta se vale mostrar o campo "Tem cupom?". */
+create or replace function public.casa_tem_cupom(p_slug text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce(public.recurso_bool(s.id, 'cupons'), false) and exists (
+           select 1 from public.cupons c
+            where c.salao_id = s.id and c.ativo
+              and (c.fim is null or c.fim >= (now() at time zone coalesce(s.fuso, 'America/Sao_Paulo'))::date))
+    from public.saloes s where s.slug = p_slug and s.status = 'ativo'
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 2) A VENDA LEVA O DESCONTO (a função do 65, com a linha do desconto)
+-- ---------------------------------------------------------------------------
+create or replace function public.pedido_vira_venda(p_pedido uuid)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare
+  p       public.pedidos%rowtype;
+  v_cli   uuid;
+  v_com   uuid;
+  v_total numeric;
+begin
+  select * into p from public.pedidos where id = p_pedido for update;
+  if p.id is null or p.status <> 'entregue' or p.comanda_id is not null then
+    return p.comanda_id;
+  end if;
+
+  -- A comanda pede uma ficha. A do pedido, ou a que der para achar/criar agora.
+  v_cli := p.cliente_id;
+  if v_cli is null then
+    begin
+      v_cli := public.ficha_do_cliente(p.salao_id, p.nome, p.telefone);
+    exception when others then
+      v_cli := null;
+    end;
+  end if;
+  if v_cli is null then
+    update public.pedidos
+       set venda_erro = 'Não deu para criar a ficha do cliente; a venda não entrou no caixa.'
+     where id = p.id;
+    return null;
+  end if;
+
+  insert into public.comandas (salao_id, cliente_id, status, acrescimo, desconto, desconto_motivo)
+       values (p.salao_id, v_cli, 'aberta', coalesce(p.taxa_entrega, 0), coalesce(p.desconto, 0),
+               case when coalesce(p.desconto, 0) > 0 then 'Cupom ' || coalesce(p.cupom_codigo, '') end)
+    returning id into v_com;
+
+  insert into public.comanda_itens (comanda_id, tipo, produto_id, descricao, qtd, preco_unit)
+  select v_com, 'produto', i.produto_id, i.nome, i.quantidade, i.preco
+    from public.pedido_itens i
+   where i.pedido_id = p.id
+   order by i.ordem;
+
+  select t.total into v_total from public.comandas_totais t where t.id = v_com;
+  if coalesce(v_total, 0) > 0 then
+    insert into public.pagamentos (comanda_id, forma, valor)
+         values (v_com, case p.pagamento when 'cartao' then 'credito' else p.pagamento end,
+                 round(v_total, 2));
+  end if;
+  update public.comandas set status = 'fechada', fechada_em = coalesce(p.entregue_em, now())
+   where id = v_com;
+
+  update public.pedidos
+     set comanda_id = v_com, venda_erro = null,
+         cliente_id = coalesce(cliente_id, v_cli)
+   where id = p.id;
+  return v_com;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 3) FAZER O PEDIDO — o do 37, com as opções de cada item (67) e o cupom
 -- ---------------------------------------------------------------------------
 create or replace function public.fazer_pedido(p_slug text, p_pedido jsonb)
 returns jsonb language plpgsql security definer set search_path = public as $$
@@ -24033,6 +24237,9 @@ declare
   v_item     jsonb;
   v_calc     jsonb;
   v_linhas   jsonb := '[]'::jsonb;
+  v_cod      text;
+  v_cupom    jsonb;
+  v_desc     numeric(10,2) := 0;
   pr         record;
 begin
   select * into s from public.saloes where slug = p_slug and status = 'ativo';
@@ -24165,7 +24372,17 @@ begin
     raise exception 'O pedido mínimo é de %.', public.reais((c->>'minimo')::numeric)
       using errcode = 'check_violation';
   end if;
-  v_total := v_subtotal + v_taxa;
+  /* O cupom (68): sobre o subtotal dos itens, nunca sobre a entrega. O
+     mínimo do pedido é conferido ANTES do desconto, como em todo delivery. */
+  v_cod := nullif(upper(regexp_replace(coalesce(p_pedido->>'cupom', ''), '\s', '', 'g')), '');
+  if v_cod is not null then
+    v_cupom := public.cupom_do_pedido(s.id, v_cod, v_subtotal, v_tel, true);
+    if v_cupom->>'motivo' is not null then
+      raise exception '%', v_cupom->>'motivo' using errcode = 'check_violation';
+    end if;
+    v_desc := least((v_cupom->>'desconto')::numeric, v_subtotal);
+  end if;
+  v_total := v_subtotal - v_desc + v_taxa;
 
   if v_pag = 'dinheiro' and coalesce(p_pedido->>'troco', '') <> '' then
     if not (p_pedido->>'troco') ~ '^[0-9]+([.,][0-9]{1,2})?$' then
@@ -24187,12 +24404,19 @@ begin
   v_numero := public.proximo_numero(s.id, 'pedido');
   insert into public.pedidos
     (salao_id, numero, cliente_id, nome, telefone, tipo_entrega, endereco, bairro,
-     subtotal, taxa_entrega, total, pagamento, troco_para, observacao)
+     subtotal, taxa_entrega, total, pagamento, troco_para, observacao, cupom_codigo, desconto)
   values (s.id, v_numero, v_cliente, v_nome, v_tel, v_modo,
           case when v_modo = 'entrega' then v_end end,
           case when v_modo = 'entrega' then v_bairro end,
-          v_subtotal, v_taxa, v_total, v_pag, v_troco, v_obs)
+          v_subtotal, v_taxa, v_total, v_pag, v_troco, v_obs,
+          case when v_cupom is not null then v_cupom->>'codigo' end, v_desc)
   returning id, token into v_pedido, v_token;
+
+  if v_cupom is not null then
+    insert into public.cupom_usos (cupom_id, salao_id, origem, telefone, desconto, pedido_id)
+         values ((v_cupom->>'cupom_id')::uuid, s.id, 'produtos',
+                 nullif(public.telefone_nacional(v_tel), ''), v_desc, v_pedido);
+  end if;
 
   for v_item in select value from jsonb_array_elements(v_linhas) loop
     v_ordem := v_ordem + 1;
@@ -24207,17 +24431,82 @@ begin
   end if;
 
   return jsonb_build_object('numero', v_numero, 'token', v_token,
-                            'subtotal', v_subtotal, 'taxa', v_taxa, 'total', v_total,
+                            'subtotal', v_subtotal, 'desconto', v_desc, 'taxa', v_taxa, 'total', v_total,
                             'status', 'recebido');
 end $$;
 
-revoke all on function public.grupos_do_produto(uuid) from public, anon, authenticated;
-revoke all on function public.opcoes_do_produto(uuid) from public, anon;
-grant execute on function public.opcoes_do_produto(uuid) to authenticated;
-revoke all on function public.salvar_opcoes_do_produto(uuid, jsonb) from public, anon;
-grant execute on function public.salvar_opcoes_do_produto(uuid, jsonb) to authenticated;
-revoke all on function public.opcoes_da_casa(text) from public;
-grant execute on function public.opcoes_da_casa(text) to anon, authenticated;
-revoke all on function public.preco_com_opcoes(uuid, numeric, jsonb) from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 4) O PAINEL VÊ O CUPOM (a lista do 37, com o desconto)
+-- ---------------------------------------------------------------------------
+create or replace function public.pedidos_da_loja(p_salao uuid, p_horas int default 24)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.e_equipe(p_salao) then
+    raise exception 'Sem permissão neste estabelecimento.'
+      using errcode = 'insufficient_privilege';
+  end if;
+  return coalesce((
+    select jsonb_agg(jsonb_build_object(
+             'id', p.id, 'numero', p.numero, 'status', p.status,
+             'nome', p.nome, 'telefone', p.telefone, 'entrega', p.tipo_entrega,
+             'endereco', p.endereco, 'bairro', p.bairro,
+             'subtotal', p.subtotal, 'taxa', p.taxa_entrega, 'total', p.total,
+             'desconto', p.desconto, 'cupom', p.cupom_codigo, 'vendaErro', p.venda_erro,
+             'pagamento', p.pagamento, 'troco', p.troco_para,
+             'observacao', p.observacao, 'motivo', p.motivo,
+             'cancelado_por', p.cancelado_por,
+             'criado_em', p.criado_em, 'aceito_em', p.aceito_em,
+             'saiu_em', p.saiu_em, 'pronto_em', p.pronto_em,
+             'entregue_em', p.entregue_em, 'cancelado_em', p.cancelado_em,
+             'itens', (select coalesce(jsonb_agg(jsonb_build_object(
+                         'nome', i.nome, 'quantidade', i.quantidade, 'preco', i.preco,
+                         'observacao', i.observacao) order by i.ordem), '[]'::jsonb)
+                         from public.pedido_itens i where i.pedido_id = p.id))
+           order by p.criado_em desc)
+      from public.pedidos p
+     where p.salao_id = p_salao
+       and (p.status not in ('entregue', 'cancelado')
+            or p.criado_em > now() - make_interval(hours => greatest(1, least(coalesce(p_horas, 24), 24 * 31))))
+  ), '[]'::jsonb);
+end $$;
+
+revoke all on function public.cupom_do_pedido(uuid, text, numeric, text, boolean) from public, anon, authenticated;
+revoke all on function public.cupom_do_pedido_previa(text, text, numeric) from public;
+grant execute on function public.cupom_do_pedido_previa(text, text, numeric) to anon, authenticated;
+revoke all on function public.casa_tem_cupom(text) from public;
+grant execute on function public.casa_tem_cupom(text) to anon, authenticated;
+revoke all on function public.pedido_vira_venda(uuid) from public, anon, authenticated;
 revoke all on function public.fazer_pedido(text, jsonb) from public;
 grant execute on function public.fazer_pedido(text, jsonb) to anon, authenticated;
+revoke all on function public.pedidos_da_loja(uuid, int) from public, anon;
+grant execute on function public.pedidos_da_loja(uuid, int) to authenticated;
+
+-- ###########################################################################
+-- ## 69_esgotado.sql
+-- ###########################################################################
+
+-- ===========================================================================
+-- 69_esgotado.sql — marcar "esgotado" com um toque, por qualquer um da equipe
+--
+-- Editar o cardápio é da gestão (02_rls, prod_gerir). Mas quem vê a massa
+-- acabar é a cozinha e o balcão, no meio do movimento — e não dá para
+-- esperar o dono. Esta função muda UMA coisa, a disponibilidade do item
+-- (`produtos.ativo`), e deixa toda a equipe fazê-lo. Preço, nome e o resto
+-- continuam só da gestão.
+--
+-- Pode rodar mais de uma vez.
+-- ===========================================================================
+create or replace function public.marcar_esgotado(p_produto uuid, p_esgotado boolean)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_salao uuid;
+begin
+  select salao_id into v_salao from public.produtos where id = p_produto;
+  if v_salao is null or not public.e_equipe(v_salao) then
+    raise exception 'Sem permissão neste estabelecimento.' using errcode = 'insufficient_privilege';
+  end if;
+  update public.produtos set ativo = not coalesce(p_esgotado, false) where id = p_produto;
+  return jsonb_build_object('ok', true, 'ativo', not coalesce(p_esgotado, false));
+end $$;
+revoke all on function public.marcar_esgotado(uuid, boolean) from public, anon;
+grant execute on function public.marcar_esgotado(uuid, boolean) to authenticated;

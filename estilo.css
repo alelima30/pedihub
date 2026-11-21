@@ -5297,6 +5297,12 @@ body.tem-cor-produtos .loja-cat.on{
   background:var(--painel); border-top:1px solid var(--borda) }
 .op-confirmar{ flex:1; min-height:46px }
 .op-confirmar[data-falta]{ opacity:.55 }
+/* O cupom no pedido (68). */
+.pd-cupom{ display:flex; gap:8px; align-items:center }
+.pd-cupom input{ flex:1; min-width:0; text-transform:uppercase }
+.pd-cupom.on{ justify-content:space-between; margin-top:14px; padding:10px 12px; border-radius:var(--r);
+  border:1px dashed var(--ok); background:var(--su-soft); font-size:14px }
+.pd-desconto b{ color:var(--ok) }
 .pd-etapas{ list-style:none; padding:0; margin:14px 0 }
 .pd-etapas li{ display:flex; gap:12px; align-items:flex-start; padding:8px 0; color:var(--txt3) }
 .pd-etapas li.feito, .pd-etapas li.agora{ color:var(--txt) }

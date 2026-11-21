@@ -80,6 +80,8 @@ insert into porta_aberta values
   ('fazer_pedido',            'o pedido do link: preço, taxa e limites conferidos lá dentro'),
   ('pedidos_da_casa',         'taxas, mínimo e se está aberto — o que a página já mostra'),
   ('opcoes_da_casa',          'os complementos do cardápio à venda — o que a página já mostra (67)'),
+  ('cupom_do_pedido_previa',  'a prévia do cupom no link: sem telefone e sem o id do cupom (68)'),
+  ('casa_tem_cupom',          'sim ou não: o link mostra o campo do cupom (68)'),
 
   -- Cadastro: precisam responder a quem ainda não tem login.
   ('slug_disponivel',         'confere o apelido enquanto a pessoa digita'),

@@ -2041,8 +2041,8 @@ const minhasTelas = () => {
                         // PediHub: sem agenda, serviços e pacotes de restaurante.
                         && !TELAS_DE_SALAO.includes(t[0]));
 };
-// Cupons e Ranking saem até valerem para o pedido (hoje só contam a agenda e a loja de salão).
-const TELAS_DE_SALAO = ['agenda', 'servicos', 'procedimentos', 'pacotes', 'pedidosloja', 'cupons', 'ranking'];
+// O Ranking sai até valer para o pedido (hoje conta a agenda). Os Cupons voltaram: valem no pedido (68).
+const TELAS_DE_SALAO = ['agenda', 'servicos', 'procedimentos', 'pacotes', 'pedidosloja', 'ranking'];
 
 /* O nome da aba. No restaurante os produtos SÃO o cardápio — mesma tela,
    mesmo cadastro, outro nome. */
@@ -2210,7 +2210,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.612e59';
+const VERSAO_APP = 'v9.30a6e5';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -4016,8 +4016,7 @@ function pintarCupons(){
   alvo.innerHTML = lista.map(c => {
     const usos = usosDosCupons.mapa ? (usosDosCupons.mapa[c.id] || 0) : null;
     const [sit, cls] = situacaoDoCupom(c, usos);
-    const onde = c.valeAgendamento && c.valeProdutos ? 'no agendamento e na loja'
-      : c.valeProdutos ? 'na loja' : 'no agendamento';
+    const onde = 'no pedido';   // PediHub: todo cupom vale no pedido (68)
     const svs = c.servicos || [];
     const contagem = [
       usos == null ? '' : usos + (usos === 1 ? ' uso' : ' usos'),
@@ -4031,7 +4030,7 @@ function pintarCupons(){
             <span class="tag ${cls}">${sit}</span></h3>
           <p style="color:var(--txt2);font-size:13.5px;margin-top:2px">
             ${rotuloDoCupom(c)} · vale ${onde} · ${validadeDoCupom(c)}</p>
-          ${c.valeAgendamento ? `<p style="font-size:13px;color:var(--txt2);margin-top:6px">
+          ${false && c.valeAgendamento ? `<p style="font-size:13px;color:var(--txt2);margin-top:6px">
             <b>Serviços:</b> ${svs.length
               ? svs.map(id => escapar((acharServico(id) || {}).nome || '?')).join(', ')
               : 'todos'}</p>` : ''}
@@ -4052,11 +4051,11 @@ function abrirCupom(cid){
   abrirModal(c ? 'Editar cupom' : 'Novo cupom', `
     <div class="campo"><label for="cpCodigo">Código</label>
       <input id="cpCodigo" value="${escapar(c ? c.codigo : '')}" maxlength="30"
-             placeholder="BEMVINDA10" autocapitalize="characters" spellcheck="false"
+             placeholder="BEMVINDO10" autocapitalize="characters" spellcheck="false"
              autocomplete="off" style="text-transform:uppercase;letter-spacing:.04em"
              oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '')">
       <p style="font-size:12.5px;color:var(--txt3);margin-top:5px">
-        Letras e números, sem espaço. É o que a cliente digita no link.</p></div>
+        Letras e números, sem espaço. É o que o cliente digita no pedido, pelo link.</p></div>
     <div class="dupla">
       <div class="campo"><label for="cpTipo">Tipo de desconto</label>
         <select id="cpTipo" onchange="ajustarFormCupom()">
@@ -4067,15 +4066,17 @@ function abrirCupom(cid){
         <input type="number" id="cpValor" min="0.01" step="0.01"
                value="${c ? Number(c.valor) : ''}"></div>
     </div>
-    <div class="campo"><label>Onde vale</label>
+    <!-- PediHub: o cupom vale no pedido (68). A escolha "onde vale" e os
+         servicos ficam escondidos, ja marcados do jeito certo. -->
+    <div class="campo" style="display:none"><label>Onde vale</label>
       <label class="check" style="margin:5px 0">
-        <input type="checkbox" id="cpAgend"${!c || c.valeAgendamento ? ' checked' : ''}
+        <input type="checkbox" id="cpAgend"
                onchange="ajustarFormCupom()">
         <span>Agendamento no link</span></label>
       <label class="check" style="margin:5px 0">
-        <input type="checkbox" id="cpProd"${c && c.valeProdutos ? ' checked' : ''}>
+        <input type="checkbox" id="cpProd" checked>
         <span>Produtos da loja do link</span></label></div>
-    <div class="campo" id="cpServCampo"><label>Só alguns serviços?</label>
+    <div class="campo" id="cpServCampo" style="display:none"><label>Só alguns serviços?</label>
       <p style="font-size:12.5px;color:var(--txt3);margin:0 0 6px">
         Nenhum marcado: vale para todos. Marcados: o desconto sai só deles.</p>
       <div id="cpServicos" style="max-height:210px;overflow:auto;
@@ -4099,9 +4100,8 @@ function abrirCupom(cid){
       <input type="checkbox" id="cpUmPor"${!c || c.umPorCliente ? ' checked' : ''}>
       <span>Cada cliente usa só 1 vez</span></label>
     <p style="font-size:12.5px;color:var(--txt3);margin-top:5px">
-      No agendamento o link reconhece a cliente pelo WhatsApp. Na loja, só
-      quando ela entrou na conta; sem conta, o pedido chega no seu WhatsApp e
-      você vê quem é.</p>
+      O sistema reconhece o cliente pelo WhatsApp informado no pedido. O
+      desconto vale sobre os itens, não sobre a taxa de entrega.</p>
     ${c ? `<label class="check" style="margin-top:12px">
       <input type="checkbox" id="cpAtivo"${c.ativo ? ' checked' : ''}>
       <span>Cupom ativo</span></label>` : ''}`,
@@ -4126,7 +4126,7 @@ function ajustarFormCupom(){
   }
   const ag = document.getElementById('cpAgend');
   const campo = document.getElementById('cpServCampo');
-  if(campo) campo.style.display = ag && ag.checked ? '' : 'none';
+  if(campo) campo.style.display = 'none';   // PediHub: sem serviço
 }
 
 function salvarCupom(cid){
@@ -4746,22 +4746,22 @@ function pintarProdutos(){
       ? `<div class="aviso atencao" id="avisoLojaLink"
               style="margin-bottom:12px">${porque}</div>` : '')
     + `<table class="tabela"><thead><tr>
-      <th>Produto</th><th>Marca</th><th>Preço</th><th>Estoque</th>
-      <th>Na loja</th><th></th>
+      <th>Item</th><th>Preço</th><th>Estoque</th>
+      <th>No cardápio</th><th></th>
     </tr></thead><tbody>` + lista.map(p => `<tr>
       <td><span class="sv-mini">${p.foto
           ? `<img src="${escapar(p.foto)}" alt="" loading="lazy">`
           : `<span data-ico="presente"></span>`}</span
-        ><b>${escapar(p.nome)}</b>${p.ativo ? '' : ' <span class="tag t-canc">inativo</span>'}${
+        ><b>${escapar(p.nome)}</b>${p.ativo ? '' : ' <span class="tag t-canc">esgotado</span>'}${
           limparCategoria(p.categoria)
             ? `<span class="tag-cat"><span data-ico="etiqueta"></span>${escapar(limparCategoria(p.categoria))}</span>`
             : ''}</td>
-      <td>${escapar(p.marca || '—')}</td>
       <td>${real(p.preco)}</td>
       <td>${p.estoque != null ? p.estoque : '—'}</td>
-      <td>${p.vendaOnline
-          ? '<span class="tag t-ok">à venda</span>'
-          : '<span style="color:var(--txt3)">só no balcão</span>'}</td>
+      <td>${!p.vendaOnline ? '<span style="color:var(--txt3)">fora do link</span>'
+          : `<button class="btn btn-peq ${p.ativo ? '' : 'btn-p'}" onclick="alternarEsgotado('${p.id}')"
+               title="${p.ativo ? 'Acabou? Some do cardápio na hora' : 'Voltou a ter? Aparece no cardápio de novo'}">${
+               p.ativo ? 'Esgotado' : 'Voltou'}</button>`}</td>
       <td style="text-align:right">${souGestor()
         ? `<button class="btn btn-peq" onclick="abrirProduto('${p.id}')">Editar</button>
            <button class="btn btn-peq btn-perigo"
@@ -4775,6 +4775,24 @@ function pintarProdutos(){
   // cabeçalho. O `pintar()` já faz uma passada geral; esta é para quando a
   // lista é redesenhada sozinha, sem passar por lá.
   rotularTabelas(alvo);
+}
+
+/* "Esgotado" com um toque (69_esgotado.sql): na nuvem pela função que deixa
+   toda a equipe fazer só isto; na demonstração, direto no item. */
+async function alternarEsgotado(pid){
+  const p = acharProduto(pid); if(!p) return;
+  const esgotar = p.ativo !== false;
+  if(NA_NUVEM){
+    try{ await Dados.chamar('marcar_esgotado', { p_produto: pid, p_esgotado: esgotar }); }
+    catch(e){ alert('Não consegui mudar: ' + limparRecusa(e.message)); return; }
+    p.ativo = !esgotar;
+    if(typeof _baixado !== 'undefined' && _baixado && Array.isArray(_baixado.produtos)){
+      const b = _baixado.produtos.find(x => x.id === pid); if(b) b.ativo = !esgotar;
+    }
+    pintar();
+    return;
+  }
+  p.ativo = !esgotar; salvar(); pintar();
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -23113,7 +23131,9 @@ function cartaoDePedido(p){
       ? '🛵 <b>Entrega</b> — ' + escapar(enderecoDoPedido(p)) : '🏪 <b>Retirada</b> no balcão'}</p>
     <p class="pedido-pag">${escapar(PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento)}${
       p.troco ? ' · troco para ' + real(Number(p.troco)) + ' (levar ' + real(Number(p.troco) - Number(p.total)) + ')' : ''}
-      · ${Number(p.taxa) ? 'taxa ' + real(Number(p.taxa)) + ' · ' : ''}<b>Total ${real(Number(p.total))}</b></p>
+      · ${Number(p.desconto) ? 'cupom ' + escapar(p.cupom || '') + ' − ' + real(Number(p.desconto)) + ' · ' : ''}${
+      Number(p.taxa) ? 'taxa ' + real(Number(p.taxa)) + ' · ' : ''}<b>Total ${real(Number(p.total))}</b></p>
+    ${p.vendaErro ? `<p class="pedido-obs" style="color:var(--alerta)">${escapar(p.vendaErro)}</p>` : ''}
     ${p.status === 'cancelado' ? `<p class="pedido-obs">${p.cancelado_por === 'cliente'
       ? 'Cancelado por quem pediu.' : 'Motivo: ' + escapar(p.motivo || 'não informado')}</p>` : ''}
     <div class="card-acoes">
@@ -23230,6 +23250,7 @@ function imprimirPedido(id){
     '', p.observacao ? 'Obs.: ' + p.observacao : '',
     p.entrega === 'entrega' ? 'ENTREGA: ' + enderecoDoPedido(p) : 'RETIRADA no balcão',
     (PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento) + (p.troco ? ' · troco para ' + real(Number(p.troco)) : ''),
+    Number(p.desconto) ? 'Cupom ' + (p.cupom || '') + ': -' + real(Number(p.desconto)) : '',
     Number(p.taxa) ? 'Taxa de entrega: ' + real(Number(p.taxa)) : '', 'TOTAL: ' + real(Number(p.total))]
     .filter((l, i, a) => l !== '' || a[i - 1] !== '');
   const w = window.open('', '_blank', 'width=380,height=600');
