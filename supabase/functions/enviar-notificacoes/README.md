@@ -67,7 +67,7 @@ Depois, no SQL Editor, uma vez:
 
 ```sql
 select cron.schedule(
-  'agendapro-notificacoes',
+  'pedihub-notificacoes',
   '15 seconds',
   $$
   select net.http_post(
@@ -88,7 +88,7 @@ select jobname, schedule, active from cron.job;
 Para desligar:
 
 ```sql
-select cron.unschedule('agendapro-notificacoes');
+select cron.unschedule('pedihub-notificacoes');
 ```
 
 ---

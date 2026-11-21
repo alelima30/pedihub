@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 18: o painel do dia
+-- PediHub — 18: o painel do dia
 --
 -- ── QUE PERGUNTA ELE RESPONDE ─────────────────────────────────────────────
 -- A que o dono faz ao abrir o sistema de manhã, e de novo no fim da tarde:

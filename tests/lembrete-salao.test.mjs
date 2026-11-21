@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o lembrete para o salão (21_notificacoes.sql, seção 7c)
+   PediHub — o lembrete para o salão (21_notificacoes.sql, seção 7c)
 
      bash tests/bancada/subir.sh
      node tests/lembrete-salao.test.mjs
@@ -40,7 +40,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -168,7 +168,7 @@ igual('para a Bia, que vai atender', r[0] && r[0].destino, TEL_PROF);
 igual('1 hora antes — o tempo DELE, e não as 2h da cliente',
   r[0] && minutosAntes(ini1, r[0].quando), 60);
 igual('pelo modelo de utilidade do lembrete do salão', r[0] && r[0].modelo,
-  'agendapro_lembrete_equipe');
+  'pedihub_lembrete_equipe');
 const v1 = (r[0] && r[0].variaveis) || [];
 igual('com sete variáveis', v1.length, 7);
 igual('a 1ª é o primeiro nome de quem RECEBE', v1[0], 'Bia');

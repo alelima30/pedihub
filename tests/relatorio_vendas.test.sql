@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a loja e os pacotes no Relatórios (55)
+-- PediHub — a loja e os pacotes no Relatórios (55)
 --
 -- Na Loja da Ana, nos últimos dez dias: a Maria mandou três pedidos pelo
 -- link — um vendido no Pix (2 batons), um cancelado, um ainda esperando. E

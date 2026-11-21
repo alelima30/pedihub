@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 32: o que faltava no cadastro de produto
+-- PediHub — 32: o que faltava no cadastro de produto
 --
 -- Três coisas, vindas da comparação com os prints que o dono mandou:
 --
@@ -232,8 +232,8 @@ begin
     return null;
   end if;
 
-  v_motivo  := coalesce(nullif(current_setting('agendapro.mov_motivo', true), ''), 'ajuste');
-  v_comanda := nullif(current_setting('agendapro.mov_comanda', true), '')::uuid;
+  v_motivo  := coalesce(nullif(current_setting('pedihub.mov_motivo', true), ''), 'ajuste');
+  v_comanda := nullif(current_setting('pedihub.mov_comanda', true), '')::uuid;
 
   insert into public.estoque_mov (produto_id, de, para, motivo, comanda_id, quem)
   values (new.id, old.estoque, new.estoque, v_motivo, v_comanda, auth.uid());
@@ -276,9 +276,9 @@ begin
   /* O recado para o gatilho do histórico, que é quem escreve. Local à
      transação (`true`), senão a conexão levaria o rótulo para o próximo que
      a usasse. */
-  perform set_config('agendapro.mov_motivo',
+  perform set_config('pedihub.mov_motivo',
                      case when v_sinal < 0 then 'venda' else 'devolucao' end, true);
-  perform set_config('agendapro.mov_comanda', new.id::text, true);
+  perform set_config('pedihub.mov_comanda', new.id::text, true);
 
   update public.produtos p
      set estoque = p.estoque + v_sinal * i.total_qtd
@@ -298,8 +298,8 @@ begin
      intenção; por isso a mutação que as remove sobrevive, e está anotada no
      `tests/mutacoes-produto-cadastro.sh` para ninguém "consertar" a suíte por
      causa dela. */
-  perform set_config('agendapro.mov_motivo', '', true);
-  perform set_config('agendapro.mov_comanda', '', true);
+  perform set_config('pedihub.mov_motivo', '', true);
+  perform set_config('pedihub.mov_comanda', '', true);
 
   return null;
 end $$;

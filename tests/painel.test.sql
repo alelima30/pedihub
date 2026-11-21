@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o painel do dia
+-- PediHub — o painel do dia
 --
 --   1. Conta o dia do SALÃO, e não o de quem está olhando?
 --   2. O faturamento é o das comandas FECHADAS — o mesmo critério do

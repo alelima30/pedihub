@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o teste grátis é um por pessoa (39_teste_unico.sql)
+-- PediHub — o teste grátis é um por pessoa (39_teste_unico.sql)
 --
 -- O caso que motivou: o dono exclui a conta, cadastra de novo e ganha mais 7
 -- dias — toda semana. O que se confere:

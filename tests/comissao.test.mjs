@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a escada da comissão: a tela e o banco dizem o mesmo?
+   PediHub — a escada da comissão: a tela e o banco dizem o mesmo?
 
      bash tests/bancada/subir.sh
      node tests/comissao.test.mjs

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 22: as cotas do plano e o consumo de mensagem
+-- PediHub — 22: as cotas do plano e o consumo de mensagem
 --
 -- ── O QUE JÁ EXISTIA, E POR QUE ESTE ARQUIVO NÃO REESCREVE NADA ───────────
 -- O sistema já tinha o mecanismo certo: `planos.recursos` é um jsonb, e
@@ -52,7 +52,7 @@ update public.planos set recursos = recursos || jsonb_build_object(
 
      Grátis     R$ 0      1 profissional, 20 horários/mês, 30 clientes,
                           5 serviços, sem produtos; agenda, clientes e o link
-                          simples (sem personalizar, com o selo AgendaPro)
+                          simples (sem personalizar, com o selo PediHub)
      Básico     R$ 49,90  1 profissional, o sistema inteiro, sem mensagens
                           automáticas (o botão manual do WhatsApp segue)
      Essencial  R$ 97     o Básico + 500 mensagens
@@ -406,7 +406,7 @@ revoke all on function public.pode_enviar_tipo(uuid, text) from public, anon, au
 -- As campanhas (promoção, aniversário — 10_campanhas) tinham fila própria, e
 -- o `fila_proxima()` não perguntava por cota nenhuma: um salão no Grátis,
 -- pelo console do navegador, montava uma campanha para a clientela inteira
--- e ela sairia pelo número do AgendaPro, sem limite e sem contar no mês —
+-- e ela sairia pelo número do PediHub, sem limite e sem contar no mês —
 -- e mensagem de promoção é a mais cara (~R$ 0,35) e a que mais arrisca o
 -- número, que é um só para todos os salões. Não há tela de campanha hoje;
 -- a porta estava aberta pelo banco.

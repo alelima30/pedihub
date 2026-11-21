@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 20: bloqueio e atendimento param de passar juntos
+-- PediHub — 20: bloqueio e atendimento param de passar juntos
 --
 -- ── O QUE FOI MEDIDO ──────────────────────────────────────────────────────
 -- Duas conexões, caminho normal, sem encaixe, jornada aberta:

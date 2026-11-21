@@ -1,4 +1,4 @@
-# AgendaPro
+# PediHub
 
 Sistema de agendamento para salão de beleza, barbearia, manicure e estética.
 Irmão do [AdminPro](https://github.com/alelima30/adminpro): mesma stack —
@@ -73,7 +73,7 @@ Para instalar como aplicativo é preciso servir por http, porque navegador não
 registra service worker em `file://`:
 
 ```bash
-cd agendapro && python3 -m http.server 8000
+cd pedihub && python3 -m http.server 8000
 # abra http://localhost:8000  →  botão "Instalar app"
 ```
 
@@ -375,7 +375,7 @@ for conferir e desmoraliza a lista toda.
    visitam o link antes dela, e ela chega em "link inválido ou vencido". A
    `nova-senha.html` aceita um link que só leva o código e o gasta quando a
    pessoa toca em Salvar. Para ligar, em Authentication → Emails → Templates
-   → **Reset password**, troque o assunto por **Trocar sua senha — AgendaPro**
+   → **Reset password**, troque o assunto por **Trocar sua senha — PediHub**
    (o padrão do Supabase vem em inglês, "Reset Your Password") e o corpo por:
 
    ```html
@@ -391,11 +391,11 @@ for conferir e desmoraliza a lista toda.
    só sem a proteção.
 
    Os outros dois que o sistema manda também nascem em inglês. Em
-   **Confirm signup**: assunto **Confirme seu cadastro — AgendaPro**, e no
+   **Confirm signup**: assunto **Confirme seu cadastro — PediHub**, e no
    corpo `<h2>Confirme seu cadastro</h2><p>Toque no link para confirmar o seu
-   e-mail e entrar no AgendaPro.</p><p><a href="{{ .ConfirmationURL }}">Confirmar
+   e-mail e entrar no PediHub.</p><p><a href="{{ .ConfirmationURL }}">Confirmar
    meu e-mail</a></p>`. Em **Change email address**: assunto **Confirme o seu
-   novo e-mail — AgendaPro**, e no corpo `<h2>Confirme o novo e-mail</h2><p>Recebemos
+   novo e-mail — PediHub**, e no corpo `<h2>Confirme o novo e-mail</h2><p>Recebemos
    um pedido para trocar o e-mail da sua conta para {{ .NewEmail }}.</p><p><a
    href="{{ .ConfirmationURL }}">Confirmar a troca</a></p><p>Se não foi você,
    ignore este e-mail.</p>`.
@@ -461,12 +461,12 @@ for conferir e desmoraliza a lista toda.
 
 ## Onde este código mora
 
-`alelima30/agendapro`, servido pelo GitHub Pages. Até 27/08/2026 ele vivia
+`alelima30/pedihub`, servido pelo GitHub Pages. Até 27/08/2026 ele vivia
 numa subpasta do repositório `pradotec` — o site da Pradotec Piscinas — e a
 pasta de lá era uma CÓPIA, com história independente.
 
 Isso custou caro no dia em que foi descoberto: uma correção de produção foi
 commitada na cópia e ficou lá, fora do ar, enquanto era relatada como
 resolvida. E o CI nunca rodava, porque o workflow estava em
-`agendapro/.github/workflows/` e o GitHub só lê `.github/workflows/` na raiz.
+`pedihub/.github/workflows/` e o GitHub só lê `.github/workflows/` na raiz.
 

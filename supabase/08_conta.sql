@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 08: a conta vira perfil
+-- PediHub — 08: a conta vira perfil
 --
 -- ── O DEFEITO QUE ISTO CONSERTA ────────────────────────────────────────────
 -- O cadastro chamava `/auth/v1/signup`, que cria a linha em `auth.users`, e

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o webhook de status não acredita em quem bate na porta
+   PediHub — o webhook de status não acredita em quem bate na porta
 
      node tests/status-whatsapp.test.js
 

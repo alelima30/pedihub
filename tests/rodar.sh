@@ -16,7 +16,7 @@ set -euo pipefail
 PGHOST="${PGHOST:-/tmp}"
 PGPORT="${PGPORT:-5444}"
 PGUSER="${PGUSER:-postgres}"
-BANCO="${BANCO:-agendapro_test}"
+BANCO="${BANCO:-pedihub_test}"
 export PGHOST PGPORT PGUSER
 
 AQUI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

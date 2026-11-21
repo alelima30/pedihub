@@ -141,7 +141,7 @@ troca $F \
   "  select public.recurso_bool(p_salao, 'campanhas_whatsapp')
      and public.pode_enviar_tipo(p_salao, 'campanha')" \
   "  select public.pode_enviar_tipo(p_salao, 'campanha')" \
-  && rodar "todo plano manda promoção pelo número do AgendaPro"
+  && rodar "todo plano manda promoção pelo número do PediHub"
 
 echo "14. a regra da campanha esquece a franquia"
 troca $F \

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — "Com quem?" quando só uma pessoa faz o serviço
+   PediHub — "Com quem?" quando só uma pessoa faz o serviço
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/um-profissional.test.mjs
@@ -54,7 +54,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -196,8 +196,8 @@ secao('7. No painel: mostrar ou ir direto');
   p.on('pageerror', e => erros.push('painel: ' + e.message));
   p.on('dialog', d => { erros.push('ALERT: ' + d.message()); d.dismiss(); });
   await p.addInitScript(([base, ses]) => {
-    window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+    window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
   }, [BASE, dona.sessao()]);
   await p.goto(BASE + '/app.html');
   await p.waitForTimeout(3500);

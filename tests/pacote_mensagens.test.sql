@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — as mensagens do pacote (45_pacote_mensagens.sql)
+-- PediHub — as mensagens do pacote (45_pacote_mensagens.sql)
 --
 -- A Maria vai toda terça às 14h, pacote de R$ 220 "a receber".
 --
@@ -109,7 +109,7 @@ select t_texto('última sessão: seis dias antes da última terça, às 10h do s
   to_char(:'terca'::date + 21 - 6, 'YYYY-MM-DD') || ' 10:00');
 select t_texto('   pelo modelo novo (o de renovação a Meta aprovou como Marketing): nome, pacote, última sessão e salão',
   (t_msg(:'pc', 'pacote_renovar')).modelo || ' | ' || (t_msg(:'pc', 'pacote_renovar')).variaveis::text,
-  'agendapro_pacote_ultima_sessao | ["Maria", "Mão e pé mensal", "terça, '
+  'pedihub_pacote_ultima_sessao | ["Maria", "Mão e pé mensal", "terça, '
     || to_char(:'terca'::date + 21, 'DD/MM') || ' às 14:00", "Salão Recado"]');
 select t_verdade('   sem convite para renovar, no texto do histórico',
   (t_msg(:'pc', 'pacote_renovar')).corpo like 'Olá, Maria. Informação sobre o seu pacote Mão e pé mensal.%Última sessão incluída: terça, %Local: Salão Recado%Depois dessa sessão, o pacote se encerra.%'
@@ -223,7 +223,7 @@ select t_verdade('   e as mensagens das terças novas dizem "já pago (Pix)", e 
   and public.pecas_agendamento(t_sessao(:'pc', 1))->>'pagamento' = 'Pacote a pagar no salão');
 select t_texto('com o modelo do pacote ligado, a cliente recebe a lista: cada data, a hora e o procedimento',
   (t_msg(:'pc2', 'pacote_agenda')).modelo || ' | ' || ((t_msg(:'pc2', 'pacote_agenda')).variaveis->>2),
-  'agendapro_pacote_agenda | ter ' || to_char(:'terca'::date + 28, 'DD/MM') || ' às 14:00 (Mão); ter '
+  'pedihub_pacote_agenda | ter ' || to_char(:'terca'::date + 28, 'DD/MM') || ' às 14:00 (Mão); ter '
     || to_char(:'terca'::date + 35, 'DD/MM') || ' às 14:00 (Mão + Pé); ter '
     || to_char(:'terca'::date + 42, 'DD/MM') || ' às 14:00 (Mão); ter '
     || to_char(:'terca'::date + 49, 'DD/MM') || ' às 14:00 (Mão + Pé)');

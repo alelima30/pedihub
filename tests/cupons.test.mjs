@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — cupom de desconto
+   PediHub — cupom de desconto
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      python3 -m http.server 8099 --directory .   (a parte da demonstração)
@@ -52,7 +52,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -255,8 +255,8 @@ secao('6. O painel');
   const dialogos = [];
   p.on('pageerror', e => erros.push('painel: ' + e.message));
   p.on('dialog', d => { dialogos.push(d.message()); d.type() === 'confirm' ? d.accept() : d.dismiss(); });
-  await p.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
+  await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
   await p.goto(BASE + '/app.html');
   const chegou = await p.waitForFunction(() => typeof bd !== 'undefined' && bd && Array.isArray(bd.cupons) && bd.cupons.length >= 8,
     null, { timeout: 20000 }).then(() => true, () => false);

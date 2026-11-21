@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — convite de equipe: um uso, um salão, uma pessoa
+-- PediHub — convite de equipe: um uso, um salão, uma pessoa
 --
 -- Um convite é uma cadeira dentro de um salão. As perguntas que este arquivo
 -- responde são as que, erradas, entregam essa cadeira a quem não devia:

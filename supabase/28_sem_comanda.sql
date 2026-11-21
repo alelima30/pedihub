@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 28: o salão que não quer comanda nem caixa
+-- PediHub — 28: o salão que não quer comanda nem caixa
 --
 -- "Não quero trabalhar com comanda e nem caixa. Abre, coloca os serviços e já
 --  começa a trabalhar."

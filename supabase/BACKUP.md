@@ -1,6 +1,6 @@
 # Backup do banco — a cópia de toda noite
 
-Todo dia às **03:17 (Brasília)** o GitHub copia o banco do AgendaPro, confere
+Todo dia às **03:17 (Brasília)** o GitHub copia o banco do PediHub, confere
 que a cópia tem os dados da agenda, **tranca com a sua senha** e guarda por
 **30 dias**. Quem faz é o `.github/workflows/backup.yml`, rodando o
 `supabase/backup.sh`. O `tests/backup.test.sh` prova a ida e a volta.
@@ -23,7 +23,7 @@ não entram nesta cópia.
      não usam essa senha; trocar não derruba nada.
    - ⚠ Use o **Session pooler**, não o *Direct connection*: no plano grátis, o
      direto não é alcançado pelas máquinas do GitHub.
-2. **No GitHub**, no repositório `agendapro`: **Settings → Secrets and
+2. **No GitHub**, no repositório `pedihub`: **Settings → Secrets and
    variables → Actions → New repository secret**, e crie dois:
    - `SUPABASE_DB_URL` → o endereço do passo 1, com a senha;
    - `BACKUP_SENHA` → uma frase sua, com **16 caracteres ou mais**.
@@ -42,7 +42,7 @@ Se uma noite falhar, o GitHub manda um e-mail para você.
 
 **Actions → Backup do banco →** clique na corrida do dia → **Artifacts →
 backup-AAAA-MM-DD**. Baixa um `.zip` com o arquivo
-`agendapro-AAAA-MM-DD.dump.gpg` dentro — trancado.
+`pedihub-AAAA-MM-DD.dump.gpg` dentro — trancado.
 
 ## Restaurar
 
@@ -51,7 +51,7 @@ cuida do sistema, com o arquivo e a senha na mão. O caminho:
 
 ```bash
 # 1. Destrancar (pede a BACKUP_SENHA)
-gpg --output banco.dump --decrypt agendapro-AAAA-MM-DD.dump.gpg
+gpg --output banco.dump --decrypt pedihub-AAAA-MM-DD.dump.gpg
 
 # 2. Ver o que tem dentro
 pg_restore --list banco.dump | less

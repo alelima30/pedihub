@@ -61,7 +61,7 @@ no log da função**, no painel do Supabase.
 
 ### O boleto saiu da venda
 
-Hoje o AgendaPro cobra **só por Pix**. O `abrir_cobranca()` recusa `boleto`
+Hoje o PediHub cobra **só por Pix**. O `abrir_cobranca()` recusa `boleto`
 **no banco**, e não só no botão da tela.
 
 A conta que decidiu isso: a tarifa do boleto é fixa por emissão, então num
@@ -76,7 +76,7 @@ válido no domínio de propósito — quem tem um em aberto precisa fechá-lo.
 ### E o cartão, que já entrou
 
 Renovação automática por **Assinaturas do Mercado Pago**: o dono autoriza uma
-vez na página deles, e nenhum dado de cartão encosta no AgendaPro. Ela convive
+vez na página deles, e nenhum dado de cartão encosta no PediHub. Ela convive
 com o Pix — o dono escolhe qual quer, e quem está no cartão fica fora da lista
 de cobrança por Pix para não pagar duas vezes.
 

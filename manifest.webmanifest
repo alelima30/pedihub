@@ -1,6 +1,6 @@
 {
-  "name": "AgendaPro — Agenda para salão e barbearia",
-  "short_name": "AgendaPro",
+  "name": "PediHub — Agenda para salão e barbearia",
+  "short_name": "PediHub",
   "description": "Agenda, clientes, comissão e relatórios para salão de beleza, barbearia e estética.",
   "start_url": "./app.html",
   "scope": "./",

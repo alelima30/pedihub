@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 31: o serviço que só é feito em certos dias
+-- PediHub — 31: o serviço que só é feito em certos dias
 --
 -- "Escova só de quinta a sábado." Pedido de quem tem serviço longo que só cabe
 -- em dia de movimento fraco, e de quem tem profissional que vem dois dias por

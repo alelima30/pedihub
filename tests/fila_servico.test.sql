@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a fila espera o serviço chegar (22_cotas.sql)
+-- PediHub — a fila espera o serviço chegar (22_cotas.sql)
 --
 -- O painel grava o agendamento e os serviços dele em duas chamadas, uma logo
 -- depois da outra. Com a fila passando a cada 15 segundos ("a mensagem está

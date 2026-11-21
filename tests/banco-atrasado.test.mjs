@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — quando o banco está atrás da tela
+   PediHub — quando o banco está atrás da tela
 
      bash tests/bancada/subir.sh
      node tests/banco-atrasado.test.mjs
@@ -52,7 +52,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -156,7 +156,7 @@ secao('1) a mensagem que chega na tela');
      acima. É o único jeito de produzir um PGRST204 aqui: a bancada não tem
      como ficar sem uma coluna que o `00_tudo.sql` acabou de criar nela. */
   const g = {};
-  const j = { AGENDAPRO:{ url:'http://x', chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:'http://x', chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',

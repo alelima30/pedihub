@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 26: a comanda dá baixa no estoque
+-- PediHub — 26: a comanda dá baixa no estoque
 --
 -- ── O QUE ESTAVA ERRADO ───────────────────────────────────────────────────
 -- `produtos.estoque` existe desde o 01_schema e NADA no sistema o movimentava.
@@ -31,7 +31,7 @@
 -- certo assim.
 --
 -- Recusar seria o sistema travando uma venda que já aconteceu: a cliente está
--- no balcão com o vidro na mão, o dinheiro na mesa, e o AgendaPro dizendo não
+-- no balcão com o vidro na mão, o dinheiro na mesa, e o PediHub dizendo não
 -- por causa de um número que ninguém atualizou desde março. O salão não
 -- desfaz a venda — ele xinga o sistema, e com razão.
 --

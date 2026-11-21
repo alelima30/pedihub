@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AgendaPro — gerador do logotipo
+PediHub — gerador do logotipo
 
 Emite os três SVG que o sistema usa, a partir de um desenho só:
 
@@ -52,8 +52,8 @@ def montar(d1, d2, w1, w2, *, tinta, com_pilula):
     meio   = (larg - 300) / 2
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {larg:.0f} {alt}"
      width="{larg:.0f}" height="{alt}" role="img" aria-labelledby="lg-t lg-d">
-  <title id="lg-t">AgendaPro{' Gestão' if com_pilula else ''}</title>
-  <desc id="lg-d">Logotipo do AgendaPro: a palavra Agenda, pro em magenta
+  <title id="lg-t">PediHub{' Gestão' if com_pilula else ''}</title>
+  <desc id="lg-d">Logotipo do PediHub: a palavra Agenda, pro em magenta
   virando roxo, com o o substituído por um anel com um visto saindo por cima, e
   uma curva sob a palavra{'; abaixo, a pílula Gestão com um calendário marcado' if com_pilula else ''}.
   As letras são contornos, não texto: o desenho sai igual em qualquer máquina.</desc>

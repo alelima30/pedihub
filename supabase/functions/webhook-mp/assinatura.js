@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a conferência da assinatura do aviso do Mercado Pago
+   PediHub — a conferência da assinatura do aviso do Mercado Pago
 
    ── POR QUE ESTE ARQUIVO É .js E NÃO .ts ───────────────────────────────────
    Porque ele precisa rodar nos DOIS lados: o Deno importa daqui, e o teste

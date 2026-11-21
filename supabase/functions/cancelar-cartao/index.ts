@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — desligar a renovação automática no cartão
+   PediHub — desligar a renovação automática no cartão
    Supabase Edge Function (Deno). Roda NO SERVIDOR, nunca no navegador.
 
    ── ⚠ POR QUE ISTO NÃO É UM UPDATE NO BANCO ────────────────────────────────

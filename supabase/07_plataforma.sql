@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 07: o painel de quem é dono da plataforma
+-- PediHub — 07: o painel de quem é dono da plataforma
 --
 -- O `super_admin` já existia no schema e já destrancava tudo: `tem_acesso()`
 -- devolve verdadeiro para ele em qualquer salão, e as policies de `planos` e

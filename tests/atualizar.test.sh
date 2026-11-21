@@ -66,7 +66,7 @@ TMP="$(mktemp -d)"
 # A primeira versão lia isto com `git show <sha>:supabase/00_tudo.sql`. Parecia
 # mais limpo — nada de copiar 200 KB para dentro do repositório — e quebrou na
 # primeira vez que o projeto mudou de casa: o sha era da história do
-# repositório `pradotec`, onde o AgendaPro morava numa subpasta. Aqui ele não
+# repositório `pradotec`, onde o PediHub morava numa subpasta. Aqui ele não
 # existe, e o teste morreu sem chegar a testar nada.
 #
 # Quebraria de novo num clone raso, que é o que toda CI faz por padrão: sem

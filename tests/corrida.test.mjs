@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — bloqueio e atendimento não passam juntos
+   PediHub — bloqueio e atendimento não passam juntos
 
      bash tests/bancada/subir.sh
      node tests/corrida.test.mjs

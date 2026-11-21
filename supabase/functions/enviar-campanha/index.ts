@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o worker das campanhas de WhatsApp
+   PediHub — o worker das campanhas de WhatsApp
    Supabase Edge Function (Deno). Roda NO SERVIDOR, nunca no navegador.
 
    ── POR QUE ESTE ARQUIVO NÃO PODE VIRAR JAVASCRIPT DO PAINEL ───────────────

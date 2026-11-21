@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a agenda acorda no dia de hoje, e os números vêm depois
+   PediHub — a agenda acorda no dia de hoje, e os números vêm depois
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=… node tests/agenda-hoje.test.mjs

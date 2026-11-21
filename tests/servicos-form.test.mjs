@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — os serviços no "Novo agendamento", com foto e busca
+   PediHub — os serviços no "Novo agendamento", com foto e busca
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=… node tests/servicos-form.test.mjs

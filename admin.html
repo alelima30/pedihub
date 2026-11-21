@@ -10,13 +10,13 @@
      salao pode querer o agendamento dentro do proprio site. -->
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Plataforma — AgendaPro</title>
+<title>Plataforma — PediHub</title>
 <meta name="robots" content="noindex, nofollow" />
 <meta name="theme-color" content="#0F172A" />
 <link rel="icon" type="image/png" href="icones/icone-192.png" />
 <style>
 /* ===========================================================================
-   AgendaPro — o painel de quem é dono da plataforma
+   PediHub — o painel de quem é dono da plataforma
    ---------------------------------------------------------------------------
    Esta tela não é o sistema do salão: é o negócio olhando para si mesmo.
    Quem abre vê quantos salões existem, quanto entra por mês, quem está
@@ -174,7 +174,7 @@ a.acao{text-decoration:none;display:inline-block}
 <div class="folha">
 
   <div class="topo">
-    <img src="icones/logotipo-branco.svg" alt="AgendaPro">
+    <img src="icones/logotipo-branco.svg" alt="PediHub">
     <span class="selo">PLATAFORMA</span>
     <button class="sair" onclick="sair()">Sair</button>
   </div>
@@ -379,7 +379,7 @@ function desenhar(){
         <b>Valor e forma de pagamento nas mensagens: ${ligado ? 'ligada' : 'desligada'}</b>
         A confirmação e o lembrete da cliente, o aviso à profissional e o lembrete
         para o salão passam a dizer o valor do atendimento e como a cliente vai
-        pagar (Pix, cartão, pacote…). Usam os quatro modelos com valor do MODELOS.md (<code>agendapro_confirmacao_valor1</code> e os três <code>*_pagamento</code>):
+        pagar (Pix, cartão, pacote…). Usam os quatro modelos com valor do MODELOS.md (<code>pedihub_confirmacao_valor1</code> e os três <code>*_pagamento</code>):
         ${ligado ? 'desligando, o sistema volta aos modelos de antes na hora.'
                  : 'ligue só depois que os quatro estiverem <b style="display:inline">aprovados</b> na Meta.'}
         <div style="margin-top:10px">
@@ -395,7 +395,7 @@ function desenhar(){
         A lista de horários (cada data, a hora e o procedimento, ao montar o
         pacote pago ou ao registrar o pagamento) e o aviso da última sessão
         (seis dias antes dela). Usam os dois modelos do pacote do MODELOS.md
-        (<code>agendapro_pacote_agenda</code> e <code>agendapro_pacote_ultima_sessao</code>):
+        (<code>pedihub_pacote_agenda</code> e <code>pedihub_pacote_ultima_sessao</code>):
         ${pacote ? 'desligando, o que estava na fila sai na hora.'
                  : 'ligue só depois que os dois estiverem <b style="display:inline">aprovados</b> na Meta. Ligando, os pacotes que já estão na agenda ganham o aviso da última sessão.'}
         <div style="margin-top:10px">
@@ -410,7 +410,7 @@ function desenhar(){
         <b>Mensagens do Crediário: ${cred ? 'ligadas' : 'desligadas'}</b>
         O resumo da compra, o lembrete dois dias antes, o "vence hoje" e o aviso
         de atraso, com a franquia própria do Crediário. Usam os quatro modelos
-        <code>agendapro_crediario_*</code> do MODELOS.md:
+        <code>pedihub_crediario_*</code> do MODELOS.md:
         ${cred ? 'desligando, o que estava na fila sai na hora.'
                : 'ligue só depois que os quatro estiverem <b style="display:inline">aprovados</b> na Meta. Ligando, as parcelas em aberto ganham os avisos que ainda vêm.'}
         <div style="margin-top:10px">
@@ -422,7 +422,7 @@ function desenhar(){
     h += `<div class="recado" id="ajusteRemarcado" style="margin-top:12px">
         <b>Aviso de horário remarcado: ${rem ? 'ligado' : 'desligado'}</b>
         Quando o salão remarca pelo painel, a cliente recebe o horário de antes e o
-        novo. Usa o modelo <code>agendapro_remarcado</code> do MODELOS.md:
+        novo. Usa o modelo <code>pedihub_remarcado</code> do MODELOS.md:
         ${rem ? 'desligando, o que estava na fila sai na hora.'
               : 'ligue só depois que ele estiver <b style="display:inline">aprovado</b> na Meta.'}
         <div style="margin-top:10px">
@@ -563,7 +563,7 @@ function blocoSaude(){
   const titulo = s.nivel === 'problema' ? 'Problema no sistema'
                : s.nivel === 'atencao'  ? 'Funcionando, com pontos de atenção'
                : 'Tudo funcionando';
-  const monitor = ((window.AGENDAPRO || {}).url || '').replace(/\/$/, '') + '/functions/v1/saude';
+  const monitor = ((window.PEDIHUB || {}).url || '').replace(/\/$/, '') + '/functions/v1/saude';
   h += `<div class="recado ${s.nivel === 'problema' ? 'erro' : ''}" id="saude">
     <b>${titulo}</b>
     ${(s.itens || []).map(linhaSaude).join('')}
@@ -687,7 +687,7 @@ async function contatoDoDono(salaoId, bt){
 
 /* ── A forma de pagamento nas mensagens ──────────────────────────────────── */
 async function ligarPagamentoNasMensagens(ligar){
-  if(ligar && !confirm('Os quatro modelos com valor (agendapro_confirmacao_valor1 e os três *_pagamento) já estão APROVADOS na Meta?\n\n'
+  if(ligar && !confirm('Os quatro modelos com valor (pedihub_confirmacao_valor1 e os três *_pagamento) já estão APROVADOS na Meta?\n\n'
       + 'Ligado antes da aprovação, a confirmação e os avisos vão para um modelo '
       + 'que não existe e não chegam a ninguém.')) return;
   try{
@@ -704,7 +704,7 @@ async function ligarPagamentoNasMensagens(ligar){
 
 /* ── As mensagens do pacote ──────────────────────────────────────────────── */
 async function ligarMensagensDoPacote(ligar){
-  if(ligar && !confirm('Os dois modelos do pacote (agendapro_pacote_agenda e agendapro_pacote_ultima_sessao) já estão APROVADOS na Meta?\n\n'
+  if(ligar && !confirm('Os dois modelos do pacote (pedihub_pacote_agenda e pedihub_pacote_ultima_sessao) já estão APROVADOS na Meta?\n\n'
       + 'Ligado antes da aprovação, as mensagens vão para um modelo '
       + 'que não existe e não chegam a ninguém.')) return;
   try{
@@ -722,7 +722,7 @@ async function ligarMensagensDoPacote(ligar){
 
 /* ── As mensagens do Crediário e o remarcado (52) ─────────────────────────── */
 async function ligarMensagensDoCrediario(ligar){
-  if(ligar && !confirm('Os quatro modelos do Crediário (agendapro_crediario_compra, _lembrete, _vence_hoje e _atraso) já estão APROVADOS na Meta?\n\n'
+  if(ligar && !confirm('Os quatro modelos do Crediário (pedihub_crediario_compra, _lembrete, _vence_hoje e _atraso) já estão APROVADOS na Meta?\n\n'
       + 'Ligado antes da aprovação, as mensagens vão para um modelo '
       + 'que não existe e não chegam a ninguém.')) return;
   try{
@@ -738,7 +738,7 @@ async function ligarMensagensDoCrediario(ligar){
   }
 }
 async function ligarMensagemRemarcado(ligar){
-  if(ligar && !confirm('O modelo agendapro_remarcado já está APROVADO na Meta?\n\n'
+  if(ligar && !confirm('O modelo pedihub_remarcado já está APROVADO na Meta?\n\n'
       + 'Ligado antes da aprovação, o aviso vai para um modelo '
       + 'que não existe e não chega a ninguém.')) return;
   try{
@@ -903,7 +903,7 @@ async function sair(){
    Dizer isso é melhor que desenhar um painel de mentira.
    ──────────────────────────────────────────────────────────────────────── */
 (function(){
-  if(!(window.AGENDAPRO && AGENDAPRO.url && AGENDAPRO.chave)){
+  if(!(window.PEDIHUB && PEDIHUB.url && PEDIHUB.chave)){
     document.getElementById('subtopo').textContent = '';
     document.getElementById('corpo').innerHTML =
       `<div class="recado"><b>Esta tela precisa do banco de verdade.</b>
@@ -916,6 +916,6 @@ async function sair(){
   carregar();
 })();
 </script>
-<p class="rodape-legal">AgendaPro · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
+<p class="rodape-legal">PediHub · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
 </body>
 </html>

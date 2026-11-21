@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o horário que abre vaga no link
+   PediHub — o horário que abre vaga no link
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/horario-equipe.test.mjs
@@ -39,7 +39,7 @@ const sql = q => execSync('psql -At -v ON_ERROR_STOP=1', { input: q, env: { ...p
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -88,8 +88,8 @@ let responder = true;
 p.on('pageerror', e => erros.push(e.message));
 p.on('dialog', d => { dialogos.push(d.message()); responder ? d.accept() : d.dismiss(); });
 await p.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, dona.sessao()]);
 await p.goto(BASE + '/app.html');
 await p.waitForFunction(() => typeof irPara === 'function'

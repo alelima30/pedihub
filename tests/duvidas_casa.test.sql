@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — as dúvidas frequentes da casa (63_duvidas_casa.sql)
+-- PediHub — as dúvidas frequentes da casa (63_duvidas_casa.sql)
 --
 -- O que tem de valer:
 --   · o link (sem login) recebe só pergunta e resposta, aparadas, com teto,

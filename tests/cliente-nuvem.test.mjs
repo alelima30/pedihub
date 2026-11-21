@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a cliente abre o link do WhatsApp e marca, contra o banco
+   PediHub — a cliente abre o link do WhatsApp e marca, contra o banco
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/cliente-nuvem.test.mjs
@@ -45,7 +45,7 @@ const secao = t => console.log('\n' + t);
 function novaAba(){
   const guardado = {};
   const janela = {
-    AGENDAPRO: { url: BASE, chave: 'chave-de-teste', ambiente: 'bancada' },
+    PEDIHUB: { url: BASE, chave: 'chave-de-teste', ambiente: 'bancada' },
     localStorage: {
       getItem: k => (k in guardado ? guardado[k] : null),
       setItem: (k,v) => { guardado[k] = String(v); },

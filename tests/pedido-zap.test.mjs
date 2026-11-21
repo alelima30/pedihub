@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a barra do pedido, com o logo do WhatsApp, no celular
+   PediHub — a barra do pedido, com o logo do WhatsApp, no celular
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/pedido-zap.test.mjs
@@ -39,7 +39,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -148,8 +148,8 @@ await porCfg({ cor:'#5B21B6', fitaCor:'#F5D76E' });
   const ctx = await nav.newContext({ viewport:{ width:1280, height:1000 } });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('painel: ' + e.message));
-  await p.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
+  await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
   await p.goto(BASE + '/app.html');
   await p.waitForFunction(() => typeof irPara === 'function' && typeof bd !== 'undefined' && bd && Array.isArray(bd.saloes),
     null, { timeout: 20000 });

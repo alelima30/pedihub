@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 35: QUEM LÊ O QUÊ (os consertos de acesso do caça-bug)
+-- PediHub — 35: QUEM LÊ O QUÊ (os consertos de acesso do caça-bug)
 --
 -- As mesmas regras já escritas no 02_rls.sql, repetidas aqui para QUEM
 -- ATUALIZA: o 98_modulos.sql não leva o 02, e sem este arquivo um banco

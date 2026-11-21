@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o mês da franquia conta do dia da assinatura (22_cotas.sql)
+-- PediHub — o mês da franquia conta do dia da assinatura (22_cotas.sql)
 --
 -- "Conta a partir do dia da assinatura." O contador de mensagens zerava todo
 -- dia 1º: quem assinava no dia 20 tinha as 500 por dez dias, e outras 500 no

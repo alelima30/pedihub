@@ -1,5 +1,5 @@
 # ===========================================================================
-# AgendaPro — a cópia do banco, todo dia de madrugada
+# PediHub — a cópia do banco, todo dia de madrugada
 #
 # Roda o supabase/backup.sh às 03:17 de Brasília e guarda a cópia TRANCADA
 # por 30 dias (Actions → esta corrida → Artifacts). Restaurar: supabase/BACKUP.md.
@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backup-${{ env.DIA }}
-          path: saida/agendapro-${{ env.DIA }}.dump.gpg
+          path: saida/pedihub-${{ env.DIA }}.dump.gpg
           retention-days: 30
           if-no-files-found: error
           # Já vai trancado (e cifrado não comprime): zipar de novo é tempo à toa.

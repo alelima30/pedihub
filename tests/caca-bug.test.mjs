@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o que o caça-bug achou na TELA, e que não volta
+   PediHub — o que o caça-bug achou na TELA, e que não volta
 
      bash tests/bancada/subir.sh                       (noutro terminal)
      python3 -m http.server 8099 --directory .         (a parte da demonstração)
@@ -56,7 +56,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -386,9 +386,9 @@ secao('10 a 12. O painel na nuvem');
   p.on('dialog', d => d.dismiss());
   // A comanda e o caixa estão DESLIGADOS na plataforma (COMANDA_LIGADA no
   // app.html); este teste mede as telas deles, então liga só nesta aba.
-  await p.addInitScript(() => { try{ sessionStorage.setItem('agendapro.comanda', '1'); }catch(e){} });
-  await p.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
+  await p.addInitScript(() => { try{ sessionStorage.setItem('pedihub.comanda', '1'); }catch(e){} });
+  await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
   await p.goto(BASE + '/app.html');
   await p.waitForFunction(() => typeof bd !== 'undefined' && bd && Array.isArray(bd.agendamentos), null, { timeout: 20000 });
   await p.waitForTimeout(900);

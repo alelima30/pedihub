@@ -147,7 +147,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.status is distinct from 'trial' then return new; end if;
   -- O "Estender teste" e as outras ações da plataforma passam.
-  if coalesce(current_setting('agendapro.plataforma', true), '') = 'sim' then return new; end if;
+  if coalesce(current_setting('pedihub.plataforma', true), '') = 'sim' then return new; end if;
   -- Sem login (SQL Editor, worker) ou a própria plataforma criando salão de
   -- teste: não é cadastro de dono.
   if auth.uid() is null or public.is_super() then return new; end if;

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — ligar a assinatura no cartão
+   PediHub — ligar a assinatura no cartão
    Supabase Edge Function (Deno). Roda NO SERVIDOR, nunca no navegador.
 
    ── AS DUAS CREDENCIAIS QUE SÓ EXISTEM AQUI ────────────────────────────────
@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
        `authorized` ela exigiria um token de cartão — que é exatamente o dado
        que este projeto não quer ver. */
     const pedidoMp: Record<string, unknown> = {
-      reason: `AgendaPro — plano ${base?.nomePlano ?? plano}`,
+      reason: `PediHub — plano ${base?.nomePlano ?? plano}`,
       external_reference: salaoId,
       payer_email: email,
       back_url: PAINEL_URL,

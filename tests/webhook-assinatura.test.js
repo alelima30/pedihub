@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o webhook do Mercado Pago não acredita em quem bate na porta
+   PediHub — o webhook do Mercado Pago não acredita em quem bate na porta
 
      node tests/webhook-assinatura.test.js
 

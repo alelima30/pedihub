@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — imagens
+   PediHub — imagens
    ---------------------------------------------------------------------------
    Um lugar só para receber foto de celular e devolver algo utilizável.
 

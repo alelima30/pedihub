@@ -29,7 +29,7 @@ let ok = 0, ruim = 0;
 const e = (m, c, d) => c ? (console.log('  ✓ ' + m), ok++)
                          : (console.log('  ✗ ' + m + (d ? '\n      ' + d : '')), ruim++);
 
-function aba(){ const g = {}; const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+function aba(){ const g = {}; const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
   localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)}, removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage', fs.readFileSync(RAIZ + '/dados.js','utf8'))(
     j, { info(){}, error(){}, log(){} }, fetch, j.localStorage); return j.Dados; }
@@ -68,8 +68,8 @@ const p = await (await nav.newContext({ viewport:{ width:1280, height:900 } })).
 const avisos = [];
 p.on('dialog', async d => { avisos.push(d.message()); await d.dismiss(); });
 p.on('pageerror', x => avisos.push('pageerror ' + x.message));
-await p.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
+await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
 await p.goto(BASE + '/app.html'); await p.waitForTimeout(4000);
 await p.evaluate(() => { const w = document.getElementById('primeiroDia'); if(w) w.hidden = true; });
 

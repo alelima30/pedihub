@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — horários de funcionamento (e as formas de pagamento)
+   PediHub — horários de funcionamento (e as formas de pagamento)
    ---------------------------------------------------------------------------
    Guardado em `saloes.cfg.funcionamento`, um objeto com uma chave por dia da
    semana — "0" é domingo, como o `getDay()` do JavaScript e o `dow` do

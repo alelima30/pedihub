@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 10: Campanhas de WhatsApp
+-- PediHub — 10: Campanhas de WhatsApp
 --
 -- Mandar mensagem para a clientela é o pedido mais repetido de quem tem
 -- salão, e é também o mais fácil de fazer errado de um jeito que custa o

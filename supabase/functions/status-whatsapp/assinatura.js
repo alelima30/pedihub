@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a conferência do aviso de status da Meta
+   PediHub — a conferência do aviso de status da Meta
 
    ── POR QUE ESTE ARQUIVO É .js E NÃO .ts ───────────────────────────────────
    Pelo mesmo motivo do `webhook-mp/assinatura.js`: o Deno importa daqui, e o

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — imagens do salão (Supabase Storage)
+-- PediHub — imagens do salão (Supabase Storage)
 -- ---------------------------------------------------------------------------
 -- Logo, foto da fachada/equipe e foto por serviço. São três imagens com o
 -- mesmo destino e a mesma regra, então um balde só resolve.

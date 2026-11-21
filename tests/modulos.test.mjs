@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — os dois módulos da casa: serviços e produtos
+   PediHub — os dois módulos da casa: serviços e produtos
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/modulos.test.mjs
@@ -49,7 +49,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -482,7 +482,7 @@ secao('4 · Em demonstração quem peneira é a página');
    tela nunca era a que decidia. Verificação que não vê o código sumir não
    protege o código.
 
-   A demonstração é o modo em que ela decide sozinha: sem `window.AGENDAPRO`
+   A demonstração é o modo em que ela decide sozinha: sem `window.PEDIHUB`
    não há servidor, o `bd` sai do `localStorage` com o `cfg` CRU, e o valor
    pode chegar como a string "false" — que `Boolean('false')` transforma em
    `true`. É um modo que a gente publica: é como o link abre para quem só
@@ -552,8 +552,8 @@ const errosP = [];
 pa.on('pageerror', e => errosP.push(e.message));
 pa.on('dialog', async d => { await d.accept(); });
 await pa.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, dona.sessao()]);
 await pa.goto(BASE + '/app.html');
 await pa.waitForTimeout(4000);
@@ -697,8 +697,8 @@ const olharPrevia = async () => {
   const pp = await ctx.newPage();
   pp.on('pageerror', e => errosP.push(e.message));
   await pp.addInitScript(([b, s]) => {
-    window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+    window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s));
   }, [BASE, dona.sessao()]);
   await pp.goto(BASE + '/app.html');
   await pp.waitForFunction(() => typeof irPara === 'function'

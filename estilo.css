@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — sistema visual
+   PediHub — sistema visual
    ---------------------------------------------------------------------------
    Uma folha só, carregada DEPOIS do estilo de cada página. O visual inteiro
    sai daqui — sem mexer na estrutura de nenhuma tela.
@@ -165,7 +165,7 @@
   --acao:var(--az-fundo); --acao-hover:var(--az-700); --acao-txt:#FFFFFF;
   /* Ação de peso mas sem brilho: confirmar, salvar, tudo que é rotina. */
   --tinta:var(--n-900); --tinta-hover:var(--n-800); --tinta-txt:var(--n-0);
-  --tinta-marca:var(--n-900);   /* a marca do AgendaPro, que nunca muda */
+  --tinta-marca:var(--n-900);   /* a marca do PediHub, que nunca muda */
 
   /* ── Forma ─────────────────────────────────────────────────────────── */
   --r:12px; --r-sm:9px; --r-lg:16px; --r-pill:999px;
@@ -740,7 +740,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
 
    ⚠ Usa `--tinta-marca`, e não `--tinta`. Na página da cliente o `--tinta`
    passou a ser a cor que o SALÃO escolheu — é ela que pinta seleção, borda e
-   avatar. A marca do AgendaPro não acompanha: ela é de outra empresa, e virar
+   avatar. A marca do PediHub não acompanha: ela é de outra empresa, e virar
    dourada porque a barbearia é dourada seria a assinatura do fornecedor se
    passando pela do cliente. */
 .marca-ic, .logo i{
@@ -3863,7 +3863,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
 
 /* ── FALAR NO WHATSAPP ─────────────────────────────────────────────────────
    O verde é o único lugar do sistema onde uma cor de fora entra: é a marca do
-   WhatsApp, e trocá-la pelo azul do AgendaPro faria o botão parecer "mais uma
+   WhatsApp, e trocá-la pelo azul do PediHub faria o botão parecer "mais uma
    ação" em vez de "sai daqui e abre outro aplicativo".
 
    O tom é o #0E7A6C, e não o #128C7E que vem à cabeça: medido, o 128C7E dá

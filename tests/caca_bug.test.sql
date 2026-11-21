@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — os defeitos de banco que o caça-bug achou, e que não voltam
+-- PediHub — os defeitos de banco que o caça-bug achou, e que não voltam
 --
 --   1. O catálogo (telefone e comissão da equipe) não abre para quem só
 --      "virou cliente" do salão.

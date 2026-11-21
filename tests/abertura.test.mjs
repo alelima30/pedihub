@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a abertura da tela de entrar
+   PediHub — a abertura da tela de entrar
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=.../node_modules/playwright node tests/abertura.test.mjs

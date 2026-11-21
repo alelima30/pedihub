@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — endereço
+   PediHub — endereço
    ---------------------------------------------------------------------------
    `saloes.endereco` é jsonb no banco, e por um bom motivo: o cliente precisa
    ver "Rua das Flores, 210 — Itu/SP" numa linha, o mapa precisa do CEP

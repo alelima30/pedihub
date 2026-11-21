@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 16: a comissão passa a ser do banco
+-- PediHub — 16: a comissão passa a ser do banco
 --
 -- ── O DEFEITO QUE ESTE ARQUIVO EXISTE PARA CONSERTAR ───────────────────────
 -- A comissão de cada item da comanda vinha PRONTA do navegador. O `app.html`

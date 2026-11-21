@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o interruptor de comanda e caixa, clicado num navegador
+   PediHub — o interruptor de comanda e caixa, clicado num navegador
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=… node tests/sem-comanda-tela.test.mjs
@@ -48,7 +48,7 @@ const e = (m, c, d) => c ? (console.log('  ✓ ' + m), ok++)
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -82,10 +82,10 @@ p.on('console', c => { if(c.type() === 'error') erros.push('console: ' + c.text(
 p.on('dialog', async d => { erros.push('ALERT: ' + d.message()); await d.dismiss(); });
 // A comanda e o caixa estão DESLIGADOS na plataforma (COMANDA_LIGADA no
 // app.html); este teste mede as telas deles, então liga só nesta aba.
-await p.addInitScript(() => { try{ sessionStorage.setItem('agendapro.comanda', '1'); }catch(e){} });
+await p.addInitScript(() => { try{ sessionStorage.setItem('pedihub.comanda', '1'); }catch(e){} });
 await p.addInitScript(([base, ses]) => {
-  window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+  window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, dona.sessao()]);
 await p.goto(BASE + '/app.html');
 await p.waitForTimeout(3500);

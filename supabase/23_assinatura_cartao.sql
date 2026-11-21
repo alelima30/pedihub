@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 23: assinatura no cartão, que se renova sozinha
+-- PediHub — 23: assinatura no cartão, que se renova sozinha
 --
 -- ── O PROBLEMA QUE ISTO RESOLVE ───────────────────────────────────────────
 -- Pix não renova. Todo mês o dono do salão precisa lembrar, abrir o painel,
@@ -15,7 +15,7 @@
 -- Assinaturas do Mercado Pago (pré-aprovação), NÃO tokenização de cartão.
 --
 -- O dono autoriza uma vez, numa página do próprio Mercado Pago. Nenhum dado
--- de cartão encosta no AgendaPro: não há formulário de cartão no nosso HTML,
+-- de cartão encosta no PediHub: não há formulário de cartão no nosso HTML,
 -- não há número de cartão passando pelo nosso servidor, e não há nós
 -- respondendo se algo vazar. O que volta para cá é um identificador.
 --

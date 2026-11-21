@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — horários de funcionamento, pagamentos e informações
+   PediHub — horários de funcionamento, pagamentos e informações
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/funcionamento.test.mjs
@@ -106,7 +106,7 @@ igual('sem forma nem observação: nada', F.pagamentos({ formas: [] }), null);
    ══════════════════════════════════════════════════════════════════════════ */
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -139,8 +139,8 @@ async function painel(quando){
   p.on('pageerror', e => erros.push('painel: ' + e.message));
   p.on('dialog', d => d.accept());
   await p.addInitScript(([b, s]) => {
-    window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+    window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s));
   }, [BASE, dona.sessao()]);
   await p.goto(BASE + '/app.html');
   await p.waitForFunction(() => typeof irPara === 'function'

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 11: dar login para a equipe
+-- PediHub — 11: dar login para a equipe
 --
 -- O banco já sabia lidar com `recepcao` e `profissional`: as policies estão
 -- escritas desde o 02_rls.sql, e a policy `vinc_gerir` até deixa o dono criar

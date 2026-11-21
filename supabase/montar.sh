@@ -7,7 +7,7 @@ SAIDA="$AQUI/00_tudo.sql"
 
 cat > "$SAIDA" <<'CAB'
 -- ===========================================================================
--- AgendaPro — INSTALAÇÃO COMPLETA
+-- PediHub — INSTALAÇÃO COMPLETA
 --
 -- Cole ESTE arquivo inteiro no SQL Editor do Supabase e clique em Run.
 --
@@ -18,7 +18,7 @@ cat > "$SAIDA" <<'CAB'
 --   04_imagens.sql     as pastas de foto, uma por salão
 --   05_agenda.sql      horarios_livres() e agendar(), o lado da cliente
 --   06_vitrine.sql     vitrine(), e o catálogo fechado para quem não tem o link
---   07_plataforma.sql  o painel de quem é dono do AgendaPro
+--   07_plataforma.sql  o painel de quem é dono do PediHub
 --   08_conta.sql       o perfil que nasce junto com a conta
 --   09_cliente.sql     a cliente vê, cancela e entra na fila com um segredo
 --   10_campanhas.sql   campanhas de WhatsApp: tabelas, RLS e a fila
@@ -67,7 +67,7 @@ cat > "$SAIDA" <<'CAB'
 --   51_google.sql            entrar com o Google: completar o cadastro (WhatsApp e aniversário)
 --   52_mensagens_novas.sql   as mensagens do Crediário (franquia própria) e a de horário remarcado
 --   53_pedidos_loja.sql      o pedido da loja gravado (cadastro antes) e a venda no painel, com crediário
---   54_sino.sql              o sino do painel: o que pede ação e os avisos do AgendaPro
+--   54_sino.sql              o sino do painel: o que pede ação e os avisos do PediHub
 --   55_relatorio_vendas.sql  a loja pelo link e os pacotes no Relatórios
 --   56_conta_excluida.sql    a cliente excluiu a conta: a marca na ficha e o aviso no sino
 --   57_plano_fechado.sql     a consulta do plano e do uso deixa de responder a quem é de fora

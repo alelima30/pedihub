@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — dados de demonstração
+   PediHub — dados de demonstração
    ---------------------------------------------------------------------------
    Os dois aplicativos (o do salão e o do cliente) leem o mesmo `localStorage`,
    então a semente precisa ser uma só. Antes ela morava dentro do `app.html`:

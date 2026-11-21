@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o que as funções de borda precisam alcançar
+-- PediHub — o que as funções de borda precisam alcançar
 --
 -- ── POR QUE ESTE ARQUIVO EXISTE ────────────────────────────────────────────
 -- O `portas.test.sql` guarda um lado: que nada esteja aberto demais. Este

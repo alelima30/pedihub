@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 14: o motor da disponibilidade
+-- PediHub — 14: o motor da disponibilidade
 --
 -- ── O PROBLEMA QUE ESTE ARQUIVO RESOLVE ────────────────────────────────────
 -- Existiam DOIS caminhos de escrita em `agendamentos`, e eles não passavam

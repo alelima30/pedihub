@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — as TELAS do pacote, abertas num navegador
+   PediHub — as TELAS do pacote, abertas num navegador
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=… node tests/pacotes-tela.test.mjs
@@ -43,7 +43,7 @@ const e = (m, c, d) => c ? (console.log('  ✓ ' + m), ok++)
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -84,8 +84,8 @@ p.on('console', c => { if(c.type() === 'error') erros.push('console: ' + c.text(
    o defeito na tela quando a tela estava me dizendo qual era. */
 p.on('dialog', async d => { erros.push('ALERT: ' + d.message()); await d.dismiss(); });
 await p.addInitScript(([base, ses]) => {
-  window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+  window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, dona.sessao()]);
 await p.goto(BASE + '/app.html');
 await p.waitForTimeout(3500);
@@ -183,8 +183,8 @@ const errosC = [];
 c.on('pageerror', x => errosC.push('pageerror: ' + x.message));
 c.on('console', x => { if(x.type() === 'error') errosC.push('console: ' + x.text()); });
 await c.addInitScript(([base, ses]) => {
-  window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+  window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, maria.sessao()]);
 await c.goto(BASE + '/agendar.html?salao=' + SLUG);
 await c.waitForTimeout(3000);
@@ -299,8 +299,8 @@ console.log('\n── O PACOTE COM A AGENDA DESLIGADA ────────�
   const errosC2 = [];
   c2.on('pageerror', x => errosC2.push('pageerror: ' + x.message));
   await c2.addInitScript(([base, ses]) => {
-    window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+    window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
   }, [BASE, maria.sessao()]);
   await c2.goto(BASE + '/agendar.html?salao=' + SLUG);
   await c2.waitForFunction(() => {

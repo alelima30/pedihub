@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — instalar no celular
+   PediHub — instalar no celular
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/instalar.test.mjs
@@ -16,7 +16,7 @@
 
    2. A página da CLIENTE apontava para o manifesto do sistema, cujo
       `start_url` é `app.html` — o painel do dono. Quem instalasse "a
-      Barbearia do Zé" ganhava um ícone que abria "AgendaPro: entre com seu
+      Barbearia do Zé" ganhava um ícone que abria "PediHub: entre com seu
       e-mail". O ícone com o nome de um negócio abrindo o login de outro.
 
    Nenhum dos dois quebra teste de tela: a página carrega, não dá erro de
@@ -43,7 +43,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -83,8 +83,8 @@ const pg = await ctx.newPage();
 const erros = [];
 pg.on('pageerror', e => erros.push(e.message));
 await pg.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, d.sessao()]);
 await pg.goto(BASE + '/app.html');
 await pg.waitForTimeout(3500);
@@ -133,7 +133,7 @@ const cli = await nav.newContext({ viewport:{ width:390, height:844 },
 const cp = await cli.newPage();
 const errosC = [];
 cp.on('pageerror', e => errosC.push(e.message));
-await cp.addInitScript(b => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
+await cp.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
 await cp.goto(BASE + '/agendar.html?salao=' + SLUG);
 await cp.waitForTimeout(3000);
 
@@ -210,7 +210,7 @@ verdade('e quem diz "agora não" não vê de novo', depois);
    canto), onde instalar não existe e o menu só tem "Abrir no Chrome". A
    instrução tem que começar por aí, ou a pessoa procura um botão que não há. */
 const android = await cp.evaluate(async () => {
-  try{ localStorage.removeItem('agendapro.semconvite'); }catch(e){}
+  try{ localStorage.removeItem('pedihub.semconvite'); }catch(e){}
   pedidoDeInstalacao = null;
   convidarAInstalar();
   await instalarSalao();

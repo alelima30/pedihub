@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — promover alguém a dono da plataforma
+-- PediHub — promover alguém a dono da plataforma
 --
 --   Supabase → seu projeto → SQL Editor → cole isto → troque o e-mail → Run
 --

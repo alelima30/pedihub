@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o fuso horário do salão (58_fuso.sql)
+-- PediHub — o fuso horário do salão (58_fuso.sql)
 --
 -- "Não posso perder nada sobre horários marcados."
 --

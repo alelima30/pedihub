@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — quando o telefone digitado é de outra pessoa
+-- PediHub — quando o telefone digitado é de outra pessoa
 --
 -- ── O QUE ESTE ARQUIVO GUARDA ──────────────────────────────────────────────
 -- A ficha é reencontrada pelo TELEFONE, e não existe verificação por SMS.

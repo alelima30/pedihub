@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — pacotes: quem paga zero, e quem não paga
+   PediHub — pacotes: quem paga zero, e quem não paga
 
      bash tests/bancada/subir.sh
      node tests/pacotes.test.mjs
@@ -40,7 +40,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',

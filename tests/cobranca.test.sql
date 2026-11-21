@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a cobrança não dá o produto de graça
+-- PediHub — a cobrança não dá o produto de graça
 --
 -- Módulo de pagamento é o único do sistema em que um defeito não custa
 -- suporte: custa dinheiro, direto, e sem ninguém perceber por meses. As

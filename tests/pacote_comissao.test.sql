@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a comissão da sessão de pacote (44_pacote_comissao.sql)
+-- PediHub — a comissão da sessão de pacote (44_pacote_comissao.sql)
 --
 -- O exemplo do dono: pacote de R$ 220, mão R$ 40, pé R$ 50; no mês, mão /
 -- mão e pé / mão / mão e pé; a profissional ganha 40%.

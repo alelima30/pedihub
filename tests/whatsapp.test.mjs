@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — falar com a cliente no WhatsApp
+   PediHub — falar com a cliente no WhatsApp
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/whatsapp.test.mjs
@@ -40,7 +40,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -93,8 +93,8 @@ const dono = await ctx.newPage();
 const erros = [];
 dono.on('pageerror', e => erros.push(e.message));
 await dono.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, d.sessao()]);
 await dono.goto(BASE + '/app.html');
 await dono.waitForTimeout(3500);
@@ -242,8 +242,8 @@ const cel = await nav.newContext({ viewport:{ width:390, height:844 },
                                    isMobile:true, hasTouch:true });
 const fone = await cel.newPage();
 await fone.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, d.sessao()]);
 await fone.goto(BASE + '/app.html');
 await fone.waitForTimeout(3500);

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a comissão é do banco, não do navegador
+-- PediHub — a comissão é do banco, não do navegador
 --
 -- As perguntas que este arquivo responde são as que, erradas, tiram dinheiro
 -- do salão ou do bolso de quem atende:

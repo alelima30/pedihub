@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o pedido da loja, do link ao painel (53_pedidos_loja)
+   PediHub — o pedido da loja, do link ao painel (53_pedidos_loja)
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/pedidos-loja-tela.test.mjs
@@ -43,7 +43,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -150,8 +150,8 @@ const ctxP = await nav.newContext({ viewport:{ width:390, height:860 }, isMobile
 const pp = await ctxP.newPage();
 pp.on('pageerror', e => erros.push('painel: ' + e.message));
 pp.on('dialog', d => d.accept());
-await pp.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
+await pp.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
 await pp.goto(BASE + '/app.html');
 await pp.waitForFunction(() => typeof bd !== 'undefined' && bd && Array.isArray(bd.saloes) && bd.planos && bd.planos.length,
   null, { timeout: 20000 });
@@ -322,8 +322,8 @@ secao('5. Conta sem WhatsApp: o caminho para completar, e de volta à loja');
   const ctx = await nav.newContext({ viewport:{ width:390, height:860 }, isMobile:true, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('link sem zap: ' + e.message));
-  await p.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s));
     window.__zap = []; window.__fechadas = 0;
     window.open = u => { const w = { opener: 1, close(){ window.__fechadas++; },
       location: { set href(v){ window.__zap.push(v); } } }; if(u) window.__zap.push(u); return w; };
@@ -403,8 +403,8 @@ secao('6. No Relatórios: a loja pelo link');
   const ctxR = await nav.newContext({ viewport:{ width:390, height:860 }, isMobile:true, hasTouch:true });
   const pr = await ctxR.newPage();
   pr.on('pageerror', e => erros.push('relatório: ' + e.message));
-  await pr.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
+  await pr.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
   await pr.goto(BASE + '/app.html');
   await pr.waitForFunction(() => typeof bd !== 'undefined' && bd && Array.isArray(bd.saloes) && bd.planos && bd.planos.length,
     null, { timeout: 20000 });
@@ -440,8 +440,8 @@ secao('7. "Pedidos só se o comércio tiver colocado vendas no Meu negócio"');
     const c = await nav.newContext({ viewport:{ width:390, height:860 }, isMobile:true, hasTouch:true });
     const p = await c.newPage();
     p.on('pageerror', e => erros.push('chave da loja: ' + e.message));
-    await p.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-      localStorage.setItem('agendapro.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
+    await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+      localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
     await p.goto(BASE + '/app.html');
     await p.waitForFunction(() => typeof bd !== 'undefined' && bd && Array.isArray(bd.saloes) && bd.planos && bd.planos.length,
       null, { timeout: 20000 });

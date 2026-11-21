@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a loja pública, e o que ela NÃO pode publicar
+-- PediHub — a loja pública, e o que ela NÃO pode publicar
 --
 -- ── A VERIFICAÇÃO QUE VALE DINHEIRO ───────────────────────────────────────
 -- `produtos.custo` é quanto o DONO paga pelo produto. A `vitrine()` é

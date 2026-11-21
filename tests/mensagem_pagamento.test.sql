@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a forma de pagamento nas mensagens (21_notificacoes.sql)
+-- PediHub — a forma de pagamento nas mensagens (21_notificacoes.sql)
 --
 -- "Temos que colocar o pagamento — Pix, cartão de crédito — nos modelos, para
 -- o profissional e a cliente." O que se confere:
@@ -61,13 +61,13 @@ $f$;
 \echo 'Desligado, que é como nasce'
 select marcar('6e500000-0000-0000-0000-000000000001', 3, 'pix');
 select t_verdade('1. a confirmação vai pelo modelo de hoje, com as 6 variáveis de hoje',
-  (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).modelo = 'agendapro_confirmacao'
+  (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).modelo = 'pedihub_confirmacao'
   and jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).variaveis) = 6);
 select t_verdade('   o aviso à profissional também (6)',
-  (linha('6e500000-0000-0000-0000-000000000001', 'novo')).modelo = 'agendapro_aviso_profissional'
+  (linha('6e500000-0000-0000-0000-000000000001', 'novo')).modelo = 'pedihub_aviso_profissional'
   and jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'novo')).variaveis) = 6);
 select t_verdade('   e o lembrete para o salão (7)',
-  (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).modelo = 'agendapro_lembrete_equipe'
+  (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).modelo = 'pedihub_lembrete_equipe'
   and jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).variaveis) = 7);
 select t_verdade('   e o texto do histórico não fala de pagamento (não foi o que saiu)',
   (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).corpo not like '%Pagamento%');
@@ -87,7 +87,7 @@ select set_config('request.jwt.claim.sub', '', false);
 \echo ''
 \echo 'Ligado'
 select t_verdade('3. a confirmação que já estava na fila passa ao modelo com pagamento',
-  (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).modelo = 'agendapro_confirmacao_valor1');
+  (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).modelo = 'pedihub_confirmacao_valor1');
 select t_verdade('   com 8 variáveis: as 6 de sempre, o valor (R$ 60,00) e a forma (Pix)',
   jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).variaveis) = 8
   and (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).variaveis->>6 = 'R$ 60,00'
@@ -95,23 +95,23 @@ select t_verdade('   com 8 variáveis: as 6 de sempre, o valor (R$ 60,00) e a fo
 select t_verdade('   e o histórico diz "💰 Valor: R$ 60,00" e "💳 Pagamento: Pix"',
   (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).corpo like E'%💰 Valor: R$ 60,00\n💳 Pagamento: Pix%');
 select t_verdade('   o lembrete da cliente também (8: R$ 60,00, Pix)',
-  (linha('6e500000-0000-0000-0000-000000000001', 'lembrete')).modelo = 'agendapro_lembrete_pagamento'
+  (linha('6e500000-0000-0000-0000-000000000001', 'lembrete')).modelo = 'pedihub_lembrete_pagamento'
   and (linha('6e500000-0000-0000-0000-000000000001', 'lembrete')).variaveis->>6 = 'R$ 60,00'
   and (linha('6e500000-0000-0000-0000-000000000001', 'lembrete')).variaveis->>7 = 'Pix');
 select t_verdade('   o aviso à profissional também (8: R$ 60,00, Pix)',
-  (linha('6e500000-0000-0000-0000-000000000001', 'novo')).modelo = 'agendapro_aviso_profissional_pagamento'
+  (linha('6e500000-0000-0000-0000-000000000001', 'novo')).modelo = 'pedihub_aviso_profissional_pagamento'
   and jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'novo')).variaveis) = 8
   and (linha('6e500000-0000-0000-0000-000000000001', 'novo')).variaveis->>6 = 'R$ 60,00'
   and (linha('6e500000-0000-0000-0000-000000000001', 'novo')).variaveis->>7 = 'Pix'
   and (linha('6e500000-0000-0000-0000-000000000001', 'novo')).corpo like '%💰 Valor: R$ 60,00%');
 select t_verdade('   e o lembrete para o salão (9: R$ 60,00, Pix)',
-  (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).modelo = 'agendapro_lembrete_equipe_pagamento'
+  (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).modelo = 'pedihub_lembrete_equipe_pagamento'
   and jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).variaveis) = 9
   and (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).variaveis->>7 = 'R$ 60,00'
   and (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).variaveis->>8 = 'Pix'
   and (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).corpo like E'%💰 Valor: R$ 60,00\n💳 Pagamento: Pix%');
 select t_verdade('   o resumo do dia não muda (não é de um agendamento só)',
-  public.modelo_de('resumo') = 'agendapro_agenda_hoje');
+  public.modelo_de('resumo') = 'pedihub_agenda_hoje');
 
 \echo ''
 \echo 'O que vai escrito'
@@ -150,9 +150,9 @@ select set_config('request.jwt.claim.sub', '6e000000-0000-0000-0000-0000000000ad
 select public.definir_mensagens_com_pagamento(false);
 select set_config('request.jwt.claim.sub', '', false);
 select t_verdade('4. desligado de novo, o que está na fila volta ao modelo de antes, com 6',
-  (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).modelo = 'agendapro_confirmacao'
+  (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).modelo = 'pedihub_confirmacao'
   and jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).variaveis) = 6
   and (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).corpo not like '%Pagamento%');
 select t_verdade('   e o lembrete para o salão volta a 7, sem valor nem pagamento',
   jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).variaveis) = 7
-  and (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).modelo = 'agendapro_lembrete_equipe');
+  and (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).modelo = 'pedihub_lembrete_equipe');

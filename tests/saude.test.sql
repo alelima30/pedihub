@@ -1,7 +1,7 @@
 -- ===========================================================================
--- AgendaPro — o check-up do sistema (40_saude.sql)
+-- PediHub — o check-up do sistema (40_saude.sql)
 --
--- "Preciso criar algo que fique monitorando o AgendaPro." O banco dos testes
+-- "Preciso criar algo que fique monitorando o PediHub." O banco dos testes
 -- não tem pg_cron nem pg_net: o despertador e as respostas da função de envio
 -- são montados aqui, com as mesmas colunas, para cada caso ser provado.
 --
@@ -39,9 +39,9 @@ create schema if not exists cron;
 create table cron.job (jobid bigserial primary key, jobname text, schedule text, active boolean);
 create table cron.job_run_details (runid bigserial primary key, jobid bigint, start_time timestamptz,
                                    status text, return_message text);
-select t_verdade('sem o agendapro-notificacoes: problema',
+select t_verdade('sem o pedihub-notificacoes: problema',
   item('despertador')->>'nivel' = 'problema' and item('despertador')->>'detalhe' like '%não existe%');
-insert into cron.job (jobname, schedule, active) values ('agendapro-notificacoes', '15 seconds', false);
+insert into cron.job (jobname, schedule, active) values ('pedihub-notificacoes', '15 seconds', false);
 select t_verdade('pausado: problema',
   item('despertador')->>'nivel' = 'problema' and item('despertador')->>'detalhe' like '%pausado%');
 update cron.job set active = true;

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — avisos no celular (59_push.sql)
+-- PediHub — avisos no celular (59_push.sql)
 --
 --   1. quem liga: só a equipe, e cada um só no próprio nome;
 --   2. o endereço do aparelho é segredo: ninguém lê de volta;

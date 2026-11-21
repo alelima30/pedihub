@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — contratar, cancelar (e a plataforma dar cortesia ou preço) um
+   PediHub — contratar, cancelar (e a plataforma dar cortesia ou preço) um
    módulo adicional, como o Crediário
    Supabase Edge Function (Deno). Roda NO SERVIDOR, nunca no navegador.
 

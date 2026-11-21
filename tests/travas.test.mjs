@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o que a auditoria de segurança achou, nas páginas
+   PediHub — o que a auditoria de segurança achou, nas páginas
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/travas.test.mjs
@@ -37,7 +37,7 @@ const SENSIVEIS = ['app.html?demo=1', 'admin.html', 'entrar.html', 'criar.html',
 for(const pagina of SENSIVEIS.concat(['agendar.html?salao=qualquer'])){
   const ctx = await nav.newContext();
   const p = await ctx.newPage();
-  // Uma página "de fora": about:blank tem outra origem que a do AgendaPro.
+  // Uma página "de fora": about:blank tem outra origem que a do PediHub.
   await p.setContent(`<iframe id="q" src="${BASE}/${pagina}" width="800" height="600"></iframe>`);
   await p.waitForTimeout(2500);
   const quadro = p.frames().find(f => f !== p.mainFrame());
@@ -75,7 +75,7 @@ secao('4. O e-mail na tela de entrar');
 {
   const ctx = await nav.newContext();
   const p = await ctx.newPage();
-  await p.addInitScript(b => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
+  await p.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
   await p.goto(BASE + '/entrar.html');
   await p.waitForFunction(() => typeof esqueci === 'function', null, { timeout: 15000 });
   const r = await p.evaluate(async () => {

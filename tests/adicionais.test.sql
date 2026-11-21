@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — os módulos adicionais (46_adicionais.sql)
+-- PediHub — os módulos adicionais (46_adicionais.sql)
 --
 -- O Crediário: R$ 49,90 por mês, do Essencial para cima, liberado no teste.
 --

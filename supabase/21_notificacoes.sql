@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 21: confirmação, lembrete e resumo do dia
+-- PediHub — 21: confirmação, lembrete e resumo do dia
 --
 -- ── O QUE ESTA FASE É, E O QUE ELA NÃO É ──────────────────────────────────
 -- Três mensagens que nascem da AGENDA e de mais nada:
@@ -509,25 +509,25 @@ $$;
 create or replace function public.modelo_de(p_tipo text)
 returns text language sql stable set search_path = public as $$
   select case p_tipo
-    when 'confirmacao' then 'agendapro_confirmacao'
-    when 'lembrete'    then 'agendapro_lembrete'
-    /* ⚠ NÃO é mais 'agendapro_novo1'. A Meta o reclassificou como MARKETING
+    when 'confirmacao' then 'pedihub_confirmacao'
+    when 'lembrete'    then 'pedihub_lembrete'
+    /* ⚠ NÃO é mais 'pedihub_novo1'. A Meta o reclassificou como MARKETING
        ("🔔 Novo agendamento… Confira na agenda" lido como chamada), e
        marketing ela segura para quem nunca falou com o número: o aviso saía
        como "enviado" e a profissional não recebia. O novo segue a forma da
        confirmação, que passou como Utilidade: endereçado à pessoa, sobre UM
        agendamento, com o local, e sem chamada para ação. */
-    when 'novo'        then 'agendapro_aviso_profissional'
-    /* ⚠ NEM 'agendapro_resumo' (a lista achatada numa linha só) NEM
-       'agendapro_agenda_dia': este a Meta reclassificou como MARKETING — o
+    when 'novo'        then 'pedihub_aviso_profissional'
+    /* ⚠ NEM 'pedihub_resumo' (a lista achatada numa linha só) NEM
+       'pedihub_agenda_dia': este a Meta reclassificou como MARKETING — o
        "☀️ Bom dia!" de abertura e o "Toque no botão para ver…" foram lidos
        como chamada. O novo tem as MESMAS quatro variáveis, na mesma ordem, no
        formato de aviso de conta: "o resumo da sua agenda de hoje", sem
        chamada no texto. Nome novo porque nome de modelo apagado na Meta fica
        preso por semanas. */
-    when 'resumo'      then 'agendapro_agenda_hoje'
+    when 'resumo'      then 'pedihub_agenda_hoje'
     -- O lembrete para o salão (7c): quem atende e/ou o dono, antes do horário.
-    when 'lembrete_equipe' then 'agendapro_lembrete_equipe'
+    when 'lembrete_equipe' then 'pedihub_lembrete_equipe'
   end
   || case when p_tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
                and public.mensagens_com_pagamento()
@@ -562,7 +562,7 @@ begin
     -- {{6}} salão
     --
     -- ⚠ O SALÃO VAI POR ÚLTIMO, E NÃO PODE FALTAR. O número que manda é do
-    -- AgendaPro, um só para todos os salões: a cliente vê "Agendapro" no topo
+    -- PediHub, um só para todos os salões: a cliente vê "Pedihub" no topo
     -- da conversa. Sem o nome da casa no texto, ela recebe "seu horário está
     -- confirmado" sem saber onde — e quem frequenta dois salões que usam o
     -- sistema não tem como distinguir um do outro. Por último para não mexer
@@ -618,13 +618,13 @@ update public.notificacoes n
    sair: o nome mudou. Cancela, dizendo por quê — o de amanhã já nasce certo. */
 update public.notificacoes
    set status = 'cancelado', motivo = 'modelo antigo do resumo do dia'
- where status = 'pendente' and tipo = 'resumo' and modelo = 'agendapro_resumo';
+ where status = 'pendente' and tipo = 'resumo' and modelo = 'pedihub_resumo';
 
-/* O 'agendapro_agenda_dia' tem as mesmas quatro variáveis do modelo de
+/* O 'pedihub_agenda_dia' tem as mesmas quatro variáveis do modelo de
    utilidade que o substitui: o que está na fila só troca de nome. */
 update public.notificacoes
    set modelo = public.modelo_de('resumo')
- where status = 'pendente' and tipo = 'resumo' and modelo = 'agendapro_agenda_dia';
+ where status = 'pendente' and tipo = 'resumo' and modelo = 'pedihub_agenda_dia';
 
 /* O aviso à profissional trocou de modelo (o de marketing para o de
    utilidade) e de variáveis (4 → 6). O que ainda está na fila é refeito:
@@ -1189,7 +1189,7 @@ revoke all on function public.variaveis_pagamento(jsonb) from public, anon, auth
 -- duplica.
 -- ---------------------------------------------------------------------------
 
-/* As variáveis, NA ORDEM do modelo `agendapro_lembrete_equipe`:
+/* As variáveis, NA ORDEM do modelo `pedihub_lembrete_equipe`:
    {{1}} primeiro nome de QUEM RECEBE  {{2}} cliente (nome inteiro)
    {{3}} serviço  {{4}} quem atende  {{5}} data  {{6}} hora  {{7}} salão
 

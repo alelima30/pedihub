@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o funil inteiro NA NUVEM: cadastrar, sair, voltar e entrar
+   PediHub — o funil inteiro NA NUVEM: cadastrar, sair, voltar e entrar
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/funil-nuvem.test.mjs

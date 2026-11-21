@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a conta vira perfil (08_conta.sql)
+-- PediHub — a conta vira perfil (08_conta.sql)
 --
 -- O cadastro cria a conta em `auth.users` e logo depois chama criar_salao(),
 -- que exige um perfil. Nada criava esse perfil: quem se cadastrasse no

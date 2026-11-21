@@ -3,7 +3,7 @@
 Endereço (público, sem login):
 
 ```
-https://ialjrnighxntuirzmppt.supabase.co/functions/v1/saude
+https://TROQUE-PELO-ID-DO-PROJETO.supabase.co/functions/v1/saude
 ```
 
 - **200**: tudo certo (ou só "atenção", que não merece alerta).
@@ -18,7 +18,7 @@ O corpo diz o nível e as chaves do que está errado, sem nenhum dado de salão:
 | Chave | O que é |
 |---|---|
 | `banco` | o banco não respondeu |
-| `despertador` | o pg_cron da fila (`agendapro-notificacoes`) não existe, está pausado, parou ou está falhando |
+| `despertador` | o pg_cron da fila (`pedihub-notificacoes`) não existe, está pausado, parou ou está falhando |
 | `funcao_envio` | a função `enviar-notificacoes` recusa o despertador (401 = CRON_SEGREDO, 404 = não publicada, 503 = sem token do WhatsApp) |
 | `fila` | há mensagem atrasada (devia ter saído há mais de 5 minutos) |
 | `falhas` | as mensagens estão falhando na Meta (token vencido, conta bloqueada, modelo pausado…) |
@@ -36,7 +36,7 @@ O que está errado e **o que fazer** aparece no `admin.html`, no cartão
 5. Salve. Ele avisa quando o endereço responder 503 e quando voltar a 200.
 
 Faça um segundo monitor, do mesmo jeito, com
-`https://www.agendaprogestao.com.br` — esse vigia se o site está no ar.
+`https://alelima30.github.io/pedihub` — esse vigia se o site está no ar.
 
 ## Publicação
 

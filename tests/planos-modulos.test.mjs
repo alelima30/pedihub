@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — Grátis bem limitado, Básico sem mensagens (22_cotas, 01)
+   PediHub — Grátis bem limitado, Básico sem mensagens (22_cotas, 01)
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=… node tests/planos-modulos.test.mjs
@@ -45,7 +45,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -156,7 +156,7 @@ igual('e nenhuma mensagem automática', (await um(`select public.pode_enviar($1)
 secao('2) O link do Grátis é o simples');
 const vg = (await um(`select public.vitrine($1) as v`, [G.slug])).v;
 igual('sem a cor e o tema guardados', [vg.salao.cor, vg.salao.tema], [null, null]);
-igual('com o selo "Feito com AgendaPro"', vg.salao.selo, true);
+igual('com o selo "Feito com PediHub"', vg.salao.selo, true);
 igual('sem loja, e sem os produtos', [vg.salao.loja, (vg.produtos || []).length], [false, 0]);
 const cfgG = (await um(`select cfg from public.saloes where id=$1`, [G.salao])).cfg;
 igual('mas a aparência continua guardada no salão', [cfgG.cor, cfgG.tema], ['#123456', 'escuro']);
@@ -212,8 +212,8 @@ const abrir = async (sessao, sufixo = '') => {
   p.on('pageerror', e => erros.push(e.message));
   p.on('dialog', d => d.accept());
   await p.addInitScript(([b, s]) => {
-    window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+    window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s));
   }, [BASE, sessao]);
   await p.goto(BASE + '/app.html' + sufixo);
   await p.waitForTimeout(3500);

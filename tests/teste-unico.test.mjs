@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o teste grátis é um por pessoa, na tela do cadastro
+   PediHub — o teste grátis é um por pessoa, na tela do cadastro
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=.../node_modules/playwright node tests/teste-unico.test.mjs
@@ -87,8 +87,8 @@ console.log('\nExcluir a conta e voltar com o mesmo e-mail');
   // O aviso, antes de excluir: no painel da primeira conta.
   const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 } });
   await ctx.addInitScript(([base, s]) => {
-    window.AGENDAPRO = { url: base, chave: 'k', ambiente: 'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+    window.PEDIHUB = { url: base, chave: 'k', ambiente: 'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s));
   }, [BASE, a.sessao]);
   const p = await ctx.newPage();
   const erros = [];

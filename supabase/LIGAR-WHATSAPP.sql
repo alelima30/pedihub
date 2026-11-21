@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — ligar o "despertador" das mensagens do WhatsApp
+-- PediHub — ligar o "despertador" das mensagens do WhatsApp
 --
 -- Cole no Supabase → SQL Editor → Run, DEPOIS de:
 --   1. guardar os segredos em Edge Functions → Secrets (WHATSAPP_TOKEN,
@@ -7,7 +7,9 @@
 --   2. publicar as funções (GitHub → Actions → "Publicar as funções do
 --      WhatsApp" → Run workflow).
 --
--- ⚠ TROQUE UMA COISA SÓ: a frase 'TROQUE-PELA-FRASE-DO-CRON_SEGREDO' lá
+-- ⚠ TROQUE DUAS COISAS: o TROQUE-PELO-ID-DO-PROJETO no endereço lá embaixo,
+-- pelo ID do projeto PediHub no Supabase (Settings → General → Project ID);
+-- e a frase 'TROQUE-PELA-FRASE-DO-CRON_SEGREDO' lá
 -- embaixo, pela MESMA frase que você guardou no segredo CRON_SEGREDO. As
 -- duas têm de ser iguais, letra por letra — é assim que a função sabe que
 -- quem a acordou foi o seu banco, e não um estranho.
@@ -27,7 +29,7 @@
 -- (nem achar a frase do segredo). Basta esta linha:
 --
 --   select cron.alter_job((select jobid from cron.job
---                           where jobname = 'agendapro-notificacoes'),
+--                           where jobname = 'pedihub-notificacoes'),
 --                         schedule := '15 seconds');
 -- ===========================================================================
 
@@ -36,16 +38,16 @@ create extension if not exists pg_net;
 
 do $$
 begin
-  perform cron.unschedule('agendapro-notificacoes')
-    where exists (select 1 from cron.job where jobname = 'agendapro-notificacoes');
+  perform cron.unschedule('pedihub-notificacoes')
+    where exists (select 1 from cron.job where jobname = 'pedihub-notificacoes');
 end $$;
 
 select cron.schedule(
-  'agendapro-notificacoes',
+  'pedihub-notificacoes',
   '15 seconds',
   $cron$
   select net.http_post(
-    url     := 'https://ialjrnighxntuirzmppt.supabase.co/functions/v1/enviar-notificacoes',
+    url     := 'https://TROQUE-PELO-ID-DO-PROJETO.supabase.co/functions/v1/enviar-notificacoes',
     headers := jsonb_build_object(
                  'Content-Type',   'application/json',
                  'x-cron-segredo', 'TROQUE-PELA-FRASE-DO-CRON_SEGREDO'),
@@ -53,4 +55,4 @@ select cron.schedule(
   $cron$);
 
 -- Conferir: deve aparecer uma linha, ativa.
-select jobname, schedule, active from cron.job where jobname = 'agendapro-notificacoes';
+select jobname, schedule, active from cron.job where jobname = 'pedihub-notificacoes';

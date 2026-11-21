@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a grade confessa quando não mostra o que o contador conta
+   PediHub — a grade confessa quando não mostra o que o contador conta
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/confere-grade.test.mjs
@@ -50,7 +50,7 @@ secao('O carimbo de versão não pode mentir');
   const app = fs.readFileSync(path.join(RAIZ, 'app.html'), 'utf8');
   const sw  = fs.readFileSync(path.join(RAIZ, 'sw.js'), 'utf8');
   const noApp = (app.match(/const VERSAO_APP = '([^']+)'/) || [])[1];
-  const noSw  = (sw.match(/const VERSAO = 'agendapro-([^']+)'/) || [])[1];
+  const noSw  = (sw.match(/const VERSAO = 'pedihub-([^']+)'/) || [])[1];
   verdade('o app.html declara uma versão', !!noApp, JSON.stringify(noApp));
   verdade('o sw.js declara uma versão', !!noSw, JSON.stringify(noSw));
   igual('e as duas são a mesma', noApp, noSw);
@@ -81,7 +81,7 @@ secao('O carimbo de versão não pode mentir');
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -123,8 +123,8 @@ const dono = await ctx.newPage();
 const erros = [];
 dono.on('pageerror', e => erros.push(e.message));
 await dono.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, d.sessao()]);
 await dono.goto(BASE + '/app.html');
 await dono.waitForTimeout(3500);

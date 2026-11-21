@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — conferência da instalação
+-- PediHub — conferência da instalação
 --
 -- COLE ESTE ARQUIVO INTEIRO NO SQL EDITOR DO SUPABASE e clique em Run,
 -- depois de rodar o 01_schema.sql e o 02_rls.sql.

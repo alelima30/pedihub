@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o que a SEGUNDA varredura do caça-bug achou na tela
+   PediHub — o que a SEGUNDA varredura do caça-bug achou na tela
 
    Desta vez com robôs: um que abre cada tela do painel e clica em cada
    botão (e em cada botão das janelas que abrem), e outro que faz caminhos

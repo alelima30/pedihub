@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — camada de dados
+   PediHub — camada de dados
    ---------------------------------------------------------------------------
    Um lugar só conversa com o armazenamento. As telas chamam funções daqui e
    nunca sabem se o dado veio do navegador ou do banco.
@@ -373,13 +373,13 @@ function paraTela(tabela, linha){
 }
 
 /* ── Conversa com o Supabase ─────────────────────────────────────────── */
-const cfg = global.AGENDAPRO || {};
+const cfg = global.PEDIHUB || {};
 const LIGADO = !!(cfg.url && cfg.chave);
 
 let sessao = null;   // { token, refresh, usuarioId, expiraEm }
 let googleLigadoMemo = null; // a resposta do /auth/v1/settings, uma vez por página
 
-const CHAVE_SESSAO = 'agendapro.sessao';
+const CHAVE_SESSAO = 'pedihub.sessao';
 
 function guardarSessao(s){
   sessao = s;
@@ -927,7 +927,7 @@ const Nuvem = {
   async borda(nome, corpo){
     if(!LIGADO) throw new Error('Sem servidor configurado.');
     if(!sessao || !sessao.token) throw new Error('Faça login de novo.');
-    const base = (window.AGENDAPRO.url || '').replace(/\/+$/, '');
+    const base = (window.PEDIHUB.url || '').replace(/\/+$/, '');
     /* ⚠ PELO `comSessaoViva()`, COMO O BANCO E O STORAGE.
 
        "Assinar com Pix" dava erro no primeiro clique e funcionava no
@@ -947,7 +947,7 @@ const Nuvem = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        apikey: window.AGENDAPRO.chave,
+        apikey: window.PEDIHUB.chave,
         Authorization: 'Bearer ' + ((sessao && sessao.token) || ''),
       },
       body: JSON.stringify(corpo || {}),
@@ -1075,7 +1075,7 @@ const Nuvem = {
    conhecido sem instalar nada — e para o dia em que o Supabase estiver fora
    do ar durante uma apresentação.
    ──────────────────────────────────────────────────────────────────────── */
-const CHAVE_DEMO = 'agendapro.demo.v1';
+const CHAVE_DEMO = 'pedihub.demo.v1';
 
 function lerDemo(){
   try{
@@ -1396,7 +1396,7 @@ async function baixar(salaoId){
   }
 
   /* ── A CONTA DA PLATAFORMA NÃO BAIXA O SALÃO DOS OUTROS ──────────────────
-     `is_super()` está em toda policy de leitura: quem administra o AgendaPro
+     `is_super()` está em toda policy de leitura: quem administra o PediHub
      enxerga, pelo banco, TODO salão. É de propósito — sem isso não há como
      dar suporte nem cobrar. Mas sem filtro nenhum, a primeira leitura do
      painel arrastava para dentro do navegador dele a lista de clientes de
@@ -1668,7 +1668,7 @@ async function apagarPastaDoSalao(salaoId, conhecidos){
       // `id` nulo é subpasta, não arquivo: o caminho aqui é sempre plano.
       if(Array.isArray(lista)) for(const o of lista) if(o && o.name && o.id !== null) nomes.add(o.name);
     }
-  }catch(e){ console.warn('[AgendaPro] listar a pasta do salão:', e.message); }
+  }catch(e){ console.warn('[PediHub] listar a pasta do salão:', e.message); }
   const marca = '/storage/v1/object/public/salao/' + salaoId + '/';
   for(const u of conhecidos || []){
     const t = String(u || ''), i = t.indexOf(marca);
@@ -1718,10 +1718,10 @@ lerSessao();
 global.Dados = Dados;
 
 if(!LIGADO){
-  console.info('[AgendaPro] Modo demonstração — os dados ficam neste navegador. '
+  console.info('[PediHub] Modo demonstração — os dados ficam neste navegador. '
              + 'Para ligar no Supabase, preencha url e chave em config.js.');
 } else {
-  console.info('[AgendaPro] Ligado em ' + cfg.url);
+  console.info('[PediHub] Ligado em ' + cfg.url);
 }
 
 })(window);

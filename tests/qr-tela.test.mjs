@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o QR no painel
+   PediHub — o QR no painel
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=… node tests/qr-tela.test.mjs

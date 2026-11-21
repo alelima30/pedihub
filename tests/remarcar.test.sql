@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o salão remarca um horário (49_remarcar.sql)
+-- PediHub — o salão remarca um horário (49_remarcar.sql)
 --
 -- "Na onde entro para remarcar caso precise?"
 --

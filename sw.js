@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — service worker
+   PediHub — service worker
    É o que torna o site instalável e o que faz a agenda abrir sem internet.
 
    Estratégia: "rede primeiro, cache como rede de segurança".
@@ -16,7 +16,7 @@
 /* Sobe a cada correção publicada, e tem que andar junto com o VERSAO_APP do
    app.html: o carimbo na lateral mostra aquele, e dois números divergentes
    fariam a tela afirmar uma versão que não é a que está servindo. */
-const VERSAO = 'agendapro-v9.70a035';
+const VERSAO = 'pedihub-v9.70a035';
 
 const ESSENCIAIS = [
   './',
@@ -115,18 +115,18 @@ self.addEventListener('fetch', ev => {
 self.addEventListener('push', ev => {
   let r = {};
   try{ r = ev.data ? ev.data.json() : {}; }catch(e){ r = {}; }
-  const titulo = String(r.titulo || 'AgendaPro').slice(0, 80);
+  const titulo = String(r.titulo || 'PediHub').slice(0, 80);
   ev.waitUntil(self.registration.showNotification(titulo, {
     body: String(r.corpo || 'Novidade na sua agenda.').slice(0, 200),
     icon: './icones/icone-192.png',
     badge: './icones/icone-192.png',
-    tag: String(r.tag || 'agendapro'),
+    tag: String(r.tag || 'pedihub'),
     data: { url: typeof r.url === 'string' && r.url.startsWith('./') ? r.url : './app.html' },
     vibrate: [180, 80, 180],
   }));
 });
 
-/* Tocou no aviso: volta para o AgendaPro que já está aberto (e vai para a
+/* Tocou no aviso: volta para o PediHub que já está aberto (e vai para a
    tela certa), ou abre um novo. Só endereço DESTE site — o `url` vem do
    banco, e mesmo assim nada que comece fora de './' é aceito acima. */
 self.addEventListener('notificationclick', ev => {

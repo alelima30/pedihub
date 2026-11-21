@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 19: o teto do link público
+-- PediHub — 19: o teto do link público
 --
 -- ── O QUE FOI MEDIDO ──────────────────────────────────────────────────────
 -- Numa bancada de pé, com SÓ a chave publicável — a mesma que está à vista no

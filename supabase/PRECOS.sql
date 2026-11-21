@@ -31,7 +31,7 @@ update public.planos p
 -- Os preços especiais por salão (13_cobranca, 1b) também saem: todo mundo
 -- paga a tabela. Para dar desconto a um salão depois, use o preço especial
 -- dele de novo — os cupons do sistema são do salão para as clientes dele, e
--- não descontam a mensalidade do AgendaPro.
+-- não descontam a mensalidade do PediHub.
 update public.assinaturas
    set precos_especiais = '{}'::jsonb
  where precos_especiais is distinct from '{}'::jsonb;

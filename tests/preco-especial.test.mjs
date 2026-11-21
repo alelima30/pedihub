@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o preço especial por salão (13_cobranca.sql, seção 1b)
+   PediHub — o preço especial por salão (13_cobranca.sql, seção 1b)
 
      bash tests/bancada/subir.sh
      node tests/preco-especial.test.mjs
@@ -34,7 +34,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',

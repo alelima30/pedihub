@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — quem tem dois salões não apaga um mexendo no outro
+   PediHub — quem tem dois salões não apaga um mexendo no outro
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=.../node_modules/playwright node tests/sincronia-saloes.test.mjs
@@ -37,7 +37,7 @@ const sql = q => execSync('psql -At -v ON_ERROR_STOP=1', { input: q, env: { ...p
 console.log('\nToda tabela sem salao_id desce pela mãe');
 {
   const g = {};
-  const j = { AGENDAPRO: { url: BANCADA, chave: 'k', ambiente: 'bancada' },
+  const j = { PEDIHUB: { url: BANCADA, chave: 'k', ambiente: 'bancada' },
     localStorage: { getItem: k => (k in g ? g[k] : null), setItem: (k, v) => { g[k] = String(v); }, removeItem: k => { delete g[k]; } } };
   new Function('window', 'console', 'fetch', 'localStorage',
     fs.readFileSync(path.join(RAIZ, '..', 'dados.js'), 'utf8'))(j, { info(){}, error(){}, log(){} }, fetch, j.localStorage);
@@ -101,8 +101,8 @@ diz(antes === 8, 'a Casa B tem 5 faixas de jornada, 1 serviço agendado, 1 item 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 } });
 await ctx.addInitScript(([base, s]) => {
-  window.AGENDAPRO = { url: base, chave: 'k', ambiente: 'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url: base, chave: 'k', ambiente: 'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BANCADA, sessao]);
 const p = await ctx.newPage();
 const erros = [], dialogos = [];
@@ -181,8 +181,8 @@ diz(erros.length === 0, 'sem erro de JavaScript', erros.join(' | '));
 {
   const c2 = await nav.newContext({ viewport: { width: 390, height: 844 } });
   await c2.addInitScript(([base, s]) => {
-    window.AGENDAPRO = { url: base, chave: 'k', ambiente: 'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+    window.PEDIHUB = { url: base, chave: 'k', ambiente: 'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s));
   }, [BANCADA, sessao]);
   const q = await c2.newPage();
   const errosQ = [];
@@ -196,7 +196,7 @@ diz(erros.length === 0, 'sem erro de JavaScript', erros.join(' | '));
       'abrir sem internet diz que não falou com o servidor — não "Nenhum salão nesta conta"',
       txt.replace(/\s+/g, ' ').slice(0, 140));
   diz(await q.isVisible('button:has-text("Tentar de novo")'), 'com o botão "Tentar de novo"');
-  const guardada = await q.evaluate(() => { try{ return !!JSON.parse(localStorage.getItem('agendapro.sessao')).token; }catch(e){ return false; } });
+  const guardada = await q.evaluate(() => { try{ return !!JSON.parse(localStorage.getItem('pedihub.sessao')).token; }catch(e){ return false; } });
   diz(guardada, 'e o login continua guardado no aparelho');
   diz(errosQ.length === 0, 'sem erro de JavaScript', errosQ.join(' | '));
   await c2.close();

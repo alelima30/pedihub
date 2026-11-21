@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a fita do carrinho, em metal e configurável
+   PediHub — a fita do carrinho, em metal e configurável
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/fita.test.mjs
@@ -46,7 +46,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -95,7 +95,7 @@ async function comFita(){
      agendar.html. Escrevi o slug primeiro: o carrinho nascia vazio, a fita
      nunca aparecia, e o teste morria no `waitForFunction` sem dizer por quê. */
   await p.addInitScript(([id, salaoId]) => {
-    localStorage.setItem('agendapro.carrinho.' + salaoId, JSON.stringify({ [id]: 2 }));
+    localStorage.setItem('pedihub.carrinho.' + salaoId, JSON.stringify({ [id]: 2 }));
   }, [prod.id, SALAO]);
   await p.goto(BASE + '/agendar.html?salao=' + SLUG);
   await p.waitForFunction(() => {
@@ -283,8 +283,8 @@ const errosP = [];
 pa.on('pageerror', e => errosP.push(e.message));
 pa.on('dialog', async d => { await d.accept(); });
 await pa.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, dona.sessao()]);
 await pa.goto(BASE + '/app.html');
 await pa.waitForTimeout(4000);

@@ -10,7 +10,7 @@
      salao pode querer o agendamento dentro do proprio site. -->
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Entrar — AgendaPro</title>
+<title>Entrar — PediHub</title>
 <meta name="description" content="Entre no painel do seu salão, barbearia ou estúdio." />
 <meta name="theme-color" content="#0F172A" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -37,7 +37,7 @@ try{
 </script>
 <style>
 /* ===========================================================================
-   AgendaPro — entrar
+   PediHub — entrar
    ---------------------------------------------------------------------------
    Duas faixas: a marca e o formulário. No computador ficam lado a lado; no
    celular a marca vira uma tarja curta no alto e o formulário ocupa o resto.
@@ -296,7 +296,7 @@ html.com-abertura, html.com-abertura body{ overflow:hidden }
 <div class="entrada-tela">
 
   <section class="lado-marca">
-    <img class="marca-grande" src="icones/logotipo.svg" alt="AgendaPro Gestão">
+    <img class="marca-grande" src="icones/logotipo.svg" alt="PediHub Gestão">
     <p>O cliente marca sozinho pelo link, você acompanha tudo de um lugar só —
        agenda, clientes, comissão e relatórios.</p>
     <div class="provas">
@@ -356,7 +356,7 @@ html.com-abertura, html.com-abertura body{ overflow:hidden }
       </div>
 
       <p class="rodape">
-        AgendaPro · <span id="ambiente">demonstração</span><br>
+        PediHub · <span id="ambiente">demonstração</span><br>
         Ao entrar você concorda com os termos de uso.
       </p>
     </div>
@@ -464,7 +464,7 @@ async function entrar(){
 
        E o `else` no fim nunca mais mostra só o número: se nem código nem
        frase vierem, ele diz o que a pessoa pode fazer. */
-    console.error('[AgendaPro] falha ao entrar:', e);
+    console.error('[PediHub] falha ao entrar:', e);
     ultimoEmail = email;
     const cod = String(e.codigo || '');
     const cru = String(e.message || '');
@@ -527,7 +527,7 @@ async function reenviar(){
       + '<span class="mono">' + seguro(ultimoEmail) + '</span> e volte aqui. '
       + 'Se não chegar em alguns minutos, procure no lixo eletrônico.');
   }catch(e){
-    console.error('[AgendaPro] reenvio da confirmação:', e);
+    console.error('[PediHub] reenvio da confirmação:', e);
     mostrar('ruim', '<b>Não consegui reenviar agora.</b> O Supabase limita '
       + 'quantos e-mails saem por hora. Espere alguns minutos e tente de novo.');
   }
@@ -554,7 +554,7 @@ async function esqueci(){
   try{
     await Dados.pedirNovaSenha(email);
   }catch(e){
-    console.error('[AgendaPro] recuperação:', e);
+    console.error('[PediHub] recuperação:', e);
     /* ── DUAS FALHAS, DUAS FRASES ─────────────────────────────────────────
        Nem aqui dizemos se o e-mail existe: contado, isso vira um verificador
        de contas de graça para quem quiser saber quem usa o sistema.
@@ -655,7 +655,7 @@ function chegouPeloEmail(){
 
 (function(){
   try{
-    const t = localStorage.getItem('agendapro.demo.v1.tema');
+    const t = localStorage.getItem('pedihub.demo.v1.tema');
     if(t) document.documentElement.setAttribute('data-tema', t);
   }catch(e){}
 
@@ -706,6 +706,6 @@ function chegouPeloEmail(){
   navigator.serviceWorker.register('sw.js').catch(e => console.error(e));
 })();
 </script>
-<p class="rodape-legal">AgendaPro · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
+<p class="rodape-legal">PediHub · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
 </body>
 </html>

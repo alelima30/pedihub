@@ -1,4 +1,4 @@
-/* PostgREST caseiro — só o pedaço que o AgendaPro usa.
+/* PostgREST caseiro — só o pedaço que o PediHub usa.
    Serve para provar que dados.js fala com um Postgres REAL, com o schema
    real e o RLS real, sem precisar de um projeto Supabase no ar.
    Não é para produção: é bancada de teste. */
@@ -631,7 +631,7 @@ const http_ = http.createServer(async (req, res) => {
     // teste em nuvem não depende de ninguém editar arquivo.
     if(u.pathname === '/config.js'){
       res.writeHead(200, {'Content-Type':'text/javascript; charset=utf-8'});
-      return res.end(`window.AGENDAPRO = { url:'http://127.0.0.1:8123',
+      return res.end(`window.PEDIHUB = { url:'http://127.0.0.1:8123',
         chave:'chave-de-bancada', ambiente:'bancada' };`);
     }
 

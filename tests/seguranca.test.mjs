@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — texto de gente não vira código
+   PediHub — texto de gente não vira código
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/seguranca.test.mjs
@@ -60,7 +60,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -123,8 +123,8 @@ const painel = await nav.newContext().then(c => c.newPage());
 const errosPainel = [];
 painel.on('pageerror', e => errosPainel.push(e.message));
 await painel.addInitScript(([base, ses]) => {
-  window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+  window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, d.sessao()]);
 await painel.goto(BASE + '/app.html');
 await painel.waitForTimeout(3500);
@@ -199,7 +199,7 @@ await painel.close();
 secao('Um link com carga no endereço');
 
 const pag = await nav.newContext().then(c => c.newPage());
-await pag.addInitScript(b => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
+await pag.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
 await pag.goto(BASE + '/agendar.html?salao=' + encodeURIComponent(CARGA('link')));
 await pag.waitForTimeout(2800);
 
@@ -229,7 +229,7 @@ await d.atualizar('saloes', salaoId, { nome: CARGA('salao') + 'Studio' });
 await d.atualizar('servicos', servico.id, { nome: CARGA('servico') + 'Corte' });
 
 const cli = await nav.newContext().then(c => c.newPage());
-await cli.addInitScript(b => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
+await cli.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
 await cli.goto(BASE + '/agendar.html?salao=' + SLUG);
 await cli.waitForTimeout(2800);
 igual('a capa mostra o nome sem executá-lo',

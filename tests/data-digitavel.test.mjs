@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o aniversário que se digita (dd/mm/aaaa), com o calendário ao lado
+   PediHub — o aniversário que se digita (dd/mm/aaaa), com o calendário ao lado
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      python3 -m http.server 8099 --directory .
@@ -42,7 +42,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',

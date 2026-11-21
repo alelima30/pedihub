@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o JavaScript de cada tela precisa ao menos COMPILAR
+   PediHub — o JavaScript de cada tela precisa ao menos COMPILAR
 
      node tests/sintaxe.test.js
 
@@ -320,7 +320,7 @@ console.log('\nO último módulo a reescrever a vitrine() não perdeu chave nenh
    frase não é aviso legal. */
 console.log('\nO aviso de direitos autorais está em todas as telas');
 {
-  const AVISO = 'AgendaPro · Todos os direitos reservados. Software protegido '
+  const AVISO = 'PediHub · Todos os direitos reservados. Software protegido '
     + 'por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, '
     + 'distribuição ou uso não autorizado são proibidos.';
 
@@ -360,7 +360,7 @@ console.log('\nOs modelos do WhatsApp combinam com o que o banco preenche');
   const sql = fs.readFileSync(path.join(RAIZ, 'supabase',
     '21_notificacoes.sql'), 'utf8');
 
-  const nomes = [...sql.matchAll(/when '(\w+)'\s+then '(agendapro_\w+)'/g)]
+  const nomes = [...sql.matchAll(/when '(\w+)'\s+then '(pedihub_\w+)'/g)]
     .map(m => ({ tipo: m[1], modelo: m[2] }));
   dizer(nomes.length === 5,
     `achei os cinco modelos no modelo_de() (${nomes.length})`,
@@ -464,7 +464,7 @@ console.log('\nOs modelos do WhatsApp combinam com o que o banco preenche');
      do `variaveis_pedido()` — um ramo por tipo, e o `else` para os dois de
      três variáveis ("a caminho" e "pronto"). */
   const sql37 = fs.readFileSync(path.join(RAIZ, 'supabase', '37_pedidos.sql'), 'utf8');
-  const doPedido = [...sql37.matchAll(/when '(pedido_\w+)'\s+then '(agendapro_\w+)'/g)]
+  const doPedido = [...sql37.matchAll(/when '(pedido_\w+)'\s+then '(pedihub_\w+)'/g)]
     .map(m => ({ tipo: m[1], modelo: m[2] }));
   dizer(doPedido.length === 5, `achei os cinco modelos do pedido no modelo_de() (${doPedido.length})`);
   const corpoVP = (sql37.match(

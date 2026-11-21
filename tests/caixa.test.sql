@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o caixa do dia e o estorno
+-- PediHub — o caixa do dia e o estorno
 --
 -- As perguntas que este arquivo responde são as que, erradas, fazem a gaveta
 -- não bater — e fazem alguém ser acusado por uma diferença que o sistema

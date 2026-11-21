@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a agenda mostra o que ainda espera a confirmação do salão
+   PediHub — a agenda mostra o que ainda espera a confirmação do salão
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=… node tests/a-confirmar.test.mjs

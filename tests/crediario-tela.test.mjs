@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o Crediário na tela (47_crediario)
+   PediHub — o Crediário na tela (47_crediario)
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/crediario-tela.test.mjs
@@ -38,7 +38,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -85,8 +85,8 @@ async function abrirPainel(dados, rotulo){
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(rotulo + ': ' + e.message));
   p.on('dialog', d => { erros.push(rotulo + ' (alerta): ' + d.message()); d.accept(); });
-  await p.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s));
     window.__abriu = []; window.open = u => { window.__abriu.push(String(u)); return null; }; }, [BASE, dados.sessao()]);
   await p.goto(BASE + '/app.html');
   await p.waitForFunction(() => typeof bd !== 'undefined' && bd && Array.isArray(bd.saloes)

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — varredura das duas áreas, tela por tela
+   PediHub — varredura das duas áreas, tela por tela
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/varredura.test.mjs
@@ -35,7 +35,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -78,10 +78,10 @@ const semErro = (onde) => {
 
 // A comanda e o caixa estão DESLIGADOS na plataforma (COMANDA_LIGADA no
 // app.html); este teste mede as telas deles, então liga só nesta aba.
-await pg.addInitScript(() => { try{ sessionStorage.setItem('agendapro.comanda', '1'); }catch(e){} });
+await pg.addInitScript(() => { try{ sessionStorage.setItem('pedihub.comanda', '1'); }catch(e){} });
 await pg.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, d.sessao()]);
 await pg.goto(BASE + '/app.html');
 await pg.waitForTimeout(3500);
@@ -331,7 +331,7 @@ cli.on('pageerror', e => errosCli.push('pageerror: ' + e.message));
 cli.on('console', m => { if(m.type() === 'error'
   && !/Failed to load resource/.test(m.text()))
   errosCli.push('console: ' + m.text().slice(0,160)); });
-await cli.addInitScript(b => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
+await cli.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
 await cli.goto(BASE + '/agendar.html?salao=' + SLUG);
 await cli.waitForTimeout(2800);
 
@@ -356,7 +356,7 @@ secao('Área da cliente: salão que não existe');
   const p = await cel.newPage();
   const e2 = [];
   p.on('pageerror', x => e2.push(x.message));
-  await p.addInitScript(b => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
+  await p.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
   await p.goto(BASE + '/agendar.html?salao=nao-existe-mesmo-' + marca);
   await p.waitForTimeout(2500);
   verdade('explica que não achou, em vez de ficar em branco',
@@ -376,7 +376,7 @@ secao('Área da cliente: salão sem serviço nenhum');
   const p = await cel.newPage();
   const e3 = [];
   p.on('pageerror', x => e3.push(x.message));
-  await p.addInitScript(b => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
+  await p.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
   await p.goto(BASE + '/agendar.html?salao=' + c2[0].slug);
   await p.waitForTimeout(2800);
   verdade('a capa abre mesmo sem serviço cadastrado',
@@ -483,7 +483,7 @@ secao('Área da cliente: lista de espera');
   const p = await cel.newPage();
   const e4 = [];
   p.on('pageerror', x => e4.push(x.message));
-  await p.addInitScript(b => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
+  await p.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
   await p.goto(BASE + '/agendar.html?salao=' + SLUG);
   await p.waitForTimeout(2800);
   const temFila = await p.evaluate(() => typeof entrarNaFila === 'function'

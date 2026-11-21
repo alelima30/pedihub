@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 01_schema.sql
+-- PediHub — 01_schema.sql
 -- Tabelas, chaves e travas. Sem RLS aqui: segurança está no 02_rls.sql.
 --
 -- Rodar à mão no SQL Editor do Supabase, em ordem (01, 02, 03).
@@ -23,7 +23,7 @@ create extension if not exists btree_gist;
 
 create table if not exists public.saloes (
   id        uuid primary key default gen_random_uuid(),
-  -- slug é o endereço público: agendapro.app/agendar/salao-da-ana
+  -- slug é o endereço público: pedihub.app/agendar/salao-da-ana
   slug      text unique not null check (slug ~ '^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$'),
   nome      text not null,
   -- O tipo não é só rótulo: ele define o VOCABULÁRIO do sistema. Barbearia

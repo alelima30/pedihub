@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ===========================================================================
-# AgendaPro — a cópia do banco, trancada com senha
+# PediHub — a cópia do banco, trancada com senha
 #
 #   SUPABASE_DB_URL=... BACKUP_SENHA=... bash supabase/backup.sh [pasta]
 #
@@ -79,5 +79,5 @@ echo "Cópia de $DIA: $(du -h "$CRU" | cut -f1), $(grep -c 'TABLE DATA' "$SAIDA/
 # apareceria na lista de processos.
 gpg --batch --yes --quiet --pinentry-mode loopback --passphrase-fd 3 \
     --symmetric --cipher-algo AES256 \
-    --output "$SAIDA/agendapro-$DIA.dump.gpg" "$CRU" 3<<<"$BACKUP_SENHA"
-echo "Trancada: $SAIDA/agendapro-$DIA.dump.gpg"
+    --output "$SAIDA/pedihub-$DIA.dump.gpg" "$CRU" 3<<<"$BACKUP_SENHA"
+echo "Trancada: $SAIDA/pedihub-$DIA.dump.gpg"

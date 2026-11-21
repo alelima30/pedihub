@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a confirmação, nas duas telas
+   PediHub — a confirmação, nas duas telas
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=… node tests/confirmacao-tela.test.mjs
@@ -34,7 +34,7 @@ const e = (m, c, d) => c ? (console.log('  ✓ ' + m), ok++)
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -72,8 +72,8 @@ p.on('pageerror', x => erros.push('pageerror: ' + x.message));
 p.on('console', c => { if(c.type() === 'error') erros.push('console: ' + c.text()); });
 p.on('dialog', async d => { erros.push('ALERT: ' + d.message()); await d.dismiss(); });
 await p.addInitScript(([base, ses]) => {
-  window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+  window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, dona.sessao()]);
 await p.goto(BASE + '/app.html');
 await p.waitForTimeout(3500);
@@ -122,8 +122,8 @@ const TEL = '+5551' + (200000000 + (Date.now() % 79999999));
 await maria.criarConta({ email:`cft-maria-${m}@t.com`, senha:'minhasenhaboa',
   nome:'Maria Cliente', telefone: TEL });
 await c.addInitScript(([base, ses]) => {
-  window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+  window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, maria.sessao()]);
 await c.goto(BASE + '/agendar.html?salao=' + SLUG);
 await c.waitForTimeout(3500);

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a agenda do mês
+   PediHub — a agenda do mês
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=… node tests/mes.test.mjs

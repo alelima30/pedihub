@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o que o mundo lá fora consegue chamar
+-- PediHub — o que o mundo lá fora consegue chamar
 --
 -- ── POR QUE ESTE ARQUIVO EXISTE ────────────────────────────────────────────
 -- No Postgres, função nova nasce EXECUTÁVEL POR TODO MUNDO. `security definer`

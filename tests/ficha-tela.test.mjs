@@ -35,7 +35,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -73,8 +73,8 @@ async function abrir(caminho, sessao, op = {}){
   p.on('pageerror', x => erros.push('pageerror: ' + x.message));
   p.on('dialog', async d => { erros.push('ALERT: ' + d.message()); await d.dismiss(); });
   await p.addInitScript(([base, ses]) => {
-    window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-    if(ses) localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+    window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+    if(ses) localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
   }, [BASE, sessao || null]);
   await p.goto(BASE + caminho);
   await p.waitForTimeout(3500);

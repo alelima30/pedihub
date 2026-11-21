@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 17: o caixa do dia, e o estorno
+-- PediHub — 17: o caixa do dia, e o estorno
 --
 -- ── O QUE FALTAVA ─────────────────────────────────────────────────────────
 -- Havia pagamento e não havia GAVETA. O sistema sabia que a cliente pagou

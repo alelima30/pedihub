@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o aviso de status da Meta
+   PediHub — o aviso de status da Meta
    Supabase Edge Function (Deno). Roda NO SERVIDOR, nunca no navegador.
 
    ── O QUE ELE FAZ ─────────────────────────────────────────────────────────

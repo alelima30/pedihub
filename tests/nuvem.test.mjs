@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — dados.js contra um Postgres de verdade
+   PediHub — dados.js contra um Postgres de verdade
    Rodar:  node tests/nuvem.test.mjs   (com a bancada de pé, ver tests/bancada/)
 
    O que este teste prova, e que nenhum outro provava: que a camada de dados
@@ -33,7 +33,7 @@ const secao = t => console.log('\n' + t);
 function novaAba(){
   const guardado = {};
   const janela = {
-    AGENDAPRO: { url: BASE, chave: 'chave-de-teste', ambiente: 'bancada' },
+    PEDIHUB: { url: BASE, chave: 'chave-de-teste', ambiente: 'bancada' },
     localStorage: {
       getItem: k => (k in guardado ? guardado[k] : null),
       setItem: (k,v) => { guardado[k] = String(v); },

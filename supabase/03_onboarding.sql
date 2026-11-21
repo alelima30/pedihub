@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 03_onboarding.sql
+-- PediHub — 03_onboarding.sql
 -- O dono se cadastra sozinho. Rodar DEPOIS do 01 e do 02.
 --
 -- O problema que este arquivo resolve: a policy `salao_criar` só deixa

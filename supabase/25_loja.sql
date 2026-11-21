@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 25: a loja na página da cliente
+-- PediHub — 25: a loja na página da cliente
 --
 -- A cliente vê os produtos que o dono marcou, põe no carrinho, e manda o
 -- pedido pelo WhatsApp DELA. Não há checkout, não há pagamento na página, e
@@ -95,7 +95,7 @@ language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'salao', jsonb_build_object(
       'id', s.id, 'slug', s.slug, 'nome', s.nome, 'tipo', s.tipo,
-      -- "Feito com AgendaPro" no rodapé do link simples (Grátis, 22_cotas).
+      -- "Feito com PediHub" no rodapé do link simples (Grátis, 22_cotas).
       'selo', not coalesce(public.recurso_bool(s.id, 'aparencia'), false),
       'logo', s.logo, 'capa', s.capa,
       'telefone', s.telefone, 'whatsapp', s.whatsapp,

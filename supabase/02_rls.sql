@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 02_rls.sql
+-- PediHub — 02_rls.sql
 -- A segurança de verdade. Rodar DEPOIS do 01_schema.sql.
 --
 -- Mesma filosofia do AdminPro: quem protege o dado não é o JavaScript da

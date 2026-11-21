@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o pedido da loja, gravado, e a venda no painel (53)
+-- PediHub — o pedido da loja, gravado, e a venda no painel (53)
 --
 -- A Maria pede dois batons e um creme pelo link da Ana.
 --

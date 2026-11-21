@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — INSTALAÇÃO COMPLETA
+-- PediHub — INSTALAÇÃO COMPLETA
 --
 -- Cole ESTE arquivo inteiro no SQL Editor do Supabase e clique em Run.
 --
@@ -10,7 +10,7 @@
 --   04_imagens.sql     as pastas de foto, uma por salão
 --   05_agenda.sql      horarios_livres() e agendar(), o lado da cliente
 --   06_vitrine.sql     vitrine(), e o catálogo fechado para quem não tem o link
---   07_plataforma.sql  o painel de quem é dono do AgendaPro
+--   07_plataforma.sql  o painel de quem é dono do PediHub
 --   08_conta.sql       o perfil que nasce junto com a conta
 --   09_cliente.sql     a cliente vê, cancela e entra na fila com um segredo
 --   10_campanhas.sql   campanhas de WhatsApp: tabelas, RLS e a fila
@@ -35,7 +35,7 @@
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 01_schema.sql
+-- PediHub — 01_schema.sql
 -- Tabelas, chaves e travas. Sem RLS aqui: segurança está no 02_rls.sql.
 --
 -- Rodar à mão no SQL Editor do Supabase, em ordem (01, 02, 03).
@@ -59,7 +59,7 @@ create extension if not exists btree_gist;
 
 create table if not exists public.saloes (
   id        uuid primary key default gen_random_uuid(),
-  -- slug é o endereço público: agendapro.app/agendar/salao-da-ana
+  -- slug é o endereço público: pedihub.app/agendar/salao-da-ana
   slug      text unique not null check (slug ~ '^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$'),
   nome      text not null,
   -- O tipo não é só rótulo: ele define o VOCABULÁRIO do sistema. Barbearia
@@ -981,7 +981,7 @@ with (security_invoker = true) as
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 02_rls.sql
+-- PediHub — 02_rls.sql
 -- A segurança de verdade. Rodar DEPOIS do 01_schema.sql.
 --
 -- Mesma filosofia do AdminPro: quem protege o dado não é o JavaScript da
@@ -1628,7 +1628,7 @@ revoke all on public.contadores from anon, authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 03_onboarding.sql
+-- PediHub — 03_onboarding.sql
 -- O dono se cadastra sozinho. Rodar DEPOIS do 01 e do 02.
 --
 -- O problema que este arquivo resolve: a policy `salao_criar` só deixa
@@ -1864,7 +1864,7 @@ grant select on public.minha_assinatura to authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — imagens do salão (Supabase Storage)
+-- PediHub — imagens do salão (Supabase Storage)
 -- ---------------------------------------------------------------------------
 -- Logo, foto da fachada/equipe e foto por serviço. São três imagens com o
 -- mesmo destino e a mesma regra, então um balde só resolve.
@@ -1950,7 +1950,7 @@ grant execute on function public.salao_do_arquivo(text) to anon, authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 05: a agenda pública
+-- PediHub — 05: a agenda pública
 --
 -- Este arquivo existe por um motivo só: hoje quem calcula horário livre é o
 -- JavaScript de `agendar.html`, contra o localStorage. Isso funciona para
@@ -2758,7 +2758,7 @@ create or replace view public.profissionais_publicos as
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 06: a vitrine de UM salão
+-- PediHub — 06: a vitrine de UM salão
 --
 -- ── O PROBLEMA QUE ESTE ARQUIVO FECHA ──────────────────────────────────────
 -- As vistas `saloes_publicos`, `servicos_publicos` e `profissionais_publicos`
@@ -2774,7 +2774,7 @@ create or replace view public.profissionais_publicos as
 --
 -- e recebia TODOS os salões da plataforma, com nome, endereço e WhatsApp. Um
 -- concorrente monta com isso uma lista de prospecção pronta: exatamente quem
--- usa o AgendaPro, onde fica e por onde falar. Você levou meses para reunir
+-- usa o PediHub, onde fica e por onde falar. Você levou meses para reunir
 -- essa lista; ela sai numa requisição.
 --
 -- ── O QUE MUDA ─────────────────────────────────────────────────────────────
@@ -2890,7 +2890,7 @@ grant execute on function public.vitrine(text) to anon, authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 07: o painel de quem é dono da plataforma
+-- PediHub — 07: o painel de quem é dono da plataforma
 --
 -- O `super_admin` já existia no schema e já destrancava tudo: `tem_acesso()`
 -- devolve verdadeiro para ele em qualquer salão, e as policies de `planos` e
@@ -3157,7 +3157,7 @@ grant execute on function public.definir_status_salao(uuid, text) to authenticat
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 08: a conta vira perfil
+-- PediHub — 08: a conta vira perfil
 --
 -- ── O DEFEITO QUE ISTO CONSERTA ────────────────────────────────────────────
 -- O cadastro chamava `/auth/v1/signup`, que cria a linha em `auth.users`, e
@@ -3303,7 +3303,7 @@ grant execute on function public.para_e164(text) to anon, authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 09: a cliente mexe no que é dela
+-- PediHub — 09: a cliente mexe no que é dela
 --
 -- ── O PROBLEMA ─────────────────────────────────────────────────────────────
 -- Marcar não pede identificação, e está certo: atrito na primeira vez custa
@@ -3789,7 +3789,7 @@ grant execute on function public.agendar(uuid, timestamptz, uuid[], text, text, 
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 10: Campanhas de WhatsApp
+-- PediHub — 10: Campanhas de WhatsApp
 --
 -- Mandar mensagem para a clientela é o pedido mais repetido de quem tem
 -- salão, e é também o mais fácil de fazer errado de um jeito que custa o
@@ -4300,7 +4300,7 @@ grant execute on function public.fila_resultado(uuid, boolean, text, text, text,
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 11: dar login para a equipe
+-- PediHub — 11: dar login para a equipe
 --
 -- O banco já sabia lidar com `recepcao` e `profissional`: as policies estão
 -- escritas desde o 02_rls.sql, e a policy `vinc_gerir` até deixa o dono criar

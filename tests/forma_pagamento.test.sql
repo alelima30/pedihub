@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — como a cliente vai pagar (09_cliente.sql, 1d)
+-- PediHub — como a cliente vai pagar (09_cliente.sql, 1d)
 --
 --   1. O que ela escolhe no link é gravado no agendamento.
 --   2. Forma estranha, ou que o salão não aceita, vira nula — e a marcação

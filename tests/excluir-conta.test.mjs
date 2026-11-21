@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — Excluir conta: a dona apaga tudo na hora, e só o que é dela
+   PediHub — Excluir conta: a dona apaga tudo na hora, e só o que é dela
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/excluir-conta.test.mjs
@@ -43,7 +43,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -221,8 +221,8 @@ await eva.enviarImagem(E.id, 'galeria-1.gif', FOTO);
   // A sessão entra só no painel: o script roda em TODA página aberta, e no
   // Entrar ele poria de volta a sessão que a exclusão acabou de limpar.
   await p.addInitScript(([b, s]) => {
-    window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    if(location.pathname.endsWith('app.html')) localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+    window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    if(location.pathname.endsWith('app.html')) localStorage.setItem('pedihub.sessao', JSON.stringify(s));
   }, [BASE, eva.sessao()]);
   await p.goto(BASE + '/app.html');
   await p.waitForFunction(() => typeof irPara === 'function' && bd && Array.isArray(bd.saloes), null, { timeout: 20000 });
@@ -255,7 +255,7 @@ await eva.enviarImagem(E.id, 'galeria-1.gif', FOTO);
   const fotos = await (await fetch(BASE + '/storage/v1/object/list/salao', { method:'POST',
     headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ prefix: E.id }) })).json();
   igual('e a pasta de fotos dele ficou vazia — até a foto que nenhum cadastro apontava', fotos, []);
-  igual('a sessão deste navegador foi limpa', await p.evaluate(() => localStorage.getItem('agendapro.sessao')), null);
+  igual('a sessão deste navegador foi limpa', await p.evaluate(() => localStorage.getItem('pedihub.sessao')), null);
   await p.context().close();
 }
 
@@ -270,8 +270,8 @@ async function noLink(d){
   p.on('dialog', async dg => { p.dialogos.push(dg.message());
     if(dg.type() === 'prompt') await dg.accept(p.resposta || ''); else await dg.accept(); });
   await p.addInitScript(([b, s]) => {
-    window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+    window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s));
   }, [BASE, d.sessao()]);
   await p.goto(BASE + '/agendar.html?salao=' + B.slug);
   await p.waitForFunction(() => typeof irPara === 'function' && typeof salao !== 'undefined' && salao, null, { timeout: 15000 });

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o Ranking (60_dashboard.sql)
+-- PediHub — o Ranking (60_dashboard.sql)
 --
 -- Uma agenda montada à mão, com a resposta sabida de antemão:
 --   · a Maria marcou 3 vezes (1ª do ranking), a Joana 2, a Carla 1;

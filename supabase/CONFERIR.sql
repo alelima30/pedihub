@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — meu banco está em dia?
+-- PediHub — meu banco está em dia?
 --
 -- Cole isto no SQL Editor do Supabase e rode. Ele NÃO MUDA NADA: só olha e
 -- responde. Serve para antes de atualizar (para ver o que falta) e depois
@@ -607,14 +607,14 @@ with conferencia(ordem, item, veredito, detalhe) as (
                || 'que a cliente escolhe não é gravada'
            else '' end
   union all
-  /* O número do WhatsApp é do AgendaPro, um só para todos os salões. A
+  /* O número do WhatsApp é do PediHub, um só para todos os salões. A
      confirmação e o lembrete têm de levar o nome da casa — e o modelo
      cadastrado na Meta espera SEIS variáveis. Com cinco, a Meta recusa cada
      mensagem com o erro 132000.
 
      E os nomes têm de ser os que a Meta aprovou: o aviso ao profissional é
-     'agendapro_aviso_profissional' (o de utilidade; o 'agendapro_novo1' virou
-     marketing e não chegava), e o resumo do dia é 'agendapro_agenda_hoje' (o curto,
+     'pedihub_aviso_profissional' (o de utilidade; o 'pedihub_novo1' virou
+     marketing e não chegava), e o resumo do dia é 'pedihub_agenda_hoje' (o curto,
      com botão). Nome que não existe lá volta 132001. */
   /* Com "mensagens com valor" ligado no admin, o aviso e o lembrete do
      salão vão pelos modelos `_pagamento` (item 40): o sufixo é tirado antes
@@ -627,8 +627,8 @@ with conferencia(ordem, item, veredito, detalhe) as (
              or to_regprocedure('public.variaveis_resumo(uuid,uuid,date,text,text)') is null
              or to_regprocedure('public.modelo_de(text)') is null
              or regexp_replace(public.modelo_de('novo'), '_pagamento$', '')
-                  is distinct from 'agendapro_aviso_profissional'
-             or public.modelo_de('resumo') is distinct from 'agendapro_agenda_hoje'
+                  is distinct from 'pedihub_aviso_profissional'
+             or public.modelo_de('resumo') is distinct from 'pedihub_agenda_hoje'
              then 'FALTA'
            else 'certo' end,
          case
@@ -638,8 +638,8 @@ with conferencia(ordem, item, veredito, detalhe) as (
              or to_regprocedure('public.variaveis_resumo(uuid,uuid,date,text,text)') is null
              or to_regprocedure('public.modelo_de(text)') is null
              or regexp_replace(public.modelo_de('novo'), '_pagamento$', '')
-                  is distinct from 'agendapro_aviso_profissional'
-             or public.modelo_de('resumo') is distinct from 'agendapro_agenda_hoje'
+                  is distinct from 'pedihub_aviso_profissional'
+             or public.modelo_de('resumo') is distinct from 'pedihub_agenda_hoje'
              then 'cole o 00_tudo.sql de novo (21_notificacoes): as mensagens saem '
                || 'sem o nome do salão ou com nome de modelo que a Meta não tem'
            else '' end
@@ -658,7 +658,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
                              where conname = 'notificacoes_tipo_check'
                                and pg_get_constraintdef(oid) like '%lembrete_equipe%')
              or regexp_replace(public.modelo_de('lembrete_equipe'), '_pagamento$', '')
-                  is distinct from 'agendapro_lembrete_equipe'
+                  is distinct from 'pedihub_lembrete_equipe'
              or pg_get_functiondef(to_regprocedure('public.gerar_resumos(timestamptz)'))
                   not like '%gerar_lembretes_equipe%'
              then 'FALTA'
@@ -673,7 +673,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
                              where conname = 'notificacoes_tipo_check'
                                and pg_get_constraintdef(oid) like '%lembrete_equipe%')
              or regexp_replace(public.modelo_de('lembrete_equipe'), '_pagamento$', '')
-                  is distinct from 'agendapro_lembrete_equipe'
+                  is distinct from 'pedihub_lembrete_equipe'
              or pg_get_functiondef(to_regprocedure('public.gerar_resumos(timestamptz)'))
                   not like '%gerar_lembretes_equipe%'
              then 'cole o 00_tudo.sql de novo (21_notificacoes): o lembrete para '
@@ -823,7 +823,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
              or not has_function_privilege('anon', 'public.fazer_pedido(text,jsonb)', 'execute')
              or to_regprocedure('public.mudar_status_pedido(uuid,text,text)') is null
              or has_function_privilege('anon', 'public.mudar_status_pedido(uuid,text,text)', 'execute')
-             or public.modelo_de('pedido_confirmado') is distinct from 'agendapro_pedido_confirmado'
+             or public.modelo_de('pedido_confirmado') is distinct from 'pedihub_pedido_confirmado'
              or pg_get_constraintdef((select oid from pg_constraint where conname = 'saloes_tipo_check'
                                        and conrelid = 'public.saloes'::regclass)) not like '%restaurante%'
              or pg_get_constraintdef((select oid from pg_constraint where conname = 'notificacoes_tipo_check'
@@ -837,7 +837,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
              or not has_function_privilege('anon', 'public.fazer_pedido(text,jsonb)', 'execute')
              or to_regprocedure('public.mudar_status_pedido(uuid,text,text)') is null
              or has_function_privilege('anon', 'public.mudar_status_pedido(uuid,text,text)', 'execute')
-             or public.modelo_de('pedido_confirmado') is distinct from 'agendapro_pedido_confirmado'
+             or public.modelo_de('pedido_confirmado') is distinct from 'pedihub_pedido_confirmado'
              or pg_get_constraintdef((select oid from pg_constraint where conname = 'saloes_tipo_check'
                                        and conrelid = 'public.saloes'::regclass)) not like '%restaurante%'
              or pg_get_constraintdef((select oid from pg_constraint where conname = 'notificacoes_tipo_check'
@@ -929,7 +929,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
              then 'FALTA'
            when to_regclass('cron.job') is not null
                 and coalesce((xpath('/table/row/schedule/text()', query_to_xml(
-                      'select schedule from cron.job where jobname = ''agendapro-notificacoes''',
+                      'select schedule from cron.job where jobname = ''pedihub-notificacoes''',
                       false, false, '')))[1]::text, '') <> '15 seconds'
              then 'FALTA'
            else 'certo' end,
@@ -944,7 +944,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
                    else 'o despertador está em "' || x.s
                         || '" — rode o cron.alter_job do LIGAR-WHATSAPP.sql' end
                    from (select (xpath('/table/row/schedule/text()', query_to_xml(
-                           'select schedule from cron.job where jobname = ''agendapro-notificacoes''',
+                           'select schedule from cron.job where jobname = ''pedihub-notificacoes''',
                            false, false, '')))[1]::text as s) x)
            end
   union all
@@ -1108,16 +1108,16 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or to_regprocedure('public.crediario_teto_mensagens(uuid)') is null
                 or not exists (select 1 from pg_trigger where tgname = 'tg_crediario_avisos')
                 or not exists (select 1 from pg_trigger where tgname = 'tg_crediario_receb_avisos')
-                or public.modelo_de('remarcado') is distinct from 'agendapro_remarcado'
-                or public.modelo_de('crediario_atraso') is distinct from 'agendapro_crediario_atraso'
+                or public.modelo_de('remarcado') is distinct from 'pedihub_remarcado'
+                or public.modelo_de('crediario_atraso') is distinct from 'pedihub_crediario_atraso'
                 or not exists (select 1 from pg_proc where proname = 'remarcar_pelo_salao' and prosrc like '%avisar_remarcado%')
               then 'FALTA' else 'certo' end,
          case when to_regprocedure('public.avisos_do_crediario(uuid)') is null
                 or to_regprocedure('public.crediario_teto_mensagens(uuid)') is null
                 or not exists (select 1 from pg_trigger where tgname = 'tg_crediario_avisos')
                 or not exists (select 1 from pg_trigger where tgname = 'tg_crediario_receb_avisos')
-                or public.modelo_de('remarcado') is distinct from 'agendapro_remarcado'
-                or public.modelo_de('crediario_atraso') is distinct from 'agendapro_crediario_atraso'
+                or public.modelo_de('remarcado') is distinct from 'pedihub_remarcado'
+                or public.modelo_de('crediario_atraso') is distinct from 'pedihub_crediario_atraso'
                 or not exists (select 1 from pg_proc where proname = 'remarcar_pelo_salao' and prosrc like '%avisar_remarcado%')
               then 'cole as duas partes de novo (52_mensagens_novas e 49_remarcar)' else '' end
   union all
@@ -1160,9 +1160,9 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or has_function_privilege('anon', 'public.fazer_pedido_loja(uuid,jsonb,text,uuid)', 'execute')
               then 'cole as duas partes de novo (53_pedidos_loja)' else '' end
   union all
-  /* O sino do painel (54): o que pede ação e os avisos do AgendaPro, com
+  /* O sino do painel (54): o que pede ação e os avisos do PediHub, com
      as tabelas fechadas e a função só para quem entra. */
-  select 68, 'Sino do painel (notificações e avisos do AgendaPro)',
+  select 68, 'Sino do painel (notificações e avisos do PediHub)',
          case when to_regprocedure('public.sino_do_painel(uuid)') is null
                 or to_regprocedure('public.publicar_aviso_plataforma(text,text,text,date,uuid)') is null
                 or to_regclass('public.avisos_lidos') is null
@@ -1498,8 +1498,8 @@ with conferencia(ordem, item, veredito, detalhe) as (
                               and tgrelid = 'public.pacote_clientes'::regclass)
              or not exists (select 1 from pg_constraint where conname = 'notificacoes_tipo_check'
                               and pg_get_constraintdef(oid) like '%pacote_pagamento%')
-             or public.modelo_de('pacote_renovar') is distinct from 'agendapro_pacote_ultima_sessao'
-             or public.modelo_de('pacote_agenda') is distinct from 'agendapro_pacote_agenda'
+             or public.modelo_de('pacote_renovar') is distinct from 'pedihub_pacote_ultima_sessao'
+             or public.modelo_de('pacote_agenda') is distinct from 'pedihub_pacote_agenda'
              or not exists (select 1 from pg_proc where proname = 'montar_pacote'
                               and strpos(prosrc, 'perform public.receber_pacote') between 1
                                   and strpos(prosrc, 'insert into public.agendamentos'))
@@ -1513,8 +1513,8 @@ with conferencia(ordem, item, veredito, detalhe) as (
                               and tgrelid = 'public.pacote_clientes'::regclass)
              or not exists (select 1 from pg_constraint where conname = 'notificacoes_tipo_check'
                               and pg_get_constraintdef(oid) like '%pacote_pagamento%')
-             or public.modelo_de('pacote_renovar') is distinct from 'agendapro_pacote_ultima_sessao'
-             or public.modelo_de('pacote_agenda') is distinct from 'agendapro_pacote_agenda'
+             or public.modelo_de('pacote_renovar') is distinct from 'pedihub_pacote_ultima_sessao'
+             or public.modelo_de('pacote_agenda') is distinct from 'pedihub_pacote_agenda'
              or not exists (select 1 from pg_proc where proname = 'montar_pacote'
                               and strpos(prosrc, 'perform public.receber_pacote') between 1
                                   and strpos(prosrc, 'insert into public.agendamentos'))

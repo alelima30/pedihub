@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 24: produtos que o salão vende
+-- PediHub — 24: produtos que o salão vende
 --
 -- ── O QUE ESTE ARQUIVO DESTRAVA ───────────────────────────────────────────
 -- A tabela `public.produtos` existe desde o 01_schema, a comanda já vende

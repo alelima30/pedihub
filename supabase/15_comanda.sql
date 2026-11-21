@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 15: as travas do dinheiro (Fase 2A)
+-- PediHub — 15: as travas do dinheiro (Fase 2A)
 --
 -- ── O QUE A AUDITORIA MEDIU, E QUE ESTE ARQUIVO FECHA ──────────────────────
 -- Três sondagens rodadas no banco antes de escrever qualquer coisa aqui, e as

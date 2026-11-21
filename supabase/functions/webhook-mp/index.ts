@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o aviso de pagamento do Mercado Pago
+   PediHub — o aviso de pagamento do Mercado Pago
    Supabase Edge Function (Deno). Roda NO SERVIDOR, nunca no navegador.
 
    ── ESTE É O ENDEREÇO MAIS EXPOSTO DO SISTEMA ──────────────────────────────

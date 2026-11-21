@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o que só a equipe sabe (41_ficha_equipe.sql)
+-- PediHub — o que só a equipe sabe (41_ficha_equipe.sql)
 --
 -- "Coloração loiro perolado: quais as tintas e como lavar o cabelo" e "a
 -- Maria não gosta de conversar, dá problema na hora do pagamento".

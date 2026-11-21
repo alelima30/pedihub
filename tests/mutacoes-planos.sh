@@ -130,7 +130,7 @@ echo "11. o link do Grátis perde o selo"
 SQLS="supabase/25_loja.sql"
 troca supabase/25_loja.sql \
   "      'selo', not coalesce(public.recurso_bool(s.id, 'aparencia'), false)," \
-  "      'selo', false," && rodar "sem a propaganda do AgendaPro"
+  "      'selo', false," && rodar "sem a propaganda do PediHub"
 
 echo "12. o Grátis ganha o caixa no plano"
 SQLS="supabase/22_cotas.sql supabase/24_produtos.sql"

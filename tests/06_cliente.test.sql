@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a cliente mexe no que é dela, e só no que é dela
+-- PediHub — a cliente mexe no que é dela, e só no que é dela
 --
 -- O segredo devolvido por `agendar()` é a credencial. Este arquivo cobra as
 -- duas metades: que ele FUNCIONA para quem o tem, e que ele é a ÚNICA coisa

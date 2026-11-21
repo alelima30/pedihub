@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o modo suporte (38_suporte.sql)
+-- PediHub — o modo suporte (38_suporte.sql)
 --
 -- A conta da plataforma abre o painel de um salão cliente. O que se confere:
 --   1. sem sessão de suporte, ela não grava nada no salão de outra pessoa;

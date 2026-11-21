@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — toda tela do painel abre, e abre limpa
+   PediHub — toda tela do painel abre, e abre limpa
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/telas.test.mjs

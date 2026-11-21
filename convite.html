@@ -10,8 +10,8 @@
      salao pode querer o agendamento dentro do proprio site. -->
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Convite — AgendaPro</title>
-<meta name="description" content="Você foi convidada para trabalhar num salão no AgendaPro." />
+<title>Convite — PediHub</title>
+<meta name="description" content="Você foi convidada para trabalhar num salão no PediHub." />
 <!-- Convite não é conteúdo para buscador: é um link privado que circula no
      WhatsApp. Indexado, ele vira porta aberta. -->
 <meta name="robots" content="noindex, nofollow" />
@@ -189,7 +189,7 @@ function telaCriarConta(){
     <button class="btn btn-p" id="btCriar" data-txt="Criar conta e entrar"
             onclick="criarEAceitar()">Criar conta e entrar</button>
     <div class="conv-troca">
-      Já tem conta no AgendaPro?
+      Já tem conta no PediHub?
       <button type="button" onclick="telaEntrar()">Entrar</button>
     </div>`;
 }
@@ -231,7 +231,7 @@ async function criarEAceitar(){
   }catch(e){
     ocupado('btCriar', false);
     /* Conta que já existe é o engano mais comum aqui: a pessoa esqueceu que
-       já tinha usado o AgendaPro como cliente de algum salão. Em vez de
+       já tinha usado o PediHub como cliente de algum salão. Em vez de
        repetir o erro do servidor, a tela oferece o caminho certo. */
     if(/already|registered|existe/i.test(e.message || '')){
       erro('Você já tem conta com este e-mail. Use "Entrar" logo abaixo.');
@@ -270,6 +270,6 @@ async function aceitar(){
 
 comecar();
 </script>
-<p class="rodape-legal">AgendaPro · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
+<p class="rodape-legal">PediHub · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
 </body>
 </html>

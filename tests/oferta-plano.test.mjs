@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a venda de plano na tela: ligada para todos, e o modo
+   PediHub — a venda de plano na tela: ligada para todos, e o modo
    desligado (`?oferta=0`) sem levar embora o que não é oferta
 
      bash tests/bancada/subir.sh
@@ -53,7 +53,7 @@ const e = (m, c, d) => c ? (console.log('  ✓ ' + m), ok++)
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -86,8 +86,8 @@ const p = await ctx.newPage();
 const erros = [];
 p.on('pageerror', x => erros.push(x.message));
 await p.addInitScript(([base, ses]) => {
-  window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+  window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, d.sessao()]);
 /* A venda está ligada para todos (`VENDA_LIGADA`). A primeira metade deste
    arquivo mede a tela com ela DESLIGADA — que continua existindo e é para

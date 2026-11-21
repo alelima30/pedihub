@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 29: o salão confirma, ou o link confirma sozinho
+-- PediHub — 29: o salão confirma, ou o link confirma sozinho
 --
 -- "O cliente receberá uma mensagem de confirmação. Isso é configurável: ou o
 --  dono confirma, ou a confirmação é automática assim que o cliente marca."

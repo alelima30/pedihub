@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 05: a agenda pública
+-- PediHub — 05: a agenda pública
 --
 -- Este arquivo existe por um motivo só: hoje quem calcula horário livre é o
 -- JavaScript de `agendar.html`, contra o localStorage. Isso funciona para

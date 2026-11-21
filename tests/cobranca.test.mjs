@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o checkout, do botão até o Pix na tela
+   PediHub — o checkout, do botão até o Pix na tela
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/cobranca.test.mjs
@@ -41,7 +41,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -108,8 +108,8 @@ await pg.route('**/functions/v1/criar-cobranca', async rota => {
 });
 
 await pg.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, d.sessao()]);
 await pg.goto(BASE + '/app.html');
 await pg.waitForTimeout(3500);
@@ -357,7 +357,7 @@ verdade('e NÃO manda valor nenhum — este seria o débito de todo mês',
 const camposDeCartao = ['numero','cartao','card','cardNumber','cvv',
                         'securityCode','validade','expiration','token'];
 const cartaoVazou = camposDeCartao.filter(k => k in noCartao.corpo);
-verdade('e nenhum dado de cartão passa pelo AgendaPro', cartaoVazou.length === 0,
+verdade('e nenhum dado de cartão passa pelo PediHub', cartaoVazou.length === 0,
   'o navegador mandou ' + JSON.stringify(cartaoVazou));
 
 verdade('e vai com o token da sessão', /^Bearer .+/.test(noCartao.auth));

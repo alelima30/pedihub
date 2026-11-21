@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a cliente se cadastra pelo link, sem agendar (48_cadastro_link)
+-- PediHub — a cliente se cadastra pelo link, sem agendar (48_cadastro_link)
 --
 --   1. sem login não há o que cadastrar; o anon nem chama;
 --   2. conta nova sem ficha: a ficha NASCE no salão, marcada "pelo link",

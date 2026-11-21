@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — confirmação, lembrete, resumo do dia e as cotas do plano
+   PediHub — confirmação, lembrete, resumo do dia e as cotas do plano
 
      bash tests/bancada/subir.sh
      node tests/notificacoes.test.mjs
@@ -40,7 +40,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -247,8 +247,8 @@ verdade('com os três atendimentos e o total',
    repetia o "Bom dia" do modelo. O dono escolheu: quantos e o primeiro, e um
    botão no modelo que abre o painel. O corpo continua com a lista inteira. */
 const vS = rSozinha[0].variaveis || [];
-/* O de UTILIDADE: o 'agendapro_agenda_dia' foi reclassificado como marketing. */
-igual('o resumo vai pelo modelo de utilidade', rSozinha[0].modelo, 'agendapro_agenda_hoje');
+/* O de UTILIDADE: o 'pedihub_agenda_dia' foi reclassificado como marketing. */
+igual('o resumo vai pelo modelo de utilidade', rSozinha[0].modelo, 'pedihub_agenda_hoje');
 igual('com quatro variáveis', vS.length, 4);
 igual('a primeira é o primeiro nome de quem recebe', vS[0], 'Dona');
 igual('a segunda é o salão', vS[1],
@@ -577,14 +577,14 @@ const linhaM = (await banco.query(
     where salao_id=$1 and tipo='confirmacao'`, [M.salao])).rows[0];
 
 igual('a confirmação nasce com o modelo aprovado',
-  linhaM.modelo, 'agendapro_confirmacao');
+  linhaM.modelo, 'pedihub_confirmacao');
 igual('e com seis variáveis, na ordem do texto cadastrado',
   (linhaM.variaveis || []).length, 6);
 igual('a primeira é o PRIMEIRO nome', linhaM.variaveis[0], 'Rita');
 verdade('a segunda é a data', /^\d{2}\/\d{2}\/\d{4}$/.test(linhaM.variaveis[1]),
   JSON.stringify(linhaM.variaveis));
 igual('a terceira é a hora, no fuso do salão', linhaM.variaveis[2], '15:00');
-/* O número que manda é do AgendaPro, o mesmo para todos os salões. Sem o
+/* O número que manda é do PediHub, o mesmo para todos os salões. Sem o
    nome da casa, a cliente recebe "agendamento confirmado" sem saber onde. */
 igual('a sexta é o nome do salão', linhaM.variaveis[5],
   (await banco.query(`select nome from public.saloes where id=$1`, [M.salao])).rows[0].nome);
@@ -600,10 +600,10 @@ const novoM = (await banco.query(
    por todas as linhas abaixo. */
 verdade('o aviso à profissional nasceu', !!novoM);
 if(novoM){
-  /* O modelo de UTILIDADE. O 'agendapro_novo1' foi reclassificado como
+  /* O modelo de UTILIDADE. O 'pedihub_novo1' foi reclassificado como
      marketing pela Meta, e o aviso saía "enviado" sem chegar. */
   igual('o aviso à profissional vai pelo modelo de utilidade',
-    novoM.modelo, 'agendapro_aviso_profissional');
+    novoM.modelo, 'pedihub_aviso_profissional');
   igual('com seis variáveis', (novoM.variaveis || []).length, 6);
   igual('a primeira é o primeiro nome de quem atende',
     novoM.variaveis[0], novoM.prof.split(' ')[0]);
@@ -675,7 +675,7 @@ await banco.query(
 const daFila = (await banco.query(
   `select * from public.notificacao_proxima(1)`)).rows[0];
 verdade('a fila entrega o modelo ao worker',
-  !!daFila && daFila.modelo === 'agendapro_confirmacao', JSON.stringify(daFila));
+  !!daFila && daFila.modelo === 'pedihub_confirmacao', JSON.stringify(daFila));
 verdade('e as variáveis junto',
   !!daFila && Array.isArray(daFila.variaveis) && daFila.variaveis.length === 6,
   JSON.stringify(daFila && daFila.variaveis));

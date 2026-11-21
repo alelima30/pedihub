@@ -108,9 +108,9 @@ troca supabase/32_produto_cadastro.sql \
 
 echo "6. a venda não se identifica, e vira ajuste"
 troca supabase/32_produto_cadastro.sql \
-  "  perform set_config('agendapro.mov_motivo',
+  "  perform set_config('pedihub.mov_motivo',
                      case when v_sinal < 0 then 'venda' else 'devolucao' end, true);" \
-  "  perform set_config('agendapro.mov_motivo', '', true);" \
+  "  perform set_config('pedihub.mov_motivo', '', true);" \
   && rodar "venda sem motivo no histórico" sql
 
 # ⚠ ESTA SOBREVIVE, E NÃO É BURACO NA SUÍTE — é mutação que não dá para
@@ -127,8 +127,8 @@ troca supabase/32_produto_cadastro.sql \
 # Fica registrada para ninguém "consertar" a suíte por causa dela.
 echo "7. o rótulo de venda gruda na conexão (sobrevive de propósito — ver acima)"
 troca supabase/32_produto_cadastro.sql \
-  "  perform set_config('agendapro.mov_motivo', '', true);
-  perform set_config('agendapro.mov_comanda', '', true);
+  "  perform set_config('pedihub.mov_motivo', '', true);
+  perform set_config('pedihub.mov_comanda', '', true);
 
   return null;" \
   "  return null;" \

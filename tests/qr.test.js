@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o QR do link
+   PediHub — o QR do link
 
      node tests/qr.test.js
 
@@ -171,7 +171,7 @@ igual('os oito valores batem com a tabela do padrão',
    ══════════════════════════════════════════════════════════════════════════ */
 secao('A estrutura da matriz');
 
-const m = QR.matriz('https://agendapro.app/studio-bella');
+const m = QR.matriz('https://pedihub.app/studio-bella');
 const n = m.length;
 console.log('      ' + n + '×' + n + ' módulos');
 verdade('a matriz é quadrada e de tamanho válido — ' + n,
@@ -207,7 +207,7 @@ verdade('o módulo que é sempre preto está preto', m[n - 8][8] === 1);
 
 /* A zona de silêncio no SVG: quatro módulos brancos em volta. Sem ela o
    leitor não acha onde o código começa em cima de um fundo colorido. */
-const desenho = QR.svg('https://agendapro.app/studio-bella');
+const desenho = QR.svg('https://pedihub.app/studio-bella');
 const caixa = (desenho.match(/viewBox="0 0 (\d+) (\d+)"/) || []);
 igual('o SVG reserva os quatro módulos de borda dos dois lados',
   Number(caixa[1]), n + 8);
@@ -299,7 +299,7 @@ function ler(m, versao){
    de 17 e o gerador subiu para a versão 2, certíssimo — e a volta, que eu
    mandava ler como versão 1, caiu no quadradinho de alinhamento do 2 e leu
    lixo a partir do décimo byte. */
-const TEXTO = 'agendapro';
+const TEXTO = 'pedihub';
 const m1 = QR.matriz(TEXTO);
 igual('o texto curto cabe na versão 1', m1.length, 21);
 
@@ -338,7 +338,7 @@ secao('Textos de tamanhos diferentes');
 
 for(const [texto, esperado] of [
   ['a', 21],
-  ['https://agendapro.app/barbearia-do-joao', 29],
+  ['https://pedihub.app/barbearia-do-joao', 29],
   ['x'.repeat(100), 41],
 ]){
   const mm = QR.matriz(texto);
@@ -353,7 +353,7 @@ verdade('texto longo demais avisa em vez de desenhar errado',
 
 /* Acentos e emoji: o endereço pode ter, e UTF-8 gasta mais de um byte. Um
    contador que contasse LETRAS em vez de BYTES quebraria só aqui. */
-const comAcento = QR.matriz('agendapro.app/salão-da-inês');
+const comAcento = QR.matriz('pedihub.app/salão-da-inês');
 verdade('endereço com acento desenha sem quebrar', comAcento.length >= 21);
 
 console.log(`\n${passou} passaram, ${falhou} falharam`);

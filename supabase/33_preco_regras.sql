@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 33. PREÇO AVANÇADO: vigência, dia da semana e faixa de horário
+-- PediHub — 33. PREÇO AVANÇADO: vigência, dia da semana e faixa de horário
 --
 -- Três regras para o mesmo serviço, que respondem a mesma pergunta do salão:
 -- sábado à tarde lota e terça de manhã fica vazia.

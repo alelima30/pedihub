@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a ficha do serviço para a cliente (62_ficha_servico.sql)
+-- PediHub — a ficha do serviço para a cliente (62_ficha_servico.sql)
 --
 -- O que tem de valer:
 --   · a dona grava a ficha pela tabela, como grava o resto do serviço;

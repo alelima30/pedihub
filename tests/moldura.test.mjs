@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a moldura do cartão de serviço, do painel até o pixel
+   PediHub — a moldura do cartão de serviço, do painel até o pixel
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/moldura.test.mjs
@@ -51,7 +51,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -450,8 +450,8 @@ const painel = await ctx.newPage();
 const errosP = [];
 painel.on('pageerror', e => errosP.push(e.message));
 await painel.addInitScript(([base, ses]) => {
-  window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+  window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, d.sessao()]);
 await painel.setViewportSize({ width: 1360, height: 900 });
 await painel.goto(BASE + '/app.html');

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a aparência que o salão escolhe, e o que a cliente vê
+   PediHub — a aparência que o salão escolhe, e o que a cliente vê
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/aparencia.test.mjs
@@ -45,7 +45,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -428,8 +428,8 @@ const selecionado = await mc.evaluate(() => {
 igual('o serviço escolhido usa a cor do salão, não o preto do sistema',
   selecionado, 'rgb(200, 163, 60)');
 
-// E a marca do AgendaPro NÃO acompanha: ela é de outra empresa.
-verdade('mas a marca do AgendaPro não vira dourada junto',
+// E a marca do PediHub NÃO acompanha: ela é de outra empresa.
+verdade('mas a marca do PediHub não vira dourada junto',
   await mc.evaluate(() => {
     const v = getComputedStyle(document.documentElement)
       .getPropertyValue('--tinta-marca').trim();
@@ -462,8 +462,8 @@ secao('A prévia em Meu negócio');
   const errosP = [];
   painel.on('pageerror', e => errosP.push(e.message));
   await painel.addInitScript(([base, ses]) => {
-    window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+    window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
   }, [BASE, d.sessao()]);
   await painel.setViewportSize({ width: 1360, height: 900 });
   await painel.goto(BASE + '/app.html');
@@ -525,7 +525,7 @@ secao('Salão antigo, que nunca abriu a tela de aparência');
 await d.atualizar('saloes', salaoId, { cfg:{ diasLiberados:30 } });
 const r = await abrir();
 igual('não força fundo escuro', await r.getAttribute('html','data-tema'), null);
-verdade('e a página abre com a cor do AgendaPro, sem migração nenhuma',
+verdade('e a página abre com a cor do PediHub, sem migração nenhuma',
   await r.isVisible('.boas-cta'));
 igual('sem erro de JavaScript', r.erros.length ? r.erros.join(' | ') : 0, 0);
 await r.close();

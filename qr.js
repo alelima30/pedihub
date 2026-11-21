@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — QR code
+   PediHub — QR code
 
    O painel promete, há muito tempo, que o link do salão "imprime como QR no
    espelho". Não imprimia: não havia QR nenhum.
@@ -21,7 +21,7 @@
    ── O QUE ESTE ARQUIVO FAZ, E O QUE NÃO FAZ ───────────────────────────────
    Faz: modo byte (UTF-8), versões 1 a 10, correção de erro M, as oito
    máscaras com a escolha pela penalidade do padrão. Dá para um endereço de
-   até 154 caracteres — de sobra para `agendapro.app/nome-do-salao`.
+   até 154 caracteres — de sobra para `pedihub.app/nome-do-salao`.
 
    Não faz: modo numérico, alfanumérico, kanji, versões acima de 10. Nada
    disso serve para endereço de internet, e cada um seria mais código para

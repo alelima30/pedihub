@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 34: CUPONS DE DESCONTO (agendamento no link e loja)
+-- PediHub — 34: CUPONS DE DESCONTO (agendamento no link e loja)
 --
 -- O salão cria um código — BEMVINDA10, NATAL15 — e a cliente digita no link:
 -- na tela "Confira seu agendamento" e no carrinho da loja.

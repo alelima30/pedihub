@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — "Meu negócio" em duas abas, com a prévia sempre à vista
+   PediHub — "Meu negócio" em duas abas, com a prévia sempre à vista
 
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/abas-salao.test.mjs
 

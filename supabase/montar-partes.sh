@@ -26,7 +26,7 @@ PARTE2="22_cotas.sql 23_assinatura_cartao.sql 24_produtos.sql 25_loja.sql 26_est
 cabeca() {
   cat <<CAB
 -- ===========================================================================
--- AgendaPro — INSTALAÇÃO COMPLETA, PARTE $1 DE 2
+-- PediHub — INSTALAÇÃO COMPLETA, PARTE $1 DE 2
 --
 -- O 00_tudo.sql ficou grande demais para o SQL Editor do Supabase, então ele
 -- vai em duas partes. É o mesmo conteúdo, na mesma ordem.

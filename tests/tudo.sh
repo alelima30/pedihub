@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ===========================================================================
-# AgendaPro — roda TUDO, de uma vez
+# PediHub — roda TUDO, de uma vez
 #
 #   bash tests/tudo.sh
 #
@@ -107,7 +107,7 @@ rodar() {
     # Falha intermitente é justamente a que mais precisa do detalhe, e a que
     # menos chance tem de ser reproduzida sob demanda.
     echo "$saida" | grep -E '^[[:space:]]*✗' | head -12 | sed 's/^/   /'
-    local arq="${TMPDIR:-/tmp}/agendapro-reprovou-$(echo "$nome" | tr -c 'a-zA-Z0-9' '-').txt"
+    local arq="${TMPDIR:-/tmp}/pedihub-reprovou-$(echo "$nome" | tr -c 'a-zA-Z0-9' '-').txt"
     printf '%s\n' "$saida" > "$arq"
     echo "   ── saída inteira em $arq ──"
 

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a capa da cliente não pode parecer quebrada
+   PediHub — a capa da cliente não pode parecer quebrada
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=… node tests/capa-servicos.test.mjs

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o Crediário (47_crediario.sql)
+-- PediHub — o Crediário (47_crediario.sql)
 --
 -- A Maria leva uma lingerie de R$ 300: R$ 100 de entrada no Pix e o resto
 -- em 2x de R$ 100, a primeira daqui a um mês. A Ju ganha 10% de comissão.

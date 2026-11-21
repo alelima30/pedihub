@@ -1,7 +1,7 @@
 -- ===========================================================================
--- AgendaPro — 40: o check-up do sistema (monitoramento)
+-- PediHub — 40: o check-up do sistema (monitoramento)
 --
--- "Preciso criar algo que fique monitorando o AgendaPro." O site no ar não
+-- "Preciso criar algo que fique monitorando o PediHub." O site no ar não
 -- quer dizer que o sistema está funcionando: o defeito mais provável aqui é a
 -- fila do WhatsApp parar calada — o despertador desligado, o token da Meta
 -- vencido, a função de envio recusando — e ninguém notar até a cliente dizer
@@ -122,7 +122,7 @@ begin
       'Rode o LIGAR-WHATSAPP.sql no SQL Editor do Supabase.');
   else
     select j.jobid, j.schedule, j.active into v_jobid, v_schedule, v_ativo
-      from cron.job j where j.jobname = 'agendapro-notificacoes';
+      from cron.job j where j.jobname = 'pedihub-notificacoes';
     -- O pg_cron escreve em inglês ("15 seconds"); a tela é em português.
     v_cada := case when v_schedule ~ '^[0-9]+ seconds?$'
                      then 'a cada ' || split_part(v_schedule, ' ', 1) || ' segundos'
@@ -130,12 +130,12 @@ begin
                    else 'no horário ' || v_schedule end;
     if v_jobid is null then
       v_itens := v_itens || public.saude_item('despertador', 'problema', 'Despertador da fila',
-        'o despertador agendapro-notificacoes não existe: as mensagens não saem.',
+        'o despertador pedihub-notificacoes não existe: as mensagens não saem.',
         'Rode o LIGAR-WHATSAPP.sql no SQL Editor do Supabase.');
     elsif not v_ativo then
       v_itens := v_itens || public.saude_item('despertador', 'problema', 'Despertador da fila',
         'o despertador está pausado: as mensagens não saem.',
-        'Rode o LIGAR-WHATSAPP.sql de novo, ou religue o agendapro-notificacoes no Supabase (Integrations, Cron).');
+        'Rode o LIGAR-WHATSAPP.sql de novo, ou religue o pedihub-notificacoes no Supabase (Integrations, Cron).');
     elsif to_regclass('cron.job_run_details') is null then
       v_itens := v_itens || public.saude_item('despertador', 'ok', 'Despertador da fila',
         'ligado, ' || v_cada || '.');

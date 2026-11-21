@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o modo Pedidos no banco (37_pedidos.sql)
+   PediHub — o modo Pedidos no banco (37_pedidos.sql)
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      node tests/pedidos.test.mjs
@@ -37,7 +37,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -222,7 +222,7 @@ igual('segredo que não existe: nada', await cliente.chamar('meu_pedido', { p_to
 const naFila = await q(`select tipo, destino, modelo, variaveis, status from public.notificacoes where pedido_id = (select id from public.pedidos where token = $1)`, [p1.token]);
 igual('o pedido novo avisou o restaurante no WhatsApp dele, com o modelo e as cinco variáveis',
   naFila.map(n => [n.tipo, n.destino, n.modelo, n.variaveis.length, n.status]),
-  [['pedido_novo', '11977771234', 'agendapro_pedido_novo', 5, 'pendente']]);
+  [['pedido_novo', '11977771234', 'pedihub_pedido_novo', 5, 'pendente']]);
 igual('na ordem do MODELOS.md: empresa, número, nome, total, modo', naFila[0].variaveis,
   [pizza.nomeSalao, String(p1.numero), 'Bruna', 'R$ 90,00', 'entrega no bairro Centro']);
 igual('cancelar antes do aceite: pode', await cliente.chamar('cancelar_meu_pedido', { p_token: p1.token }), true);
@@ -245,7 +245,7 @@ await mudar(pizza, 'em_preparo');
 const aceite = await q(`select tipo, destino, modelo, variaveis from public.notificacoes where pedido_id = $1 and tipo <> 'pedido_novo'`, [id2]);
 igual('aceitar põe a confirmação na fila, para a cliente, com o tempo estimado',
   aceite.map(n => [n.tipo, n.destino, n.modelo, n.variaveis]),
-  [['pedido_confirmado', '11933332222', 'agendapro_pedido_confirmado', ['Bruna', pizza.nomeSalao, String(p2.numero), 'R$ 90,00', '40 a 60 min']]]);
+  [['pedido_confirmado', '11933332222', 'pedihub_pedido_confirmado', ['Bruna', pizza.nomeSalao, String(p2.numero), 'R$ 90,00', '40 a 60 min']]]);
 verdade('aceitar duas vezes (duplo clique): a segunda é recusada', !!(await recusa(() => mudar(pizza, 'em_preparo'))));
 igual('e a confirmação não sai em dobro', Number((await um(`select count(*) n from public.notificacoes where pedido_id = $1 and tipo = 'pedido_confirmado'`, [id2])).n), 1);
 verdade('pedido de entrega não fica "pronto para retirar"', /não pode ir para/.test(await recusa(() => mudar(pizza, 'pronto')) || ''));
@@ -267,12 +267,12 @@ const id3 = (await um(`select id from public.pedidos where token = $1`, [p3.toke
 await pizza.chamar('mudar_status_pedido', { p_pedido: id3, p_status: 'em_preparo' });
 await pizza.chamar('mudar_status_pedido', { p_pedido: id3, p_status: 'pronto' });
 igual('retirada: "pronto para retirar" vai para a cliente',
-  (await um(`select modelo from public.notificacoes where pedido_id = $1 and status = 'pendente'`, [id3])).modelo, 'agendapro_pedido_pronto');
+  (await um(`select modelo from public.notificacoes where pedido_id = $1 and status = 'pendente'`, [id3])).modelo, 'pedihub_pedido_pronto');
 const p4 = await fazer(pizza, { telefone:'(11) 93333-4444' });
 const id4 = (await um(`select id from public.pedidos where token = $1`, [p4.token])).id;
 await pizza.chamar('mudar_status_pedido', { p_pedido: id4, p_status: 'cancelado', p_motivo: 'acabou a massa' });
 const canc = await um(`select variaveis, modelo from public.notificacoes where pedido_id = $1 and tipo = 'pedido_cancelado'`, [id4]);
-igual('cancelado pela casa: a cliente recebe o motivo', [canc.modelo, canc.variaveis[3]], ['agendapro_pedido_cancelado', 'acabou a massa']);
+igual('cancelado pela casa: a cliente recebe o motivo', [canc.modelo, canc.variaveis[3]], ['pedihub_pedido_cancelado', 'acabou a massa']);
 igual('e o pedido guarda quem cancelou', (await um(`select cancelado_por from public.pedidos where id = $1`, [id4])).cancelado_por, 'casa');
 await cfg(pizza, { avisarCliente: false, avisarCasa: false });
 const p5 = await fazer(pizza, { telefone:'(11) 93333-5555' });

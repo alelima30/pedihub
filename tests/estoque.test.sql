@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a comanda dá baixa no estoque
+-- PediHub — a comanda dá baixa no estoque
 --
 -- ── OS DOIS DEFEITOS QUE ESTE ARQUIVO EXISTE PARA PEGAR ───────────────────
 --

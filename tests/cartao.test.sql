@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a assinatura no cartão renova sozinha, e só uma vez por mês
+-- PediHub — a assinatura no cartão renova sozinha, e só uma vez por mês
 --
 -- ── O QUE ESTE ARQUIVO EXISTE PARA PEGAR ──────────────────────────────────
 -- O defeito que a auditoria previu antes de existir código: na SEGUNDA

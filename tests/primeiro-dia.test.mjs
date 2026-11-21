@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o passo a passo do primeiro dia
+   PediHub — o passo a passo do primeiro dia
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=… node tests/primeiro-dia.test.mjs

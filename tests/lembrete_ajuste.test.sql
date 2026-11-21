@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o lembrete da cliente acompanha o ajuste (21_notificacoes.sql)
+-- PediHub — o lembrete da cliente acompanha o ajuste (21_notificacoes.sql)
 --
 -- "Parece que o lembrete não está funcionando, chega uma hora antes." O
 -- lembrete era calculado UMA vez, ao marcar: trocar o tempo em Notificações

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — os relatórios batem com o que está gravado
+-- PediHub — os relatórios batem com o que está gravado
 --
 -- Relatório errado é pior que relatório nenhum: o dono paga comissão a mais,
 -- ou a menos, e descobre pela funcionária. Então aqui os números NÃO são

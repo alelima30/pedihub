@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — configuração
+   PediHub — configuração
    ---------------------------------------------------------------------------
    ESTE É O ÚNICO ARQUIVO QUE VOCÊ PRECISA EDITAR PARA LIGAR NO SUPABASE.
 
@@ -27,9 +27,9 @@
    lê a agenda e a clientela de todos os salões.
    =========================================================================== */
 
-window.AGENDAPRO = {
-  url:   'https://ialjrnighxntuirzmppt.supabase.co',
-  chave: 'sb_publishable_7E1IGSXJdA-U40VKDmlC7g_fBmSeZh1',
+window.PEDIHUB = {
+  url:   '',   // ← a Project URL do Supabase do PediHub
+  chave: '',   // ← a Publishable key do Supabase do PediHub
 
   // Aparece no rodapé para você não se confundir entre ensaio e produção.
   ambiente: 'produção',
@@ -71,8 +71,8 @@ window.AGENDAPRO = {
    ──────────────────────────────────────────────────────────────────────── */
 try{
   if(new URLSearchParams(location.search).get('demo') === '1'){
-    window.AGENDAPRO.url = '';
-    window.AGENDAPRO.chave = '';
-    window.AGENDAPRO.ambiente = 'demonstração';
+    window.PEDIHUB.url = '';
+    window.PEDIHUB.chave = '';
+    window.PEDIHUB.ambiente = 'demonstração';
   }
 }catch(e){ /* file:// sem search, ou navegador antigo: segue no modo normal */ }

@@ -1,12 +1,12 @@
 /* ===========================================================================
-   AgendaPro — "Precisa de ajuda?" pelo WhatsApp do suporte
+   PediHub — "Precisa de ajuda?" pelo WhatsApp do suporte
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=… node tests/ajuda.test.mjs
 
    ── O PEDIDO ───────────────────────────────────────────────────────────────
    Quem trava e não tem a quem perguntar, desiste. Um botão que abre o
-   WhatsApp do suporte do AgendaPro — (11) 96365-9620.
+   WhatsApp do suporte do PediHub — (11) 96365-9620.
 
    ── O QUE ESTE ARQUIVO PROTEGE ─────────────────────────────────────────────
      1. O botão está no topo, à vista no celular, e com tamanho de dedo.
@@ -34,7 +34,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -58,8 +58,8 @@ await ctx.route('https://wa.me/**', r => r.fulfill({ status:200, contentType:'te
 const p = await ctx.newPage();
 const erros = []; p.on('pageerror', e => erros.push(e.message));
 await p.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, d.sessao()]);
 await p.goto(BASE + '/app.html'); await p.waitForTimeout(3500);
 await p.evaluate(() => { if(typeof pdFechar === 'function') pdFechar(true); });

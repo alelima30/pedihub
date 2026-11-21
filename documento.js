@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — CPF e CNPJ: máscara e dígito verificador
+   PediHub — CPF e CNPJ: máscara e dígito verificador
 
    ── POR QUE ISTO VIROU ARQUIVO ────────────────────────────────────────────
    O `cpfValido` e o `cnpjValido` nasceram dentro do `criar.html`, e ficaram

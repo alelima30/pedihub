@@ -147,24 +147,24 @@ alter table public.notificacoes add constraint notificacoes_tipo_check
 create or replace function public.modelo_de(p_tipo text)
 returns text language sql stable set search_path = public as $$
   select case p_tipo
-    when 'confirmacao'       then 'agendapro_confirmacao'
-    when 'lembrete'          then 'agendapro_lembrete'
-    when 'novo'              then 'agendapro_aviso_profissional'
-    when 'resumo'            then 'agendapro_agenda_hoje'
-    when 'lembrete_equipe'   then 'agendapro_lembrete_equipe'
+    when 'confirmacao'       then 'pedihub_confirmacao'
+    when 'lembrete'          then 'pedihub_lembrete'
+    when 'novo'              then 'pedihub_aviso_profissional'
+    when 'resumo'            then 'pedihub_agenda_hoje'
+    when 'lembrete_equipe'   then 'pedihub_lembrete_equipe'
     -- Os do pedido (37). Texto e ordem das variáveis no MODELOS.md.
-    when 'pedido_novo'       then 'agendapro_pedido_novo'
-    when 'pedido_confirmado' then 'agendapro_pedido_confirmado'
-    when 'pedido_a_caminho'  then 'agendapro_pedido_a_caminho'
-    when 'pedido_pronto'     then 'agendapro_pedido_pronto'
-    when 'pedido_cancelado'  then 'agendapro_pedido_cancelado'
+    when 'pedido_novo'       then 'pedihub_pedido_novo'
+    when 'pedido_confirmado' then 'pedihub_pedido_confirmado'
+    when 'pedido_a_caminho'  then 'pedihub_pedido_a_caminho'
+    when 'pedido_pronto'     then 'pedihub_pedido_pronto'
+    when 'pedido_cancelado'  then 'pedihub_pedido_cancelado'
     -- Os do pacote (45). Só saem com o interruptor da plataforma ligado.
     -- A última sessão (tipo `pacote_renovar`, o nome antigo do aviso): o
-    -- `agendapro_pacote_renovacao` a Meta aprovou como Marketing, e categoria
+    -- `pedihub_pacote_renovacao` a Meta aprovou como Marketing, e categoria
     -- não se troca. O de pagamento não sai mais (45), mas o nome fica aqui.
-    when 'pacote_renovar'    then 'agendapro_pacote_ultima_sessao'
-    when 'pacote_pagamento'  then 'agendapro_pacote_pagamento'
-    when 'pacote_agenda'     then 'agendapro_pacote_agenda'
+    when 'pacote_renovar'    then 'pedihub_pacote_ultima_sessao'
+    when 'pacote_pagamento'  then 'pedihub_pacote_pagamento'
+    when 'pacote_agenda'     then 'pedihub_pacote_agenda'
   end
   || case when p_tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
                and public.mensagens_com_pagamento()

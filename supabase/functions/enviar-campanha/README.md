@@ -1,6 +1,6 @@
 # O worker das campanhas — como colocar no ar
 
-Esta pasta é a **única** parte do AgendaPro que roda no servidor. Ela existe
+Esta pasta é a **única** parte do PediHub que roda no servidor. Ela existe
 porque duas credenciais não podem chegar ao navegador de jeito nenhum:
 
 | Segredo | O que ele dá a quem tiver |

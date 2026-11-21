@@ -15,7 +15,7 @@
 --     aí a cliente recebe a lista de horários. Não há o que lembrar antes.
 --
 -- ── ⚠ SÓ SAEM COM OS MODELOS APROVADOS NA META ────────────────────────────
--- O número que manda é o do AgendaPro, e ele só manda modelo aprovado. Os
+-- O número que manda é o do PediHub, e ele só manda modelo aprovado. Os
 -- dois são novos (MODELOS.md): até a plataforma cadastrar, ver aprovados e
 -- ligar no admin, NADA é posto na fila — e não um monte de mensagens para um
 -- modelo que não existe (132001), que contariam como falha e sujariam o
@@ -175,7 +175,7 @@ begin
   /* "Combine a renovação com o salão" fez a Meta aprovar o modelo como
      MARKETING (custa umas 8 vezes mais e é segurado para quem nunca falou com
      o número). Agora é só a informação — a última sessão e onde — com outro
-     nome de modelo (`agendapro_pacote_ultima_sessao`, no modelo_de do 37). */
+     nome de modelo (`pedihub_pacote_ultima_sessao`, no modelo_de do 37). */
   perform public.gravar_aviso_do_pacote(r.salao_id, 'pacote_renovar', 'pacote_renovar:' || r.id,
     v_motivo, v_quando, interval '0', v_ult.inicio, v_tel, r.cliente_id, v_ult.id,
     'Olá, ' || v_nome || '. Informação sobre o seu pacote ' || r.pacote || '.'

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o pacote com agenda fixa e o pagamento do pacote (43)
+-- PediHub — o pacote com agenda fixa e o pagamento do pacote (43)
 --
 -- "Ela paga mensal e vai toda terça às 14h: na primeira faz mão, na segunda
 --  mão e pé, na terceira só mão, na quarta mão e pé."

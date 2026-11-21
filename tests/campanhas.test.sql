@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — Campanhas de WhatsApp: isolamento, fila e idempotência
+-- PediHub — Campanhas de WhatsApp: isolamento, fila e idempotência
 --
 -- Este arquivo existe para responder às três perguntas que, se erradas,
 -- tornam o módulo inaceitável num SaaS:

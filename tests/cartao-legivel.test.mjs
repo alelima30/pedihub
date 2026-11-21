@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o cartão do atendimento tem que ser LEGÍVEL nos dois temas
+   PediHub — o cartão do atendimento tem que ser LEGÍVEL nos dois temas
 
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/cartao-legivel.test.mjs
 

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — testes de isolamento (RLS)
+-- PediHub — testes de isolamento (RLS)
 --
 -- Estes são os testes que impedem manchete. Cada caso aqui simula alguém
 -- logado chamando a API REST do Supabase DIRETO, sem passar pela nossa tela —

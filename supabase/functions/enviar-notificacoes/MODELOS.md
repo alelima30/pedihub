@@ -32,7 +32,7 @@ mostra o `corpo`, não o que foi enviado. Seria um defeito invisível.
 
 ---
 
-## 1. `agendapro_confirmacao`
+## 1. `pedihub_confirmacao`
 
 Sai assim que a cliente marca.
 
@@ -57,13 +57,13 @@ Até breve!
 | `{{5}}` | profissional | Ana |
 | `{{6}}` | nome do salão | Salão da Ana |
 
-> **Por que o nome do salão.** O número que manda é do AgendaPro, um só para
-> todos os salões — a cliente vê "Agendapro" no topo da conversa. Sem o nome
+> **Por que o nome do salão.** O número que manda é do PediHub, um só para
+> todos os salões — a cliente vê "Pedihub" no topo da conversa. Sem o nome
 > da casa no texto, ela não sabe onde é o horário.
 
 ---
 
-## 2. `agendapro_lembrete`
+## 2. `pedihub_lembrete`
 
 Sai o tanto de horas antes que o dono escolher (padrão: 2h).
 
@@ -88,7 +88,7 @@ Mesmas seis variáveis da confirmação, na mesma ordem.
 
 ---
 
-## 3. `agendapro_aviso_profissional`
+## 3. `pedihub_aviso_profissional`
 
 Vai para **quem atende**, avisando que entrou horário na agenda dela.
 
@@ -116,17 +116,17 @@ Aviso automático do sistema de agendamento.
 > Aqui é o nome **completo** da cliente, e não só o primeiro: é ele que a
 > profissional vai procurar na agenda.
 
-> **Por que não é mais o `agendapro_novo1`.** A Meta o reclassificou como
+> **Por que não é mais o `pedihub_novo1`.** A Meta o reclassificou como
 > **Marketing** — o "🔔 Novo agendamento… Confira na agenda" foi lido como
 > chamada — e mensagem de marketing ela segura para quem nunca conversou com
 > o número: o aviso saía como "enviado" e não chegava. Este segue a forma da
 > confirmação, que passou como Utilidade: endereçado à pessoa, sobre **um**
-> agendamento, com o local, sem chamada para ação. O `agendapro_novo1` pode ser
+> agendamento, com o local, sem chamada para ação. O `pedihub_novo1` pode ser
 > apagado na Meta: o sistema não usa mais.
 
 ---
 
-## 4. `agendapro_agenda_hoje`
+## 4. `pedihub_agenda_hoje`
 
 O resumo do dia, uma vez pela manhã, para o dono e para cada profissional.
 
@@ -153,7 +153,7 @@ Aviso automático do sistema de agendamento.
 |---|---|
 | Texto do botão | `Ver agenda` |
 | Tipo de URL | **Estática** |
-| URL | o endereço do painel, o mesmo que você abre para entrar — ex.: `https://alelima30.github.io/agendapro/app.html` |
+| URL | o endereço do painel, o mesmo que você abre para entrar — ex.: `https://alelima30.github.io/pedihub/app.html` |
 
 > **Por que não vai a lista inteira.** Variável de modelo **não aceita quebra
 > de linha**. A lista achatada saía como uma linha só, enorme, e ainda
@@ -161,7 +161,7 @@ Aviso automático do sistema de agendamento.
 > a lista bonita, uma por linha, fica no painel — que é para onde o botão
 > leva. O histórico do painel continua guardando a lista inteira.
 
-> **Por que o nome não é mais `agendapro_resumo` nem `agendapro_agenda_dia`.**
+> **Por que o nome não é mais `pedihub_resumo` nem `pedihub_agenda_dia`.**
 > O primeiro mandava a lista numa linha só. O segundo a Meta reclassificou
 > como **Marketing**: o "☀️ Bom dia!" de abertura e o "Toque no botão para
 > ver a agenda completa" foram lidos como chamada — e marketing ela segura
@@ -172,7 +172,7 @@ Aviso automático do sistema de agendamento.
 
 ---
 
-## 5. `agendapro_lembrete_equipe`
+## 5. `pedihub_lembrete_equipe`
 
 O **lembrete para o salão**: antes do atendimento, para quem vai atender, para
 o dono, ou para os dois — o salão escolhe em **Mensagens da agenda**. Vem
@@ -220,12 +220,12 @@ duas linhas a mais no fim: **💰 Valor** e **💳 Pagamento** — sempre as **d
 > custa cerca de 8 vezes mais e fica segurado para quem nunca falou com o
 > número.
 >
-> O `agendapro_confirmacao_pagamento` foi passado pela Meta para Marketing
+> O `pedihub_confirmacao_pagamento` foi passado pela Meta para Marketing
 > (os outros três entraram como Utilidade e ficam como estão). Por isso a
-> confirmação com valor é a **`agendapro_confirmacao_valor1`** (com o "1":
+> confirmação com valor é a **`pedihub_confirmacao_valor1`** (com o "1":
 > é o nome com que ela foi aprovada na Meta), com o texto
 > no formato dos que passaram — sem "!" e fechando com "Aviso automático do
-> sistema de agendamento." O `agendapro_confirmacao_pagamento` pode ser
+> sistema de agendamento." O `pedihub_confirmacao_pagamento` pode ser
 > apagado na Meta: o sistema não o usa.
 >
 > Se a Meta mudar de novo para Marketing, não ligue: me avise, que o texto é
@@ -248,7 +248,7 @@ duas linhas a mais no fim: **💰 Valor** e **💳 Pagamento** — sempre as **d
 > modelo que não existe (erro 132001), e não chegar. Os de cima podem ficar
 > cadastrados: desligando, o sistema volta para eles na hora.
 
-## 1b. `agendapro_confirmacao_valor1`
+## 1b. `pedihub_confirmacao_valor1`
 
 ```
 Olá, {{1}}. Seu agendamento está confirmado.
@@ -267,7 +267,7 @@ Aviso automático do sistema de agendamento.
 As seis da confirmação, na mesma ordem; `{{7}}` o valor (ex.: R$ 80,00) e
 `{{8}}` a forma de pagamento (ex.: Pix).
 
-## 2b. `agendapro_lembrete_pagamento`
+## 2b. `pedihub_lembrete_pagamento`
 
 ```
 🔔 Olá, {{1}}! Passando para lembrar do seu horário.
@@ -286,7 +286,7 @@ Esperamos você!
 As seis do lembrete, na mesma ordem; `{{7}}` o valor e `{{8}}` a forma de
 pagamento.
 
-## 3b. `agendapro_aviso_profissional_pagamento`
+## 3b. `pedihub_aviso_profissional_pagamento`
 
 ```
 Olá, {{1}}. Um horário foi agendado com você.
@@ -306,7 +306,7 @@ As seis do aviso à profissional, na mesma ordem; `{{7}}` o valor e `{{8}}`
 como a cliente vai pagar — o que a profissional precisa saber antes de a
 cliente sentar.
 
-## 5b. `agendapro_lembrete_equipe_pagamento`
+## 5b. `pedihub_lembrete_equipe_pagamento`
 
 ```
 Olá, {{1}}. Lembrete de um horário agendado.
@@ -335,7 +335,7 @@ Mesmas regras de cima: **Utilidade**, **Português (BR)**, sem cabeçalho e sem
 botão. Enquanto não forem aprovados, as mensagens do pedido ficam **pendentes**
 na fila — nada é dado como enviado sem ter saído.
 
-## 6. `agendapro_pedido_novo`
+## 6. `pedihub_pedido_novo`
 
 Vai para o **WhatsApp do estabelecimento** quando chega um pedido pelo link.
 
@@ -356,7 +356,7 @@ O pedido está na tela de Pedidos.
 | `{{4}}` | total | R$ 58,00 |
 | `{{5}}` | entrega ou retirada | entrega no bairro Centro |
 
-## 7. `agendapro_pedido_confirmado`
+## 7. `pedihub_pedido_confirmado`
 
 Vai para a **cliente** quando o estabelecimento toca em **Aceitar**.
 
@@ -377,7 +377,7 @@ Obrigado pela preferência!
 | `{{4}}` | total | R$ 58,00 |
 | `{{5}}` | tempo estimado (Pedidos e entrega) | 40 a 60 min |
 
-## 8. `agendapro_pedido_a_caminho`
+## 8. `pedihub_pedido_a_caminho`
 
 Vai para a cliente quando o pedido de **entrega** sai.
 
@@ -395,7 +395,7 @@ Até já!
 | `{{2}}` | número do pedido | 12 |
 | `{{3}}` | nome do estabelecimento | Pizzaria do Zé |
 
-## 9. `agendapro_pedido_pronto`
+## 9. `pedihub_pedido_pronto`
 
 Vai para a cliente quando o pedido de **retirada** fica pronto.
 
@@ -413,7 +413,7 @@ Até já!
 | `{{2}}` | número do pedido | 12 |
 | `{{3}}` | nome do estabelecimento | Pizzaria do Zé |
 
-## 10. `agendapro_pedido_cancelado`
+## 10. `pedihub_pedido_cancelado`
 
 Vai para a cliente quando o **estabelecimento** cancela (quando é ela quem
 cancela, pelo link, não vai mensagem: ela já sabe).
@@ -454,16 +454,16 @@ sistema de agendamento."
 > datas juntas). Depois da aprovação, ligue em **admin → Mensagens do
 > WhatsApp → Ligar as mensagens do pacote**.
 
-> **Os que saíram.** O `agendapro_pacote_renovacao` a Meta aprovou como
+> **Os que saíram.** O `pedihub_pacote_renovacao` a Meta aprovou como
 > **Marketing** — o "combine a renovação com o salão" foi lido como convite
 > para comprar — e categoria não se troca: o aviso agora é o
-> `agendapro_pacote_ultima_sessao`, só com a informação. O
-> `agendapro_pacote_pagamento` (lembrete de pagar o pacote "a receber") saiu:
+> `pedihub_pacote_ultima_sessao`, só com a informação. O
+> `pedihub_pacote_pagamento` (lembrete de pagar o pacote "a receber") saiu:
 > o pacote a receber fica reservado até o salão tocar em "Recebi", e aí a
 > cliente recebe a lista de horários — não há o que lembrar antes. Os dois
 > podem ser apagados na Meta.
 
-## 10b. `agendapro_pacote_agenda`
+## 10b. `pedihub_pacote_agenda`
 
 Vai para a cliente quando o salão monta o pacote com agenda fixa já pago, ou
 quando registra o pagamento do pacote a receber: cada data, a hora e o que ela
@@ -490,7 +490,7 @@ Você recebe um lembrete antes de cada sessão. Aviso automático do sistema de 
 > lista vale para o pacote inteiro, e o nome de quem atende pode mudar no
 > meio. O salão não muda.
 
-## 11. `agendapro_pacote_ultima_sessao`
+## 11. `pedihub_pacote_ultima_sessao`
 
 Vai para a cliente **seis dias antes da última sessão do pacote**, às 10h
 (hora do salão) — só quando todas as sessões do pacote estão na agenda. Se ela
@@ -532,7 +532,7 @@ art. 42): nada de ameaça, nada de "nome sujo".
 > tem as dele — 200, 500 ou 1.000 por mês, conforme o plano do Crediário
 > contratado. Passou do limite no mês, esperam o mês seguinte.
 
-## 13. `agendapro_crediario_compra`
+## 13. `pedihub_crediario_compra`
 
 Vai para a cliente logo depois da venda no crediário.
 
@@ -552,7 +552,7 @@ Guarde esta mensagem. Mensagem automática do sistema do salão.
 | `{{3}}` | valor que ficou no crediário | R$ 200,00 |
 | `{{4}}` | as parcelas, numa linha só | 1ª R$ 100,00 em 05/12; 2ª R$ 100,00 em 05/01 |
 
-## 14. `agendapro_crediario_lembrete`
+## 14. `pedihub_crediario_lembrete`
 
 Vai para a cliente **dois dias antes** do vencimento da parcela, às 10h.
 
@@ -575,7 +575,7 @@ Se você já pagou, desconsidere esta mensagem. Mensagem automática do sistema 
 | `{{5}}` | a data do vencimento | 05/12 |
 | `{{6}}` | a chave Pix do salão, ou "combine com o salão" | Pix (chave: ana@salao.com) |
 
-## 15. `agendapro_crediario_vence_hoje`
+## 15. `pedihub_crediario_vence_hoje`
 
 Vai para a cliente **no dia** do vencimento, às 10h, se a parcela ainda
 estiver em aberto.
@@ -597,7 +597,7 @@ Se você já pagou, desconsidere esta mensagem. Mensagem automática do sistema 
 | `{{4}}` | o que falta pagar da parcela | R$ 100,00 |
 | `{{5}}` | a chave Pix do salão, ou "combine com o salão" | Pix (chave: ana@salao.com) |
 
-## 16. `agendapro_crediario_atraso`
+## 16. `pedihub_crediario_atraso`
 
 Vai para a cliente **um dia depois** do vencimento, às 10h, se a parcela
 continuar em aberto. Uma vez só por parcela.
@@ -624,7 +624,7 @@ Se você já pagou, desconsidere esta mensagem. Em caso de dúvida, fale com o s
 
 # O de horário remarcado
 
-## 17. `agendapro_remarcado`
+## 17. `pedihub_remarcado`
 
 Vai para a cliente quando o salão **remarca pelo painel** o dia ou a hora
 (trocar só a profissional não manda mensagem). Remarcou de novo antes de sair,

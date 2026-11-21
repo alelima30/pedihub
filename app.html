@@ -10,7 +10,7 @@
      salao pode querer o agendamento dentro do proprio site. -->
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AgendaPro — Agenda do salão</title>
+<title>PediHub — Agenda do salão</title>
 <meta name="description" content="Agenda, clientes, comissão e relatórios para salão de beleza, barbearia e estética." />
 <meta name="theme-color" content="#FFFFFF" />
 <!-- PWA: instalável no celular e no computador -->
@@ -18,12 +18,12 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="AgendaPro" />
+<meta name="apple-mobile-web-app-title" content="PediHub" />
 <link rel="icon" type="image/png" href="icones/icone-192.png" />
 <link rel="apple-touch-icon" href="icones/apple-touch-icon.png" />
 <style>
 /* ===========================================================================
-   AgendaPro — visual
+   PediHub — visual
    Sem framework, sem build. Abrir o arquivo é rodar o sistema.
    =========================================================================== */
 :root{
@@ -605,7 +605,7 @@ span.ajuda{display:block;margin-top:5px}
          invisível num dos dois. Trocar por JavaScript funcionaria, mas
          pisca na primeira pintura — e o logotipo é a primeira coisa que a
          pessoa vê. -->
-    <img class="lat-logo lat-logo-claro" src="icones/logotipo-escuro-linha.svg" alt="AgendaPro">
+    <img class="lat-logo lat-logo-claro" src="icones/logotipo-escuro-linha.svg" alt="PediHub">
     <img class="lat-logo lat-logo-escuro" src="icones/marca-linha.svg" alt="" aria-hidden="true">
     <span class="marca-etiqueta">Gestão</span>
   </div>
@@ -645,7 +645,7 @@ span.ajuda{display:block;margin-top:5px}
          afirmações que ninguém consegue conciliar: o navegador pode estar
          servindo a página de ontem e nada na tela diz isso. Um clique
          recarrega passando por cima de todo cache. -->
-    <p class="lat-rodape">AgendaPro · <span id="mTipo">salão</span><br>
+    <p class="lat-rodape">PediHub · <span id="mTipo">salão</span><br>
       <button class="lat-versao" onclick="recarregarDeVerdade()"
               title="Recarregar buscando a versão mais nova">
         versão <span id="mVersao">—</span></button></p>
@@ -663,7 +663,7 @@ span.ajuda{display:block;margin-top:5px}
     <span class="espaco"></span>
     <span class="tb-data" id="tbData"></span>
     <!-- O SINO (54_sino.sql): o que pede ação agora, e os avisos do
-         AgendaPro. Escondido até o banco responder; sem o 54, fica escondido. -->
+         PediHub. Escondido até o banco responder; sem o 54, fica escondido. -->
     <button class="tb-sino" id="btSino" type="button" onclick="alternarSino()" style="display:none"
             aria-label="Notificações" aria-expanded="false" aria-controls="sinoPainel">
       <span data-ico="sino"></span><span class="sino-num" id="sinoNum" hidden></span></button>
@@ -1041,7 +1041,7 @@ span.ajuda{display:block;margin-top:5px}
     Aberto direto do arquivo: funciona, mas <b>não instala como app</b> nem
     guarda offline. Sirva por https:// ou localhost para isso.<br>
   </span>
-  AgendaPro · demonstração com dados no próprio navegador (localStorage).
+  PediHub · demonstração com dados no próprio navegador (localStorage).
   Nada é enviado para servidor nenhum.
 </footer>
 </div><!-- /palco -->
@@ -1108,7 +1108,7 @@ span.ajuda{display:block;margin-top:5px}
 <script src="dados.js"></script>
 <script>
 /* ===========================================================================
-   AgendaPro — lógica
+   PediHub — lógica
    ---------------------------------------------------------------------------
    MODO DEMONSTRAÇÃO. Os dados vivem no localStorage deste navegador, para
    que a tela possa ser conferida sem Supabase nenhum configurado.
@@ -1124,7 +1124,7 @@ span.ajuda{display:block;margin-top:5px}
    saber o que a outra acabou de fazer.
    =========================================================================== */
 
-const CHAVE = 'agendapro.demo.v1';
+const CHAVE = 'pedihub.demo.v1';
 
 /* A JANELA MÍNIMA da grade — não mais o limite dela.
    Era limite, e por isso o dono via "1 atendimento" no topo com a grade
@@ -2266,7 +2266,7 @@ async function sair(){
   if(emSuporte()) return sairDoSuporte();
   if(!confirm('Sair do painel?')) return;
   try{ if(window.Dados && Dados.sair) await Dados.sair(); }
-  catch(e){ console.warn('[AgendaPro] sessão já estava encerrada:', e.message); }
+  catch(e){ console.warn('[PediHub] sessão já estava encerrada:', e.message); }
   location.href = 'entrar.html';
 }
 
@@ -2284,7 +2284,7 @@ function linkDeAjuda(){
   const s = ((typeof bd !== 'undefined' && bd && bd.saloes) || [])
               .find(x => x.id === salaoAtual);
   const tela = ((document.getElementById('tituloTela') || {}).textContent || '').trim();
-  const txt = 'Olá! Preciso de ajuda com o AgendaPro.'
+  const txt = 'Olá! Preciso de ajuda com o PediHub.'
     + (s ? '\nSalão: ' + s.nome + (s.slug ? ' (' + s.slug + ')' : '') : '')
     + (tela ? '\nTela: ' + tela : '') + '\n\n';
   return 'https://wa.me/' + SUPORTE_WHATSAPP + '?text=' + encodeURIComponent(txt);
@@ -3951,7 +3951,7 @@ async function carregarUsosDosCupons(){
     const m = Array.isArray(r) ? r[0] : r;
     if(usosDosCupons.salao === salao) usosDosCupons.mapa = (m && typeof m === 'object') ? m : {};
   }catch(e){
-    console.info('[AgendaPro] usos_dos_cupons:', e.message);
+    console.info('[PediHub] usos_dos_cupons:', e.message);
   }
   if(telaAtual === 'cupons' && salaoAtual === salao) pintarCupons();
 }
@@ -4998,7 +4998,7 @@ async function pintarAcessos(){
   alvo.innerHTML = `
     <h3 class="secao">Quem entra no sistema</h3>
     <p class="secao-sub">Login é diferente de ficha. Quem está aqui abre o
-      AgendaPro com a própria conta; quem está na lista acima aparece na
+      PediHub com a própria conta; quem está na lista acima aparece na
       agenda. A mesma pessoa pode estar nos dois, ou em só um.</p>
     <div id="listaAcessos"><div class="vazio">Carregando…</div></div>
     <div class="card-acoes">
@@ -5358,7 +5358,7 @@ async function carregarGaveta(){
     gavetaAtual = await Dados.chamar('conferir_caixa', { p_caixa: k.id });
   }catch(e){
     gavetaAtual = null;
-    console.error('[AgendaPro] conferir_caixa:', e);
+    console.error('[PediHub] conferir_caixa:', e);
   }
 }
 
@@ -6658,7 +6658,7 @@ async function carregarRelatorio(){
         /* A loja pelo link e os pacotes (55_relatorio_vendas). Banco sem ele
            (o SQL não foi colado): os dois blocos só não aparecem. */
         Dados.chamar('relatorio_vendas', { p_salao: salaoAtual, p_de: relDe, p_ate: relAte })
-          .catch(e => { console.info('[AgendaPro] relatório de vendas:', e.message); return null; }),
+          .catch(e => { console.info('[PediHub] relatório de vendas:', e.message); return null; }),
       ]);
       // Função que devolve escalar vem crua; a de conjunto vem em lista.
       r = Array.isArray(rr) ? rr[0] : rr;
@@ -7008,7 +7008,7 @@ function prepararPublico(){
       /* Endereço absurdamente longo é a única forma de cair aqui. Melhor a
          caixa vazia do que um desenho pela metade que alguém imprime. */
       caixaQr.innerHTML = '';
-      console.error('[AgendaPro] QR:', erro.message);
+      console.error('[PediHub] QR:', erro.message);
     }
   }
 
@@ -8025,7 +8025,7 @@ async function comandaDoAgendamento(agId){
         if(novo){ bd = novo; pintar(); }
         c = bd.comandas.find(x => x.agendamentoId === agId);
       }
-    }catch(e){ console.info('[AgendaPro] comanda já aberta?', e.message); }
+    }catch(e){ console.info('[PediHub] comanda já aberta?', e.message); }
   }
   if(!c){
     const a = bd.agendamentos.find(x => x.id === agId);
@@ -10833,7 +10833,7 @@ function confirmarTrocaDeFuso(novo){
       ${partes.length ? `<div class="aviso ok" style="margin-top:12px"><b>${partes.join(' e ')}</b>
         ${n + b === 1 ? 'continua' : 'continuam'} exatamente na mesma hora.</div>` : ''}
       <p style="font-size:13.5px;color:var(--txt2);margin-top:12px">A agenda fica
-        travada por 1 minuto. Se alguém da equipe estiver com o AgendaPro aberto,
+        travada por 1 minuto. Se alguém da equipe estiver com o PediHub aberto,
         a tela dele se atualiza sozinha.</p>`,
       [['Entendi', 'location.reload()', 'btn-p']]);
   });
@@ -12251,7 +12251,7 @@ function pintarAvisoWhats(saindo){
   alvo.innerHTML = saindo
     ? `<div class="aviso ok" style="margin-bottom:0">
         <b>O WhatsApp está ligado.</b> As mensagens desta agenda já estão
-        saindo pelo número do AgendaPro — o estado de cada uma aparece aqui
+        saindo pelo número do PediHub — o estado de cada uma aparece aqui
         embaixo.</div>`
     : `<div class="aviso info" style="margin-bottom:0">
         <b>Nenhuma mensagem desta agenda saiu ainda.</b><br>
@@ -12340,7 +12340,7 @@ async function pintarAvisoPacoteMsg(){
   alvo.innerHTML = liberadas === false
     ? `<div class="aviso info" style="margin-top:12px;margin-bottom:0">
         <b>As mensagens do pacote ainda não estão saindo.</b> Elas usam textos novos
-        que o WhatsApp precisa aprovar; assim que o AgendaPro liberar, começam
+        que o WhatsApp precisa aprovar; assim que o PediHub liberar, começam
         sozinhas — inclusive para os pacotes que já estão na agenda. Pode
         deixar ligadas.</div>`
     : '';
@@ -12360,7 +12360,7 @@ async function pintarAvisoRemarcadoMsg(){
   alvo.innerHTML = liberada === false
     ? `<div class="aviso info" style="margin-top:12px;margin-bottom:0">
         <b>O aviso de horário remarcado ainda não está saindo.</b> Ele usa um texto
-        novo que o WhatsApp precisa aprovar; assim que o AgendaPro liberar,
+        novo que o WhatsApp precisa aprovar; assim que o PediHub liberar,
         começa sozinho. Pode deixar ligado.</div>`
     : '';
 }
@@ -15502,8 +15502,8 @@ const COMANDA_NA_PLATAFORMA = comandaNestaAba(COMANDA_LIGADA);
 function comandaNestaAba(padrao){
   try{
     const q = new URLSearchParams(location.search).get('comanda');
-    if(q === '1' || q === '0') sessionStorage.setItem('agendapro.comanda', q);
-    const g = sessionStorage.getItem('agendapro.comanda');
+    if(q === '1' || q === '0') sessionStorage.setItem('pedihub.comanda', q);
+    const g = sessionStorage.getItem('pedihub.comanda');
     return g === '1' ? true : g === '0' ? false : padrao;
   }catch(e){ return padrao; }
 }
@@ -15601,7 +15601,7 @@ async function pintarConta(){
   try{
     minhaConta = await Dados.minhaConta();
   }catch(e){
-    console.error('[AgendaPro] conta:', e);
+    console.error('[PediHub] conta:', e);
     alvo.innerHTML = `<div class="aviso" style="margin:0">
       <b>Não consegui ler os dados da sua conta agora.</b><br>
       ${escapar(e.message || '')} — recarregue a página e tente de novo.</div>`;
@@ -15754,7 +15754,7 @@ async function confirmarExcluirConta(){
   try{ await Dados.sair(); }catch(e){}
   try{
     // O tema claro/escuro fica: é do aparelho, não da conta.
-    Object.keys(localStorage).filter(k => k.startsWith('agendapro.') && !k.endsWith('.tema'))
+    Object.keys(localStorage).filter(k => k.startsWith('pedihub.') && !k.endsWith('.tema'))
       .forEach(k => localStorage.removeItem(k));
   }catch(e){}
   location.href = 'entrar.html?conta=excluida';
@@ -16738,7 +16738,7 @@ function tirarDaGaleria(i){
   const nome = String(fora.url || '').split('/').pop().split('?')[0];
   if(Dados.ligado && nome){
     Dados.apagarImagem(salaoAtual, nome)
-      .catch(e => console.warn('[AgendaPro] sobrou o arquivo no Storage:', e.message));
+      .catch(e => console.warn('[PediHub] sobrou o arquivo no Storage:', e.message));
   }
 }
 
@@ -16806,7 +16806,7 @@ async function tirarImagemSalao(chave){
   // já está vazia e a imagem não aparece mais em lugar nenhum.
   if(Dados.ligado){
     Dados.apagarImagem(salaoAtual, chave + '.jpg')
-      .catch(e => console.warn('[AgendaPro] sobrou o arquivo no Storage:', e.message));
+      .catch(e => console.warn('[PediHub] sobrou o arquivo no Storage:', e.message));
   }
 }
 
@@ -16864,8 +16864,8 @@ const OFERTA_DE_PLANO = ofertaNestaAba(VENDA_LIGADA);
 function ofertaNestaAba(padrao){
   try{
     const q = new URLSearchParams(location.search).get('oferta');
-    if(q === '1' || q === '0') sessionStorage.setItem('agendapro.oferta', q);
-    const g = sessionStorage.getItem('agendapro.oferta');
+    if(q === '1' || q === '0') sessionStorage.setItem('pedihub.oferta', q);
+    const g = sessionStorage.getItem('pedihub.oferta');
     return g === '1' ? true : g === '0' ? false : padrao;
   }catch(e){ return padrao; }
 }
@@ -17162,7 +17162,7 @@ let usoDoPlano = null;
 async function carregarUsoDoPlano(){
   if(!NA_NUVEM || !salaoAtual) return;
   try{ usoDoPlano = await Dados.chamar('uso_do_plano', { p_salao: salaoAtual }); }
-  catch(e){ usoDoPlano = null; console.info('[AgendaPro] uso do plano:', e.message); }
+  catch(e){ usoDoPlano = null; console.info('[PediHub] uso do plano:', e.message); }
   pintarMedidoresDoPlano();
 }
 
@@ -17204,7 +17204,7 @@ function pintarMedidoresDoPlano(){
    WhatsApp do suporte, já dizendo o salão; e quem pode assinar vê os planos. */
 function botoesMaisMensagens(){
   const s = acharSalao(salaoAtual) || {};
-  const txt = 'Olá! Quero comprar mensagens extras para o AgendaPro.\nSalão: '
+  const txt = 'Olá! Quero comprar mensagens extras para o PediHub.\nSalão: '
     + (s.nome || '') + (s.slug ? ' (' + s.slug + ')' : '');
   return `<div style="margin-top:9px;display:flex;gap:8px;flex-wrap:wrap" id="maisMensagens">
     ${SUPORTE_WHATSAPP ? `<a class="btn btn-peq btn-p" target="_blank" rel="noopener"
@@ -17257,7 +17257,7 @@ function pintarConsumoMensagens(){
   if(teto === 0){
     alvo.innerHTML = `<div class="aviso info" style="margin-top:13px;margin-bottom:0">
       <b>Seu plano não inclui mensagens automáticas.</b><br>
-      Nada desta lista sai pelo WhatsApp do AgendaPro. Mandar mensagem pelo
+      Nada desta lista sai pelo WhatsApp do PediHub. Mandar mensagem pelo
       WhatsApp do salão continua funcionando normalmente.</div>`;
     return;
   }
@@ -17707,7 +17707,7 @@ function desenharMensagensDoCrediario(){
     : i.liberadas === false
       ? `<div class="aviso info" style="margin-bottom:14px" id="crMsgAguardando">
           <b>As mensagens do Crediário ainda não estão saindo.</b> Elas usam textos
-          novos que o WhatsApp precisa aprovar; assim que o AgendaPro liberar,
+          novos que o WhatsApp precisa aprovar; assim que o PediHub liberar,
           começam sozinhas — inclusive para as parcelas que ainda vão vencer.
           Pode deixar ligadas.</div>` : '';
   const uso = i && !i.erro && Number(i.teto) > 0
@@ -17925,7 +17925,7 @@ async function desfazerRecebimentoCrediarioAgora(recId){
   }
 }
 
-/* A cobrança pelo WhatsApp DO SALÃO (o número dele, não o do AgendaPro): não
+/* A cobrança pelo WhatsApp DO SALÃO (o número dele, não o do PediHub): não
    gasta franquia e funciona sem modelo aprovado. Sem `escapar()`: o texto vai
    para dentro do endereço, e de lá para a caixa do WhatsApp. */
 function cobrarParcela(vendaId, parcelaId){
@@ -18669,7 +18669,7 @@ function pdfDoRecibo(r){
     '<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>',
     '<< /Type /Font /Subtype /Type1 /BaseFont /Courier-Bold /Encoding /WinAnsiEncoding >>',
     `<< /Length ${conteudo.length} >>\nstream\n${conteudo}\nendstream`,
-    `<< /Title (${titulo}) /Producer (AgendaPro) >>`,
+    `<< /Title (${titulo}) /Producer (PediHub) >>`,
   ];
   let pdf = '%PDF-1.4\n%âãÏÓ\n';
   const posicoes = [];
@@ -18858,12 +18858,12 @@ async function cancelarPedidoLojaAgora(id){
    "Dentro do painel do dono, um ícone de sino para as notificações do
    sistema." O que pede ação agora — horário esperando o "sim", sinal por Pix
    a conferir, pedido da loja, parcela vencida, mensagem que não saiu,
-   franquia no fim, assinatura — e os avisos que o AgendaPro escreve no admin.
+   franquia no fim, assinatura — e os avisos que o PediHub escreve no admin.
 
    QUEM VÊ O QUÊ é o banco que decide (`sino_do_painel`): a tela só desenha o
    que veio. Cada item leva à tela onde se resolve e some sozinho quando o
    motivo some — não há "marcar como lido" no que é trabalho. Só o aviso do
-   AgendaPro se marca como lido.
+   PediHub se marca como lido.
 
    QUANDO PERGUNTA: a cada redesenho do painel, no máximo uma vez a cada 10
    segundos (o redesenho acontece depois de tudo o que muda alguma coisa), a
@@ -18891,7 +18891,7 @@ async function atualizarSino(){
     const r = await Dados.chamar('sino_do_painel', { p_salao: deQuem });
     if(deQuem === salaoAtual) sinoDados = Object.assign({ itens: [], avisos: [] }, Array.isArray(r) ? r[0] : r, { salao: deQuem });
   }catch(e){
-    console.info('[AgendaPro] sino:', e.message);
+    console.info('[PediHub] sino:', e.message);
     /* O banco ainda sem o 54 (o SQL não foi colado): o sino fica escondido,
        sem aviso nenhum na tela. Outro erro (sem rede): fica o de antes. */
     if(/PGRST202|could not find|does not exist|not found/i.test(e.message || ''))
@@ -18972,7 +18972,7 @@ function contaDoSino(d){
 }
 
 /* ── AVISOS NO CELULAR (59_push.sql) ──────────────────────────────────────
-   O celular toca com o AgendaPro fechado: horário novo pelo link, horário
+   O celular toca com o PediHub fechado: horário novo pelo link, horário
    cancelado pela cliente, pedido novo. É o Web Push do navegador — não passa
    pela Meta e não gasta a franquia de mensagens.
 
@@ -19071,7 +19071,7 @@ async function pintarEstadoAvisosCelular(){
   if(!el) return;
   if(!NA_NUVEM){ el.textContent = 'Disponível no app de verdade, não na demonstração.'; return; }
   if(AvisosCelular.iphoneSemInstalar()){
-    el.innerHTML = 'Neste iPhone, primeiro instale o AgendaPro na tela de início.'; return;
+    el.innerHTML = 'Neste iPhone, primeiro instale o PediHub na tela de início.'; return;
   }
   if(!AvisosCelular.suportado()){ el.textContent = 'Este navegador não recebe avisos.'; return; }
   el.innerHTML = (await AvisosCelular.ligadoAqui())
@@ -19087,13 +19087,13 @@ async function abrirAvisosCelular(){
   }
   if(AvisosCelular.iphoneSemInstalar()){
     abrirModal('Avisos no iPhone', `
-      <p style="font-size:14px">No iPhone, os avisos só chegam com o AgendaPro
+      <p style="font-size:14px">No iPhone, os avisos só chegam com o PediHub
         <b>instalado na tela de início</b>. É rápido:</p>
       <ol style="font-size:14px;margin:10px 0 0 18px;line-height:1.7">
-        <li>Abra o AgendaPro no <b>Safari</b>.</li>
+        <li>Abra o PediHub no <b>Safari</b>.</li>
         <li>Toque no botão <b>Compartilhar</b> (o quadrado com a seta para cima).</li>
         <li>Toque em <b>Adicionar à Tela de Início</b> e em <b>Adicionar</b>.</li>
-        <li>Abra o AgendaPro pelo ícone novo, toque no sino e em <b>Avisos no celular</b>.</li>
+        <li>Abra o PediHub pelo ícone novo, toque no sino e em <b>Avisos no celular</b>.</li>
       </ol>
       <p style="font-size:13px;color:var(--txt2);margin-top:10px">Precisa do iOS 16.4 ou mais novo.</p>`,
       [['Entendi', 'fecharModal()', 'btn-p']]);
@@ -19119,7 +19119,7 @@ async function abrirAvisosCelular(){
       </div>`).join('')}` : '';
   abrirModal('Avisos no celular', `
     <p style="font-size:14px">O celular toca quando chega <b>horário novo pelo link</b>,
-      quando uma <b>cliente cancela</b> e quando entra <b>pedido</b> — mesmo com o AgendaPro fechado.</p>
+      quando uma <b>cliente cancela</b> e quando entra <b>pedido</b> — mesmo com o PediHub fechado.</p>
     <div class="aviso ok" style="margin-top:12px"><b>Não gasta nenhuma mensagem do plano.</b>
       É um aviso do próprio celular, não do WhatsApp.</div>
     ${negado ? `<div class="aviso atencao" style="margin-top:12px" id="avcNegado"><b>Os avisos estão bloqueados
@@ -19202,7 +19202,7 @@ function desenharSino(){
         onclick="sinoIr(${k})"><span class="sino-ic">${ico(l.ic)}</span>
         <span><b>${escapar(l.t)}</b><small>${escapar(l.s)}</small></span></button>`).join('')}
     ${avisos.map(a => `<div class="sino-aviso" id="sinoAviso-${escapar(a.id)}">
-        <span class="sino-de">AVISO DO AGENDAPRO${a.publicadoEm ? ' · ' + escapar(quandoDoPedidoLoja(a.publicadoEm)) : ''}</span>
+        <span class="sino-de">AVISO DO PEDIHUB${a.publicadoEm ? ' · ' + escapar(quandoDoPedidoLoja(a.publicadoEm)) : ''}</span>
         <b>${escapar(a.titulo)}</b><p>${escapar(a.texto)}</p>
         <button type="button" class="btn btn-peq" onclick="marcarAvisoLido('${escapar(a.id)}')">Marcar como lido</button>
       </div>`).join('')}
@@ -19252,7 +19252,7 @@ function sinoIr(k){
   if(l.marcar === 'contas'){
     Dados.chamar('ver_contas_excluidas', { p_salao: salaoAtual })
       .then(() => pedirSino(true))
-      .catch(e => console.info('[AgendaPro] contas excluídas:', e.message));
+      .catch(e => console.info('[PediHub] contas excluídas:', e.message));
   }
   irPara(l.tela);
   if(l.aba && typeof trocarAbaSalao === 'function') setTimeout(() => trocarAbaSalao(l.aba), 60);
@@ -19268,7 +19268,7 @@ async function marcarAvisoLido(id){
   sinoDados.avisos = (sinoDados.avisos || []).filter(a => a.id !== id);
   desenharSino();
   try{ await Dados.chamar('marcar_aviso_lido', { p_aviso: id }); }
-  catch(e){ console.info('[AgendaPro] marcar aviso:', e.message); pedirSino(true); }
+  catch(e){ console.info('[PediHub] marcar aviso:', e.message); pedirSino(true); }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -19287,7 +19287,7 @@ async function carregarAdicionais(){
   if(!NA_NUVEM || !salaoAtual) return;
   const antes = JSON.stringify((meusAdicionais || {}).recursos || []) + crediarioNaAba();
   try{ meusAdicionais = await Dados.chamar('meus_adicionais', { p_salao: salaoAtual }); }
-  catch(e){ meusAdicionais = null; console.info('[AgendaPro] módulos adicionais:', e.message); }
+  catch(e){ meusAdicionais = null; console.info('[PediHub] módulos adicionais:', e.message); }
   pintarAdicionais();
   // O que o banco disse muda o menu (a aba Crediário) e a tela aberta.
   if(antes !== JSON.stringify((meusAdicionais || {}).recursos || []) + crediarioNaAba()){
@@ -19333,7 +19333,7 @@ function cartaoAdicional(x){
       botoes = `<button class="btn btn-p btn-peq" onclick="pedirAdicional('${cod}','contratar')">Trocar para o ${escapar(x.nome)}</button>`;
     else if(!m.emDia && !m.teste) situacao += ' Regularize a mensalidade primeiro.';
   }else if(x.ativo && x.cortesia){
-    situacao = 'Ativo — cortesia do AgendaPro.';
+    situacao = 'Ativo — cortesia do PediHub.';
   }else if(x.status === 'ativo'){
     situacao = 'Ativo. Entra na sua mensalidade.';
     botoes = `<button class="btn btn-peq" onclick="pedirAdicional('${cod}','cancelar')">Cancelar o módulo</button>`;
@@ -19457,7 +19457,7 @@ function pagarPlanoComAdicional(plano){
    ---------------------------------------------------------------------------
    ⚠ NENHUM DADO DE CARTÃO PASSA POR ESTA TELA. Não há campo de número, de CVV
    nem de validade em lugar nenhum deste arquivo, e não é economia de trabalho:
-   é o que faz o AgendaPro não ser responsável por guardar cartão de ninguém.
+   é o que faz o PediHub não ser responsável por guardar cartão de ninguém.
 
    O botão pede à borda uma pré-aprovação e abre a página do PRÓPRIO Mercado
    Pago, onde o dono digita o cartão. O que volta para cá é a informação de que
@@ -19542,7 +19542,7 @@ async function assinarCartao(codigo){
         <b>${escapar(p ? p.nome : codigo)} · ${p ? real(precoDoPlano(codigo)) : ''} por mês,
         com renovação automática.</b><br>
         O cartão é digitado na página do Mercado Pago — ele não passa pelo
-        AgendaPro e não fica guardado aqui.
+        PediHub e não fica guardado aqui.
       </div>
       <a class="btn btn-p" target="_blank" rel="noopener"
          href="${escapar(r.url)}">Autorizar no Mercado Pago</a>
@@ -19902,11 +19902,11 @@ async function entrarNoSuporte(){
     Object.assign(modoSuporte, { salao: pedido, acesso: v.acesso, nome: v.nome || '' });
     Dados.modoSuporte(pedido);
     salaoAtual = pedido;
-    document.title = 'Suporte · ' + modoSuporte.nome + ' — AgendaPro';
+    document.title = 'Suporte · ' + modoSuporte.nome + ' — PediHub';
   }catch(e){
     // Conta comum com o endereço do admin na mão: o banco recusou, e o painel
     // abre como sempre — o dela. Só a plataforma ouve o porquê.
-    console.info('[AgendaPro] modo suporte não abriu:', e.message);
+    console.info('[PediHub] modo suporte não abriu:', e.message);
     if(!/privilege|plataforma abre/i.test(e.message || ''))
       alert('Não consegui abrir o modo suporte:\n\n' + e.message);
   }
@@ -19952,7 +19952,7 @@ async function liberarEdicaoSuporte(){
 
 async function sairDoSuporte(){
   try{ await Dados.chamar('encerrar_suporte', { p_acesso: modoSuporte.acesso }); }
-  catch(e){ console.warn('[AgendaPro] encerrar suporte:', e.message); }
+  catch(e){ console.warn('[PediHub] encerrar suporte:', e.message); }
   location.href = 'admin.html';
 }
 
@@ -20319,7 +20319,7 @@ async function conferirFuso(){
   if(!sl || !sl.fuso || typeof Dados.fusoDoSalao !== 'function') return false;
   let noBanco = null;
   try{ noBanco = await Dados.fusoDoSalao(deQuem); }
-  catch(e){ console.info('[AgendaPro] fuso do salão:', e.message); return false; }
+  catch(e){ console.info('[PediHub] fuso do salão:', e.message); return false; }
   // Trocou de estabelecimento enquanto a pergunta voltava: a resposta é do outro.
   if(deQuem !== salaoAtual) return false;
   if(!noBanco || noBanco === sl.fuso) return false;
@@ -20360,7 +20360,7 @@ async function sincronizarAgenda(){
   }catch(e){
     // Rede oscilando não é motivo para assustar ninguém: tenta de novo no
     // próximo ciclo, e o que está na tela continua valendo.
-    console.info('[AgendaPro] sincronização adiada:', e.message);
+    console.info('[PediHub] sincronização adiada:', e.message);
     return 0;
   }
   // Pode ter começado uma gravação enquanto estas três requisições voltavam.
@@ -20523,11 +20523,11 @@ async function carregarTudo(){
     for(const s of (cru.saloes || [])){
       if((cru.assinaturas || []).some(a => a.salaoId === s.id)) continue;
       try{ planoDaEquipe[s.id] = await Dados.chamar('plano_do_salao', { p_salao: s.id }); }
-      catch(e){ console.info('[AgendaPro] plano do salão:', e.message); }
+      catch(e){ console.info('[PediHub] plano do salão:', e.message); }
     }
     return montarAgenda(montarJornadas(cru));
   }catch(e){
-    console.error('[AgendaPro] não consegui ler o banco:', e);
+    console.error('[PediHub] não consegui ler o banco:', e);
     /* Sem rede é o caso comum — celular sem sinal, wi-fi do salão caindo — e
        não tem nada a ver com config.js. Na abertura, quem avisa é a tela (ver
        a partida, lá embaixo); com o painel já aberto, o que está nele fica. */
@@ -20695,7 +20695,7 @@ function salvar(){
       .then(() => { _baixado = _copia(paraSubir); })
       .catch(async e => {
         _geracaoGravacao++;
-        console.error('[AgendaPro] falha ao gravar:', e);
+        console.error('[PediHub] falha ao gravar:', e);
         // No suporte só leitura a recusa é a trava funcionando, não um defeito.
         if(emSuporte() && /Modo suporte: só leitura/.test(e.message || ''))
           alert('Modo suporte: só leitura. Nada foi gravado.\n\nPara mexer neste '
@@ -20802,7 +20802,7 @@ function completarTabelas(d){
 /* ===========================================================================
    INSTALAR COMO APLICATIVO (PWA)
    ---------------------------------------------------------------------------
-   Instalado, o AgendaPro abre em janela própria, com ícone na tela inicial e
+   Instalado, o PediHub abre em janela própria, com ícone na tela inicial e
    sem barra de endereço — a recepção usa como se fosse app nativo, e abre
    mesmo com a internet oscilando.
 
@@ -20892,7 +20892,7 @@ function explicarInstalacaoManual(){
       <p style="color:var(--txt2);font-size:14px">Clique no ícone de instalar na
       barra de endereço, à direita — um monitor com uma seta para baixo.</p></div>`;
 
-  abrirModal('Instalar o AgendaPro', passos + `
+  abrirModal('Instalar o PediHub', passos + `
     <div class="aviso info" style="margin-bottom:0">Depois de instalado, ele abre
       como aplicativo: sem barra de endereço, com ícone na tela de início, e a
       agenda continua abrindo mesmo sem internet.</div>
@@ -21111,7 +21111,7 @@ const PD_PASSOS = [
       + 'para pular e fazer depois em Meu negócio → Aparência.',
     desenhar: pdDesenharCara },
   { titulo:'Mais recursos',
-    sub:'O que mais o AgendaPro faz. Ligue agora o que quiser — o resto fica '
+    sub:'O que mais o PediHub faz. Ligue agora o que quiser — o resto fica '
       + 'para depois, cada um na sua aba.',
     desenhar: pdDesenharRecursos },
   { titulo:'Pronto — este é o seu link',
@@ -21210,7 +21210,7 @@ async function pdGravar(){
   catch(erro){
     // `salvar()` já trata e avisa; isto é só para um erro inesperado não
     // deixar a trava presa e o assistente mudo para sempre.
-    console.error('[AgendaPro] assistente ao gravar:', erro);
+    console.error('[PediHub] assistente ao gravar:', erro);
   }
   finally{ pdGravando = false; }
   pdDesenhar();
@@ -22639,7 +22639,7 @@ function pdDesenharRecursos(){
   const semMensagens = tetoDoPlano('mensagens_mes') === 0;
   cartoes.push(pdCartaoRecurso('mensagens', 'Mensagens no WhatsApp da cliente',
     'A confirmação, assim que ela marca, e o lembrete antes do horário. Saem pelo número '
-    + 'do AgendaPro e contam na franquia de mensagens do seu plano.',
+    + 'do PediHub e contam na franquia de mensagens do seu plano.',
     semMensagens ? `<p class="ajuda" id="pdSemMensagens">Seu plano não tem mensagens no WhatsApp —
         elas entram nos planos com mensagens, em <b>Plano</b>.</p>`
     : `<p class="pd-rec-rot">Confirmação, assim que ela marca</p>
@@ -22674,7 +22674,7 @@ function pdDesenhar8(){
     // Endereço absurdamente longo é a única forma de cair aqui. Melhor sem
     // QR do que com um desenho pela metade que alguém imprime.
     qr = '';
-    console.error('[AgendaPro] QR:', erro.message);
+    console.error('[PediHub] QR:', erro.message);
   }
 
   const servicos = servsAtivos().length;
@@ -22787,14 +22787,14 @@ function pintarFaixaPrimeiroDia(){
 function registrarServiceWorker(){
   if(!('serviceWorker' in navigator)) return;
   if(location.protocol === 'file:'){
-    console.info('[AgendaPro] Aberto como arquivo local — sem instalação nem modo offline. '
+    console.info('[PediHub] Aberto como arquivo local — sem instalação nem modo offline. '
                + 'Sirva por https:// (ou localhost) para o app instalável funcionar.');
     document.getElementById('avisoLocal').style.display = '';
     return;
   }
   navigator.serviceWorker.register('sw.js')
-    .then(() => console.info('[AgendaPro] Service worker no ar.'))
-    .catch(e => console.error('[AgendaPro] Falha ao registrar o service worker:', e));
+    .then(() => console.info('[PediHub] Service worker no ar.'))
+    .catch(e => console.error('[PediHub] Falha ao registrar o service worker:', e));
 }
 
 /* ── Partida ─────────────────────────────────────────────────────────── */
@@ -23115,7 +23115,7 @@ function abrirConfigPedidos(){
         <span>Avisar a cliente quando aceitar, sair para entrega, ficar pronto ou cancelar</span></label>
       <label class="check"><input type="checkbox" id="pcAvisaCasa" ${marcado(c.avisarCasa)}>
         <span>Avisar no WhatsApp do estabelecimento quando chegar pedido novo</span></label>
-      <p class="ajuda">Cada aviso gasta uma mensagem do plano, e só sai com o WhatsApp do AgendaPro ligado.</p>
+      <p class="ajuda">Cada aviso gasta uma mensagem do plano, e só sai com o WhatsApp do PediHub ligado.</p>
     </div>
     <div id="pcRecado"></div>`,
     [['Cancelar', 'fecharModal()', ''], ['Salvar', 'salvarConfigPedidos()', 'btn-p']]);
@@ -23289,12 +23289,12 @@ function mostrarQuemEstaLogado(){
          o Caixa abre zerado. Vazio por defeito e vazio de verdade têm a mesma
          cara na tela — e foi assim que quatro 400 duraram meses. */
       if(bd.falhas && bd.falhas.length){
-        console.error('[AgendaPro] não carregou:', bd.falhas);
+        console.error('[PediHub] não carregou:', bd.falhas);
         setTimeout(() => avisoDeCarga(bd.falhas), 400);
       }
       if(!bd.saloes || !bd.saloes.length){
         /* ── A CONTA DA PLATAFORMA CAI AQUI ─────────────────────────────
-           Quem administra o AgendaPro não tem salão — não deve mesmo ter.
+           Quem administra o PediHub não tem salão — não deve mesmo ter.
            Só que esta tela dizia a ele "crie o seu em criar.html", sem uma
            palavra sobre o painel da plataforma, que é justamente o lugar
            dessa conta. Mandar o administrador criar um salão é mandá-lo
@@ -23303,7 +23303,7 @@ function mostrarQuemEstaLogado(){
         const meu = (bd.perfis || []).find(p => p.superAdmin);
         semSalao(meu
           ? '<b>Esta é a sua conta de plataforma</b>'
-            + 'Ela administra o AgendaPro e não tem salão próprio — está certo '
+            + 'Ela administra o PediHub e não tem salão próprio — está certo '
             + 'assim. O painel dela é o <a class="link" href="admin.html">'
             + 'admin.html</a>.'
           : '<b>Nenhum salão nesta conta</b>'
@@ -23366,7 +23366,7 @@ function mostrarQuemEstaLogado(){
      somem — isso é informação de que a pessoa precisa antes de digitar
      qualquer coisa.
 
-     Ligado ao banco, dizia "AgendaPro · ligado ao banco (produção)". Isso
+     Ligado ao banco, dizia "PediHub · ligado ao banco (produção)". Isso
      não é aviso, é recado de programador: quem tem salão não precisa saber
      em que ambiente está, e ler "produção" no rodapé do próprio negócio
      passa a impressão de estar dentro de uma ferramenta de teste. Some. */
@@ -23387,6 +23387,6 @@ function mostrarQuemEstaLogado(){
   }
 })();
 </script>
-<p class="rodape-legal">AgendaPro · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
+<p class="rodape-legal">PediHub · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
 </body>
 </html>

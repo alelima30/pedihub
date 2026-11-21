@@ -36,7 +36,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -62,7 +62,7 @@ const parCel = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-25
 const CEL = {
   p256dh: b64u(await crypto.subtle.exportKey('raw', parCel.publicKey)),
   auth: b64u(crypto.getRandomValues(new Uint8Array(16))),
-  endpoint: 'https://push.teste.agendapro/ep-' + Date.now().toString(36),
+  endpoint: 'https://push.teste.pedihub/ep-' + Date.now().toString(36),
 };
 
 /* ── O salão ─────────────────────────────────────────────────────────────── */
@@ -99,8 +99,8 @@ async function abrir(sessao, op = {}){
   p.on('pageerror', x => erros.push('pageerror: ' + x.message));
   p.on('dialog', async d => { erros.push('ALERT: ' + d.message()); await d.dismiss(); });
   await p.addInitScript(([base, ses, cel, perm]) => {
-    window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+    window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
     // A permissão do navegador: começa como o teste mandar, e "Permitir" ao pedir.
     let permissao = perm;
     window.__pedidosDePermissao = 0;
@@ -182,7 +182,7 @@ await banco.query(`insert into public.perfis (id, nome, telefone) values ($1, 'B
   on conflict (id) do update set nome = 'Bia'`, [BIA]);
 await banco.query(`insert into public.vinculos (perfil_id, salao_id, papel) values ($1, $2, 'profissional')`, [BIA, SALAO]);
 await banco.query(`insert into public.push_aparelhos (salao_id, perfil_id, endpoint, p256dh, auth, rotulo)
-  values ($1, $2, 'https://push.teste.agendapro/bia-${m}', $3, $4, 'Celular da Bia')`,
+  values ($1, $2, 'https://push.teste.pedihub/bia-${m}', $3, $4, 'Celular da Bia')`,
   [SALAO, BIA, CEL.p256dh, CEL.auth]);
 const dia = (await um(`select to_char((now() at time zone 'America/Sao_Paulo')::date + 2, 'YYYY-MM-DD') d`)).d;
 const cliente = aba();
@@ -208,7 +208,7 @@ secao('4. O worker entrega, e o "celular" decifra');
 const recebidos = [];
 const fetchDeVerdade = globalThis.fetch;
 globalThis.fetch = async (url, op) => {
-  if(String(url).startsWith('https://push.teste.agendapro/')){
+  if(String(url).startsWith('https://push.teste.pedihub/')){
     recebidos.push({ url: String(url), headers: op.headers, corpo: new Uint8Array(op.body) });
     return new Response(null, { status: 201 });
   }
@@ -216,7 +216,7 @@ globalThis.fetch = async (url, op) => {
 };
 const lote = await todos(`select * from public.push_proxima(10)`);
 for(const a of lote){
-  const r = await enviar(CHAVES, a, { titulo: a.titulo, corpo: a.corpo, url: a.url, tag: 'agendapro-' + a.id });
+  const r = await enviar(CHAVES, a, { titulo: a.titulo, corpo: a.corpo, url: a.url, tag: 'pedihub-' + a.id });
   await banco.query(`select public.push_resultado($1, $2, $3)`, [a.id, r.ok, r.ok ? null : r.codigo]);
 }
 globalThis.fetch = fetchDeVerdade;
@@ -251,7 +251,7 @@ secao('5. O service worker mostra o aviso, e o toque abre a agenda');
   const ouvintes = {}, mostrados = [], abertos = [];
   const self = {
     addEventListener: (n, f) => { ouvintes[n] = f; }, skipWaiting(){},
-    registration: { scope: 'https://agendaprogestao.com.br/',
+    registration: { scope: 'https://alelima30.github.io/pedihub/',
       showNotification: async (t, o) => { mostrados.push({ t, o }); } },
     clients: { matchAll: async () => [], openWindow: async u => { abertos.push(u); } },
   };
@@ -261,11 +261,11 @@ secao('5. O service worker mostra o aviso, e o toque abre a agenda');
   await espera;
   e('o aviso aparece com o título e a linha do recado',
     mostrados.length === 1 && mostrados[0].t === recado.titulo && mostrados[0].o.body === recado.corpo);
-  e('com o ícone do AgendaPro', mostrados[0].o.icon === './icones/icone-192.png');
+  e('com o ícone do PediHub', mostrados[0].o.icon === './icones/icone-192.png');
   ouvintes.push({ data: { json: () => { throw new Error('ilegível'); } }, waitUntil: x => { espera = x; } });
   await espera;
   e('recado ilegível ainda mostra um aviso (push mudo faz o Chrome reclamar)',
-    mostrados.length === 2 && mostrados[1].t === 'AgendaPro');
+    mostrados.length === 2 && mostrados[1].t === 'PediHub');
   ouvintes.push({ data: { json: () => ({ titulo: 'X', url: 'https://golpe.exemplo/' }) }, waitUntil: x => { espera = x; } });
   await espera;
   e('endereço de fora do site é trocado pelo painel', mostrados[2].o.data.url === './app.html');
@@ -273,7 +273,7 @@ secao('5. O service worker mostra o aviso, e o toque abre a agenda');
   ouvintes.notificationclick({ notification: { data: { url: './app.html#agenda' }, close(){ fechou = true; } },
     waitUntil: x => { espera = x; } });
   await espera;
-  e('tocar no aviso fecha e abre a agenda', fechou && abertos[0] === 'https://agendaprogestao.com.br/app.html#agenda',
+  e('tocar no aviso fecha e abre a agenda', fechou && abertos[0] === 'https://alelima30.github.io/pedihub/app.html#agenda',
     JSON.stringify(abertos));
 }
 

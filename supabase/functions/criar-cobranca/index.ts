@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — abrir a cobrança do plano no Mercado Pago
+   PediHub — abrir a cobrança do plano no Mercado Pago
    Supabase Edge Function (Deno). Roda NO SERVIDOR, nunca no navegador.
 
    ── AS DUAS CREDENCIAIS QUE SÓ EXISTEM AQUI ────────────────────────────────
@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
     const vence = new Date(cobranca.vence_em);
     const pedido: Record<string, unknown> = {
       transaction_amount: Number(cobranca.valor),
-      description: `AgendaPro — plano ${cobranca.plano}`,
+      description: `PediHub — plano ${cobranca.plano}`,
       external_reference: cobranca.id,
       payment_method_id: metodo === 'boleto' ? 'bolbradesco' : 'pix',
       date_of_expiration: vence.toISOString(),

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a jornada deixou de ser sugestão
+-- PediHub — a jornada deixou de ser sugestão
 --
 -- Antes deste motor, o banco aceitava um agendamento às 03:00 num
 -- profissional com jornada das 09:00 às 18:00. Não é hipótese: foi medido na

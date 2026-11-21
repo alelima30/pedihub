@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 12: os relatórios
+-- PediHub — 12: os relatórios
 --
 -- O salão já tinha todo o dado e nenhuma resposta. Comanda, item, pagamento e
 -- comissão estão gravados desde o começo; o que não existia era a pergunta

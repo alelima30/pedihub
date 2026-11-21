@@ -67,22 +67,22 @@ e "endereço Direct connection: diz para usar o Session pooler" "$([ $r -ne 0 ] 
 echo ""
 echo "2. A cópia"
 s=$(SUPABASE_DB_URL="$URL" BACKUP_SENHA="$SENHA" DIA=teste bash supabase/backup.sh "$TMP/b" 2>&1); r=$?
-e "copiou e trancou" "$([ $r -eq 0 ] && [ -s "$TMP/b/agendapro-teste.dump.gpg" ] && echo 1)" "$s"
+e "copiou e trancou" "$([ $r -eq 0 ] && [ -s "$TMP/b/pedihub-teste.dump.gpg" ] && echo 1)" "$s"
 e "e diz o tamanho e quantas tabelas" "$(echo "$s" | grep -q 'tabelas com dados' && echo 1)" "$s"
 e "a cópia aberta não fica na pasta" "$([ ! -e "$TMP/b/banco.dump" ] && [ "$(ls "$TMP/b" | wc -l)" -eq 1 ] && echo 1)" "$(ls "$TMP/b")"
 
 echo ""
 echo "3. Trancada"
 e "o arquivo trancado não abre como cópia do Postgres" \
-  "$(pg_restore --list "$TMP/b/agendapro-teste.dump.gpg" >/dev/null 2>&1 || echo 1)"
+  "$(pg_restore --list "$TMP/b/pedihub-teste.dump.gpg" >/dev/null 2>&1 || echo 1)"
 e "nem com a senha errada" \
   "$(gpg --batch --quiet --pinentry-mode loopback --passphrase 'outra-senha-qualquer-errada' \
-       --decrypt "$TMP/b/agendapro-teste.dump.gpg" >/dev/null 2>&1 || echo 1)"
+       --decrypt "$TMP/b/pedihub-teste.dump.gpg" >/dev/null 2>&1 || echo 1)"
 
 echo ""
 echo "4. Destrancar e restaurar (o caminho do BACKUP.md)"
 gpg --batch --quiet --pinentry-mode loopback --passphrase-fd 3 \
-    --output "$TMP/banco.dump" --decrypt "$TMP/b/agendapro-teste.dump.gpg" 3<<<"$SENHA"
+    --output "$TMP/banco.dump" --decrypt "$TMP/b/pedihub-teste.dump.gpg" 3<<<"$SENHA"
 e "com a senha certa, destranca" "$(pg_restore --list "$TMP/banco.dump" 2>/dev/null | grep -q 'TABLE DATA public agendamentos ' && echo 1)"
 $P -d postgres -c "drop database if exists $DESTINO;" >/dev/null 2>&1
 $P -d postgres -c "create database $DESTINO;" >/dev/null

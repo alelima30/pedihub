@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 27: pacotes de serviço
+-- PediHub — 27: pacotes de serviço
 --
 -- O dono cria "Pacote Unha em Dia": 4 manutenções, vale 90 dias, de segunda a
 -- quarta. Vincula a Maria. A Maria, LOGADA no link, marca manutenção e vê

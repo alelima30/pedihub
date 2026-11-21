@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 09: a cliente mexe no que é dela
+-- PediHub — 09: a cliente mexe no que é dela
 --
 -- ── O PROBLEMA ─────────────────────────────────────────────────────────────
 -- Marcar não pede identificação, e está certo: atrito na primeira vez custa
@@ -131,7 +131,7 @@ create trigger tg_notif_pagamento
 -- "Como fazer para colocar sinal?" — o caminho do Pix com a confirmação do
 -- salão: quem marca pelo link paga uma parte para a chave Pix do próprio
 -- salão, manda o comprovante pelo WhatsApp, e o dono confirma. O dinheiro vai
--- direto para o salão; o AgendaPro não toca nele.
+-- direto para o salão; o PediHub não toca nele.
 --
 -- Mora em `cfg.pagamentos.sinal`, junto da chave Pix (funcionamento.js):
 --     { tipo: 'pct' | 'fixo', valor: 10, prazoMin: 60, titular, regra }

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o check-up do sistema, para quem vigia de fora
+   PediHub — o check-up do sistema, para quem vigia de fora
    Supabase Edge Function (Deno). Roda NO SERVIDOR, nunca no navegador.
 
    ── O QUE ELE FAZ ─────────────────────────────────────────────────────────

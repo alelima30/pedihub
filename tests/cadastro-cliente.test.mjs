@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o cadastro que a cliente preenche antes de confirmar
+   PediHub — o cadastro que a cliente preenche antes de confirmar
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=… node tests/cadastro-cliente.test.mjs

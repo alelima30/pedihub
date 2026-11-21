@@ -28,7 +28,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -104,8 +104,8 @@ async function abrir(caminho, sessao, op = {}){
   p.on('pageerror', x => erros.push('pageerror: ' + x.message));
   p.on('dialog', async d => { erros.push('ALERT: ' + d.message()); await d.dismiss(); });
   await p.addInitScript(([base, ses]) => {
-    window.AGENDAPRO = { url: base, chave:'k', ambiente:'bancada' };
-    if(ses) localStorage.setItem('agendapro.sessao', JSON.stringify(ses));
+    window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
+    if(ses) localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
   }, [BASE, sessao || null]);
   await p.goto(BASE + caminho, op.referer ? { referer: op.referer } : {});
   await p.waitForTimeout(3500);
@@ -125,7 +125,7 @@ e('duas pessoas diferentes viraram duas linhas — ' + JSON.stringify(vis.rows),
 e('a primeira veio pelo Instagram, e abriu 2 vezes',
   vis.rows.some(r => r.origem === 'instagram' && r.vezes === 2));
 e('a segunda veio pelo WhatsApp', vis.rows.some(r => r.origem === 'whatsapp'));
-const codigo = await v1.evaluate(() => localStorage.getItem('agendapro.visitante'));
+const codigo = await v1.evaluate(() => localStorage.getItem('pedihub.visitante'));
 e('o aparelho guarda só um código aleatório', /^[A-Za-z0-9_-]{24}$/.test(codigo || ''), codigo);
 e('e o banco não guarda esse código como veio',
   Number((await um(`select count(*) n from public.link_visitas where visitante like '%' || $1 || '%'`, [codigo])).n) === 0);

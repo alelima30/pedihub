@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — INSTALAÇÃO COMPLETA, PARTE 2 DE 2
+-- PediHub — INSTALAÇÃO COMPLETA, PARTE 2 DE 2
 --
 -- O 00_tudo.sql ficou grande demais para o SQL Editor do Supabase, então ele
 -- vai em duas partes. É o mesmo conteúdo, na mesma ordem.
@@ -27,7 +27,7 @@ end $$;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 22: as cotas do plano e o consumo de mensagem
+-- PediHub — 22: as cotas do plano e o consumo de mensagem
 --
 -- ── O QUE JÁ EXISTIA, E POR QUE ESTE ARQUIVO NÃO REESCREVE NADA ───────────
 -- O sistema já tinha o mecanismo certo: `planos.recursos` é um jsonb, e
@@ -80,7 +80,7 @@ update public.planos set recursos = recursos || jsonb_build_object(
 
      Grátis     R$ 0      1 profissional, 20 horários/mês, 30 clientes,
                           5 serviços, sem produtos; agenda, clientes e o link
-                          simples (sem personalizar, com o selo AgendaPro)
+                          simples (sem personalizar, com o selo PediHub)
      Básico     R$ 49,90  1 profissional, o sistema inteiro, sem mensagens
                           automáticas (o botão manual do WhatsApp segue)
      Essencial  R$ 97     o Básico + 500 mensagens
@@ -434,7 +434,7 @@ revoke all on function public.pode_enviar_tipo(uuid, text) from public, anon, au
 -- As campanhas (promoção, aniversário — 10_campanhas) tinham fila própria, e
 -- o `fila_proxima()` não perguntava por cota nenhuma: um salão no Grátis,
 -- pelo console do navegador, montava uma campanha para a clientela inteira
--- e ela sairia pelo número do AgendaPro, sem limite e sem contar no mês —
+-- e ela sairia pelo número do PediHub, sem limite e sem contar no mês —
 -- e mensagem de promoção é a mais cara (~R$ 0,35) e a que mais arrisca o
 -- número, que é um só para todos os salões. Não há tela de campanha hoje;
 -- a porta estava aberta pelo banco.
@@ -762,7 +762,7 @@ comment on function public.notificacao_status(text, text, text, text) is
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 23: assinatura no cartão, que se renova sozinha
+-- PediHub — 23: assinatura no cartão, que se renova sozinha
 --
 -- ── O PROBLEMA QUE ISTO RESOLVE ───────────────────────────────────────────
 -- Pix não renova. Todo mês o dono do salão precisa lembrar, abrir o painel,
@@ -778,7 +778,7 @@ comment on function public.notificacao_status(text, text, text, text) is
 -- Assinaturas do Mercado Pago (pré-aprovação), NÃO tokenização de cartão.
 --
 -- O dono autoriza uma vez, numa página do próprio Mercado Pago. Nenhum dado
--- de cartão encosta no AgendaPro: não há formulário de cartão no nosso HTML,
+-- de cartão encosta no PediHub: não há formulário de cartão no nosso HTML,
 -- não há número de cartão passando pelo nosso servidor, e não há nós
 -- respondendo se algo vazar. O que volta para cá é um identificador.
 --
@@ -1334,7 +1334,7 @@ comment on function public.meu_cartao(uuid) is
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 24: produtos que o salão vende
+-- PediHub — 24: produtos que o salão vende
 --
 -- ── O QUE ESTE ARQUIVO DESTRAVA ───────────────────────────────────────────
 -- A tabela `public.produtos` existe desde o 01_schema, a comanda já vende
@@ -1522,7 +1522,7 @@ revoke all on function public.checar_limite_produtos() from public, anon, authen
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 25: a loja na página da cliente
+-- PediHub — 25: a loja na página da cliente
 --
 -- A cliente vê os produtos que o dono marcou, põe no carrinho, e manda o
 -- pedido pelo WhatsApp DELA. Não há checkout, não há pagamento na página, e
@@ -1618,7 +1618,7 @@ language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'salao', jsonb_build_object(
       'id', s.id, 'slug', s.slug, 'nome', s.nome, 'tipo', s.tipo,
-      -- "Feito com AgendaPro" no rodapé do link simples (Grátis, 22_cotas).
+      -- "Feito com PediHub" no rodapé do link simples (Grátis, 22_cotas).
       'selo', not coalesce(public.recurso_bool(s.id, 'aparencia'), false),
       'logo', s.logo, 'capa', s.capa,
       'telefone', s.telefone, 'whatsapp', s.whatsapp,
@@ -2074,7 +2074,7 @@ $$;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 26: a comanda dá baixa no estoque
+-- PediHub — 26: a comanda dá baixa no estoque
 --
 -- ── O QUE ESTAVA ERRADO ───────────────────────────────────────────────────
 -- `produtos.estoque` existe desde o 01_schema e NADA no sistema o movimentava.
@@ -2106,7 +2106,7 @@ $$;
 -- certo assim.
 --
 -- Recusar seria o sistema travando uma venda que já aconteceu: a cliente está
--- no balcão com o vidro na mão, o dinheiro na mesa, e o AgendaPro dizendo não
+-- no balcão com o vidro na mão, o dinheiro na mesa, e o PediHub dizendo não
 -- por causa de um número que ninguém atualizou desde março. O salão não
 -- desfaz a venda — ele xinga o sistema, e com razão.
 --
@@ -2183,7 +2183,7 @@ comment on function public.tg_comanda_estoque() is
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 27: pacotes de serviço
+-- PediHub — 27: pacotes de serviço
 --
 -- O dono cria "Pacote Unha em Dia": 4 manutenções, vale 90 dias, de segunda a
 -- quarta. Vincula a Maria. A Maria, LOGADA no link, marca manutenção e vê
@@ -2748,7 +2748,7 @@ comment on table public.pacotes is
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 28: o salão que não quer comanda nem caixa
+-- PediHub — 28: o salão que não quer comanda nem caixa
 --
 -- "Não quero trabalhar com comanda e nem caixa. Abre, coloca os serviços e já
 --  começa a trabalhar."
@@ -3009,7 +3009,7 @@ grant execute on function public.usa_comanda(uuid) to service_role;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 29: o salão confirma, ou o link confirma sozinho
+-- PediHub — 29: o salão confirma, ou o link confirma sozinho
 --
 -- "O cliente receberá uma mensagem de confirmação. Isso é configurável: ou o
 --  dono confirma, ou a confirmação é automática assim que o cliente marca."
@@ -3124,7 +3124,7 @@ grant execute on function public.confirma_automatico(uuid) to anon, authenticate
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 30: os números do dashboard
+-- PediHub — 30: os números do dashboard
 --
 -- Uma chamada só devolve tudo o que os cartões do dashboard desenham. A tela
 -- não soma nada: escolhe o que mostrar e desenha o que veio.
@@ -3302,7 +3302,7 @@ grant execute on function public.painel_grafico(uuid) to authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 31: o serviço que só é feito em certos dias
+-- PediHub — 31: o serviço que só é feito em certos dias
 --
 -- "Escova só de quinta a sábado." Pedido de quem tem serviço longo que só cabe
 -- em dia de movimento fraco, e de quem tem profissional que vem dois dias por
@@ -3633,7 +3633,7 @@ end $$;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 32: o que faltava no cadastro de produto
+-- PediHub — 32: o que faltava no cadastro de produto
 --
 -- Três coisas, vindas da comparação com os prints que o dono mandou:
 --
@@ -3866,8 +3866,8 @@ begin
     return null;
   end if;
 
-  v_motivo  := coalesce(nullif(current_setting('agendapro.mov_motivo', true), ''), 'ajuste');
-  v_comanda := nullif(current_setting('agendapro.mov_comanda', true), '')::uuid;
+  v_motivo  := coalesce(nullif(current_setting('pedihub.mov_motivo', true), ''), 'ajuste');
+  v_comanda := nullif(current_setting('pedihub.mov_comanda', true), '')::uuid;
 
   insert into public.estoque_mov (produto_id, de, para, motivo, comanda_id, quem)
   values (new.id, old.estoque, new.estoque, v_motivo, v_comanda, auth.uid());
@@ -3910,9 +3910,9 @@ begin
   /* O recado para o gatilho do histórico, que é quem escreve. Local à
      transação (`true`), senão a conexão levaria o rótulo para o próximo que
      a usasse. */
-  perform set_config('agendapro.mov_motivo',
+  perform set_config('pedihub.mov_motivo',
                      case when v_sinal < 0 then 'venda' else 'devolucao' end, true);
-  perform set_config('agendapro.mov_comanda', new.id::text, true);
+  perform set_config('pedihub.mov_comanda', new.id::text, true);
 
   update public.produtos p
      set estoque = p.estoque + v_sinal * i.total_qtd
@@ -3932,8 +3932,8 @@ begin
      intenção; por isso a mutação que as remove sobrevive, e está anotada no
      `tests/mutacoes-produto-cadastro.sh` para ninguém "consertar" a suíte por
      causa dela. */
-  perform set_config('agendapro.mov_motivo', '', true);
-  perform set_config('agendapro.mov_comanda', '', true);
+  perform set_config('pedihub.mov_motivo', '', true);
+  perform set_config('pedihub.mov_comanda', '', true);
 
   return null;
 end $$;
@@ -3988,7 +3988,7 @@ comment on function public.estoque_historico(uuid, int) is
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 33. PREÇO AVANÇADO: vigência, dia da semana e faixa de horário
+-- PediHub — 33. PREÇO AVANÇADO: vigência, dia da semana e faixa de horário
 --
 -- Três regras para o mesmo serviço, que respondem a mesma pergunta do salão:
 -- sábado à tarde lota e terça de manhã fica vazia.
@@ -4416,7 +4416,7 @@ grant execute on function public.preco_dos_servicos(uuid, uuid[], timestamptz)
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 34: CUPONS DE DESCONTO (agendamento no link e loja)
+-- PediHub — 34: CUPONS DE DESCONTO (agendamento no link e loja)
 --
 -- O salão cria um código — BEMVINDA10, NATAL15 — e a cliente digita no link:
 -- na tela "Confira seu agendamento" e no carrinho da loja.
@@ -4988,7 +4988,7 @@ grant execute on function public.usos_dos_cupons(uuid) to authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 35: QUEM LÊ O QUÊ (os consertos de acesso do caça-bug)
+-- PediHub — 35: QUEM LÊ O QUÊ (os consertos de acesso do caça-bug)
 --
 -- As mesmas regras já escritas no 02_rls.sql, repetidas aqui para QUEM
 -- ATUALIZA: o 98_modulos.sql não leva o 02, e sem este arquivo um banco
@@ -5343,24 +5343,24 @@ alter table public.notificacoes add constraint notificacoes_tipo_check
 create or replace function public.modelo_de(p_tipo text)
 returns text language sql stable set search_path = public as $$
   select case p_tipo
-    when 'confirmacao'       then 'agendapro_confirmacao'
-    when 'lembrete'          then 'agendapro_lembrete'
-    when 'novo'              then 'agendapro_aviso_profissional'
-    when 'resumo'            then 'agendapro_agenda_hoje'
-    when 'lembrete_equipe'   then 'agendapro_lembrete_equipe'
+    when 'confirmacao'       then 'pedihub_confirmacao'
+    when 'lembrete'          then 'pedihub_lembrete'
+    when 'novo'              then 'pedihub_aviso_profissional'
+    when 'resumo'            then 'pedihub_agenda_hoje'
+    when 'lembrete_equipe'   then 'pedihub_lembrete_equipe'
     -- Os do pedido (37). Texto e ordem das variáveis no MODELOS.md.
-    when 'pedido_novo'       then 'agendapro_pedido_novo'
-    when 'pedido_confirmado' then 'agendapro_pedido_confirmado'
-    when 'pedido_a_caminho'  then 'agendapro_pedido_a_caminho'
-    when 'pedido_pronto'     then 'agendapro_pedido_pronto'
-    when 'pedido_cancelado'  then 'agendapro_pedido_cancelado'
+    when 'pedido_novo'       then 'pedihub_pedido_novo'
+    when 'pedido_confirmado' then 'pedihub_pedido_confirmado'
+    when 'pedido_a_caminho'  then 'pedihub_pedido_a_caminho'
+    when 'pedido_pronto'     then 'pedihub_pedido_pronto'
+    when 'pedido_cancelado'  then 'pedihub_pedido_cancelado'
     -- Os do pacote (45). Só saem com o interruptor da plataforma ligado.
     -- A última sessão (tipo `pacote_renovar`, o nome antigo do aviso): o
-    -- `agendapro_pacote_renovacao` a Meta aprovou como Marketing, e categoria
+    -- `pedihub_pacote_renovacao` a Meta aprovou como Marketing, e categoria
     -- não se troca. O de pagamento não sai mais (45), mas o nome fica aqui.
-    when 'pacote_renovar'    then 'agendapro_pacote_ultima_sessao'
-    when 'pacote_pagamento'  then 'agendapro_pacote_pagamento'
-    when 'pacote_agenda'     then 'agendapro_pacote_agenda'
+    when 'pacote_renovar'    then 'pedihub_pacote_ultima_sessao'
+    when 'pacote_pagamento'  then 'pedihub_pacote_pagamento'
+    when 'pacote_agenda'     then 'pedihub_pacote_agenda'
   end
   || case when p_tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
                and public.mensagens_com_pagamento()
@@ -6117,7 +6117,7 @@ begin
   if p_ate > current_date + 90 then
     raise exception 'Teste de mais de 90 dias não é teste: mude o plano.' using errcode = 'check_violation';
   end if;
-  perform set_config('agendapro.plataforma', 'sim', true);
+  perform set_config('pedihub.plataforma', 'sim', true);
   insert into public.assinaturas (salao_id, plano, status, trial_ate, atualizado_em)
        values (p_salao, 'trial', 'trial', p_ate, now())
   on conflict (salao_id) do update
@@ -6159,7 +6159,7 @@ declare v_linha jsonb; v_salao uuid; v_acesso uuid;
 begin
   -- Quem não é a plataforma passa direto: é a imensa maioria das gravações.
   if auth.uid() is null or not public.is_super() then return null; end if;
-  if coalesce(current_setting('agendapro.plataforma', true), '') = 'sim' then return null; end if;
+  if coalesce(current_setting('pedihub.plataforma', true), '') = 'sim' then return null; end if;
   v_linha := to_jsonb(case when tg_op = 'DELETE' then old else new end);
   v_salao := public.salao_da_linha(tg_table_name, v_linha);
   if v_salao is null then return null; end if;
@@ -6227,7 +6227,7 @@ begin
     raise exception 'Salão não encontrado.' using errcode = 'check_violation';
   end if;
 
-  perform set_config('agendapro.plataforma', 'sim', true);
+  perform set_config('pedihub.plataforma', 'sim', true);
   update public.saloes set status = p_status where id = p_salao;
 
   return jsonb_build_object('salaoId', p_salao, 'de', v_antes, 'para', p_status);
@@ -6406,7 +6406,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.status is distinct from 'trial' then return new; end if;
   -- O "Estender teste" e as outras ações da plataforma passam.
-  if coalesce(current_setting('agendapro.plataforma', true), '') = 'sim' then return new; end if;
+  if coalesce(current_setting('pedihub.plataforma', true), '') = 'sim' then return new; end if;
   -- Sem login (SQL Editor, worker) ou a própria plataforma criando salão de
   -- teste: não é cadastro de dono.
   if auth.uid() is null or public.is_super() then return new; end if;
@@ -6468,9 +6468,9 @@ revoke all on function public.tg_dono_sai_marca() from public, anon, authenticat
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 40: o check-up do sistema (monitoramento)
+-- PediHub — 40: o check-up do sistema (monitoramento)
 --
--- "Preciso criar algo que fique monitorando o AgendaPro." O site no ar não
+-- "Preciso criar algo que fique monitorando o PediHub." O site no ar não
 -- quer dizer que o sistema está funcionando: o defeito mais provável aqui é a
 -- fila do WhatsApp parar calada — o despertador desligado, o token da Meta
 -- vencido, a função de envio recusando — e ninguém notar até a cliente dizer
@@ -6591,7 +6591,7 @@ begin
       'Rode o LIGAR-WHATSAPP.sql no SQL Editor do Supabase.');
   else
     select j.jobid, j.schedule, j.active into v_jobid, v_schedule, v_ativo
-      from cron.job j where j.jobname = 'agendapro-notificacoes';
+      from cron.job j where j.jobname = 'pedihub-notificacoes';
     -- O pg_cron escreve em inglês ("15 seconds"); a tela é em português.
     v_cada := case when v_schedule ~ '^[0-9]+ seconds?$'
                      then 'a cada ' || split_part(v_schedule, ' ', 1) || ' segundos'
@@ -6599,12 +6599,12 @@ begin
                    else 'no horário ' || v_schedule end;
     if v_jobid is null then
       v_itens := v_itens || public.saude_item('despertador', 'problema', 'Despertador da fila',
-        'o despertador agendapro-notificacoes não existe: as mensagens não saem.',
+        'o despertador pedihub-notificacoes não existe: as mensagens não saem.',
         'Rode o LIGAR-WHATSAPP.sql no SQL Editor do Supabase.');
     elsif not v_ativo then
       v_itens := v_itens || public.saude_item('despertador', 'problema', 'Despertador da fila',
         'o despertador está pausado: as mensagens não saem.',
-        'Rode o LIGAR-WHATSAPP.sql de novo, ou religue o agendapro-notificacoes no Supabase (Integrations, Cron).');
+        'Rode o LIGAR-WHATSAPP.sql de novo, ou religue o pedihub-notificacoes no Supabase (Integrations, Cron).');
     elsif to_regclass('cron.job_run_details') is null then
       v_itens := v_itens || public.saude_item('despertador', 'ok', 'Despertador da fila',
         'ligado, ' || v_cada || '.');
@@ -7069,7 +7069,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if coalesce(current_setting('role', true), 'none') not in ('anon', 'authenticated')
      or public.is_super()
-     or coalesce(current_setting('agendapro.plataforma', true), '') = 'sim' then
+     or coalesce(current_setting('pedihub.plataforma', true), '') = 'sim' then
     return new;
   end if;
   if new.status is distinct from old.status then
@@ -7746,7 +7746,7 @@ revoke all on function public.tg_pacote_comissao() from public, anon, authentica
 --     aí a cliente recebe a lista de horários. Não há o que lembrar antes.
 --
 -- ── ⚠ SÓ SAEM COM OS MODELOS APROVADOS NA META ────────────────────────────
--- O número que manda é o do AgendaPro, e ele só manda modelo aprovado. Os
+-- O número que manda é o do PediHub, e ele só manda modelo aprovado. Os
 -- dois são novos (MODELOS.md): até a plataforma cadastrar, ver aprovados e
 -- ligar no admin, NADA é posto na fila — e não um monte de mensagens para um
 -- modelo que não existe (132001), que contariam como falha e sujariam o
@@ -7906,7 +7906,7 @@ begin
   /* "Combine a renovação com o salão" fez a Meta aprovar o modelo como
      MARKETING (custa umas 8 vezes mais e é segurado para quem nunca falou com
      o número). Agora é só a informação — a última sessão e onde — com outro
-     nome de modelo (`agendapro_pacote_ultima_sessao`, no modelo_de do 37). */
+     nome de modelo (`pedihub_pacote_ultima_sessao`, no modelo_de do 37). */
   perform public.gravar_aviso_do_pacote(r.salao_id, 'pacote_renovar', 'pacote_renovar:' || r.id,
     v_motivo, v_quando, interval '0', v_ult.inicio, v_tel, r.cliente_id, v_ult.id,
     'Olá, ' || v_nome || '. Informação sobre o seu pacote ' || r.pacote || '.'
@@ -9866,26 +9866,26 @@ alter table public.notificacoes add constraint notificacoes_tipo_check
 create or replace function public.modelo_de(p_tipo text)
 returns text language sql stable set search_path = public as $$
   select case p_tipo
-    when 'confirmacao'       then 'agendapro_confirmacao'
-    when 'lembrete'          then 'agendapro_lembrete'
-    when 'novo'              then 'agendapro_aviso_profissional'
-    when 'resumo'            then 'agendapro_agenda_hoje'
-    when 'lembrete_equipe'   then 'agendapro_lembrete_equipe'
-    when 'pedido_novo'       then 'agendapro_pedido_novo'
-    when 'pedido_confirmado' then 'agendapro_pedido_confirmado'
-    when 'pedido_a_caminho'  then 'agendapro_pedido_a_caminho'
-    when 'pedido_pronto'     then 'agendapro_pedido_pronto'
-    when 'pedido_cancelado'  then 'agendapro_pedido_cancelado'
+    when 'confirmacao'       then 'pedihub_confirmacao'
+    when 'lembrete'          then 'pedihub_lembrete'
+    when 'novo'              then 'pedihub_aviso_profissional'
+    when 'resumo'            then 'pedihub_agenda_hoje'
+    when 'lembrete_equipe'   then 'pedihub_lembrete_equipe'
+    when 'pedido_novo'       then 'pedihub_pedido_novo'
+    when 'pedido_confirmado' then 'pedihub_pedido_confirmado'
+    when 'pedido_a_caminho'  then 'pedihub_pedido_a_caminho'
+    when 'pedido_pronto'     then 'pedihub_pedido_pronto'
+    when 'pedido_cancelado'  then 'pedihub_pedido_cancelado'
     -- A última sessão (tipo `pacote_renovar`, o nome antigo do aviso): o
-    -- `agendapro_pacote_renovacao` a Meta aprovou como Marketing.
-    when 'pacote_renovar'    then 'agendapro_pacote_ultima_sessao'
-    when 'pacote_pagamento'  then 'agendapro_pacote_pagamento'
-    when 'pacote_agenda'     then 'agendapro_pacote_agenda'
-    when 'crediario_compra'     then 'agendapro_crediario_compra'
-    when 'crediario_lembrete'   then 'agendapro_crediario_lembrete'
-    when 'crediario_vence_hoje' then 'agendapro_crediario_vence_hoje'
-    when 'crediario_atraso'     then 'agendapro_crediario_atraso'
-    when 'remarcado'            then 'agendapro_remarcado'
+    -- `pedihub_pacote_renovacao` a Meta aprovou como Marketing.
+    when 'pacote_renovar'    then 'pedihub_pacote_ultima_sessao'
+    when 'pacote_pagamento'  then 'pedihub_pacote_pagamento'
+    when 'pacote_agenda'     then 'pedihub_pacote_agenda'
+    when 'crediario_compra'     then 'pedihub_crediario_compra'
+    when 'crediario_lembrete'   then 'pedihub_crediario_lembrete'
+    when 'crediario_vence_hoje' then 'pedihub_crediario_vence_hoje'
+    when 'crediario_atraso'     then 'pedihub_crediario_atraso'
+    when 'remarcado'            then 'pedihub_remarcado'
   end
   || case when p_tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
                and public.mensagens_com_pagamento()
@@ -10740,7 +10740,7 @@ grant execute on function public.recibo_do_pedido_loja(uuid) to authenticated;
 --   conta_excluida  clientes que excluíram a conta do link (56), até o balcão
 --                 ver o aviso.
 --
--- E os AVISOS DO AGENDAPRO: o que a plataforma escreve no admin (novidade,
+-- E os AVISOS DO PEDIHUB: o que a plataforma escreve no admin (novidade,
 -- manutenção, recado) aparece no sino de todos os salões até a pessoa
 -- marcar como lido.
 --
@@ -10922,7 +10922,7 @@ begin
     end if;
   end if;
 
-  -- Os avisos do AgendaPro que esta pessoa ainda não leu.
+  -- Os avisos do PediHub que esta pessoa ainda não leu.
   select coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'titulo', x.titulo, 'texto', x.texto,
            'publicadoEm', x.publicado_em) order by x.publicado_em desc), '[]'::jsonb)
     into v_avisos
@@ -11689,7 +11689,7 @@ grant execute on function public.mudar_fuso(uuid, text) to authenticated;
 -- NUNCA desconta da franquia de mensagens do plano.
 --
 -- Cada pessoa da equipe liga no próprio aparelho (Meu negócio →
--- Notificações). No iPhone só funciona com o AgendaPro instalado na tela de
+-- Notificações). No iPhone só funciona com o PediHub instalado na tela de
 -- início; no Android funciona direto. Quem nunca ligou não recebe nada, e
 -- nada deste arquivo muda o WhatsApp das clientes.
 --
@@ -11983,7 +11983,7 @@ begin
     raise exception 'Só a equipe do salão testa os avisos.' using errcode = 'insufficient_privilege';
   end if;
   n := public.push_avisar(p_salao, array[auth.uid()], 'Aviso de teste',
-         'Se você está lendo isto, os avisos do AgendaPro chegam neste aparelho.',
+         'Se você está lendo isto, os avisos do PediHub chegam neste aparelho.',
          './app.html', 'teste:' || auth.uid() || ':' || to_char(now(), 'YYYYMMDDHH24MI'));
   return jsonb_build_object('ok', true, 'aparelhos', n);
 end $$;

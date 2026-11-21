@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o funil de cadastro, dirigido como gente dirige
+   PediHub — o funil de cadastro, dirigido como gente dirige
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=.../node_modules/playwright node tests/cadastro.test.mjs

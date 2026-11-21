@@ -32,7 +32,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if coalesce(current_setting('role', true), 'none') not in ('anon', 'authenticated')
      or public.is_super()
-     or coalesce(current_setting('agendapro.plataforma', true), '') = 'sim' then
+     or coalesce(current_setting('pedihub.plataforma', true), '') = 'sim' then
     return new;
   end if;
   if new.status is distinct from old.status then

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o mapa de colunas bate com o banco?
+   PediHub — o mapa de colunas bate com o banco?
    Rodar:  node tests/colunas.test.js
 
    POR QUE ESTE TESTE EXISTE
@@ -165,7 +165,7 @@ dizer(Object.keys(tabelas).length >= 20,
 // Carrega o mapa de dados.js sem navegador: montamos o mínimo de `window`.
 const dadosJs = fs.readFileSync(path.join(RAIZ, 'dados.js'), 'utf8');
 const janela = {
-  AGENDAPRO: { url: '', chave: '' },
+  PEDIHUB: { url: '', chave: '' },
   localStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
 };
 new Function('window', 'console', 'fetch', 'localStorage', dadosJs)(

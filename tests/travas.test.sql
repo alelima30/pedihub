@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o que a auditoria de segurança achou (42_travas.sql e 14_motor)
+-- PediHub — o que a auditoria de segurança achou (42_travas.sql e 14_motor)
 --
 --   1. a dona de salão suspenso NÃO se reativa pela API; a plataforma e o SQL
 --      Editor mudam o status como sempre; a data de criação não muda;

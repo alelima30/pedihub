@@ -13,13 +13,13 @@ autorização do cartão e a cobrança mensal.
 
 ---
 
-## ⚠ Nenhum dado de cartão passa pelo AgendaPro
+## ⚠ Nenhum dado de cartão passa pelo PediHub
 
 Não há campo de número, CVV ou validade em nenhum arquivo deste projeto. O
 dono digita o cartão **na página do Mercado Pago**, e o que volta para cá é um
 identificador de assinatura.
 
-Isso não é economia de trabalho — é o que faz o AgendaPro não ser responsável
+Isso não é economia de trabalho — é o que faz o PediHub não ser responsável
 por guardar cartão de ninguém, e não ter que responder se algo vazar. De
 quebra, cartão vencido, cartão trocado, tentativa recusada e nova tentativa
 são problema deles: essa lista inteira é código que não existe aqui.
@@ -96,7 +96,7 @@ Só uma é nova; as outras já estão lá para o Pix.
 
 | Nome | Onde achar |
 |---|---|
-| `PAINEL_URL` | **novo, e obrigatório**: para onde o Mercado Pago devolve o dono depois de autorizar. Ex.: `https://seu-usuario.github.io/agendapro/app.html` |
+| `PAINEL_URL` | **novo, e obrigatório**: para onde o Mercado Pago devolve o dono depois de autorizar. Ex.: `https://seu-usuario.github.io/pedihub/app.html` |
 | `MP_ACCESS_TOKEN` | já configurada |
 | `SUPABASE_SERVICE_ROLE_KEY` | já vem preenchida |
 

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — Web Push sem biblioteca, em Web Crypto puro
+   PediHub — Web Push sem biblioteca, em Web Crypto puro
    (RFC 8291, a cifra do recado; RFC 8292, o crachá VAPID)
 
    ── POR QUE NÃO UMA BIBLIOTECA ─────────────────────────────────────────────
@@ -18,7 +18,7 @@
      1. CIFRA o recado com as chaves do aparelho (aes128gcm) — nem o Google
         consegue ler o que passa por ele;
      2. ASSINA um crachá (JWT ES256) com a NOSSA chave VAPID, provando que é
-        o AgendaPro — o mesmo AgendaPro de quando a pessoa ligou o aviso;
+        o PediHub — o mesmo PediHub de quando a pessoa ligou o aviso;
      3. faz um POST no endereço. 201 = entregue ao serviço; 404/410 = a
         inscrição morreu (app removido, permissão revogada).
    =========================================================================== */
@@ -63,7 +63,7 @@ export async function gerarChaves(contato) {
     { name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
   const privadaJwk = await crypto.subtle.exportKey('jwk', par.privateKey);
   const publica = b64u.enc(await crypto.subtle.exportKey('raw', par.publicKey));
-  return { publica, privadaJwk, contato: contato || 'mailto:contato@agendapro.app' };
+  return { publica, privadaJwk, contato: contato || 'mailto:contato@pedihub.app' };
 }
 
 /* O crachá: um JWT ES256 por ORIGEM de endpoint (RFC 8292). O `aud` é só o
@@ -74,7 +74,7 @@ export async function crachaVapid(chaves, endpoint, agoraMs) {
   const corpo = b64u.enc(te.encode(JSON.stringify({
     aud: new URL(endpoint).origin,
     exp: Math.floor((agoraMs ?? Date.now()) / 1000) + 12 * 3600,
-    sub: chaves.contato || 'mailto:contato@agendapro.app',
+    sub: chaves.contato || 'mailto:contato@pedihub.app',
   })));
   const privada = await crypto.subtle.importKey('jwk', chaves.privadaJwk,
     { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);

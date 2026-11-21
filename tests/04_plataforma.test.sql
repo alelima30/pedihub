@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o painel de quem é dono da plataforma
+-- PediHub — o painel de quem é dono da plataforma
 --
 -- Uma conta super_admin lê a clientela e o faturamento de TODOS os salões. É
 -- a credencial mais perigosa do sistema, então o que se prova aqui é menos

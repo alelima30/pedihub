@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — nenhum segredo pode estar num arquivo que o navegador baixa
+   PediHub — nenhum segredo pode estar num arquivo que o navegador baixa
 
      node tests/segredos.test.js
 

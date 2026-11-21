@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — as travas do dinheiro (Fase 2A)
+-- PediHub — as travas do dinheiro (Fase 2A)
 --
 -- Este arquivo guarda as TRÊS SONDAGENS da auditoria da Fase 2. Elas foram
 -- rodadas neste mesmo banco, antes de uma linha de correção existir, e as três

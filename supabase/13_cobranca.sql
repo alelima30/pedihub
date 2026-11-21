@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 13: a cobrança (Pix e boleto, pelo Mercado Pago)
+-- PediHub — 13: a cobrança (Pix e boleto, pelo Mercado Pago)
 --
 -- Este arquivo é a metade que mora no banco. A outra metade são duas funções
 -- de borda: `criar-cobranca` (que fala com o Mercado Pago) e `webhook-mp`

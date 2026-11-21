@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 30: os números do dashboard
+-- PediHub — 30: os números do dashboard
 --
 -- Uma chamada só devolve tudo o que os cartões do dashboard desenham. A tela
 -- não soma nada: escolhe o que mostrar e desenha o que veio.

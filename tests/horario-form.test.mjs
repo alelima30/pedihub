@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o horário no "+ Agendamento" (e nos outros campos de hora)
+   PediHub — o horário no "+ Agendamento" (e nos outros campos de hora)
 
      python3 -m http.server 8099 --directory .
      PLAYWRIGHT=… node tests/horario-form.test.mjs

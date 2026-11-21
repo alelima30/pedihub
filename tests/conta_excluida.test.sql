@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a cliente excluiu a conta: o salão fica sabendo (56)
+-- PediHub — a cliente excluiu a conta: o salão fica sabendo (56)
 --
 -- No Salão da Ana: a Maria (com conta, horário marcado e pacote) exclui a
 -- conta; a Bia tem a ficha desligada por outro motivo (o perfil continua).

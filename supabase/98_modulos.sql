@@ -2578,11 +2578,11 @@ $$;
 create or replace function public.modelo_de(p_tipo text)
 returns text language sql stable set search_path = public as $$
   select case p_tipo
-    when 'confirmacao' then 'agendapro_confirmacao'
-    when 'lembrete'    then 'agendapro_lembrete'
-    when 'novo'        then 'agendapro_aviso_profissional'
-    when 'resumo'      then 'agendapro_agenda_hoje'
-    when 'lembrete_equipe' then 'agendapro_lembrete_equipe'
+    when 'confirmacao' then 'pedihub_confirmacao'
+    when 'lembrete'    then 'pedihub_lembrete'
+    when 'novo'        then 'pedihub_aviso_profissional'
+    when 'resumo'      then 'pedihub_agenda_hoje'
+    when 'lembrete_equipe' then 'pedihub_lembrete_equipe'
   end
   || case when p_tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
                and public.mensagens_com_pagamento()
@@ -2628,10 +2628,10 @@ update public.notificacoes n
    and n.corpo like '%(valor do pacote)%';
 update public.notificacoes
    set status = 'cancelado', motivo = 'modelo antigo do resumo do dia'
- where status = 'pendente' and tipo = 'resumo' and modelo = 'agendapro_resumo';
+ where status = 'pendente' and tipo = 'resumo' and modelo = 'pedihub_resumo';
 update public.notificacoes
    set modelo = public.modelo_de('resumo')
- where status = 'pendente' and tipo = 'resumo' and modelo = 'agendapro_agenda_dia';
+ where status = 'pendente' and tipo = 'resumo' and modelo = 'pedihub_agenda_dia';
 update public.notificacoes n
    set modelo    = public.modelo_de('novo'),
        variaveis = coalesce(public.variaveis_agendamento(n.agendamento_id, 'novo'), n.variaveis),
@@ -4958,8 +4958,8 @@ begin
   if new.estoque is not distinct from old.estoque then
     return null;
   end if;
-  v_motivo  := coalesce(nullif(current_setting('agendapro.mov_motivo', true), ''), 'ajuste');
-  v_comanda := nullif(current_setting('agendapro.mov_comanda', true), '')::uuid;
+  v_motivo  := coalesce(nullif(current_setting('pedihub.mov_motivo', true), ''), 'ajuste');
+  v_comanda := nullif(current_setting('pedihub.mov_comanda', true), '')::uuid;
   insert into public.estoque_mov (produto_id, de, para, motivo, comanda_id, quem)
   values (new.id, old.estoque, new.estoque, v_motivo, v_comanda, auth.uid());
   return null;
@@ -4980,9 +4980,9 @@ begin
   else
     return null;
   end if;
-  perform set_config('agendapro.mov_motivo',
+  perform set_config('pedihub.mov_motivo',
                      case when v_sinal < 0 then 'venda' else 'devolucao' end, true);
-  perform set_config('agendapro.mov_comanda', new.id::text, true);
+  perform set_config('pedihub.mov_comanda', new.id::text, true);
   update public.produtos p
      set estoque = p.estoque + v_sinal * i.total_qtd
     from (select ci.produto_id, sum(ci.qtd) as total_qtd
@@ -4992,8 +4992,8 @@ begin
              and ci.produto_id is not null
            group by ci.produto_id) i
    where p.id = i.produto_id;
-  perform set_config('agendapro.mov_motivo', '', true);
-  perform set_config('agendapro.mov_comanda', '', true);
+  perform set_config('pedihub.mov_motivo', '', true);
+  perform set_config('pedihub.mov_comanda', '', true);
   return null;
 end $$;
 comment on function public.tg_comanda_estoque() is
@@ -5738,19 +5738,19 @@ alter table public.notificacoes add constraint notificacoes_tipo_check
 create or replace function public.modelo_de(p_tipo text)
 returns text language sql stable set search_path = public as $$
   select case p_tipo
-    when 'confirmacao'       then 'agendapro_confirmacao'
-    when 'lembrete'          then 'agendapro_lembrete'
-    when 'novo'              then 'agendapro_aviso_profissional'
-    when 'resumo'            then 'agendapro_agenda_hoje'
-    when 'lembrete_equipe'   then 'agendapro_lembrete_equipe'
-    when 'pedido_novo'       then 'agendapro_pedido_novo'
-    when 'pedido_confirmado' then 'agendapro_pedido_confirmado'
-    when 'pedido_a_caminho'  then 'agendapro_pedido_a_caminho'
-    when 'pedido_pronto'     then 'agendapro_pedido_pronto'
-    when 'pedido_cancelado'  then 'agendapro_pedido_cancelado'
-    when 'pacote_renovar'    then 'agendapro_pacote_ultima_sessao'
-    when 'pacote_pagamento'  then 'agendapro_pacote_pagamento'
-    when 'pacote_agenda'     then 'agendapro_pacote_agenda'
+    when 'confirmacao'       then 'pedihub_confirmacao'
+    when 'lembrete'          then 'pedihub_lembrete'
+    when 'novo'              then 'pedihub_aviso_profissional'
+    when 'resumo'            then 'pedihub_agenda_hoje'
+    when 'lembrete_equipe'   then 'pedihub_lembrete_equipe'
+    when 'pedido_novo'       then 'pedihub_pedido_novo'
+    when 'pedido_confirmado' then 'pedihub_pedido_confirmado'
+    when 'pedido_a_caminho'  then 'pedihub_pedido_a_caminho'
+    when 'pedido_pronto'     then 'pedihub_pedido_pronto'
+    when 'pedido_cancelado'  then 'pedihub_pedido_cancelado'
+    when 'pacote_renovar'    then 'pedihub_pacote_ultima_sessao'
+    when 'pacote_pagamento'  then 'pedihub_pacote_pagamento'
+    when 'pacote_agenda'     then 'pedihub_pacote_agenda'
   end
   || case when p_tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
                and public.mensagens_com_pagamento()
@@ -6343,7 +6343,7 @@ begin
   if p_ate > current_date + 90 then
     raise exception 'Teste de mais de 90 dias não é teste: mude o plano.' using errcode = 'check_violation';
   end if;
-  perform set_config('agendapro.plataforma', 'sim', true);
+  perform set_config('pedihub.plataforma', 'sim', true);
   insert into public.assinaturas (salao_id, plano, status, trial_ate, atualizado_em)
        values (p_salao, 'trial', 'trial', p_ate, now())
   on conflict (salao_id) do update
@@ -6377,7 +6377,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 declare v_linha jsonb; v_salao uuid; v_acesso uuid;
 begin
   if auth.uid() is null or not public.is_super() then return null; end if;
-  if coalesce(current_setting('agendapro.plataforma', true), '') = 'sim' then return null; end if;
+  if coalesce(current_setting('pedihub.plataforma', true), '') = 'sim' then return null; end if;
   v_linha := to_jsonb(case when tg_op = 'DELETE' then old else new end);
   v_salao := public.salao_da_linha(tg_table_name, v_linha);
   if v_salao is null then return null; end if;
@@ -6430,7 +6430,7 @@ begin
   if v_antes is null then
     raise exception 'Salão não encontrado.' using errcode = 'check_violation';
   end if;
-  perform set_config('agendapro.plataforma', 'sim', true);
+  perform set_config('pedihub.plataforma', 'sim', true);
   update public.saloes set status = p_status where id = p_salao;
   return jsonb_build_object('salaoId', p_salao, 'de', v_antes, 'para', p_status);
 end $$;
@@ -6521,7 +6521,7 @@ create or replace function public.tg_teste_uma_vez()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.status is distinct from 'trial' then return new; end if;
-  if coalesce(current_setting('agendapro.plataforma', true), '') = 'sim' then return new; end if;
+  if coalesce(current_setting('pedihub.plataforma', true), '') = 'sim' then return new; end if;
   if auth.uid() is null or public.is_super() then return new; end if;
   if public.ja_usou_teste(auth.uid()) then
     new.plano := 'gratuito';
@@ -6636,19 +6636,19 @@ begin
       'Rode o LIGAR-WHATSAPP.sql no SQL Editor do Supabase.');
   else
     select j.jobid, j.schedule, j.active into v_jobid, v_schedule, v_ativo
-      from cron.job j where j.jobname = 'agendapro-notificacoes';
+      from cron.job j where j.jobname = 'pedihub-notificacoes';
     v_cada := case when v_schedule ~ '^[0-9]+ seconds?$'
                      then 'a cada ' || split_part(v_schedule, ' ', 1) || ' segundos'
                    when v_schedule = '* * * * *' then 'a cada minuto'
                    else 'no horário ' || v_schedule end;
     if v_jobid is null then
       v_itens := v_itens || public.saude_item('despertador', 'problema', 'Despertador da fila',
-        'o despertador agendapro-notificacoes não existe: as mensagens não saem.',
+        'o despertador pedihub-notificacoes não existe: as mensagens não saem.',
         'Rode o LIGAR-WHATSAPP.sql no SQL Editor do Supabase.');
     elsif not v_ativo then
       v_itens := v_itens || public.saude_item('despertador', 'problema', 'Despertador da fila',
         'o despertador está pausado: as mensagens não saem.',
-        'Rode o LIGAR-WHATSAPP.sql de novo, ou religue o agendapro-notificacoes no Supabase (Integrations, Cron).');
+        'Rode o LIGAR-WHATSAPP.sql de novo, ou religue o pedihub-notificacoes no Supabase (Integrations, Cron).');
     elsif to_regclass('cron.job_run_details') is null then
       v_itens := v_itens || public.saude_item('despertador', 'ok', 'Despertador da fila',
         'ligado, ' || v_cada || '.');
@@ -6972,7 +6972,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if coalesce(current_setting('role', true), 'none') not in ('anon', 'authenticated')
      or public.is_super()
-     or coalesce(current_setting('agendapro.plataforma', true), '') = 'sim' then
+     or coalesce(current_setting('pedihub.plataforma', true), '') = 'sim' then
     return new;
   end if;
   if new.status is distinct from old.status then
@@ -8856,24 +8856,24 @@ alter table public.notificacoes add constraint notificacoes_tipo_check
 create or replace function public.modelo_de(p_tipo text)
 returns text language sql stable set search_path = public as $$
   select case p_tipo
-    when 'confirmacao'       then 'agendapro_confirmacao'
-    when 'lembrete'          then 'agendapro_lembrete'
-    when 'novo'              then 'agendapro_aviso_profissional'
-    when 'resumo'            then 'agendapro_agenda_hoje'
-    when 'lembrete_equipe'   then 'agendapro_lembrete_equipe'
-    when 'pedido_novo'       then 'agendapro_pedido_novo'
-    when 'pedido_confirmado' then 'agendapro_pedido_confirmado'
-    when 'pedido_a_caminho'  then 'agendapro_pedido_a_caminho'
-    when 'pedido_pronto'     then 'agendapro_pedido_pronto'
-    when 'pedido_cancelado'  then 'agendapro_pedido_cancelado'
-    when 'pacote_renovar'    then 'agendapro_pacote_ultima_sessao'
-    when 'pacote_pagamento'  then 'agendapro_pacote_pagamento'
-    when 'pacote_agenda'     then 'agendapro_pacote_agenda'
-    when 'crediario_compra'     then 'agendapro_crediario_compra'
-    when 'crediario_lembrete'   then 'agendapro_crediario_lembrete'
-    when 'crediario_vence_hoje' then 'agendapro_crediario_vence_hoje'
-    when 'crediario_atraso'     then 'agendapro_crediario_atraso'
-    when 'remarcado'            then 'agendapro_remarcado'
+    when 'confirmacao'       then 'pedihub_confirmacao'
+    when 'lembrete'          then 'pedihub_lembrete'
+    when 'novo'              then 'pedihub_aviso_profissional'
+    when 'resumo'            then 'pedihub_agenda_hoje'
+    when 'lembrete_equipe'   then 'pedihub_lembrete_equipe'
+    when 'pedido_novo'       then 'pedihub_pedido_novo'
+    when 'pedido_confirmado' then 'pedihub_pedido_confirmado'
+    when 'pedido_a_caminho'  then 'pedihub_pedido_a_caminho'
+    when 'pedido_pronto'     then 'pedihub_pedido_pronto'
+    when 'pedido_cancelado'  then 'pedihub_pedido_cancelado'
+    when 'pacote_renovar'    then 'pedihub_pacote_ultima_sessao'
+    when 'pacote_pagamento'  then 'pedihub_pacote_pagamento'
+    when 'pacote_agenda'     then 'pedihub_pacote_agenda'
+    when 'crediario_compra'     then 'pedihub_crediario_compra'
+    when 'crediario_lembrete'   then 'pedihub_crediario_lembrete'
+    when 'crediario_vence_hoje' then 'pedihub_crediario_vence_hoje'
+    when 'crediario_atraso'     then 'pedihub_crediario_atraso'
+    when 'remarcado'            then 'pedihub_remarcado'
   end
   || case when p_tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
                and public.mensagens_com_pagamento()
@@ -10268,7 +10268,7 @@ begin
     raise exception 'Só a equipe do salão testa os avisos.' using errcode = 'insufficient_privilege';
   end if;
   n := public.push_avisar(p_salao, array[auth.uid()], 'Aviso de teste',
-         'Se você está lendo isto, os avisos do AgendaPro chegam neste aparelho.',
+         'Se você está lendo isto, os avisos do PediHub chegam neste aparelho.',
          './app.html', 'teste:' || auth.uid() || ':' || to_char(now(), 'YYYYMMDDHH24MI'));
   return jsonb_build_object('ok', true, 'aparelhos', n);
 end $$;

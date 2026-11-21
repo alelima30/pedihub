@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ===========================================================================
-# AgendaPro — carimba a versão do painel
+# PediHub — carimba a versão do painel
 #
 #   bash versao.sh          # recarimba com o conteúdo atual
 #   bash versao.sh v10      # sobe o número da release E recarimba
@@ -56,7 +56,7 @@ import re, sys
 carimbo = sys.argv[1]
 for arq, padrao, novo in [
     ('app.html', r"const VERSAO_APP = '[^']*'", f"const VERSAO_APP = '{carimbo}'"),
-    ('sw.js',    r"const VERSAO = 'agendapro-[^']*'", f"const VERSAO = 'agendapro-{carimbo}'"),
+    ('sw.js',    r"const VERSAO = 'pedihub-[^']*'", f"const VERSAO = 'pedihub-{carimbo}'"),
 ]:
     s = open(arq, encoding='utf-8').read()
     novo_s, n = re.subn(padrao, novo, s, count=1)

@@ -8,7 +8,7 @@
 -- NUNCA desconta da franquia de mensagens do plano.
 --
 -- Cada pessoa da equipe liga no próprio aparelho (Meu negócio →
--- Notificações). No iPhone só funciona com o AgendaPro instalado na tela de
+-- Notificações). No iPhone só funciona com o PediHub instalado na tela de
 -- início; no Android funciona direto. Quem nunca ligou não recebe nada, e
 -- nada deste arquivo muda o WhatsApp das clientes.
 --
@@ -302,7 +302,7 @@ begin
     raise exception 'Só a equipe do salão testa os avisos.' using errcode = 'insufficient_privilege';
   end if;
   n := public.push_avisar(p_salao, array[auth.uid()], 'Aviso de teste',
-         'Se você está lendo isto, os avisos do AgendaPro chegam neste aparelho.',
+         'Se você está lendo isto, os avisos do PediHub chegam neste aparelho.',
          './app.html', 'teste:' || auth.uid() || ':' || to_char(now(), 'YYYYMMDDHH24MI'));
   return jsonb_build_object('ok', true, 'aparelhos', n);
 end $$;

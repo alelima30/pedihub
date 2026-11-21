@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — 06: a vitrine de UM salão
+-- PediHub — 06: a vitrine de UM salão
 --
 -- ── O PROBLEMA QUE ESTE ARQUIVO FECHA ──────────────────────────────────────
 -- As vistas `saloes_publicos`, `servicos_publicos` e `profissionais_publicos`
@@ -15,7 +15,7 @@
 --
 -- e recebia TODOS os salões da plataforma, com nome, endereço e WhatsApp. Um
 -- concorrente monta com isso uma lista de prospecção pronta: exatamente quem
--- usa o AgendaPro, onde fica e por onde falar. Você levou meses para reunir
+-- usa o PediHub, onde fica e por onde falar. Você levou meses para reunir
 -- essa lista; ela sai numa requisição.
 --
 -- ── O QUE MUDA ─────────────────────────────────────────────────────────────

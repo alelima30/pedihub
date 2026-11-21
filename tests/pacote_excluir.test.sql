@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — excluir pacote (50_pacote_excluir.sql)
+-- PediHub — excluir pacote (50_pacote_excluir.sql)
 --
 -- "Só excluir quando não tiver pessoas nesse pacote."
 --

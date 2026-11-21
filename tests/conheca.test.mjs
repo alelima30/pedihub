@@ -1,5 +1,5 @@
 /* ===========================================================================
-   A página dos anúncios (conheca.html) — o desenho do dono do AgendaPro
+   A página dos anúncios (conheca.html) — o desenho do dono do PediHub
 
    Veio da ferramenta de design como um pacote de 14 MB que se montava no
    navegador; no site ela é estática (HTML montado, WebP, fontes em arquivo e
@@ -61,7 +61,7 @@ console.log('\nAbrindo');
     h1: [...document.querySelectorAll('h1')].map(h => h.textContent.replace(/\s+/g, ' ').trim()),
     lang: document.documentElement.lang,
   }));
-  diz(/AgendaPro/.test(cab.titulo) && cab.desc.length > 60, 'tem título e descrição para o Google', cab.titulo);
+  diz(/PediHub/.test(cab.titulo) && cab.desc.length > 60, 'tem título e descrição para o Google', cab.titulo);
   diz(/conheca\.html$/.test(cab.canonico) && /lp\/og\.jpg$/.test(cab.og), 'link canônico e imagem de compartilhamento (WhatsApp, Instagram)');
   diz(fs.existsSync(path.join(RAIZ, 'lp/og.jpg')), 'e a imagem de compartilhamento existe no site');
   diz(cab.h1.length === 1 && /agenda online/i.test(cab.h1[0]) && /pronta hoje/.test(cab.h1[0]), 'um título só (h1), com a promessa', cab.h1.join(' | '));

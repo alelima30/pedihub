@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — INSTALAÇÃO COMPLETA, PARTE 1 DE 2
+-- PediHub — INSTALAÇÃO COMPLETA, PARTE 1 DE 2
 --
 -- O 00_tudo.sql ficou grande demais para o SQL Editor do Supabase, então ele
 -- vai em duas partes. É o mesmo conteúdo, na mesma ordem.
@@ -27,7 +27,7 @@ end $$;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 01_schema.sql
+-- PediHub — 01_schema.sql
 -- Tabelas, chaves e travas. Sem RLS aqui: segurança está no 02_rls.sql.
 --
 -- Rodar à mão no SQL Editor do Supabase, em ordem (01, 02, 03).
@@ -51,7 +51,7 @@ create extension if not exists btree_gist;
 
 create table if not exists public.saloes (
   id        uuid primary key default gen_random_uuid(),
-  -- slug é o endereço público: agendapro.app/agendar/salao-da-ana
+  -- slug é o endereço público: pedihub.app/agendar/salao-da-ana
   slug      text unique not null check (slug ~ '^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$'),
   nome      text not null,
   -- O tipo não é só rótulo: ele define o VOCABULÁRIO do sistema. Barbearia
@@ -1050,7 +1050,7 @@ with (security_invoker = true) as
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 02_rls.sql
+-- PediHub — 02_rls.sql
 -- A segurança de verdade. Rodar DEPOIS do 01_schema.sql.
 --
 -- Mesma filosofia do AdminPro: quem protege o dado não é o JavaScript da
@@ -1710,7 +1710,7 @@ revoke all on public.contadores from anon, authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 03_onboarding.sql
+-- PediHub — 03_onboarding.sql
 -- O dono se cadastra sozinho. Rodar DEPOIS do 01 e do 02.
 --
 -- O problema que este arquivo resolve: a policy `salao_criar` só deixa
@@ -1951,7 +1951,7 @@ grant select on public.minha_assinatura to authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — imagens do salão (Supabase Storage)
+-- PediHub — imagens do salão (Supabase Storage)
 -- ---------------------------------------------------------------------------
 -- Logo, foto da fachada/equipe e foto por serviço. São três imagens com o
 -- mesmo destino e a mesma regra, então um balde só resolve.
@@ -2037,7 +2037,7 @@ grant execute on function public.salao_do_arquivo(text) to anon, authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 05: a agenda pública
+-- PediHub — 05: a agenda pública
 --
 -- Este arquivo existe por um motivo só: hoje quem calcula horário livre é o
 -- JavaScript de `agendar.html`, contra o localStorage. Isso funciona para
@@ -2863,7 +2863,7 @@ create or replace view public.profissionais_publicos as
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 06: a vitrine de UM salão
+-- PediHub — 06: a vitrine de UM salão
 --
 -- ── O PROBLEMA QUE ESTE ARQUIVO FECHA ──────────────────────────────────────
 -- As vistas `saloes_publicos`, `servicos_publicos` e `profissionais_publicos`
@@ -2879,7 +2879,7 @@ create or replace view public.profissionais_publicos as
 --
 -- e recebia TODOS os salões da plataforma, com nome, endereço e WhatsApp. Um
 -- concorrente monta com isso uma lista de prospecção pronta: exatamente quem
--- usa o AgendaPro, onde fica e por onde falar. Você levou meses para reunir
+-- usa o PediHub, onde fica e por onde falar. Você levou meses para reunir
 -- essa lista; ela sai numa requisição.
 --
 -- ── O QUE MUDA ─────────────────────────────────────────────────────────────
@@ -3100,7 +3100,7 @@ grant execute on function public.vitrine(text) to anon, authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 07: o painel de quem é dono da plataforma
+-- PediHub — 07: o painel de quem é dono da plataforma
 --
 -- O `super_admin` já existia no schema e já destrancava tudo: `tem_acesso()`
 -- devolve verdadeiro para ele em qualquer salão, e as policies de `planos` e
@@ -3370,7 +3370,7 @@ grant execute on function public.definir_status_salao(uuid, text) to authenticat
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 08: a conta vira perfil
+-- PediHub — 08: a conta vira perfil
 --
 -- ── O DEFEITO QUE ISTO CONSERTA ────────────────────────────────────────────
 -- O cadastro chamava `/auth/v1/signup`, que cria a linha em `auth.users`, e
@@ -3528,7 +3528,7 @@ grant execute on function public.para_e164(text) to anon, authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 09: a cliente mexe no que é dela
+-- PediHub — 09: a cliente mexe no que é dela
 --
 -- ── O PROBLEMA ─────────────────────────────────────────────────────────────
 -- Marcar não pede identificação, e está certo: atrito na primeira vez custa
@@ -3660,7 +3660,7 @@ create trigger tg_notif_pagamento
 -- "Como fazer para colocar sinal?" — o caminho do Pix com a confirmação do
 -- salão: quem marca pelo link paga uma parte para a chave Pix do próprio
 -- salão, manda o comprovante pelo WhatsApp, e o dono confirma. O dinheiro vai
--- direto para o salão; o AgendaPro não toca nele.
+-- direto para o salão; o PediHub não toca nele.
 --
 -- Mora em `cfg.pagamentos.sinal`, junto da chave Pix (funcionamento.js):
 --     { tipo: 'pct' | 'fixo', valor: 10, prazoMin: 60, titular, regra }
@@ -4657,7 +4657,7 @@ grant execute on function public.meus_agendamentos_da_conta() to authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 10: Campanhas de WhatsApp
+-- PediHub — 10: Campanhas de WhatsApp
 --
 -- Mandar mensagem para a clientela é o pedido mais repetido de quem tem
 -- salão, e é também o mais fácil de fazer errado de um jeito que custa o
@@ -5210,7 +5210,7 @@ grant execute on function public.fila_resultado(uuid, boolean, text, text, text,
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 11: dar login para a equipe
+-- PediHub — 11: dar login para a equipe
 --
 -- O banco já sabia lidar com `recepcao` e `profissional`: as policies estão
 -- escritas desde o 02_rls.sql, e a policy `vinc_gerir` até deixa o dono criar
@@ -5596,7 +5596,7 @@ grant execute on function public.revogar_convite(uuid)            to authenticat
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 12: os relatórios
+-- PediHub — 12: os relatórios
 --
 -- O salão já tinha todo o dado e nenhuma resposta. Comanda, item, pagamento e
 -- comissão estão gravados desde o começo; o que não existia era a pergunta
@@ -5838,7 +5838,7 @@ grant execute on function public.relatorio(uuid, date, date) to authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 13: a cobrança (Pix e boleto, pelo Mercado Pago)
+-- PediHub — 13: a cobrança (Pix e boleto, pelo Mercado Pago)
 --
 -- Este arquivo é a metade que mora no banco. A outra metade são duas funções
 -- de borda: `criar-cobranca` (que fala com o Mercado Pago) e `webhook-mp`
@@ -6397,7 +6397,7 @@ revoke all on function public.vencer_cobrancas() from public, anon, authenticate
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 14: o motor da disponibilidade
+-- PediHub — 14: o motor da disponibilidade
 --
 -- ── O PROBLEMA QUE ESTE ARQUIVO RESOLVE ────────────────────────────────────
 -- Existiam DOIS caminhos de escrita em `agendamentos`, e eles não passavam
@@ -6928,7 +6928,7 @@ grant execute on function public.avaliar_horario(uuid, timestamptz, timestamptz,
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 15: as travas do dinheiro (Fase 2A)
+-- PediHub — 15: as travas do dinheiro (Fase 2A)
 --
 -- ── O QUE A AUDITORIA MEDIU, E QUE ESTE ARQUIVO FECHA ──────────────────────
 -- Três sondagens rodadas no banco antes de escrever qualquer coisa aqui, e as
@@ -7368,7 +7368,7 @@ grant execute on function public.reais(numeric) to anon, authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 16: a comissão passa a ser do banco
+-- PediHub — 16: a comissão passa a ser do banco
 --
 -- ── O DEFEITO QUE ESTE ARQUIVO EXISTE PARA CONSERTAR ───────────────────────
 -- A comissão de cada item da comanda vinha PRONTA do navegador. O `app.html`
@@ -7758,7 +7758,7 @@ grant select on public.comandas_totais to authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 17: o caixa do dia, e o estorno
+-- PediHub — 17: o caixa do dia, e o estorno
 --
 -- ── O QUE FALTAVA ─────────────────────────────────────────────────────────
 -- Havia pagamento e não havia GAVETA. O sistema sabia que a cliente pagou
@@ -8303,7 +8303,7 @@ grant execute on function public.fechar_caixa(uuid, numeric, text) to authentica
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 18: o painel do dia
+-- PediHub — 18: o painel do dia
 --
 -- ── QUE PERGUNTA ELE RESPONDE ─────────────────────────────────────────────
 -- A que o dono faz ao abrir o sistema de manhã, e de novo no fim da tarde:
@@ -8488,7 +8488,7 @@ grant execute on function public.painel_hoje(uuid, date) to authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 19: o teto do link público
+-- PediHub — 19: o teto do link público
 --
 -- ── O QUE FOI MEDIDO ──────────────────────────────────────────────────────
 -- Numa bancada de pé, com SÓ a chave publicável — a mesma que está à vista no
@@ -8785,7 +8785,7 @@ comment on function public.teto_online_rajada(uuid) is
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 20: bloqueio e atendimento param de passar juntos
+-- PediHub — 20: bloqueio e atendimento param de passar juntos
 --
 -- ── O QUE FOI MEDIDO ──────────────────────────────────────────────────────
 -- Duas conexões, caminho normal, sem encaixe, jornada aberta:
@@ -8997,7 +8997,7 @@ comment on function public.travar_agenda(uuid) is
 -- ###########################################################################
 
 -- ===========================================================================
--- AgendaPro — 21: confirmação, lembrete e resumo do dia
+-- PediHub — 21: confirmação, lembrete e resumo do dia
 --
 -- ── O QUE ESTA FASE É, E O QUE ELA NÃO É ──────────────────────────────────
 -- Três mensagens que nascem da AGENDA e de mais nada:
@@ -9507,25 +9507,25 @@ $$;
 create or replace function public.modelo_de(p_tipo text)
 returns text language sql stable set search_path = public as $$
   select case p_tipo
-    when 'confirmacao' then 'agendapro_confirmacao'
-    when 'lembrete'    then 'agendapro_lembrete'
-    /* ⚠ NÃO é mais 'agendapro_novo1'. A Meta o reclassificou como MARKETING
+    when 'confirmacao' then 'pedihub_confirmacao'
+    when 'lembrete'    then 'pedihub_lembrete'
+    /* ⚠ NÃO é mais 'pedihub_novo1'. A Meta o reclassificou como MARKETING
        ("🔔 Novo agendamento… Confira na agenda" lido como chamada), e
        marketing ela segura para quem nunca falou com o número: o aviso saía
        como "enviado" e a profissional não recebia. O novo segue a forma da
        confirmação, que passou como Utilidade: endereçado à pessoa, sobre UM
        agendamento, com o local, e sem chamada para ação. */
-    when 'novo'        then 'agendapro_aviso_profissional'
-    /* ⚠ NEM 'agendapro_resumo' (a lista achatada numa linha só) NEM
-       'agendapro_agenda_dia': este a Meta reclassificou como MARKETING — o
+    when 'novo'        then 'pedihub_aviso_profissional'
+    /* ⚠ NEM 'pedihub_resumo' (a lista achatada numa linha só) NEM
+       'pedihub_agenda_dia': este a Meta reclassificou como MARKETING — o
        "☀️ Bom dia!" de abertura e o "Toque no botão para ver…" foram lidos
        como chamada. O novo tem as MESMAS quatro variáveis, na mesma ordem, no
        formato de aviso de conta: "o resumo da sua agenda de hoje", sem
        chamada no texto. Nome novo porque nome de modelo apagado na Meta fica
        preso por semanas. */
-    when 'resumo'      then 'agendapro_agenda_hoje'
+    when 'resumo'      then 'pedihub_agenda_hoje'
     -- O lembrete para o salão (7c): quem atende e/ou o dono, antes do horário.
-    when 'lembrete_equipe' then 'agendapro_lembrete_equipe'
+    when 'lembrete_equipe' then 'pedihub_lembrete_equipe'
   end
   || case when p_tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
                and public.mensagens_com_pagamento()
@@ -9560,7 +9560,7 @@ begin
     -- {{6}} salão
     --
     -- ⚠ O SALÃO VAI POR ÚLTIMO, E NÃO PODE FALTAR. O número que manda é do
-    -- AgendaPro, um só para todos os salões: a cliente vê "Agendapro" no topo
+    -- PediHub, um só para todos os salões: a cliente vê "Pedihub" no topo
     -- da conversa. Sem o nome da casa no texto, ela recebe "seu horário está
     -- confirmado" sem saber onde — e quem frequenta dois salões que usam o
     -- sistema não tem como distinguir um do outro. Por último para não mexer
@@ -9616,13 +9616,13 @@ update public.notificacoes n
    sair: o nome mudou. Cancela, dizendo por quê — o de amanhã já nasce certo. */
 update public.notificacoes
    set status = 'cancelado', motivo = 'modelo antigo do resumo do dia'
- where status = 'pendente' and tipo = 'resumo' and modelo = 'agendapro_resumo';
+ where status = 'pendente' and tipo = 'resumo' and modelo = 'pedihub_resumo';
 
-/* O 'agendapro_agenda_dia' tem as mesmas quatro variáveis do modelo de
+/* O 'pedihub_agenda_dia' tem as mesmas quatro variáveis do modelo de
    utilidade que o substitui: o que está na fila só troca de nome. */
 update public.notificacoes
    set modelo = public.modelo_de('resumo')
- where status = 'pendente' and tipo = 'resumo' and modelo = 'agendapro_agenda_dia';
+ where status = 'pendente' and tipo = 'resumo' and modelo = 'pedihub_agenda_dia';
 
 /* O aviso à profissional trocou de modelo (o de marketing para o de
    utilidade) e de variáveis (4 → 6). O que ainda está na fila é refeito:
@@ -10187,7 +10187,7 @@ revoke all on function public.variaveis_pagamento(jsonb) from public, anon, auth
 -- duplica.
 -- ---------------------------------------------------------------------------
 
-/* As variáveis, NA ORDEM do modelo `agendapro_lembrete_equipe`:
+/* As variáveis, NA ORDEM do modelo `pedihub_lembrete_equipe`:
    {{1}} primeiro nome de QUEM RECEBE  {{2}} cliente (nome inteiro)
    {{3}} serviço  {{4}} quem atende  {{5}} data  {{6}} hora  {{7}} salão
 

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — "eu já rodei o 98_modulos.sql?"
+-- PediHub — "eu já rodei o 98_modulos.sql?"
 --
 -- Cole no SQL Editor do Supabase e clique em Run. Devolve UMA linha.
 --

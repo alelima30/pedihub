@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — testes do banco
+-- PediHub — testes do banco
 --
 --   bash tests/rodar.sh
 --

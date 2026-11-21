@@ -168,7 +168,7 @@ begin
   if p_ate > current_date + 90 then
     raise exception 'Teste de mais de 90 dias não é teste: mude o plano.' using errcode = 'check_violation';
   end if;
-  perform set_config('agendapro.plataforma', 'sim', true);
+  perform set_config('pedihub.plataforma', 'sim', true);
   insert into public.assinaturas (salao_id, plano, status, trial_ate, atualizado_em)
        values (p_salao, 'trial', 'trial', p_ate, now())
   on conflict (salao_id) do update
@@ -210,7 +210,7 @@ declare v_linha jsonb; v_salao uuid; v_acesso uuid;
 begin
   -- Quem não é a plataforma passa direto: é a imensa maioria das gravações.
   if auth.uid() is null or not public.is_super() then return null; end if;
-  if coalesce(current_setting('agendapro.plataforma', true), '') = 'sim' then return null; end if;
+  if coalesce(current_setting('pedihub.plataforma', true), '') = 'sim' then return null; end if;
   v_linha := to_jsonb(case when tg_op = 'DELETE' then old else new end);
   v_salao := public.salao_da_linha(tg_table_name, v_linha);
   if v_salao is null then return null; end if;
@@ -278,7 +278,7 @@ begin
     raise exception 'Salão não encontrado.' using errcode = 'check_violation';
   end if;
 
-  perform set_config('agendapro.plataforma', 'sim', true);
+  perform set_config('pedihub.plataforma', 'sim', true);
   update public.saloes set status = p_status where id = p_salao;
 
   return jsonb_build_object('salaoId', p_salao, 'de', v_antes, 'para', p_status);

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — entrar com o Google: completar o cadastro (51_google.sql)
+-- PediHub — entrar com o Google: completar o cadastro (51_google.sql)
 --
 -- O Google entrega nome e e-mail. O salão precisa do WhatsApp e do
 -- aniversário, e `completar_meu_cadastro` os grava no perfil de quem entrou.

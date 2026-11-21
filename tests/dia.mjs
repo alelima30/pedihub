@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — que dia é hoje PARA O SALÃO
+   PediHub — que dia é hoje PARA O SALÃO
 
    ── POR QUE ESTE ARQUIVO EXISTE ────────────────────────────────────────────
    Um teste de tela vive em dois relógios ao mesmo tempo: o do processo Node

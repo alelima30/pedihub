@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — as mensagens da equipe dizem que precisam do WhatsApp de cada um
+   PediHub — as mensagens da equipe dizem que precisam do WhatsApp de cada um
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/equipe-whatsapp.test.mjs
@@ -39,7 +39,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -81,8 +81,8 @@ const p = await (await nav.newContext({ viewport:{ width:1360, height:900 } })).
 p.on('pageerror', e => erros.push(e.message));
 p.on('dialog', d => d.accept());
 await p.addInitScript(([b, s]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s));
 }, [BASE, dona.sessao()]);
 await p.goto(BASE + '/app.html');
 await p.waitForFunction(() => typeof irPara === 'function'

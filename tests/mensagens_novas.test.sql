@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — as mensagens do Crediário e a de horário remarcado (52)
+-- PediHub — as mensagens do Crediário e a de horário remarcado (52)
 --
 -- A Maria leva uma lingerie de R$ 300 em 3x de R$ 100, a primeira daqui a
 -- dez dias.
@@ -120,7 +120,7 @@ select t_vender(:'primeiro') as cr \gset
 select t_texto('o resumo da compra sai agora, pelo modelo dele',
   (t_msg('crediario_compra', :'cr')).modelo || ' | ' || (t_msg('crediario_compra', :'cr')).status
     || ' | ' || ((t_msg('crediario_compra', :'cr')).quando <= now())::text,
-  'agendapro_crediario_compra | pendente | true');
+  'pedihub_crediario_compra | pendente | true');
 select t_texto('   com o nome, o salão, o valor e as parcelas numa linha',
   (t_msg('crediario_compra', :'cr')).variaveis::text,
   '["Maria", "Lingerie da Ana", "R$ 300,00", "1ª R$ 100,00 em ' || to_char(:'primeiro'::date, 'DD/MM')
@@ -141,7 +141,7 @@ select t_texto('lembrete: dois dias antes, 10h; com a parcela, o valor, o vencim
 select t_texto('vence hoje: no dia, 10h',
   t_hora((t_msg('crediario_vence_hoje', t_parcela(:'cr', 1))).quando) || ' | '
     || (t_msg('crediario_vence_hoje', t_parcela(:'cr', 1))).modelo,
-  to_char(:'primeiro'::date, 'YYYY-MM-DD') || ' 10:00 | agendapro_crediario_vence_hoje');
+  to_char(:'primeiro'::date, 'YYYY-MM-DD') || ' 10:00 | pedihub_crediario_vence_hoje');
 select t_texto('atraso: um dia depois, 10h, com a data em que venceu',
   t_hora((t_msg('crediario_atraso', t_parcela(:'cr', 1))).quando) || ' | '
     || ((t_msg('crediario_atraso', t_parcela(:'cr', 1))).variaveis->>3),
@@ -302,7 +302,7 @@ select t_verdade('ligado: remarcou de novo, para o dia 7 às 16h', (:'rm2'::json
 select t_texto('a cliente recebe o de antes e o novo, pelo modelo do remarcado',
   (select n.modelo || ' | ' || n.variaveis::text from public.notificacoes n
     where n.tipo = 'remarcado' and n.status = 'pendente'),
-  'agendapro_remarcado | ["Maria", "Lingerie da Ana", "'
+  'pedihub_remarcado | ["Maria", "Lingerie da Ana", "'
     || (array['domingo','segunda','terça','quarta','quinta','sexta','sábado'])[extract(dow from current_date + 6)::int + 1]
     || ', ' || to_char(current_date + 6, 'DD/MM') || ' às 15:30", "' || to_char(current_date + 7, 'DD/MM/YYYY')
     || '", "16:00", "Conjunto renda", "Ju"]');

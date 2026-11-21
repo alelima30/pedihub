@@ -30,7 +30,7 @@ function montar({ vivos, refreshVale = true, bordaResponde }){
   const pedidos = [];
   const guardado = {};
   const janela = {
-    AGENDAPRO: { url: 'https://projeto.supabase.co', chave: 'publica' },
+    PEDIHUB: { url: 'https://projeto.supabase.co', chave: 'publica' },
     localStorage: {
       getItem: k => (k in guardado ? guardado[k] : null),
       setItem: (k, v) => { guardado[k] = String(v); },

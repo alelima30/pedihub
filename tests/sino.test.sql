@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o sino do painel (54)
+-- PediHub — o sino do painel (54)
 --
 -- O Salão da Ana: a Ana (dona), a Rita (recepção), a Ju e a Bia (atendem).
 --
@@ -11,7 +11,7 @@
 --      quem atende não;
 --   5. mensagens que falharam, a franquia e a assinatura: só a gestão;
 --   6. resolvido, some: confirmar, vender, receber a parcela;
---   7. os avisos do AgendaPro: só a plataforma publica; a gestão ou a equipe
+--   7. os avisos do PediHub: só a plataforma publica; a gestão ou a equipe
 --      vê, conforme o público; lido, some só para quem leu; arquivado ou
 --      vencido, some para todos.
 -- ===========================================================================
@@ -208,7 +208,7 @@ select t_texto('confirmou dois, vendeu o pedido, recebeu a parcela, a franquia v
   t_sino(:ana::uuid), 'a_confirmar:2 | avisos 0');
 
 \echo ''
-\echo '7. Os avisos do AgendaPro'
+\echo '7. Os avisos do PediHub'
 select t_texto('só a plataforma publica',
   erro_de($$select t_como('a5400000-0000-0000-0000-00000000000a', 'select public.publicar_aviso_plataforma(''Oi'', ''Texto do aviso'')')$$),
   'Só a plataforma publica avisos para os salões.');

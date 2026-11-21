@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — remarcar pelo painel
+   PediHub — remarcar pelo painel
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/remarcar-tela.test.mjs
@@ -47,7 +47,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -116,8 +116,8 @@ const ctx = await nav.newContext({ viewport:{ width:390, height:860 }, isMobile:
 const p = await ctx.newPage();
 p.on('pageerror', e => erros.push(e.message));
 p.on('dialog', d => { dialogos.push(d.message()); responder ? d.accept() : d.dismiss(); });
-await p.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
+await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, dona.sessao()]);
 await p.goto(BASE + '/app.html');
 await p.waitForFunction(() => typeof bd !== 'undefined' && bd && Array.isArray(bd.saloes)
   && bd.planos && bd.planos.length, null, { timeout: 20000 });

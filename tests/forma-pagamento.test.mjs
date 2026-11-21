@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — "Como você vai pagar?": a escolha da cliente, do link à agenda
+   PediHub — "Como você vai pagar?": a escolha da cliente, do link à agenda
 
      bash tests/bancada/subir.sh                       (noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/forma-pagamento.test.mjs
@@ -40,7 +40,7 @@ const secao = t => console.log('\n' + t);
 
 function aba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -230,8 +230,8 @@ secao('6. O painel');
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('painel: ' + e.message));
   p.on('dialog', d => d.dismiss());
-  await p.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s)); }, [BASE, A.dona.sessao()]);
+  await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, A.dona.sessao()]);
   await p.goto(BASE + '/app.html');
   await p.waitForFunction(() => typeof bd !== 'undefined' && bd && Array.isArray(bd.agendamentos)
     && bd.agendamentos.length > 0, null, { timeout: 20000 });

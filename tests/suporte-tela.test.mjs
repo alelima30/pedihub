@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o modo suporte, pela porta da frente
+   PediHub — o modo suporte, pela porta da frente
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=.../node_modules/playwright node tests/suporte-tela.test.mjs
@@ -65,8 +65,8 @@ const nav = await chromium.launch({ executablePath: CHROMIUM });
 async function aba(sessao, url, largura = 1280){
   const ctx = await nav.newContext({ viewport: { width: largura, height: 900 } });
   await ctx.addInitScript(([base, s]) => {
-    window.AGENDAPRO = { url: base, chave: 'k', ambiente: 'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+    window.PEDIHUB = { url: base, chave: 'k', ambiente: 'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s));
   }, [BANCADA, sessao]);
   const p = await ctx.newPage();
   p.erros = []; p.dialogos = []; p.responder = null;

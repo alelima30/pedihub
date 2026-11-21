@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o link público não enche a agenda do salão
+   PediHub — o link público não enche a agenda do salão
 
      bash tests/bancada/subir.sh
      node tests/teto-online.test.mjs
@@ -68,7 +68,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -459,8 +459,8 @@ const pg2 = await (await nav.newContext({ viewport:{ width:1360, height:900 } })
 pg2.on('pageerror', e => errosJs.push(e.message));
 pg2.on('dialog', d => d.accept());
 await pg2.addInitScript(([b, ss]) => {
-  window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-  localStorage.setItem('agendapro.sessao', JSON.stringify(ss));
+  window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+  localStorage.setItem('pedihub.sessao', JSON.stringify(ss));
 }, [BASE, dona.sessao()]);
 await pg2.goto(BASE + '/app.html');
 await pg2.waitForTimeout(4000);

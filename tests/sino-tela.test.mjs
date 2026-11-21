@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o sino do painel, na tela (54_sino)
+   PediHub — o sino do painel, na tela (54_sino)
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/sino-tela.test.mjs
@@ -9,7 +9,7 @@
 
      1. o admin publica um aviso para os salões (e a lista diz que está no ar);
      2. no painel da dona, o sino aparece com o número: o horário a confirmar,
-        o pedido da loja e o aviso do AgendaPro;
+        o pedido da loja e o aviso do PediHub;
      3. aberto, cada item diz o que é e leva à tela dele; o aviso se marca
         como lido (e sai do sino, e fica gravado);
      4. resolvido, some: confirmou o horário, o número desce;
@@ -38,7 +38,7 @@ const secao = t => console.log('\n' + t);
 
 function novaAba(){
   const g = {};
-  const j = { AGENDAPRO:{ url:BASE, chave:'k', ambiente:'bancada' },
+  const j = { PEDIHUB:{ url:BASE, chave:'k', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -86,8 +86,8 @@ async function abrir(sessao, url, largura = 390, rotas){
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(url + ': ' + e.message));
   p.on('dialog', d => d.accept());
-  await p.addInitScript(([b, s]) => { window.AGENDAPRO = { url:b, chave:'k', ambiente:'bancada' };
-    localStorage.setItem('agendapro.sessao', JSON.stringify(s)); }, [BASE, sessao]);
+  await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
+    localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, sessao]);
   await p.goto(BASE + '/' + url);
   return { ctx, p };
 }
@@ -144,7 +144,7 @@ const avisosVivos = Number((await linha(`select count(*) n from public.avisos_pl
   where arquivado_em is null and para = 'gestao' and (ate is null or ate >= current_date)
     and (salao_id is null or salao_id = $1)`, [SALAO])).n);
 const esperado = 2 + avisosVivos;
-igual('o número: 1 horário a confirmar + 1 pedido da loja + os avisos do AgendaPro',
+igual('o número: 1 horário a confirmar + 1 pedido da loja + os avisos do PediHub',
   await numeroDoSino(pc), esperado > 9 ? '9+' : String(esperado));
 
 secao('3. Aberto: o que é cada um, e para onde leva');
@@ -153,7 +153,7 @@ await pc.waitForSelector('#sinoPainel:not([hidden]) .sino-item', { timeout: 1000
 const painel = await texto(pc, '#sinoPainel');
 verdade('a lista diz: "1 horário espera sua confirmação", "1 pedido novo da loja" e o aviso, com "Marcar como lido"',
   /1 horário espera sua confirmação/.test(painel) && /1 pedido novo da loja/.test(painel)
-  && painel.includes('Novidade: o sino ' + m) && /AVISO DO AGENDAPRO/.test(painel) && /Marcar como lido/.test(painel), painel);
+  && painel.includes('Novidade: o sino ' + m) && /AVISO DO PEDIHUB/.test(painel) && /Marcar como lido/.test(painel), painel);
 verdade('   e o aviso que foi só para este salão também está lá', painel.includes('Só para o seu salão ' + m), painel);
 verdade('   a 390px a lista cabe na tela', await pc.evaluate(() => {
   const r = document.getElementById('sinoPainel').getBoundingClientRect();

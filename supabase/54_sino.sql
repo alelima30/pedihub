@@ -25,7 +25,7 @@
 --   conta_excluida  clientes que excluíram a conta do link (56), até o balcão
 --                 ver o aviso.
 --
--- E os AVISOS DO AGENDAPRO: o que a plataforma escreve no admin (novidade,
+-- E os AVISOS DO PEDIHUB: o que a plataforma escreve no admin (novidade,
 -- manutenção, recado) aparece no sino de todos os salões até a pessoa
 -- marcar como lido.
 --
@@ -207,7 +207,7 @@ begin
     end if;
   end if;
 
-  -- Os avisos do AgendaPro que esta pessoa ainda não leu.
+  -- Os avisos do PediHub que esta pessoa ainda não leu.
   select coalesce(jsonb_agg(jsonb_build_object('id', x.id, 'titulo', x.titulo, 'texto', x.texto,
            'publicadoEm', x.publicado_em) order by x.publicado_em desc), '[]'::jsonb)
     into v_avisos

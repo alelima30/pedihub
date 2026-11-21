@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — a agenda pública (05_agenda.sql)
+-- PediHub — a agenda pública (05_agenda.sql)
 --
 -- O que se prova aqui é o caminho da CLIENTE, que é o caminho de quem não fez
 -- login e não pode ser confiado em nada: horários livres batendo com a

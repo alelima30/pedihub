@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — o sinal por Pix para garantir o horário (09_cliente.sql, 1e)
+-- PediHub — o sinal por Pix para garantir o horário (09_cliente.sql, 1e)
 --
 -- "Como fazer para colocar sinal?" — quem marca pelo link paga uma parte
 -- para a chave Pix do salão, e o dono confirma quando o comprovante chega.

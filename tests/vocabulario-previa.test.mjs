@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — a prévia fala as mesmas palavras do link
+   PediHub — a prévia fala as mesmas palavras do link
 
      node tests/vocabulario-previa.test.mjs
 

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- AgendaPro — os produtos que o salão vende
+-- PediHub — os produtos que o salão vende
 --
 -- ── O QUE ESTE ARQUIVO EXISTE PARA PEGAR ──────────────────────────────────
 -- O módulo 24 é pequeno, e é justamente por isso que ele tem uma decisão fácil

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o worker das mensagens da agenda
+   PediHub — o worker das mensagens da agenda
    Supabase Edge Function (Deno). Roda NO SERVIDOR, nunca no navegador.
 
    ── O QUE ELE MANDA, E O QUE NÃO ──────────────────────────────────────────
@@ -191,7 +191,7 @@ async function despacharAvisos() {
   while (lote && lote.length) {
     for (const a of lote) {
       const r = await enviarPush(chaves, a,
-        { titulo: a.titulo, corpo: a.corpo, url: a.url, tag: 'agendapro-' + a.id });
+        { titulo: a.titulo, corpo: a.corpo, url: a.url, tag: 'pedihub-' + a.id });
       await rpc('push_resultado', { p_id: a.id, p_ok: r.ok, p_codigo: r.ok ? null : r.codigo });
       if (r.ok) enviados++;
       else { falhas++; console.error('enviar-notificacoes: aviso no celular falhou', r.codigo); }

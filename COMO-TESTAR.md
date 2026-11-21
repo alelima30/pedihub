@@ -1,4 +1,4 @@
-# Como testar o AgendaPro
+# Como testar o PediHub
 
 Dois caminhos. O primeiro não precisa de nada instalado; o segundo liga no
 Supabase de verdade.
@@ -36,7 +36,7 @@ Para instalar como aplicativo (ícone na tela inicial), precisa servir por
 http — navegador não registra service worker em `file://`:
 
 ```bash
-cd agendapro && python3 -m http.server 8000
+cd pedihub && python3 -m http.server 8000
 # abra http://localhost:8000 → botão "Instalar app"
 ```
 
@@ -69,7 +69,7 @@ que os testes não previram.
 Em **Settings → API**, copie os dois valores e cole no **`config.js`**:
 
 ```js
-window.AGENDAPRO = {
+window.PEDIHUB = {
   url:   'https://xxxxxxxx.supabase.co',
   chave: 'eyJhbGciOi...',        // a chave "anon / public"
   ambiente: 'produção',
@@ -89,7 +89,7 @@ com o banco. Nada mais muda.
 Sirva a pasta por http (o navegador bloqueia várias coisas em `file://`):
 
 ```bash
-cd agendapro && python3 -m http.server 8000
+cd pedihub && python3 -m http.server 8000
 ```
 
 Abra `http://localhost:8000/criar.html`, crie sua conta e siga. O salão, a

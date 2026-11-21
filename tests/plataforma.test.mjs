@@ -1,5 +1,5 @@
 /* ===========================================================================
-   AgendaPro — o painel da plataforma, pela porta da frente
+   PediHub — o painel da plataforma, pela porta da frente
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=.../node_modules/playwright node tests/plataforma.test.mjs
@@ -36,8 +36,8 @@ const nav = await chromium.launch({ executablePath: CHROMIUM });
    perguntar o que o painel BAIXARIA, sem depender do que a tela desenha —
    o que desce para o navegador é o que importa aqui, não o que aparece. */
 function novaAba(sessao){
-  const g = { 'agendapro.sessao': JSON.stringify(sessao) };
-  const j = { AGENDAPRO:{ url:BANCADA, chave:'chave-de-teste', ambiente:'bancada' },
+  const g = { 'pedihub.sessao': JSON.stringify(sessao) };
+  const j = { PEDIHUB:{ url:BANCADA, chave:'chave-de-teste', ambiente:'bancada' },
     localStorage:{ getItem:k=>(k in g?g[k]:null), setItem:(k,v)=>{g[k]=String(v)},
                    removeItem:k=>{delete g[k]} } };
   new Function('window','console','fetch','localStorage',
@@ -49,8 +49,8 @@ function novaAba(sessao){
 async function abrir(sessao){
   const ctx = await nav.newContext({ viewport:{ width:1280, height:900 } });
   await ctx.addInitScript(([base, s]) => {
-    window.AGENDAPRO = { url: base, chave: 'chave-de-teste', ambiente: 'bancada' };
-    if(s) localStorage.setItem('agendapro.sessao', JSON.stringify(s));
+    window.PEDIHUB = { url: base, chave: 'chave-de-teste', ambiente: 'bancada' };
+    if(s) localStorage.setItem('pedihub.sessao', JSON.stringify(s));
   }, [BANCADA, sessao]);
   const p = await ctx.newPage();
   p.erros = [];

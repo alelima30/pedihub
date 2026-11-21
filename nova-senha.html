@@ -10,14 +10,14 @@
      salao pode querer o agendamento dentro do proprio site. -->
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Nova senha — AgendaPro</title>
+<title>Nova senha — PediHub</title>
 <meta name="description" content="Escolha uma senha nova para entrar no painel." />
 <meta name="theme-color" content="#FFFFFF" />
 <meta name="robots" content="noindex" />
 <link rel="icon" type="image/png" href="icones/icone-192.png" />
 <style>
 /* ===========================================================================
-   AgendaPro — escolher uma senha nova
+   PediHub — escolher uma senha nova
    ---------------------------------------------------------------------------
    A pessoa chega aqui pelo link do e-mail, e o link traz uma SESSÃO no
    #fragmento da URL. Fragmento não vai para o servidor — fica só no
@@ -248,7 +248,7 @@ async function pedirOutro(){
   try{
     await Dados.pedirNovaSenha(email, VOLTA || undefined);
   }catch(e){
-    console.error('[AgendaPro] pedir outro link:', e);
+    console.error('[PediHub] pedir outro link:', e);
     const cod = String(e.codigo || ''), cru = String(e.message || '');
     if(cod.indexOf('rate_limit') >= 0 || e.status === 429
        || /after \d+ seconds|rate limit|security purposes/i.test(cru)){
@@ -314,7 +314,7 @@ async function salvar(){
     await Dados.trocarSenha({ token: entrada.token, refresh: entrada.refresh,
                               senha: s1 });
   }catch(e){
-    console.error('[AgendaPro] trocar senha:', e);
+    console.error('[PediHub] trocar senha:', e);
     bt.disabled = false; bt.textContent = 'Salvar e entrar';
     if(venceu(e)) return semLink('vencido');
     const cru = String(e.message || '');
@@ -332,6 +332,6 @@ async function salvar(){
   setTimeout(() => { location.href = VOLTA || 'app.html'; }, 900);
 }
 </script>
-<p class="rodape-legal">AgendaPro · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
+<p class="rodape-legal">PediHub · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
 </body>
 </html>
