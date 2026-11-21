@@ -9987,17 +9987,175 @@ function limparFotoProduto(){
 
 const acharProduto = i => (bd.produtos || []).find(p => p.id === i);
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPLEMENTOS E VARIAÇÕES (67_complementos.sql)
+
+   Cada item do cardápio tem GRUPOS de opções: "Tamanho" (escolhe 1),
+   "Sabores" (meio a meio: até 2, cobra o mais caro), "Adicionais" (até 5,
+   cada um soma). Na nuvem eles sobem pelo `salvar_opcoes_do_produto()` —
+   o banco confere tudo e é ele que calcula o preço no pedido. Na
+   demonstração ficam no próprio item (`grupos`, que o dados.js não sobe).
+
+   Os modelos prontos existem porque montar "Ponto da carne" do zero é o
+   tipo de trabalho que faz o dono desistir no terceiro item.
+   ═══════════════════════════════════════════════════════════════════════════ */
+let gruposEmEdicao = [];
+let gruposMexidos = false;
+const REGRAS_GRUPO = [
+  ['soma',  'Soma o preço de cada escolhida'],
+  ['maior', 'Cobra a mais cara (meio a meio)'],
+  ['media', 'Cobra a média (meio a meio)'],
+];
+const MODELOS_GRUPO = {
+  tamanho:   ['Tamanho', { nome:'Tamanho', min:1, max:1, regra:'soma', opcoes:[
+               {nome:'Pequena', preco:0}, {nome:'Média', preco:10}, {nome:'Grande', preco:20}] }],
+  sabores:   ['Sabores (meio a meio)', { nome:'Sabores', min:1, max:2, regra:'maior', opcoes:[
+               {nome:'Calabresa', preco:0}, {nome:'Mussarela', preco:0}, {nome:'Frango com catupiry', preco:5}] }],
+  borda:     ['Borda', { nome:'Borda', min:0, max:1, regra:'soma', opcoes:[
+               {nome:'Catupiry', preco:8}, {nome:'Cheddar', preco:8}] }],
+  adicionais:['Adicionais', { nome:'Adicionais', min:0, max:5, regra:'soma', opcoes:[
+               {nome:'Bacon', preco:5}, {nome:'Ovo', preco:3}, {nome:'Queijo extra', preco:4}] }],
+  ponto:     ['Ponto da carne', { nome:'Ponto da carne', min:1, max:1, regra:'soma', opcoes:[
+               {nome:'Mal passada', preco:0}, {nome:'Ao ponto', preco:0}, {nome:'Bem passada', preco:0}] }],
+  retirar:   ['Retirar ingrediente', { nome:'Retirar', min:0, max:5, regra:'soma', opcoes:[
+               {nome:'Sem cebola', preco:0}, {nome:'Sem tomate', preco:0}, {nome:'Sem maionese', preco:0}] }],
+};
+
+function blocoComplementos(){
+  return `<div class="campo" style="margin-top:14px">
+    <label>Complementos e variações</label>
+    <span style="font-size:12px;color:var(--txt2);display:block;margin-bottom:8px">
+      Tamanho, sabores, borda, adicionais, ponto da carne... O cliente escolhe
+      no link e o preço sai certo, calculado pelo sistema.</span>
+    <div id="pGrupos"><p class="secao-sub">Carregando…</p></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+      <button type="button" class="btn btn-peq" onclick="novoGrupo()">+ Grupo em branco</button>
+      ${Object.entries(MODELOS_GRUPO).map(([k, [rot]]) =>
+        `<button type="button" class="btn btn-peq" onclick="novoGrupo('${k}')">+ ${escapar(rot)}</button>`).join('')}
+    </div></div>`;
+}
+
+async function carregarGruposDoProduto(p){
+  gruposEmEdicao = []; gruposMexidos = false;
+  if(p && NA_NUVEM){
+    try{
+      const r = await Dados.chamar('opcoes_do_produto', { p_produto: p.id });
+      gruposEmEdicao = Array.isArray(r) ? r : [];
+    }catch(e){
+      const alvo = document.getElementById('pGrupos');
+      if(alvo) alvo.innerHTML = `<div class="aviso">Não consegui carregar os complementos: ${escapar(limparRecusa(e.message))}</div>`;
+      return;
+    }
+  }else if(p && Array.isArray(p.grupos)){
+    gruposEmEdicao = JSON.parse(JSON.stringify(p.grupos));
+  }
+  desenharGrupos();
+}
+
+function desenharGrupos(){
+  const alvo = document.getElementById('pGrupos');
+  if(!alvo) return;
+  if(!gruposEmEdicao.length){
+    alvo.innerHTML = '<p class="secao-sub" style="margin:0">Nenhum complemento. Item simples, preço único.</p>';
+    return;
+  }
+  alvo.innerHTML = gruposEmEdicao.map((g, i) => `
+    <div class="card grupo-op" style="padding:12px;margin-bottom:8px;box-shadow:none">
+      <div class="dupla">
+        <div class="campo" style="margin-bottom:6px"><label>Nome do grupo</label>
+          <input value="${escapar(g.nome || '')}" maxlength="60" placeholder="Ex.: Borda"
+                 oninput="mudarGrupo(${i},'nome',this.value)"></div>
+        <div class="campo" style="margin-bottom:6px"><label>Como entra no preço</label>
+          <select onchange="mudarGrupo(${i},'regra',this.value)">
+            ${REGRAS_GRUPO.map(([v, r]) => `<option value="${v}" ${g.regra === v ? 'selected' : ''}>${r}</option>`).join('')}
+          </select></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;margin-bottom:8px">
+        O cliente escolhe de
+        <input type="number" min="0" max="20" value="${Number(g.min || 0)}" style="width:64px"
+               oninput="mudarGrupo(${i},'min',this.value)"> até
+        <input type="number" min="1" max="20" value="${Number(g.max || 1)}" style="width:64px"
+               oninput="mudarGrupo(${i},'max',this.value)">
+        <span style="color:var(--txt2)">(de 0 = opcional; 1 até 1 = escolha obrigatória)</span>
+      </div>
+      ${(g.opcoes || []).map((o, j) => `
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+          <input value="${escapar(o.nome || '')}" maxlength="60" placeholder="Opção" style="flex:1;min-width:0"
+                 oninput="mudarOpcao(${i},${j},'nome',this.value)">
+          <span style="font-size:12px;color:var(--txt2)">+ R$</span>
+          <input type="number" min="0" step="0.01" value="${Number(o.preco || 0)}" style="width:86px"
+                 oninput="mudarOpcao(${i},${j},'preco',this.value)">
+          <label title="Desmarque quando acabar" style="font-size:12px;display:flex;gap:4px;align-items:center">
+            <input type="checkbox" ${o.ativo === false ? '' : 'checked'}
+                   onchange="mudarOpcao(${i},${j},'ativo',this.checked)">tem</label>
+          <button type="button" class="btn btn-peq" aria-label="Tirar esta opção"
+                  onclick="tirarOpcao(${i},${j})">✕</button>
+        </div>`).join('')}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="btn btn-peq" onclick="novaOpcao(${i})">+ Opção</button>
+        <button type="button" class="btn btn-peq" onclick="moverGrupo(${i},-1)" ${i ? '' : 'disabled'}>↑</button>
+        <button type="button" class="btn btn-peq" onclick="moverGrupo(${i},1)" ${i < gruposEmEdicao.length - 1 ? '' : 'disabled'}>↓</button>
+        <span style="flex:1"></span>
+        <button type="button" class="btn btn-peq" style="color:var(--erro)" onclick="tirarGrupo(${i})">Tirar o grupo</button>
+      </div>
+    </div>`).join('');
+}
+
+function novoGrupo(modelo){
+  const base = modelo && MODELOS_GRUPO[modelo] ? MODELOS_GRUPO[modelo][1]
+             : { nome:'', min:0, max:1, regra:'soma', opcoes:[{ nome:'', preco:0 }] };
+  gruposEmEdicao.push(JSON.parse(JSON.stringify(base)));
+  gruposMexidos = true; desenharGrupos();
+}
+function tirarGrupo(i){ gruposEmEdicao.splice(i, 1); gruposMexidos = true; desenharGrupos(); }
+function moverGrupo(i, d){
+  const j = i + d; if(j < 0 || j >= gruposEmEdicao.length) return;
+  [gruposEmEdicao[i], gruposEmEdicao[j]] = [gruposEmEdicao[j], gruposEmEdicao[i]];
+  gruposMexidos = true; desenharGrupos();
+}
+function novaOpcao(i){ (gruposEmEdicao[i].opcoes = gruposEmEdicao[i].opcoes || []).push({ nome:'', preco:0 }); gruposMexidos = true; desenharGrupos(); }
+function tirarOpcao(i, j){ gruposEmEdicao[i].opcoes.splice(j, 1); gruposMexidos = true; desenharGrupos(); }
+function mudarGrupo(i, campo, v){
+  gruposEmEdicao[i][campo] = (campo === 'min' || campo === 'max') ? parseInt(v, 10) || 0 : v;
+  gruposMexidos = true;
+}
+function mudarOpcao(i, j, campo, v){
+  gruposEmEdicao[i].opcoes[j][campo] = campo === 'preco' ? (parseFloat(v) || 0) : v;
+  gruposMexidos = true;
+}
+
+/* O que vai para o banco: sem opção em branco, e o erro dito aqui antes de
+   sair — o banco recusa do mesmo jeito, mas a mensagem daqui aponta o grupo. */
+function gruposParaGravar(){
+  const fora = [];
+  const lista = gruposEmEdicao.map(g => ({
+    id: g.id || undefined, nome: String(g.nome || '').trim(),
+    min: Math.max(0, parseInt(g.min, 10) || 0), max: Math.max(1, parseInt(g.max, 10) || 1),
+    regra: g.regra || 'soma',
+    opcoes: (g.opcoes || []).filter(o => String(o.nome || '').trim())
+      .map(o => ({ id: o.id || undefined, nome: String(o.nome).trim(),
+                   preco: Number(o.preco || 0).toFixed(2), ativo: o.ativo !== false })),
+  }));
+  lista.forEach(g => {
+    if(!g.nome) fora.push('Um grupo de complementos está sem nome.');
+    else if(!g.opcoes.length) fora.push(`O grupo "${g.nome}" está sem opções.`);
+    else if(g.min > g.max) fora.push(`No grupo "${g.nome}", o mínimo passou do máximo.`);
+    else if(g.min > g.opcoes.length) fora.push(`O grupo "${g.nome}" pede mais escolhas do que tem opções.`);
+  });
+  return { lista, erro: fora[0] || null };
+}
+
 function abrirProduto(pid){
   const p = pid ? acharProduto(pid) : null;
-  abrirModal(p ? 'Editar produto' : 'Novo produto', `
+  abrirModal(p ? 'Editar item do cardápio' : 'Novo item do cardápio', `
     <div class="foto-linha" style="margin-bottom:16px">
       <div class="foto-previa servico" id="previaProduto">
         ${p && p.foto ? `<img src="${escapar(p.foto)}" alt="">`
                       : `<span data-ico="presente"></span>`}
       </div>
       <div class="foto-txt">
-        <b>Foto do produto</b>
-        <p>É o que faz a cliente escolher. "Shampoo" não diz nada; o vidro na
+        <b>Foto do item</b>
+        <p>É o que faz o cliente pedir. "X-Bacon" não diz nada; o lanche na
            foto diz.</p>
         <div class="foto-acoes">
           <label class="btn btn-peq">Escolher
@@ -10009,8 +10167,8 @@ function abrirProduto(pid){
     </div>
     <input type="hidden" id="pFoto" value="${p && p.foto ? p.foto : ''}">
     <div class="campo"><label>Nome</label>
-      <input id="pNome" value="${escapar(p ? p.nome : '')}" placeholder="Shampoo sem sal 300ml"></div>
-    <div class="campo"><label>Marca</label>
+      <input id="pNome" value="${escapar(p ? p.nome : '')}" placeholder="X-Bacon, Pizza grande, Açaí 500ml"></div>
+    <div class="campo" style="display:none"><label>Marca</label>
       <input id="pMarca" value="${escapar(p ? (p.marca||'') : '')}" placeholder="opcional"></div>
     <!-- A categoria vira etiqueta aqui na lista e o filtro da loja do link.
          As que o salao ja usa aparecem como sugestao: "Tratamento de cabelo"
@@ -10019,36 +10177,36 @@ function abrirProduto(pid){
     <div class="campo"><label for="pCat">Categoria</label>
       <input id="pCat" list="pCatLista" maxlength="40" autocomplete="off"
              value="${escapar(p ? limparCategoria(p.categoria) : '')}"
-             placeholder="Ex.: Tratamento de cabelo">
+             placeholder="Ex.: Lanches, Pizzas, Bebidas">
       <datalist id="pCatLista">${categoriasDosProdutos()
         .map(c => `<option value="${escapar(c)}">`).join('')}</datalist>
-      <span style="font-size:12px;color:var(--txt2)">Opcional. Na loja do link,
-        a cliente toca na categoria para ver só os produtos dela.</span></div>
+      <span style="font-size:12px;color:var(--txt2)">Opcional. No cardápio do link,
+        o cliente toca na categoria para ver só os itens dela.</span></div>
     <div class="campo"><label>Descrição</label>
       <textarea id="pDesc" rows="2"
-        placeholder="Para cabelo com química. Não resseca.">${escapar(p ? (p.descricao||'') : '')}</textarea>
-      <span style="font-size:12px;color:var(--txt2)">Aparece na loja, embaixo
+        placeholder="Pão brioche, 180 g de carne, cheddar e bacon crocante.">${escapar(p ? (p.descricao||'') : '')}</textarea>
+      <span style="font-size:12px;color:var(--txt2)">Aparece no cardápio, embaixo
         do nome.</span></div>
     <div class="dupla">
-      <div class="campo"><label>Preço de venda</label>
+      <div class="campo"><label>Preço</label>
         <input type="number" id="pPreco" value="${p ? p.preco : 0}" min="0" step="0.01"></div>
       <div class="campo"><label>Custo</label>
         <input type="number" id="pCusto" value="${p ? p.custo : 0}" min="0" step="0.01">
-        <span style="font-size:12px;color:var(--txt2)">Só seu. Nunca aparece
-          para a cliente.</span></div>
+        <span style="font-size:12px;color:var(--txt2)">Opcional e só seu. Nunca
+          aparece para o cliente.</span></div>
     </div>
     <div class="dupla">
       <div class="campo"><label>Estoque</label>
         <input type="number" id="pEstoque" value="${p ? p.estoque : 0}" step="1">
-        <span style="font-size:12px;color:var(--txt2)">Sai sozinho quando a
-          comanda é fechada, e volta se ela for reaberta.</span></div>
-      <div class="campo"><label>Comissão (%)</label>
+        <span style="font-size:12px;color:var(--txt2)">Opcional. Baixa sozinho a
+          cada venda entregue.</span></div>
+      <div class="campo" style="display:none"><label>Comissão (%)</label>
         <input type="number" id="pCom" value="${p && p.comissaoPct != null ? p.comissaoPct : 0}"
                min="0" max="100">
         <span style="font-size:12px;color:var(--txt2)">Em branco vale zero.
           Produto não herda a comissão do profissional — ela é do produto.</span></div>
     </div>
-    <div class="campo"><label>Comissão fixa (R$)</label>
+    <div class="campo" style="display:none"><label>Comissão fixa (R$)</label>
       <input type="number" id="pComFixa" step="0.01" min="0"
              value="${p && p.comissaoFixa != null ? p.comissaoFixa : ''}"
              placeholder="em branco = não usa valor fixo">
@@ -10056,8 +10214,8 @@ function abrirProduto(pid){
         soma com a porcentagem — R$ 5 por vidro mais 10% é arranjo comum.</span></div>
     <label class="serv-op" style="border:1px solid var(--borda);border-radius:9px">
       <input type="checkbox" id="pAtivo" ${!p || p.ativo ? 'checked' : ''}>
-      <span class="i"><span class="n">Ativo</span>
-        <span class="d">Aparece na comanda, na hora de fechar a conta</span></span></label>
+      <span class="i"><span class="n">Disponível</span>
+        <span class="d">Desmarque quando acabar (esgotado): some do cardápio na hora.</span></span></label>
     <label class="serv-op" style="border:1px solid var(--borda);border-radius:9px;margin-top:8px">
       <input type="checkbox" id="pOnline" ${p ? (p.vendaOnline ? 'checked' : '') : (restaurantePainel() ? 'checked' : '')}>
       <span class="i"><span class="n">${restaurantePainel() ? 'Aparece no cardápio do link' : 'Vender na página do restaurante'}</span>
@@ -10076,16 +10234,18 @@ function abrirProduto(pid){
     <label class="serv-op" style="border:1px solid var(--borda);border-radius:9px;margin-top:8px">
       <input type="checkbox" id="pPrecoVisivel"
              ${!p || p.precoVisivel !== false ? 'checked' : ''}>
-      <span class="i"><span class="n">Mostrar o preço na loja</span>
-        <span class="d">Desligado, a cliente vê o produto sem o valor e
-          pergunta no WhatsApp. O preço nem sai do banco.</span></span></label>
+      <span class="i"><span class="n">Mostrar o preço no cardápio</span>
+        <span class="d">Desligado, o cliente vê o item sem o valor e
+          pergunta no WhatsApp — e não consegue pedir pelo link.</span></span></label>
 
-    ${paresDoProduto(p)}
+    ${blocoComplementos()}
+    <div style="display:none">${paresDoProduto(p)}</div>
     ${historicoDoEstoque(p)}
   `, [
     ['Cancelar','fecharModal()',''],
     ['Salvar', `salvarProduto(${p ? `'${p.id}'` : 'null'})`, 'btn-p'],
   ]);
+  carregarGruposDoProduto(p);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -10245,7 +10405,9 @@ async function verHistoricoEstoque(produtoId){
 
 async function salvarProduto(pid){
   const nome = (document.getElementById('pNome').value || '').trim();
-  if(nome.length < 2){ alert('Informe o nome do produto.'); return; }
+  if(nome.length < 2){ alert('Informe o nome do item.'); return; }
+  const grupos = gruposParaGravar();
+  if(grupos.erro){ alert(grupos.erro); return; }
 
   const alvoId = pid || id();
   let foto = document.getElementById('pFoto').value || null;
@@ -10307,7 +10469,25 @@ async function salvarProduto(pid){
   // As comissões por pessoa ANTES do salvar, para tudo subir numa gravação só.
   guardarParesDoProduto(alvoId);
 
-  salvar(); fecharModal(); pintar();
+  /* Os complementos: na nuvem, depois do item existir no banco (o grupo
+     aponta para ele); na demonstração, guardados no próprio item. */
+  if(!NA_NUVEM){
+    acharProduto(alvoId).grupos = grupos.lista;
+    salvar(); fecharModal(); pintar();
+    return;
+  }
+  const gravacao = salvar();
+  if(gruposMexidos){
+    try{
+      await gravacao;
+      await Dados.chamar('salvar_opcoes_do_produto', { p_produto: alvoId, p_grupos: grupos.lista });
+      acharProduto(alvoId).grupos = grupos.lista;
+    }catch(e){
+      alert('O item foi salvo, mas os complementos NÃO:\n\n' + limparRecusa(e.message)
+          + '\n\nAbra o item de novo e confira.');
+    }
+  }
+  fecharModal(); pintar();
 }
 
 function abrirProf(pid){

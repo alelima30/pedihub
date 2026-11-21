@@ -190,6 +190,8 @@ const SO_DA_TELA = {
   // a gravação inteira cai junto. Quem calcula é o banco, e é assim que a
   // conta da comanda não depende da versão da tela.
   comanda_itens: ['total','comissaoValor','comissaoPct','comissaoFixa'],
+  // Os complementos (67) sobem pelo salvar_opcoes_do_produto(), nunca na linha do produto.
+  produtos:     ['grupos'],
 };
 
 /* ── CAMPO VAZIO NÃO É TEXTO VAZIO ────────────────────────────────────────
