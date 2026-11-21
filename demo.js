@@ -270,20 +270,19 @@ function semear(){
     // do Individual: sem ele, um profissional com tudo liberado é exatamente
     // o que o plano de R$ 57 ofereceria, e ninguém assinaria.
     planos: [
+      // PediHub (66_planos_pedihub.sql): Grátis, Teste, Essencial e Profissional.
       {codigo:'gratuito',   nome:'Grátis',       maxProfissionais:1,  precoMes:0,
-       recursos:{agendamentos_mes:40, lembrete_whatsapp:false, agenda_online:true}},
-      {codigo:'trial',      nome:'Teste grátis', maxProfissionais:1,  precoMes:0,
-       recursos:{lembrete_whatsapp:true, agenda_online:true}},
-      {codigo:'individual', nome:'Individual',   maxProfissionais:1,  precoMes:57,
-       recursos:{lembrete_whatsapp:true, agenda_online:true}},
-      {codigo:'duo',        nome:'Duo',          maxProfissionais:2,  precoMes:87,
-       recursos:{lembrete_whatsapp:true, agenda_online:true}},
-      {codigo:'time',       nome:'Time',         maxProfissionais:3,  precoMes:127,
-       recursos:{lembrete_whatsapp:true, agenda_online:true}},
-      {codigo:'equipe',     nome:'Equipe',       maxProfissionais:5,  precoMes:187,
-       recursos:{lembrete_whatsapp:true, agenda_online:true}},
-      {codigo:'salao',      nome:'Restaurante',        maxProfissionais:20, precoMes:297,
-       recursos:{lembrete_whatsapp:true, agenda_online:true}},
+       recursos:{loja:true, pedidos_mes:50, max_produtos:40, caixa:false, relatorios:false,
+                 cupons:false, aparencia:false, crediario:false, mensagens_mes:0}},
+      {codigo:'trial',      nome:'Teste grátis', maxProfissionais:2,  precoMes:0,
+       recursos:{loja:true, caixa:true, relatorios:true, cupons:true, aparencia:true,
+                 crediario:true, mensagens_mes:100}},
+      {codigo:'individual', nome:'Essencial',    maxProfissionais:1,  precoMes:69.9,
+       recursos:{loja:true, caixa:true, relatorios:true, cupons:true, aparencia:true,
+                 crediario:false, mensagens_mes:0}},
+      {codigo:'time',       nome:'Profissional', maxProfissionais:3,  precoMes:119.9,
+       recursos:{loja:true, caixa:true, relatorios:true, cupons:true, aparencia:true,
+                 crediario:true, mensagens_mes:1000}},
     ],
     // Três situações de propósito, porque são as três telas que o dono vê:
     // o Studio Bella assina o Time e está no limite; a barbearia está com o

@@ -963,7 +963,7 @@ span.ajuda{display:block;margin-top:5px}
     <div id="ofertaPlano">
       <h2 style="margin:24px 0 6px;font-size:16px">Trocar de plano</h2>
       <p style="color:var(--txt2);font-size:14px;margin-bottom:14px">
-        Quantos profissionais você precisa ter na agenda ao mesmo tempo?</p>
+        Sem comissão por pedido e sem limite de pedidos nos planos pagos.</p>
       <div id="reguaPlanos"></div>
       <div id="cartaoPlano"></div>
     </div>
@@ -17105,22 +17105,20 @@ function oQueOPlanoInclui(){
   const p = planoEfetivo();
   if(!p || !p.recursos) return '';
   const msgs = Number(p.recursos.mensagens_mes || 0);
+  const pedidosMes = Number(p.recursos.pedidos_mes || 0);
+  /* PediHub: a lista fala do restaurante. A ordem importa: o `splice` da
+     comanda logo abaixo entra na posição 3. */
   const itens = [
-    ['Agenda e link de agendamento', true],
-    ['Clientes', true],
-    [msgs > 0 ? `Confirmação e lembrete pelo WhatsApp (${msgs} mensagens no mês)`
-              : 'Confirmação e lembrete automáticos pelo WhatsApp', msgs > 0],
-    ['Relatórios', moduloLiberado('relatorios')],
-    ['Produtos no link', moduloLiberado('loja')],
-    ['Pacotes', moduloLiberado('pacotes')],
+    ['Cardápio no link e QR Code', true],
+    [pedidosMes > 0 ? `Pedidos pelo link (até ${pedidosMes} por mês)` : 'Pedidos pelo link, sem limite', true],
+    ['Entrega por bairro, retirada e acompanhamento do pedido', true],
+    [msgs > 0 ? `Avisos automáticos ao cliente pelo WhatsApp (${msgs.toLocaleString('pt-BR')} mensagens no mês)`
+              : 'Avisos automáticos ao cliente pelo WhatsApp', msgs > 0],
+    ['Relatórios de vendas', moduloLiberado('relatorios')],
     ['Cupons de desconto', moduloLiberado('cupons')],
     ['Aparência do link (cores, fotos e modelos)', moduloLiberado('aparencia')],
-    /* Os três sem trava de plano no banco (09_cliente 1e, 41_ficha_equipe):
-       todo plano tem. No fim da lista, para o `splice` da comanda abaixo
-       continuar caindo no mesmo lugar. */
-    ['Sinal por Pix para garantir o horário', true],
-    ['Procedimentos com passo a passo (só a equipe vê)', true],
-    ['Lembretes da equipe sobre cada cliente', true],
+    ['Crediário (venda no fiado)', moduloLiberado('crediario')],
+    ['Sem comissão por pedido', true],
   ];
   if(COMANDA_NA_PLATAFORMA) itens.splice(3, 0, ['Comanda e caixa', moduloLiberado('caixa')]);
   return `<div class="plano-inclui" id="planoInclui">
@@ -17352,8 +17350,7 @@ function pintarPlano(){
         </div>` : ''}
       </div>
       ${emDia ? avisoDeVencimento(a, p, faltam) : ''}
-      ${medidor('Profissionais na agenda', usados, limite)}
-      ${tetoMes != null ? medidor('Horários em ' + mesPorExtenso(diaAtual), noMes, tetoMes) : ''}
+      <!-- PediHub: sem medidor de profissionais e de horarios (eram da agenda). -->
       <!-- Os tres medidores novos vem do BANCO, pelo uso_do_plano(). Contar
            cliente no navegador daria o numero errado no dia em que o painel
            parar de baixar a clientela inteira — e daria um numero DIFERENTE
@@ -17362,12 +17359,12 @@ function pintarPlano(){
       <div id="medidoresDoPlano"></div>
       ${oQueOPlanoInclui()}
       <div id="adicionaisPlano"></div>
-      ${mesCheio ? `<div class="aviso atencao" style="margin-top:13px;margin-bottom:0">
+      ${false && mesCheio ? `<div class="aviso atencao" style="margin-top:13px;margin-bottom:0">
         <b>Você usou os ${tetoMes} horários deste mês.</b><br>
         A agenda continua aberta para consultar e atender; para marcar mais,
         ${COMO_CRESCER}. Em ${mesPorExtenso(somarDias(fimDoMes(diaAtual), 1))} o
         contador zera.</div>` : ''}
-      ${fora.length ? `<div class="aviso atencao" style="margin-top:13px;margin-bottom:0">
+      ${false && fora.length ? `<div class="aviso atencao" style="margin-top:13px;margin-bottom:0">
         <b>${escapar(fora.map(x => x.nome).join(', '))} ${fora.length > 1 ? 'estão' : 'está'}
         fora do seu plano.</b><br>
         ${fora.length > 1 ? 'Elas continuam' : 'A agenda dele(a) continua'} no
@@ -17375,7 +17372,7 @@ function pintarPlano(){
         ${fora.length > 1 ? 'não recebem' : 'não recebe'} agendamento novo
         enquanto o plano cobrir ${limite}. Desative outra pessoa para abrir a
         vaga, ou ${COMO_CRESCER}.</div>` : ''}
-      ${cheio && !fora.length && !mesCheio ? (limite <= 1 || (p && p.codigo === 'trial')
+      ${false && cheio && !fora.length && !mesCheio ? (limite <= 1 || (p && p.codigo === 'trial')
         // Plano de 1 profissional com a dona na agenda não é "limite
         // estourado": é o tamanho do plano. Diz onde cabe mais gente. O
         // teste grátis (2 profissionais, 61_teste_30_dias) também: quem está
@@ -17388,10 +17385,10 @@ function pintarPlano(){
         Desativar não apaga o histórico dele.</div>`) : ''}
       ${dias !== null && dias <= 2 && !caiu ? `<div class="aviso atencao" style="margin-top:13px;margin-bottom:0">
         <b>O teste acaba ${dias === 0 ? 'hoje' : 'em ' + dias + ' dia(s)'}.</b><br>
-        A agenda não fecha: você passa para o plano Grátis, com 1 profissional,
-        ${(planoDe('gratuito')||{recursos:{}}).recursos.agendamentos_mes} horários
-        por mês e sem caixa, relatórios, produtos, pacotes, cupons e mensagens
-        automáticas. O que você cadastrou fica guardado.</div>` : ''}
+        O cardápio não sai do ar: você passa para o plano Grátis, com até
+        ${(planoDe('gratuito')||{recursos:{}}).recursos.pedidos_mes || 50} pedidos pelo link
+        por mês e sem caixa, relatórios, cupons e avisos automáticos. O que você
+        cadastrou fica guardado.</div>` : ''}
     </div>`;
 
   pintarAdicionais();
@@ -17421,39 +17418,27 @@ function pintarPlano(){
     return;
   }
 
-  // A régua de profissionais, que é a ideia boa da concorrência: em vez de
-  // uma tabela comparativa, o dono responde "quantos somos?" e o plano
-  // aparece. Ele se classifica sozinho.
+  /* PediHub: dois planos pagos, escolhidos pelo nome — não há "quantos
+     profissionais" no restaurante. Abre no plano atual (se for pago) ou no
+     Profissional, e o outro fica a um toque. */
   const planos = (bd.planos||[])
-                   .filter(x => x.codigo !== 'trial' && x.codigo !== 'gratuito')
-                   .sort((a,b) => a.maxProfissionais - b.maxProfissionais);
-  if(planoEscolhido === null) planoEscolhido = Math.max(usados, 1);
-
-  /* Um botão por TAMANHO de plano, lido dos planos: 1, 2, 3, "4 a 6",
-     "7 a 12". Era 1…6 fixo, com o "6+" valendo 6 — o 5 e o 6+ caíam os dois
-     no Equipe (até 6), e o Restaurante (até 12) nunca aparecia. Aceso fica o
-     menor tamanho que comporta quem o dono escolheu (ou já tem na equipe). */
-  const passos = [...new Set(planos.map(x => x.maxProfissionais))];
-  const aceso = passos.find(n => n >= planoEscolhido) || passos[passos.length-1];
+                   .filter(x => x.ativo !== false && x.codigo !== 'trial' && x.codigo !== 'gratuito')
+                   .sort((a,b) => Number(a.precoMes || 0) - Number(b.precoMes || 0));
+  if(planoEscolhido === null || !planos.some(x => x.codigo === planoEscolhido)){
+    planoEscolhido = (p && planos.some(x => x.codigo === p.codigo)) ? p.codigo
+                   : (planos.find(x => x.codigo === 'time') || planos[planos.length-1] || {}).codigo;
+  }
   document.getElementById('reguaPlanos').innerHTML = `
     <div class="regua">
-      ${passos.map((n, i) => {
-        const de = i ? passos[i-1] + 1 : 1;
-        return `<button class="${n===aceso?'on':''}"
-          onclick="planoEscolhido=${n};pintarPlano()">
-          ${de === n ? n : de + ' a ' + n}</button>`;
-      }).join('')}
+      ${planos.map(x => `<button class="${x.codigo===planoEscolhido?'on':''}"
+          onclick="planoEscolhido='${x.codigo}';pintarPlano()">${escapar(x.nome)}</button>`).join('')}
     </div>`;
-
-  /* O recomendado é o plano COM mensagens do tamanho escolhido; o Básico
-     (mesmo tamanho, sem mensagens automáticas) aparece logo abaixo como a
-     opção mais em conta — o dono escolhe com os dois à vista. */
-  const comMsg = x => Number((x.recursos || {}).mensagens_mes || 0) > 0;
-  const recomendado = planos.find(x => x.maxProfissionais >= planoEscolhido && comMsg(x))
-                   || planos.find(x => x.maxProfissionais >= planoEscolhido)
-                   || planos[planos.length-1];
-  const alternativa = recomendado && planos.find(x => x.codigo !== recomendado.codigo
-                   && x.maxProfissionais === recomendado.maxProfissionais && !comMsg(x));
+  const recomendado = planos.find(x => x.codigo === planoEscolhido) || planos[planos.length-1];
+  const alternativa = null;
+  const RESUMO_DO_PLANO = {
+    individual: 'Pedidos ilimitados, entrega por bairro, caixa, relatórios e cupons.',
+    time: 'Tudo do Essencial, mais avisos automáticos no WhatsApp (1.000 por mês) e crediário.',
+  };
   /* O recomendado É o plano que ele já paga e está em dia: o cartão vira
      "seu plano atual", diz até quando, e só oferece renovar quando faltar
      pouco. Escolhendo outro tamanho na régua, volta a ser oferta normal. */
@@ -17467,7 +17452,7 @@ function pintarPlano(){
       <div style="font-size:26px;font-weight:800;margin:6px 0">
         ${real(precoDoPlano(recomendado.codigo))}<span style="font-size:14px;font-weight:600;
         color:var(--txt2)"> /mês</span></div>
-      <p>Até ${recomendado.maxProfissionais} profissional(is) na agenda.</p>
+      <p>${escapar(RESUMO_DO_PLANO[recomendado.codigo] || '')}</p>
       <!-- OS DOIS JEITOS DE PAGAR, LADO A LADO: Pix (um mes por vez) e
            cartao (renovacao automatica). O Pix tinha saido da tela quando a
            venda era tratada fora dela; voltou a pedido, porque e o caminho

@@ -20,9 +20,9 @@ update public.planos p
           ('gratuito',     0.00),
           ('trial',        0.00),
           ('basico',      49.90),
-          ('individual',  97.00),
+          ('individual',  69.90),
           ('duo',        157.00),
-          ('time',       197.00),
+          ('time',       119.90),
           ('equipe',     297.00),
           ('salao',      497.00)
        ) as v(codigo, preco)

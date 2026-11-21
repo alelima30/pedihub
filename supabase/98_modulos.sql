@@ -10900,6 +10900,53 @@ create trigger pedido_entregue_vira_venda
   when (new.status = 'entregue' and old.status is distinct from 'entregue')
   execute function public.pedido_entregue_vira_venda();
 
+update public.planos set
+  nome = 'Grátis', preco_mes = 0, ordem = 0, ativo = true,
+  recursos = recursos || jsonb_build_object(
+    'loja', true, 'max_produtos', 40, 'pedidos_mes', 50, 'max_clientes', 300,
+    'caixa', false, 'relatorios', false, 'cupons', false, 'pacotes', false,
+    'aparencia', false, 'crediario', false,
+    'mensagens_mes', 0, 'lembrete_whatsapp', false)
+ where codigo = 'gratuito';
+update public.planos set
+  nome = 'Essencial', preco_mes = 69.90, ordem = 2, ativo = true,
+  recursos = (recursos - 'pedidos_mes') || jsonb_build_object(
+    'loja', true, 'max_produtos', 300, 'max_clientes', 5000,
+    'caixa', true, 'relatorios', true, 'cupons', true, 'pacotes', false,
+    'aparencia', true, 'crediario', false,
+    'mensagens_mes', 0, 'lembrete_whatsapp', false)
+ where codigo = 'individual';
+update public.planos set
+  nome = 'Profissional', preco_mes = 119.90, ordem = 3, ativo = true,
+  recursos = (recursos - 'pedidos_mes') || jsonb_build_object(
+    'loja', true, 'max_produtos', 1000, 'max_clientes', 20000,
+    'caixa', true, 'relatorios', true, 'cupons', true, 'pacotes', false,
+    'aparencia', true, 'crediario', true,
+    'mensagens_mes', 1000, 'lembrete_whatsapp', true)
+ where codigo = 'time';
+update public.planos set ativo = false
+ where codigo in ('basico', 'duo', 'equipe', 'salao');
+create or replace function public.pedidos_limite_do_plano()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare v_teto int; v_feitos int; v_inicio timestamptz; v_fuso text;
+begin
+  v_teto := public.recurso_num(new.salao_id, 'pedidos_mes');
+  if v_teto is null then return new; end if;
+  select coalesce(fuso, 'America/Sao_Paulo') into v_fuso from public.saloes where id = new.salao_id;
+  v_inicio := date_trunc('month', now() at time zone v_fuso) at time zone v_fuso;
+  select count(*) into v_feitos from public.pedidos
+   where salao_id = new.salao_id and criado_em >= v_inicio;
+  if v_feitos >= v_teto then
+    raise exception 'Este restaurante chegou ao limite de pedidos pelo link neste mês. Faça o pedido pelo WhatsApp do restaurante.'
+      using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+drop trigger if exists pedidos_limite_do_plano on public.pedidos;
+create trigger pedidos_limite_do_plano
+  before insert on public.pedidos
+  for each row execute function public.pedidos_limite_do_plano();
+
 alter table public.agendamentos
   add column if not exists gerenciar_token uuid not null default gen_random_uuid();
 alter table public.lista_espera

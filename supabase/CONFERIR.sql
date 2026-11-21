@@ -680,14 +680,14 @@ with conferencia(ordem, item, veredito, detalhe) as (
                || 'o restaurante não está instalado'
            else '' end
   union all
-  /* A franquia nova (teste 100, Essencial 500…), a reserva da cliente no
+  /* A franquia nova (teste 100; no PediHub o Essencial é 0 e o Profissional 1.000), a reserva da cliente no
      worker, e o prazo: mensagem de horário que já começou não sai. */
   select 30, 'franquia de mensagens e reserva da cliente',
          case
            when (select (recursos->>'mensagens_mes')::int from public.planos
                   where codigo = 'trial') is distinct from 100
              or (select (recursos->>'mensagens_mes')::int from public.planos
-                  where codigo = 'individual') is distinct from 500
+                  where codigo = 'individual') is distinct from 0   -- PediHub: o Essencial não tem mensagem automática
              or to_regprocedure('public.pode_enviar_tipo(uuid,text)') is null
              or pg_get_functiondef(to_regprocedure('public.notificacao_proxima(integer)'))
                   not like '%pode_enviar_tipo%'
@@ -701,7 +701,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
            when (select (recursos->>'mensagens_mes')::int from public.planos
                   where codigo = 'trial') is distinct from 100
              or (select (recursos->>'mensagens_mes')::int from public.planos
-                  where codigo = 'individual') is distinct from 500
+                  where codigo = 'individual') is distinct from 0   -- PediHub: o Essencial não tem mensagem automática
              or to_regprocedure('public.pode_enviar_tipo(uuid,text)') is null
              or pg_get_functiondef(to_regprocedure('public.notificacao_proxima(integer)'))
                   not like '%pode_enviar_tipo%'
@@ -1624,6 +1624,25 @@ with conferencia(ordem, item, veredito, detalhe) as (
                                  and tgrelid = 'public.pedidos'::regclass)
                 or has_function_privilege('authenticated', 'public.pedido_vira_venda(uuid)', 'execute')
               then 'cole o 98_modulos.sql (64_so_restaurante e 65_pedido_vira_venda)' else '' end
+  union all
+  /* PediHub (66): os planos do restaurante e o teto de 50 pedidos do Grátis. */
+  select 83, 'Planos do PediHub (Grátis, Essencial e Profissional)',
+         case when not exists (select 1 from public.planos where codigo = 'individual'
+                                 and nome = 'Essencial' and ativo)
+                or not exists (select 1 from public.planos where codigo = 'time'
+                                 and nome = 'Profissional' and ativo)
+                or exists (select 1 from public.planos where codigo in ('basico','duo','equipe','salao') and ativo)
+                or not exists (select 1 from pg_trigger where tgname = 'pedidos_limite_do_plano'
+                                 and tgrelid = 'public.pedidos'::regclass)
+              then 'FALTA' else 'certo' end,
+         case when not exists (select 1 from public.planos where codigo = 'individual'
+                                 and nome = 'Essencial' and ativo)
+                or not exists (select 1 from public.planos where codigo = 'time'
+                                 and nome = 'Profissional' and ativo)
+                or exists (select 1 from public.planos where codigo in ('basico','duo','equipe','salao') and ativo)
+                or not exists (select 1 from pg_trigger where tgname = 'pedidos_limite_do_plano'
+                                 and tgrelid = 'public.pedidos'::regclass)
+              then 'cole o 98_modulos.sql (66_planos_pedihub)' else '' end
   union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
