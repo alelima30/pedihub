@@ -979,12 +979,12 @@ span.ajuda{display:block;margin-top:5px}
     <div class="publico">
       <div class="pub-topo">
         <h3 id="pubNome">—</h3>
-        <p id="pubEnd">Agende seu horário</p>
+        <p id="pubEnd">Faça seu pedido</p>
       </div>
       <div class="pub-corpo">
         <div class="aviso info">
           <b>O link deste restaurante</b> — é o que você manda no WhatsApp, cola na bio
-          do Instagram ou imprime como QR no espelho.
+          do Instagram ou imprime como QR na mesa e no balcão.
           <div style="display:flex;gap:6px;margin-top:9px;flex-wrap:wrap">
             <input id="linkPublico" readonly onclick="this.select()"
                    style="flex:1;min-width:200px;padding:8px 10px;border:1px solid var(--borda);
@@ -1001,8 +1001,8 @@ span.ajuda{display:block;margin-top:5px}
             <div class="qr-caixa" id="qrDoLink"></div>
             <div class="qr-txt">
               <b>Ou aponte a câmera</b>
-              <span>Imprima e cole no espelho, no balcão ou na porta. Quem
-                apontar o telefone cai direto na sua agenda.</span>
+              <span>Imprima e cole na mesa, no balcão, na porta ou na embalagem.
+                Quem apontar o telefone cai direto no seu cardápio.</span>
               <button class="btn btn-peq" onclick="baixarQr()"
                       style="margin-top:8px">Baixar para imprimir</button>
             </div>
@@ -1015,10 +1015,13 @@ span.ajuda{display:block;margin-top:5px}
              no sistema. A garantia continua a mesma; o que muda é quem
              consegue ler a frase. -->
         <div class="aviso neutro">
-          Abaixo, uma prévia do que a cliente enxerga: os horários
-          <b>livres</b>, e nada além disso. Nome, telefone e histórico de quem
-          já marcou ficam só aqui dentro, com você.
+          Toque em <b>Abrir o app do cliente</b> para ver o seu cardápio do
+          jeito que o cliente vê. Nome, telefone e histórico de quem já pediu
+          ficam só aqui dentro, com você.
         </div>
+        <!-- PediHub: a previa do agendamento (servico, profissional, dia e
+             horario livre) nao existe no restaurante. -->
+        <div style="display:none">
         <div class="campo">
           <div class="passo">1 · SERVIÇO</div>
           <select id="pubServico" onchange="pintarPublico()"></select>
@@ -1034,6 +1037,7 @@ span.ajuda{display:block;margin-top:5px}
         <div class="passo">4 · HORÁRIO LIVRE</div>
         <div class="horarios" id="pubHorarios"></div>
         <p class="nota" id="pubNota"></p>
+        </div>
       </div>
     </div>
   </section>
@@ -12933,7 +12937,7 @@ const CORES_SOLTAS = [
      assim. Ela só aparece no lugar do endereço, quando o dono não preencheu
      um; por isso a ajuda diz quando ela existe, senão o dono escolhe a cor e
      procura a frase na própria página sem achar. */
-  ['subtitulo',  'Agende seu horário', 'A frase embaixo do nome. Só aparece quando o endereço não está preenchido.'],
+  ['subtitulo',  'Faça seu pedido', 'A frase embaixo do nome. Só aparece quando o endereço não está preenchido.'],
   ['horario',    'Horário de hoje', 'O "Até amanhã às 00:00" ao lado do ABERTO.'],
   ['bemVindo',   'Bem-vindo!',      'O título do quadro de boas-vindas.'],
   ['convite',    'Frase do Bem-vindo', 'A frase "Escolha o serviço..." embaixo do Bem-vindo.'],
