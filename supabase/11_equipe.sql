@@ -3,7 +3,7 @@
 --
 -- O banco já sabia lidar com `recepcao` e `profissional`: as policies estão
 -- escritas desde o 02_rls.sql, e a policy `vinc_gerir` até deixa o dono criar
--- vínculo no próprio salão. O que faltava era o CAMINHO.
+-- vínculo no próprio restaurante. O que faltava era o CAMINHO.
 --
 -- ── POR QUE UM CONVITE, E NÃO UM CAMPO DE E-MAIL ───────────────────────────
 -- Para criar o vínculo é preciso o `perfil_id` da pessoa. O dono não tem como
@@ -17,7 +17,7 @@
 --
 -- ── O LINK VAI PELO WHATSAPP, NÃO POR E-MAIL ───────────────────────────────
 -- Não há servidor de e-mail neste projeto, e não vale inventar um para isto:
--- o dono já manda o link do salão pelo WhatsApp o dia inteiro. O convite é
+-- o dono já manda o link do restaurante pelo WhatsApp o dia inteiro. O convite é
 -- mais um link, no mesmo canal, com o mesmo gesto.
 --
 -- Isso tem uma consequência de segurança que o desenho leva em conta: um link
@@ -33,7 +33,7 @@ create table if not exists public.convites_equipe (
   salao_id   uuid not null references public.saloes(id) on delete cascade,
 
   -- O papel que a pessoa vai ter. `cliente` não entra: para ser cliente
-  -- basta abrir o link do salão, e `dono` não se convida — transferir a casa
+  -- basta abrir o link do restaurante, e `dono` não se convida — transferir a casa
   -- é outra operação, com outras perguntas.
   papel      text not null check (papel in ('admin','recepcao','profissional')),
 
@@ -76,7 +76,7 @@ create table if not exists public.convites_equipe (
    O estrago aparecia longe daqui. A função de quatro argumentos era criada
    sem reclamar — corpo plpgsql não é conferido contra o schema na hora do
    `create` — o PostgREST passava a enxergá-la, o painel parava de acusar
-   "Could not find the function", e só no clique do dono, no salão de verdade,
+   "Could not find the function", e só no clique do dono, no restaurante de verdade,
    é que estourava `column "profissional_id" does not exist`. Instalação
    "bem-sucedida", convite quebrado.
 
@@ -98,7 +98,7 @@ create policy conv_gerir on public.convites_equipe for all to authenticated
   using ( public.e_gestor(salao_id) ) with check ( public.e_gestor(salao_id) );
 
 -- `anon` não lê esta tabela nem por acidente: quem tiver acesso a ela tem
--- todos os tokens do sistema, e cada token é uma cadeira dentro de um salão.
+-- todos os tokens do sistema, e cada token é uma cadeira dentro de um restaurante.
 revoke all on public.convites_equipe from anon;
 grant select, insert, update, delete on public.convites_equipe to authenticated;
 
@@ -121,7 +121,7 @@ declare
   pr public.profissionais%rowtype;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Só quem administra o salão pode convidar.'
+    raise exception 'Só quem administra o restaurante pode convidar.'
       using errcode = 'insufficient_privilege';
   end if;
   if p_papel not in ('admin','recepcao','profissional') then
@@ -134,9 +134,9 @@ begin
         using errcode = 'check_violation';
     end if;
     select * into pr from public.profissionais where id = p_profissional;
-    -- Ficha de OUTRO salão seria dar acesso à agenda alheia.
+    -- Ficha de OUTRO restaurante seria dar acesso à agenda alheia.
     if pr.id is null or pr.salao_id <> p_salao then
-      raise exception 'Esta agenda não é deste salão.' using errcode = 'check_violation';
+      raise exception 'Esta agenda não é deste restaurante.' using errcode = 'check_violation';
     end if;
     -- E ficha que já tem dono não se entrega duas vezes: seria roubar a
     -- agenda de quem já entra com ela.
@@ -162,8 +162,8 @@ end $$;
 -- 3) O QUE A PESSOA CONVIDADA VÊ ANTES DE ENTRAR
 --
 -- Chamável por quem NÃO fez login: é a página do convite, e ela precisa dizer
--- de que salão se trata antes de pedir a conta. Devolve o mínimo — nome do
--- salão e papel — e nada mais. Nem quem convidou, nem quem já é da equipe,
+-- de que restaurante se trata antes de pedir a conta. Devolve o mínimo — nome do
+-- restaurante e papel — e nada mais. Nem quem convidou, nem quem já é da equipe,
 -- nem o id de coisa nenhuma.
 --
 -- Token inválido e token vencido dão a MESMA resposta genérica de propósito:
@@ -204,7 +204,7 @@ end $$;
 --
 -- Quem aceita é sempre `auth.uid()`. Não há parâmetro de "para quem" — se
 -- houvesse, um convite vazado viraria a chance de colocar OUTRA pessoa
--- dentro do salão.
+-- dentro do restaurante.
 -- ---------------------------------------------------------------------------
 create or replace function public.aceitar_convite(p_token uuid)
 returns jsonb
@@ -228,7 +228,7 @@ begin
      or c.usado_em is not null
      or c.revogado_em is not null
      or c.expira_em < now() then
-    raise exception 'Este convite não vale mais. Peça outro ao salão.'
+    raise exception 'Este convite não vale mais. Peça outro ao restaurante.'
       using errcode = 'check_violation';
   end if;
 
@@ -278,7 +278,7 @@ returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -301,14 +301,14 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- 6) TIRAR O ACESSO
 --
--- Duas recusas, e as duas evitam um salão sem dono:
+-- Duas recusas, e as duas evitam um restaurante sem dono:
 --   · ninguém tira o próprio acesso de dono (ficaria de fora da própria casa,
 --     sem caminho de volta pela tela);
 --   · não se tira o ÚLTIMO dono, mesmo sendo outra pessoa a fazer isso.
 --
 -- Tirar o acesso NÃO apaga a ficha de profissional nem o histórico: são
 -- coisas diferentes. Quem sai da equipe para de entrar no sistema; os
--- atendimentos que ela fez continuam no caixa do salão.
+-- atendimentos que ela fez continuam no caixa do restaurante.
 -- ---------------------------------------------------------------------------
 create or replace function public.remover_acesso(
   p_salao uuid, p_perfil uuid, p_papel text)
@@ -318,7 +318,7 @@ declare
   v_donos int;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Só quem administra o salão pode mexer nos acessos.'
+    raise exception 'Só quem administra o restaurante pode mexer nos acessos.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -330,7 +330,7 @@ begin
     select count(*) into v_donos from public.vinculos
      where salao_id = p_salao and papel = 'dono' and status = 'ativo';
     if v_donos <= 1 then
-      raise exception 'Este é o único dono do salão. Passe a titularidade antes.'
+      raise exception 'Este é o único dono do restaurante. Passe a titularidade antes.'
         using errcode = 'check_violation';
     end if;
   end if;
@@ -363,8 +363,8 @@ end $$;
 -- 8) PERMISSÕES
 --
 -- `ver_convite` é a única que `anon` alcança, e é por desenho: a página do
--- convite precisa dizer de que salão se trata ANTES de a pessoa ter conta.
--- Ela devolve nome do salão e papel, nada mais.
+-- convite precisa dizer de que restaurante se trata ANTES de a pessoa ter conta.
+-- Ela devolve nome do restaurante e papel, nada mais.
 -- ---------------------------------------------------------------------------
 revoke all on function public.criar_convite(uuid, text, text, uuid) from public;
 revoke all on function public.ver_convite(uuid)                 from public;

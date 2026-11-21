@@ -1,9 +1,9 @@
 -- ===========================================================================
--- 56_conta_excluida.sql — a cliente excluiu a conta: o salão fica sabendo
+-- 56_conta_excluida.sql — a cliente excluiu a conta: o restaurante fica sabendo
 --
 -- O pedido: "e quando algum cliente excluir a conta dele, o que aparece pro
--- dono do salão?" Não aparecia nada. A exclusão (36) tira só o login dela: a
--- ficha é do SALÃO e continua em Clientes (`clientes.perfil_id` vira nulo),
+-- dono do restaurante?" Não aparecia nada. A exclusão (36) tira só o login dela: a
+-- ficha é do RESTAURANTE e continua em Clientes (`clientes.perfil_id` vira nulo),
 -- com os horários marcados — e os lembretes, que vão para o WhatsApp da
 -- ficha. O dono não tinha como saber que ela não entra mais pelo link.
 --

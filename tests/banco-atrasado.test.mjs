@@ -11,7 +11,7 @@
    tela chama função que o banco ainda não tem. Isso não é um caso raro: é o
    estado normal de todo cliente entre uma publicação e a colagem seguinte.
 
-   E foi o que aconteceu num salão de verdade, em duas telas no mesmo dia:
+   E foi o que aconteceu num restaurante de verdade, em duas telas no mesmo dia:
 
      Relatórios · «Could not find the function public.relatorio(p_ate, p_de,
                   p_salao) in the schema cache»
@@ -22,7 +22,7 @@
 
    Duas coisas estavam erradas, e nenhuma das duas era da tela.
 
-   1. A FRASE. Está escrita para quem programa. Para a dona do salão não quer
+   1. A FRASE. Está escrita para quem programa. Para a dona do restaurante não quer
       dizer nada e, pior, não diz o que fazer. Ela ficou olhando um erro em
       inglês sobre cache de schema.
 
@@ -120,7 +120,7 @@ secao('0) a bancada responde como o PostgREST de verdade');
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   1) A TRADUÇÃO — o que a dona do salão lê
+   1) A TRADUÇÃO — o que a dona do restaurante lê
    ═══════════════════════════════════════════════════════════════════════════ */
 secao('1) a mensagem que chega na tela');
 
@@ -186,7 +186,7 @@ secao('1) a mensagem que chega na tela');
 
    A tradução acima é a rede de baixo, para quando o banco do cliente estiver
    atrasado. Não é desculpa para publicar tela que chama função inexistente:
-   isso é defeito nosso, e tem que reprovar aqui, não no salão dela.
+   isso é defeito nosso, e tem que reprovar aqui, não no restaurante dela.
 
    Repare que confere pelo NOME DOS ARGUMENTOS, não só pelo nome da função.
    Era exatamente aí que estava o defeito do convite: `criar_convite` existia,
@@ -210,7 +210,7 @@ const nomesEm = t => [...t.matchAll(/(^|[\s,{])(p_[a-z_0-9]+)\s*:/g)].map(a => a
    está o `rest('rpc/fn', { body: JSON.stringify({ p_a: ... }) })`. Ficar só
    com o primeiro padrão deixaria `vitrine`, `meus_agendamentos`, `minha_fila`
    e as outras de fora — justamente as que a cliente alcança sem login, e as
-   únicas que um salão quebrado deixa quebradas para quem está de fora.
+   únicas que um restaurante quebrado deixa quebradas para quem está de fora.
 
    `[\s\S]*?` porque as chamadas quebram em várias linhas.
 
@@ -335,7 +335,7 @@ secao('4) a tabela que o banco ainda não tem');
 
     /* E a carga do painel NÃO PARA por causa disso. As tabelas descem em
        paralelo, e a que falta tem que virar lista vazia — senão publicar a
-       tela derrubaria o painel de todo salão até a colagem seguinte, que é
+       tela derrubaria o painel de todo restaurante até a colagem seguinte, que é
        o estado normal de todo cliente. */
     const bd = await dona.baixar(S);
     verdade('o painel baixa o resto normalmente',

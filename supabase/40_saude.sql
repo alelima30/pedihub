@@ -19,15 +19,15 @@
 --   · as mensagens não estão falhando — e, falhando, por quê, com o erro da
 --     Meta traduzido e o que fazer.
 --
--- E, só para o admin, o que é do NEGÓCIO e não do sistema: salão com a
+-- E, só para o admin, o que é do NEGÓCIO e não do sistema: restaurante com a
 -- franquia acabando e assinatura vencendo.
 --
 -- ── TRÊS PORTAS ────────────────────────────────────────────────────────────
 --   saude_verificar()   faz a conta. Não é de ninguém de fora.
---   saude_plataforma()  o admin.html: tudo, com o nome dos salões. Só is_super().
+--   saude_plataforma()  o admin.html: tudo, com o nome dos restaurantes. Só is_super().
 --   saude_publica()     a função de borda `saude`, que o UptimeRobot visita:
 --                       só "ok" ou "problema" e as chaves do que está errado.
---                       Nenhum nome de salão, telefone ou texto de mensagem.
+--                       Nenhum nome de restaurante, telefone ou texto de mensagem.
 --
 -- O alerta sai pelo UptimeRobot, e não pelo WhatsApp do próprio sistema, de
 -- propósito: se o que quebrou foi o WhatsApp, o aviso também não chegaria.
@@ -221,7 +221,7 @@ begin
   end if;
 
   -- 4. A fila. Atrasada é a que já devia ter saído há 5 minutos, não está
-  -- esperando nova tentativa e não está parada pela franquia do salão (essa
+  -- esperando nova tentativa e não está parada pela franquia do restaurante (essa
   -- espera de propósito, e entra no negócio, mais abaixo).
   select count(*), min(n.quando) into v_atrasadas, v_antiga
     from public.notificacoes n
@@ -276,7 +276,7 @@ begin
     v_itens := v_itens || public.saude_item('falhas', 'problema', 'Envio pelo WhatsApp',
       'mais falhas que envios nas últimas 24h (' || v_falhou24 || ' falharam, '
       || v_enviadas || ' saíram). Motivo mais comum: ' || public.saude_erro_meta(v_cod_24),
-      'Veja o histórico em Notificações, num salão, para o motivo de cada uma.');
+      'Veja o histórico em Notificações, num restaurante, para o motivo de cada uma.');
   elsif v_falhando > 0 or v_falhou24 > 0 then
     v_itens := v_itens || public.saude_item('falhas', 'atencao', 'Envio pelo WhatsApp',
       concat_ws(' ',
@@ -302,13 +302,13 @@ begin
    where x.teto > 0 and x.pct >= 0.9;
   if v_lista is not null then
     v_negocio := v_negocio || public.saude_item('franquia', 'atencao',
-      'Salões com as mensagens acabando', v_lista || '.',
+      'Restaurantes com as mensagens acabando', v_lista || '.',
       'Ofereça um plano maior ou mensagens extras.');
   end if;
   if v_bloqueadas > 0 then
     v_negocio := v_negocio || public.saude_item('franquia_parada', 'atencao',
       'Mensagens paradas pela franquia', v_bloqueadas
-      || ' mensagem(ns) esperando porque a franquia do salão acabou.');
+      || ' mensagem(ns) esperando porque a franquia do restaurante acabou.');
   end if;
 
   select string_agg(s.nome || case when a.vence_em >= current_date
@@ -341,7 +341,7 @@ begin
       'pendentes', v_pendentes, 'ultimoEnvio', v_ultimo));
 end $$;
 
-/* O admin.html. Tudo, com nome de salão: é a plataforma olhando para si. */
+/* O admin.html. Tudo, com nome de restaurante: é a plataforma olhando para si. */
 create or replace function public.saude_plataforma()
 returns jsonb language plpgsql stable security definer set search_path = public as $$
 begin
@@ -353,7 +353,7 @@ begin
 end $$;
 
 /* A função de borda `saude`, que o UptimeRobot visita. Só o nível e as CHAVES
-   do que está errado ("despertador", "falhas"…): nenhum nome de salão, número
+   do que está errado ("despertador", "falhas"…): nenhum nome de restaurante, número
    ou texto de mensagem sai daqui, porque o endereço é público. */
 create or replace function public.saude_publica()
 returns jsonb language sql stable security definer set search_path = public as $$

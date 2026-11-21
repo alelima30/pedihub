@@ -5,7 +5,7 @@
 -- mensagens automáticas que faltavam:
 --
 --   · ÚLTIMA SESSÃO (era "renovação"): seis dias antes da última sessão, às
---     10h do salão, a cliente recebe "Informação sobre o seu pacote: última
+--     10h do restaurante, a cliente recebe "Informação sobre o seu pacote: última
 --     sessão incluída terça, 01/12 às 14:00". Só quando todas as sessões
 --     estão na agenda (antes disso, "a última" não é a última). Renovou
 --     antes? O aviso do pacote anterior sai da fila. Sem convite para
@@ -21,7 +21,7 @@
 -- modelo que não existe (132001), que contariam como falha e sujariam o
 -- histórico. O mesmo cuidado da forma de pagamento nas mensagens (21).
 --
--- ── E O SALÃO ESCOLHE ─────────────────────────────────────────────────────
+-- ── E O RESTAURANTE ESCOLHE ─────────────────────────────────────────────────────
 -- Em Notificações, uma chave para cada (`notifPacoteRenova`,
 -- `notifPacotePaga`), ligadas por padrão: é aviso sobre o que a cliente já
 -- comprou. Contam na franquia de mensagens como a confirmação.
@@ -155,14 +155,14 @@ begin
   end;
   v_nome := public.variavel_limpa(split_part(btrim(coalesce(r.cliente, 'cliente')), ' ', 1));
 
-  -- RENOVAÇÃO: seis dias antes da última, às 10h do salão.
+  -- RENOVAÇÃO: seis dias antes da última, às 10h do restaurante.
   if v_comum is null then
     v_quando := ((((v_ult.inicio at time zone v_fuso)::date - 6) + time '10:00') at time zone v_fuso);
     v_quando_txt := v_dias[extract(dow from (v_ult.inicio at time zone v_fuso))::int + 1]
                     || ', ' || to_char(v_ult.inicio at time zone v_fuso, 'DD/MM "às" HH24:MI');
   end if;
   v_motivo := coalesce(v_comum, case
-    when not public.notif_liga(r.salao_id, 'notifPacoteRenova', true) then 'desligado pelo salão'
+    when not public.notif_liga(r.salao_id, 'notifPacoteRenova', true) then 'desligado pelo restaurante'
     when exists (select 1 from public.pacote_clientes y
                   where y.cliente_id = r.cliente_id and y.pacote_id = r.pacote_id
                     and y.id <> r.id and y.cancelado_em is null and y.criado_em > r.criado_em)
@@ -172,7 +172,7 @@ begin
     -- Pacote curto (tudo numa semana): o aviso cairia antes de ele começar.
     when v_quando <= v_prim.inicio then 'pacote curto demais para o aviso'
   end);
-  /* "Combine a renovação com o salão" fez a Meta aprovar o modelo como
+  /* "Combine a renovação com o restaurante" fez a Meta aprovar o modelo como
      MARKETING (custa umas 8 vezes mais e é segurado para quem nunca falou com
      o número). Agora é só a informação — a última sessão e onde — com outro
      nome de modelo (`pedihub_pacote_ultima_sessao`, no modelo_de do 37). */
@@ -186,16 +186,16 @@ begin
                       public.variavel_limpa(v_quando_txt), public.variavel_limpa(r.casa)));
 
   /* PAGAMENTO: não sai mais. "O pacote só é confirmado com o pagamento" —
-     as sessões ficam reservadas até o salão tocar em "Recebi" (43), e aí a
+     as sessões ficam reservadas até o restaurante tocar em "Recebi" (43), e aí a
      cliente recebe a lista de horários. Um lembrete de pagar antes disso
      sobrava. A chamada fica só para tirar da fila o que estivesse pendente;
-     o painel continua mostrando "a receber" para o salão. */
+     o painel continua mostrando "a receber" para o restaurante. */
   perform public.gravar_aviso_do_pacote(r.salao_id, 'pacote_pagamento', 'pacote_pagamento:' || r.id,
-    'sem lembrete de pagamento: o pacote confirma quando o salão registra o pagamento',
+    'sem lembrete de pagamento: o pacote confirma quando o restaurante registra o pagamento',
     null, interval '1 hour', v_prim.inicio, v_tel, r.cliente_id, v_prim.id, null, null);
 end $$;
 
-/* Os pacotes de um salão (ou de todos) que ainda têm sessão pela frente:
+/* Os pacotes de um restaurante (ou de todos) que ainda têm sessão pela frente:
    ligou ou desligou a chave, a fila de todos eles é refeita. */
 create or replace function public.refazer_avisos_de_pacote(p_salao uuid default null)
 returns int language plpgsql security definer set search_path = public as $$
@@ -257,7 +257,7 @@ begin
     (salao_id, tipo, destino, cliente_id, agendamento_id, quando, corpo, chave, modelo, variaveis)
   values (r.salao_id, 'pacote_agenda', v_tel, r.cliente_id, p_ids[1], now(),
           /* Sem o nome da profissional: "vai que no pacote muda o
-             profissional". No lugar, o salão (Local) — e ele sai da
+             profissional". No lugar, o restaurante (Local) — e ele sai da
              primeira linha para não aparecer duas vezes. */
           'Olá, ' || v_nome || '. Seu pacote ' || p_pacote
             || ' está com os horários marcados.'
@@ -310,7 +310,7 @@ create trigger tg_pacote_cliente_avisos
   after update of pago_em, valor, cancelado_em on public.pacote_clientes
   for each row execute function public.tg_pacote_cliente_avisos();
 
--- O salão ligou ou desligou uma das duas chaves em Notificações.
+-- O restaurante ligou ou desligou uma das duas chaves em Notificações.
 create or replace function public.tg_salao_avisos_de_pacote()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -340,7 +340,7 @@ begin
   insert into public.plataforma_ajustes (chave, valor, atualizado_em)
        values ('mensagensPacote', to_jsonb(coalesce(p_ligar, false)), now())
   on conflict (chave) do update set valor = excluded.valor, atualizado_em = now();
-  -- Desligou: o que estava na fila sai, de todos os salões.
+  -- Desligou: o que estava na fila sai, de todos os restaurantes.
   if not coalesce(p_ligar, false) then
     update public.notificacoes
        set status = 'cancelado', motivo = 'mensagens do pacote desligadas'

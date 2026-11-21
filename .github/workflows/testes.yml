@@ -4,7 +4,7 @@
 # POR QUE ISTO EXISTE
 # A suíte só valia quando alguém lembrava de rodar. Nesta semana três defeitos
 # chegaram ao ar por isso: o painel cunhava id que o Postgres recusa, a aba
-# Equipe quebrava, e a tela da cliente dizia que o salão não existe. Todos
+# Equipe quebrava, e a tela da cliente dizia que o restaurante não existe. Todos
 # teriam sido pegos por um teste que ninguém rodou naquele minuto.
 #
 # Aqui roda sozinho, no envio e no pull request, com um Postgres de serviço —

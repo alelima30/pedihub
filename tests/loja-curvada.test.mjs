@@ -13,7 +13,7 @@
      · Curvada: os produtos em cartões iguais aos "Produtos em destaque" da
        capa (a foto com a onda), dois por linha, com o Adicionar embaixo;
      · Clássica: as fileiras de sempre;
-     · nas duas, o Adicionar na cor do botão do salão (ou na cor dos
+     · nas duas, o Adicionar na cor do botão do restaurante (ou na cor dos
        produtos, quando o dono escolheu uma), e o "Escolha pelo menos 1
        produto" num tom da mesma cor, em vez do cinza.
 
@@ -64,7 +64,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`lc-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 await dona.inserir('servicos', { salaoId: SALAO, nome:'Hidratação', duracaoMin:60, intervaloMin:0,
@@ -138,7 +138,7 @@ await porCfg({ moldura:'elegante' });
     'Condicionador Tododia Para cabelos mais macios R$ 45,00 Adicionar');
 
   secao('2. O Adicionar na cor do tema');
-  igual('fundo na cor do botão do salão, e não branco', t.addFundo, cor('#B8356B'));
+  igual('fundo na cor do botão do restaurante, e não branco', t.addFundo, cor('#B8356B'));
   igual('com a letra calculada para ela (branca sobre o rosa)', t.addLetra, 'rgb(255, 255, 255)');
 
   secao('3. "Escolha pelo menos 1 produto" num tom da cor do tema');

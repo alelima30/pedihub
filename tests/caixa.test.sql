@@ -6,7 +6,7 @@
 -- criou:
 --
 --   0. As travas, desligadas, deixam o defeito voltar?
---   1. Dá para abrir dois caixas no mesmo salão?
+--   1. Dá para abrir dois caixas no mesmo restaurante?
 --   2. O pagamento cai sozinho no caixa aberto?
 --   3. Cartão e Pix ficam FORA da conta da gaveta?
 --   4. Sangria e suprimento entram com o sinal certo?
@@ -20,7 +20,7 @@
 \set ON_ERROR_STOP on
 
 insert into public.saloes (id, slug, nome, tipo) values
-  ('d0000000-1111-0000-0000-00000000000a', 'salao-caixa', 'Salão Caixa', 'salao');
+  ('d0000000-1111-0000-0000-00000000000a', 'salao-caixa', 'Restaurante Caixa', 'salao');
 insert into public.assinaturas (salao_id, plano, status) values
   ('d0000000-1111-0000-0000-00000000000a', 'time', 'ativa');
 insert into public.profissionais (id, salao_id, nome, comissao_pct) values
@@ -36,7 +36,7 @@ insert into public.clientes (id, salao_id, nome, telefone) values
 
    `conferir_caixa()` e `fechar_caixa()` conferem `ve_agenda_toda()`, que
    depende de `auth.uid()`. Sem sessão o uid é nulo, a função recusa com "Sem
-   permissão neste salão", e o teste morre numa linha que não tem defeito.
+   permissão neste restaurante", e o teste morre numa linha que não tem defeito.
 
    Os INSERTs continuam passando porque o teste roda como superusuário, que
    ignora RLS — mas função com `if not e_gestor(...) then raise` não é RLS: é
@@ -54,11 +54,11 @@ insert into public.vinculos (perfil_id, salao_id, papel, status) values
 
 select set_config('request.jwt.claim.sub',
                   'd0000000-0000-0000-0000-00000000000d', false);
-select t_verdade('logada como a dona do salão',
+select t_verdade('logada como a dona do restaurante',
   public.ve_agenda_toda('d0000000-1111-0000-0000-00000000000a'));
 
 \echo ''
-\echo '1) Um caixa aberto por salão'
+\echo '1) Um caixa aberto por restaurante'
 
 insert into public.caixas (id, salao_id, valor_abertura) values
   ('d0000000-cccc-0000-0000-00000000000a', 'd0000000-1111-0000-0000-00000000000a', 200);
@@ -69,13 +69,13 @@ select t_verdade('o segundo caixa aberto é recusado',
     values ('d0000000-1111-0000-0000-00000000000a', 50)
   $q$));
 
--- Mas outro SALÃO abre o dele sem problema: a trava é por salão.
+-- Mas outro RESTAURANTE abre o dele sem problema: a trava é por restaurante.
 insert into public.saloes (id, slug, nome, tipo) values
   ('d0000000-1111-0000-0000-00000000000b', 'outro-caixa', 'Outro', 'salao');
 insert into public.assinaturas (salao_id, plano, status) values
   ('d0000000-1111-0000-0000-00000000000b', 'time', 'ativa');
 
-select t_verdade('outro salão abre o caixa dele',
+select t_verdade('outro restaurante abre o caixa dele',
   not recusado($q$
     insert into public.caixas (salao_id, valor_abertura)
     values ('d0000000-1111-0000-0000-00000000000b', 30)
@@ -229,9 +229,9 @@ select t_verdade('e ela não fecha mais enquanto não for paga de novo',
   $q$));
 
 \echo ''
-\echo '8) O salão do estorno é o da comanda, não o que mandaram'
+\echo '8) O restaurante do estorno é o da comanda, não o que mandaram'
 
--- Mandar o salão errado seria uma linha de dinheiro contada no salão do
+-- Mandar o restaurante errado seria uma linha de dinheiro contada no restaurante do
 -- vizinho — e o RLS a esconderia de quem deveria vê-la.
 insert into public.pagamentos (id, comanda_id, forma, valor) values
   ('d0000000-9999-0000-0000-00000000000d', 'd0000000-aaaa-0000-0000-00000000000b',
@@ -240,7 +240,7 @@ insert into public.estornos (id, pagamento_id, salao_id, valor, motivo) values
   ('d0000000-eeee-0000-0000-00000000000a', 'd0000000-9999-0000-0000-00000000000d',
    'd0000000-1111-0000-0000-00000000000b', 50, 'salao errado de proposito');
 
-select t_verdade('o gatilho corrigiu o salão do estorno',
+select t_verdade('o gatilho corrigiu o restaurante do estorno',
   (select salao_id from public.estornos
     where id = 'd0000000-eeee-0000-0000-00000000000a')
   = 'd0000000-1111-0000-0000-00000000000a');

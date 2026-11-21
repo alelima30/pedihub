@@ -375,7 +375,7 @@ const peneirado = await anon.duvidasDaCasa(SLUG);
 e('o banco peneira: sem resposta e não-objeto ficam de fora, título com teto, chave estranha some',
   peneirado.length === 3 && peneirado[2].p.length === 150 && !('segredo' in peneirado[2]), JSON.stringify(peneirado).slice(0, 200));
 await banco.query(`update public.saloes set status = 'suspenso' where id = $1`, [SALAO]);
-e('salão fora do ar não entrega nada', (await anon.duvidasDaCasa(SLUG)).length === 0);
+e('restaurante fora do ar não entrega nada', (await anon.duvidasDaCasa(SLUG)).length === 0);
 await banco.query(`update public.saloes set status = 'ativo' where id = $1`, [SALAO]);
 await banco.query(`update public.saloes set cfg = jsonb_set(cfg, '{duvidas}', (cfg->'duvidas') - 2 - 3 - 4) where id = $1`, [SALAO]);
 

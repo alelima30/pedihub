@@ -22,7 +22,7 @@
 
    ⚠ E UMA QUARTA, QUE É DE TEXTO E NÃO DE REGRA: o dia bloqueado não pode
    aparecer como "cheio". "Cheio" manda a cliente esperar uma vaga que nunca
-   vai abrir; o salão está vazio, o serviço é que não é feito ali.
+   vai abrir; o restaurante está vazio, o serviço é que não é feito ali.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -74,9 +74,9 @@ const corte = await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte',
   duracaoMin:30, intervaloMin:0, preco:80, ativo:true, aceitaOnline:true });
 const escova = await dona.inserir('servicos', { salaoId: SALAO, nome:'Escova',
   duracaoMin:60, intervaloMin:0, preco:120, ativo:true, aceitaOnline:true });
-ok('salão criado, com um Corte e uma Escova — nenhum com dia marcado');
+ok('restaurante criado, com um Corte e uma Escova — nenhum com dia marcado');
 
-/* ⚠ AS DATAS SAEM DO FUSO DO SALÃO, e não do relógio desta máquina. Já custou
+/* ⚠ AS DATAS SAEM DO FUSO DO RESTAURANTE, e não do relógio desta máquina. Já custou
    caro neste projeto: teste que monta data com `new Date()` local reprova uma
    hora por dia e passa nas outras vinte e três. */
 const hojeNoSalao = (await dona.chamar('hoje_no_salao', { p_salao: SALAO }));
@@ -132,7 +132,7 @@ const naSegunda = await porque(SEGUNDA, [escova.id]);
 verdade('na segunda o banco recusa', typeof naSegunda === 'string' && naSegunda.length > 0,
   JSON.stringify(naSegunda));
 /* ⚠ A FRASE PRECISA DIZER O QUÊ, QUANDO E O QUE FAZER. Recusa sem motivo
-   escrito é igual a horário que some: a cliente conclui que o salão fechou. */
+   escrito é igual a horário que some: a cliente conclui que o restaurante fechou. */
 verdade('e a frase diz o serviço', /Escova/.test(naSegunda || ''), naSegunda);
 /* ⚠ SEM CONCORDÂNCIA DE GÊNERO. A frase dizia "Escova é feito só quinta" — o
    nome do serviço é texto livre do dono, e metade é feminino. Não dá para
@@ -149,13 +149,13 @@ verdade('mas oferece na quinta', await vagas(QUINTA, [escova.id]) > 0);
 
 /* ⚠ O CORTE, QUE NINGUÉM TOCOU, CONTINUA ABERTO NA SEGUNDA. É a prova de que
    a regra é do serviço e não do dia: um serviço com dia marcado não pode
-   fechar a segunda-feira do salão inteiro. */
+   fechar a segunda-feira do restaurante inteiro. */
 igual('o corte continua aberto na segunda', await porque(SEGUNDA, [corte.id]), null);
 verdade('e com horário para marcar', await vagas(SEGUNDA, [corte.id]) > 0);
 
 /* ⚠ E BASTA UM DO PEDIDO ESTAR FORA. Ela marcou corte + escova juntos; se a
    escova não é feita na segunda, o par não cabe na segunda. Barrar só quando
-   TODOS estão fora deixaria passar um combinado que o salão não cumpre — e o
+   TODOS estão fora deixaria passar um combinado que o restaurante não cumpre — e o
    problema apareceria com a cliente sentada na cadeira. */
 verdade('corte + escova na segunda é recusado por causa da escova',
   /Escova/.test(await porque(SEGUNDA, [corte.id, escova.id]) || ''),
@@ -170,7 +170,7 @@ verdade('corte + escova na segunda é recusado por causa da escova',
    feita em dia nenhum.
 
    Nada dava erro. Ela recebia "pronto, a gente te avisa" e ficava esperando um
-   telefonema que não podia acontecer. Do lado do salão também não aparecia
+   telefonema que não podia acontecer. Do lado do restaurante também não aparecia
    nada: um pedido impossível no meio dos possíveis.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('A fila de espera e os dias do serviço');
@@ -203,7 +203,7 @@ verdade('e com a MESMA frase da recusa de marcar',
 
 /* ⚠ E BASTA UM DIA PARA ACEITAR. Recusar a janela por ela conter dias ruins
    seria recusar quase todas — quase toda semana tem pelo menos um dia de
-   fora. Se pega uma quinta, o salão vai oferecer a quinta. */
+   fora. Se pega uma quinta, o restaurante vai oferecer a quinta. */
 igual('janela que pega uma quinta é aceita',
   await naFila(DOMINGO, somarDias(DOMINGO, 6), [escova.id]), null);
 igual('e o corte, que não tem dia marcado, entra em qualquer janela',

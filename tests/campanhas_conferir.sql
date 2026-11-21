@@ -31,16 +31,16 @@ select t_verdade('as duas tabelas estão com RLS ligado',
 -- As funções do módulo conferem permissão com `if not e_gestor(x) then raise`.
 -- Com o auxiliar devolvendo NULL, `not NULL` é NULL, o `if` não dispara e a
 -- função segue como se a permissão existisse — foi assim que placar_campanha()
--- devolveu o placar da campanha de outro salão. Instalar o módulo sem estes
+-- devolveu o placar da campanha de outro restaurante. Instalar o módulo sem estes
 -- auxiliares corrigidos é instalar o buraco junto.
-select t_verdade('e_equipe() de um salão inexistente devolve false, não NULL',
+select t_verdade('e_equipe() de um restaurante inexistente devolve false, não NULL',
   public.e_equipe('00000000-0000-0000-0000-000000000000') = false);
-select t_verdade('e_gestor() de um salão inexistente devolve false, não NULL',
+select t_verdade('e_gestor() de um restaurante inexistente devolve false, não NULL',
   public.e_gestor('00000000-0000-0000-0000-000000000000') = false);
-select t_verdade('tem_acesso() de um salão inexistente devolve false, não NULL',
+select t_verdade('tem_acesso() de um restaurante inexistente devolve false, não NULL',
   public.tem_acesso('00000000-0000-0000-0000-000000000000') = false);
 
--- A fila é do worker. Se `authenticated` alcançasse, qualquer dono de salão
+-- A fila é do worker. Se `authenticated` alcançasse, qualquer dono de restaurante
 -- varreria telefone da plataforma inteira.
 select t_falso('anon não executa a fila do worker',
   has_function_privilege('anon', 'public.fila_proxima(int)', 'execute'));
@@ -65,7 +65,7 @@ select t_igual('as 6 funções do convite estão lá',
                         'equipe_com_acesso','remover_acesso','revogar_convite')), 6);
 
 -- `ver_convite` é a única que `anon` alcança, e é por desenho: a página do
--- convite precisa dizer de que salão se trata antes de a pessoa ter conta.
+-- convite precisa dizer de que restaurante se trata antes de a pessoa ter conta.
 select t_verdade('anon executa ver_convite',
   has_function_privilege('anon', 'public.ver_convite(uuid)', 'execute'));
 select t_falso('mas NÃO cria convite',
@@ -100,7 +100,7 @@ select t_igual('as 7 funções da cobrança estão lá',
 
 /* ⚠ AS QUATRO LINHAS QUE VALEM DINHEIRO.
    `registrar_pagamento` é o que move a assinatura. Alcançável por quem fez
-   login, qualquer dono de salão assina o plano de R$ 297 de graça — é uma
+   login, qualquer dono de restaurante assina o plano de R$ 297 de graça — é uma
    linha no console do navegador. As outras três são o mesmo furo por portas
    vizinhas: abrir cobrança fora do fluxo, anotar um pagamento à mão, ou ler a
    carteira inteira de quem está para vencer. */
@@ -127,8 +127,8 @@ select t_falso('e quem fez login não ESCREVE na tabela de cobranças',
   has_table_privilege('authenticated', 'public.cobrancas', 'insert'));
 select t_falso('nem atualiza',
   has_table_privilege('authenticated', 'public.cobrancas', 'update'));
--- E a assinatura continua sendo só de leitura para o salão.
-select t_falso('o salão continua sem poder editar a própria assinatura',
+-- E a assinatura continua sendo só de leitura para o restaurante.
+select t_falso('o restaurante continua sem poder editar a própria assinatura',
   has_table_privilege('authenticated', 'public.assinaturas', 'update'));
 
 -- ── O motor da agenda, que vem no mesmo arquivo ────────────────────────────

@@ -87,14 +87,14 @@ grant select on public.pedidos_loja, public.pedido_loja_itens to authenticated;
 -- 2) A CLIENTE FAZ O PEDIDO (a porta do link)
 --
 -- Só com conta: é o cadastro que diz quem pediu (e o pedido vai para a ficha
--- dela). Sem ficha no salão, ela nasce aqui (48). No máximo 5 pedidos
+-- dela). Sem ficha no restaurante, ela nasce aqui (48). No máximo 5 pedidos
 -- esperando por cliente: o resto é a conversa do WhatsApp.
 --
 -- ⚠ CORRIGIU E MANDOU DE NOVO: o MESMO pedido. A loja sempre deixou a
 -- cliente ajustar o carrinho e mandar de novo (o cupom não é gasto outra
 -- vez). Com o pedido gravado, mandar de novo com `p_pedido` (o dela, ainda
 -- esperando) troca os itens do mesmo número — e não enche o painel de
--- pedidos repetidos. Já vendido ou cancelado pelo salão, nasce outro.
+-- pedidos repetidos. Já vendido ou cancelado pelo restaurante, nasce outro.
 -- ---------------------------------------------------------------------------
 drop function if exists public.fazer_pedido_loja(uuid, jsonb, text);
 create or replace function public.fazer_pedido_loja(p_salao uuid, p_itens jsonb, p_cupom text default null,
@@ -109,26 +109,26 @@ begin
   end if;
   select s.cfg into v_cfg from public.saloes s where s.id = p_salao and s.status = 'ativo';
   if not found then
-    raise exception 'Este salão não está recebendo pedidos agora.' using errcode = 'check_violation';
+    raise exception 'Este restaurante não está recebendo pedidos agora.' using errcode = 'check_violation';
   end if;
   if lower(btrim(coalesce(v_cfg->>'loja', 'true'))) in ('false', 'f', '0', 'no', 'nao', 'não') then
-    raise exception 'Este salão não está recebendo pedidos agora.' using errcode = 'check_violation';
+    raise exception 'Este restaurante não está recebendo pedidos agora.' using errcode = 'check_violation';
   end if;
   if p_itens is null or jsonb_typeof(p_itens) <> 'array' or jsonb_array_length(p_itens) = 0 then
     raise exception 'O carrinho está vazio.' using errcode = 'check_violation';
   end if;
   if jsonb_array_length(p_itens) > 50 then
-    raise exception 'Pedido grande demais: combine com o salão pelo WhatsApp.' using errcode = 'check_violation';
+    raise exception 'Pedido grande demais: combine com o restaurante pelo WhatsApp.' using errcode = 'check_violation';
   end if;
 
-  -- A ficha dela neste salão: a ligada à conta; senão, o cadastro (48).
+  -- A ficha dela neste restaurante: a ligada à conta; senão, o cadastro (48).
   select c.id into v_cliente from public.clientes c
    where c.salao_id = p_salao and c.perfil_id = v_eu order by c.criado_em limit 1;
   if v_cliente is null then
     f := public.cadastrar_minha_ficha(p_salao);
     v_cliente := nullif(f->>'ficha', '')::uuid;
     if v_cliente is null and f->>'motivo' = 'telefone_de_outra_ficha' then
-      -- O WhatsApp dela já está numa ficha do salão: o pedido vai para essa.
+      -- O WhatsApp dela já está numa ficha do restaurante: o pedido vai para essa.
       select public.telefone_nacional(p.telefone) into v_tel from public.perfis p where p.id = v_eu;
       select c.id into v_cliente from public.clientes c
        where c.salao_id = p_salao and public.telefone_nacional(c.telefone) = v_tel
@@ -138,7 +138,7 @@ begin
       if f->>'motivo' = 'sem_telefone' then
         raise exception 'Falta o seu WhatsApp no cadastro: complete e envie de novo.' using errcode = 'check_violation';
       end if;
-      raise exception 'Não consegui fazer seu cadastro neste salão. Fale com ele pelo WhatsApp.'
+      raise exception 'Não consegui fazer seu cadastro neste restaurante. Fale com ele pelo WhatsApp.'
         using errcode = 'check_violation';
     end if;
   end if;
@@ -159,10 +159,10 @@ begin
   if v_id is null then
     if (select count(*) from public.pedidos_loja p
          where p.salao_id = p_salao and p.cliente_id = v_cliente and p.status = 'novo') >= 5 then
-      raise exception 'Você já tem pedidos esperando o salão. Aguarde a resposta pelo WhatsApp.'
+      raise exception 'Você já tem pedidos esperando o restaurante. Aguarde a resposta pelo WhatsApp.'
         using errcode = 'check_violation';
     end if;
-    -- O número do pedido, um por salão, sem pular nem repetir.
+    -- O número do pedido, um por restaurante, sem pular nem repetir.
     perform pg_advisory_xact_lock(hashtext('pedido_loja:' || p_salao::text));
     select coalesce(max(p.numero), 0) + 1 into v_num from public.pedidos_loja p where p.salao_id = p_salao;
     insert into public.pedidos_loja (salao_id, numero, cliente_id, perfil_id, cupom)
@@ -263,7 +263,7 @@ begin
   end if;
   if p_profissional is not null and not exists (
        select 1 from public.profissionais pr where pr.id = p_profissional and pr.salao_id = p.salao_id) then
-    raise exception 'Quem vendeu não é deste salão.' using errcode = 'check_violation';
+    raise exception 'Quem vendeu não é deste restaurante.' using errcode = 'check_violation';
   end if;
 
   insert into public.comandas (salao_id, cliente_id, status) values (p.salao_id, p.cliente_id, 'aberta')
@@ -276,7 +276,7 @@ begin
     select pr.nome, pr.preco into v_desc, v_preco from public.produtos pr
      where pr.id = nullif(x->>'id', '')::uuid and pr.salao_id = p.salao_id;
     if v_desc is null then
-      raise exception 'Um dos produtos não é deste salão.' using errcode = 'check_violation';
+      raise exception 'Um dos produtos não é deste restaurante.' using errcode = 'check_violation';
     end if;
     insert into public.comanda_itens (comanda_id, tipo, produto_id, descricao, qtd, preco_unit, profissional_id)
          values (v_com, 'produto', nullif(x->>'id', '')::uuid, v_desc, v_qtd, coalesce(v_preco, 0), p_profissional);

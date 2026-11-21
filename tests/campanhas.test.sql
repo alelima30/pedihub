@@ -4,8 +4,8 @@
 -- Este arquivo existe para responder às três perguntas que, se erradas,
 -- tornam o módulo inaceitável num SaaS:
 --
---   1. O Salão A consegue enxergar, alterar ou mandar mensagem para a
---      clientela do Salão B? (multi-tenant)
+--   1. O Restaurante A consegue enxergar, alterar ou mandar mensagem para a
+--      clientela do Restaurante B? (multi-tenant)
 --   2. Dois disparos ao mesmo tempo mandam a mesma mensagem duas vezes?
 --   3. Quem pediu para não receber promoção recebe promoção?
 --
@@ -16,7 +16,7 @@
 
 \set ON_ERROR_STOP on
 
--- ── Dois salões, dois donos, clientelas separadas ──────────────────────────
+-- ── Dois restaurantes, dois donos, clientelas separadas ──────────────────────────
 insert into auth.users (id, email) values
   ('a0000000-0000-0000-0000-00000000000a', 'donoA@teste.com'),
   ('b0000000-0000-0000-0000-00000000000b', 'donoB@teste.com');
@@ -27,8 +27,8 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do nothing;
 
 insert into public.saloes (id, slug, nome, tipo) values
-  ('a0000000-1111-0000-0000-000000000001', 'salao-a', 'Salão A', 'salao'),
-  ('b0000000-1111-0000-0000-000000000001', 'salao-b', 'Salão B', 'salao');
+  ('a0000000-1111-0000-0000-000000000001', 'salao-a', 'Restaurante A', 'salao'),
+  ('b0000000-1111-0000-0000-000000000001', 'salao-b', 'Restaurante B', 'salao');
 
 insert into public.assinaturas (salao_id, plano, status) values
   ('a0000000-1111-0000-0000-000000000001', 'time', 'ativa'),
@@ -67,10 +67,10 @@ insert into public.clientes (id, salao_id, nome, telefone, aceita_marketing) val
 
 select set_config('request.jwt.claim.sub',
                   'a0000000-0000-0000-0000-00000000000a', false);
-select t_verdade('o teste está logado como a dona do Salão A',
+select t_verdade('o teste está logado como a dona do Restaurante A',
   auth.uid() = 'a0000000-0000-0000-0000-00000000000a');
 
-select t_igual('promoção alcança 2 das 4 fichas do salão',
+select t_igual('promoção alcança 2 das 4 fichas do restaurante',
   (select count(*) from public.publico_da_campanha(
      'a0000000-1111-0000-0000-000000000001', 'promocao')), 2);
 
@@ -90,7 +90,7 @@ select t_igual('já um lembrete alcança as 3 com telefone',
   (select count(*) from public.publico_da_campanha(
      'a0000000-1111-0000-0000-000000000001', 'lembrete')), 3);
 
-select t_falso('e NUNCA alcança a cliente do outro salão',
+select t_falso('e NUNCA alcança a cliente do outro restaurante',
   exists (select 1 from public.publico_da_campanha(
             'a0000000-1111-0000-0000-000000000001', 'lembrete') p
            where p.cliente_id = 'b0000000-2222-0000-0000-000000000001'));
@@ -123,11 +123,11 @@ select t_verdade('e o banco recusa a duplicata na marra também',
   like '%ux_camp_dest%');
 
 \echo ''
-\echo 'O SALÃO B NÃO ALCANÇA NADA DO SALÃO A'
+\echo 'O RESTAURANTE B NÃO ALCANÇA NADA DO RESTAURANTE A'
 
 select set_config('request.jwt.claim.sub',
                   'b0000000-0000-0000-0000-00000000000b', false);
-select t_verdade('agora logado como o dono do Salão B',
+select t_verdade('agora logado como o dono do Restaurante B',
   auth.uid() = 'b0000000-0000-0000-0000-00000000000b');
 
 /* `set role`, NÃO `set local role`.
@@ -158,13 +158,13 @@ select t_igual('nem os destinatários dela — nenhum telefone alheio',
    permissão existisse.
 
    Foi assim que `placar_campanha()` devolveu o placar da campanha de OUTRO
-   salão para quem só tinha o uuid. As três linhas abaixo travam a classe
+   restaurante para quem só tinha o uuid. As três linhas abaixo travam a classe
    inteira, não só aquele caso. */
-select t_falso('e_equipe() de um salão alheio é false, não NULL',
+select t_falso('e_equipe() de um restaurante alheio é false, não NULL',
   public.e_equipe('a0000000-1111-0000-0000-000000000001') is null);
-select t_falso('e_gestor() de um salão alheio é false, não NULL',
+select t_falso('e_gestor() de um restaurante alheio é false, não NULL',
   public.e_gestor('a0000000-1111-0000-0000-000000000001') is null);
-select t_falso('tem_acesso() de um salão alheio é false, não NULL',
+select t_falso('tem_acesso() de um restaurante alheio é false, não NULL',
   public.tem_acesso('a0000000-1111-0000-0000-000000000001') is null);
 
 -- IDOR: ele TEM o uuid da campanha do outro e chama a função direto.
@@ -184,13 +184,13 @@ select t_verdade('listar a clientela do outro é RECUSADO',
   recusado($$select * from public.publico_da_campanha(
     'a0000000-1111-0000-0000-000000000001', 'promocao')$$));
 
--- E o que ele NÃO PODE é criar campanha apontando para o salão alheio: seria
+-- E o que ele NÃO PODE é criar campanha apontando para o restaurante alheio: seria
 -- mandar mensagem em nome de outra casa, com a clientela de outra casa.
-select t_verdade('criar campanha no salão do outro é RECUSADO',
+select t_verdade('criar campanha no restaurante do outro é RECUSADO',
   recusado($$insert into public.campanhas (salao_id, nome, corpo)
              values ('a0000000-1111-0000-0000-000000000001', 'Invasão', 'oi')$$));
 
--- A fila é do worker, não do dono de salão. Se `authenticated` alcançasse
+-- A fila é do worker, não do dono de restaurante. Se `authenticated` alcançasse
 -- isto, qualquer dono varreria telefone da plataforma inteira.
 select t_verdade('a fila do worker é RECUSADA a quem só fez login',
   recusado($$select * from public.fila_proxima(5)$$));

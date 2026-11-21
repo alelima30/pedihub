@@ -7,7 +7,7 @@
 --
 -- A diferença de fundo em relação ao AdminPro: lá um usuário pertence a UM
 -- condomínio (coluna `condominio_id` em `usuarios`). Aqui a mesma pessoa pode
--- ser cliente de vários salões e profissional em outro. Por isso a identidade
+-- ser cliente de vários restaurantes e profissional em outro. Por isso a identidade
 -- é global (`perfis`) e o pertencimento é uma tabela à parte (`vinculos`).
 -- ===========================================================================
 
@@ -32,7 +32,7 @@ create table if not exists public.saloes (
   tipo      text not null default 'salao'
             check (tipo in ('salao','barbearia','estetica','manicure',
                             'clinica','tatuagem','pet','outro')),
-  -- Imagens do salão. Guardam ENDEREÇO, não bytes: em produção apontam para o
+  -- Imagens do restaurante. Guardam ENDEREÇO, não bytes: em produção apontam para o
   -- Supabase Storage; na demonstração são `data:` URL no próprio navegador.
   -- Coluna text nos dois casos, então a tela não precisa saber a diferença.
   logo      text,
@@ -45,13 +45,13 @@ create table if not exists public.saloes (
             check (status in ('ativo','suspenso','cancelado')),
   -- Regras do agendamento online: antecedência mínima e máxima, prazo de
   -- cancelamento, se exige sinal. Cabe em JSON porque é configuração que só o
-  -- próprio salão lê — não é dado que se cruza em relatório.
+  -- próprio restaurante lê — não é dado que se cruza em relatório.
   cfg       jsonb not null default '{}'::jsonb,
   criado_em timestamptz not null default now()
 );
 
 -- ---------------------------------------------------------------------------
--- 1b) O QUE O SALÃO PAGA
+-- 1b) O QUE O RESTAURANTE PAGA
 --
 -- O AdminPro não tem isso, e a documentação dele reconhece: "o sistema não
 -- sabe quem é o cliente, só qual é o condomínio". Com poucos clientes e Pix
@@ -76,7 +76,7 @@ create table if not exists public.assinaturas (
   plano        text not null references public.planos(codigo),
   status       text not null default 'trial'
                check (status in ('trial','ativa','inadimplente','cancelada')),
-  -- Fim do teste grátis. Passou disso sem virar 'ativa', o salão para.
+  -- Fim do teste grátis. Passou disso sem virar 'ativa', o restaurante para.
   trial_ate    date,
   vence_em     date,
   -- Por onde o dono chegou até nós. É a única forma de saber qual parceria
@@ -87,7 +87,7 @@ create table if not exists public.assinaturas (
   atualizado_em timestamptz not null default now()
 );
 
--- Qual plano vale HOJE para este salão.
+-- Qual plano vale HOJE para este restaurante.
 --
 -- Toda regra de cobrança passa por aqui, e existe um motivo: antes, a data de
 -- validade estava escrita dentro do `limite_profissionais`, e só a do teste
@@ -96,8 +96,8 @@ create table if not exists public.assinaturas (
 -- tudo, para sempre, até alguém marcar 'inadimplente' na mão. E não havia nada
 -- que marcasse.
 --
--- Quando a assinatura não está em vigor, o salão NÃO para: ele cai no plano
--- 'gratuito'. É de propósito. Salão que não quer pagar continua usando com um
+-- Quando a assinatura não está em vigor, o restaurante NÃO para: ele cai no plano
+-- 'gratuito'. É de propósito. Restaurante que não quer pagar continua usando com um
 -- teto; se caísse para nada, o dono voltava para o caderno e a gente perdia o
 -- canal por onde ele um dia assina.
 create or replace function public.plano_efetivo(p_salao uuid)
@@ -116,7 +116,7 @@ returns text language sql stable security definer set search_path = public as $$
     'gratuito')
 $$;
 
--- Quantos profissionais este salão pode ter, agora.
+-- Quantos profissionais este restaurante pode ter, agora.
 create or replace function public.limite_profissionais(p_salao uuid)
 returns int language sql stable security definer set search_path = public as $$
   select coalesce(
@@ -146,12 +146,12 @@ $$;
 -- `agendamentos_mes` ausente (ou null) = sem teto.
 --
 -- Por que o grátis tem teto de agendamento, e não de funcionalidade: o teto
--- precisa crescer junto com o salão. Cortar a agenda online do plano grátis
+-- precisa crescer junto com o restaurante. Cortar a agenda online do plano grátis
 -- mataria justamente o que faz o dono adotar o sistema. Já 40 horários por mês
--- é um salão que ainda não é negócio; a 120 ele é, e aí R$ 57 sai de um corte.
+-- é um restaurante que ainda não é negócio; a 120 ele é, e aí R$ 57 sai de um corte.
 --
 -- O lembrete no WhatsApp fica de fora do grátis por um motivo de caixa, não de
--- marketing: cada mensagem enviada é dinheiro que sai, por salão que não paga.
+-- marketing: cada mensagem enviada é dinheiro que sai, por restaurante que não paga.
 insert into public.planos
   (codigo, nome, max_profissionais, preco_mes, ordem, recursos) values
   ('gratuito',  'Grátis',       1,  0.00, 0,
@@ -166,7 +166,7 @@ insert into public.planos
      '{"lembrete_whatsapp":true,"agenda_online":true}'),
   ('equipe',    'Equipe',       6,297.00, 5,
      '{"lembrete_whatsapp":true,"agenda_online":true}'),
-  ('salao',     'Salão',       12,497.00, 6,
+  ('salao',     'Restaurante',       12,497.00, 6,
      '{"lembrete_whatsapp":true,"agenda_online":true}')
 on conflict (codigo) do update
    set nome = excluded.nome,
@@ -177,7 +177,7 @@ on conflict (codigo) do update
        -- e rodar o schema de novo não pode remarcar o preço de ninguém.
 
 -- ---------------------------------------------------------------------------
--- 2) QUEM É A PESSOA (global) E ONDE ELA ENTRA (por salão)
+-- 2) QUEM É A PESSOA (global) E ONDE ELA ENTRA (por restaurante)
 -- ---------------------------------------------------------------------------
 
 -- Uma linha por telefone no sistema inteiro. É o espelho de auth.users.
@@ -189,12 +189,12 @@ create table if not exists public.perfis (
   email      text,
   nascimento date,
   foto       text,
-  -- Dono da plataforma (você). Enxerga todos os salões, para dar suporte.
+  -- Dono da plataforma (você). Enxerga todos os restaurantes, para dar suporte.
   super_admin boolean not null default false,
   criado_em  timestamptz not null default now()
 );
 
--- A mesma pessoa pode ter N vínculos: cliente no salão A, profissional no B.
+-- A mesma pessoa pode ter N vínculos: cliente no restaurante A, profissional no B.
 create table if not exists public.vinculos (
   perfil_id uuid not null references public.perfis(id) on delete cascade,
   salao_id  uuid not null references public.saloes(id) on delete cascade,
@@ -212,7 +212,7 @@ create index if not exists ix_vinculos_salao on public.vinculos(salao_id, papel)
   where status = 'ativo';
 
 -- ---------------------------------------------------------------------------
--- 3) O QUE O SALÃO OFERECE
+-- 3) O QUE O RESTAURANTE OFERECE
 -- ---------------------------------------------------------------------------
 
 create table if not exists public.profissionais (
@@ -266,7 +266,7 @@ begin
       from public.assinaturas a join public.planos pl on pl.codigo = a.plano
      where a.salao_id = new.salao_id;
     raise exception
-      'O plano % permite % profissional(is) ativo(s), e o salão já tem %. '
+      'O plano % permite % profissional(is) ativo(s), e o restaurante já tem %. '
       'Troque de plano ou desative alguém antes de cadastrar mais.',
       coalesce(nome_plano, 'atual'), limite, usados
       using errcode = 'check_violation';
@@ -352,8 +352,8 @@ create table if not exists public.jornadas (
 
 create index if not exists ix_jornada_prof on public.jornadas(profissional_id, dia_semana);
 
--- Exceção pontual: férias, médico, feriado, ou o salão fechado inteiro.
--- profissional_id nulo = vale para o salão todo.
+-- Exceção pontual: férias, médico, feriado, ou o restaurante fechado inteiro.
+-- profissional_id nulo = vale para o restaurante todo.
 create table if not exists public.bloqueios (
   id              uuid primary key default gen_random_uuid(),
   salao_id        uuid not null references public.saloes(id) on delete cascade,
@@ -368,12 +368,12 @@ create table if not exists public.bloqueios (
 create index if not exists ix_bloq_salao on public.bloqueios(salao_id, inicio);
 
 -- ---------------------------------------------------------------------------
--- 5) O CLIENTE DO SALÃO
+-- 5) O CLIENTE DO RESTAURANTE
 -- ---------------------------------------------------------------------------
 
--- Ficha do cliente DENTRO de um salão. A mesma pessoa (mesmo `perfil_id`) tem
--- uma ficha em cada salão que frequenta, com histórico e observações próprias
--- — e um salão não enxerga a ficha do outro.
+-- Ficha do cliente DENTRO de um restaurante. A mesma pessoa (mesmo `perfil_id`) tem
+-- uma ficha em cada restaurante que frequenta, com histórico e observações próprias
+-- — e um restaurante não enxerga a ficha do outro.
 --
 -- perfil_id nulo = cliente que a recepção cadastrou e nunca instalou o app.
 -- Quando essa pessoa se cadastrar com o mesmo telefone, os dois se juntam.
@@ -392,7 +392,7 @@ create table if not exists public.clientes (
   criado_em  timestamptz not null default now()
 );
 
--- A mesma pessoa não pode ter duas fichas no mesmo salão.
+-- A mesma pessoa não pode ter duas fichas no mesmo restaurante.
 create unique index if not exists ux_cli_perfil
   on public.clientes(salao_id, perfil_id) where perfil_id is not null;
 create unique index if not exists ux_cli_tel
@@ -470,7 +470,7 @@ create index if not exists ix_agend_cliente on public.agendamentos(cliente_id, i
 -- "Excluir" apagava a linha. Sumia o atendimento, sumiam os serviços dele (o
 -- banco apaga em cascata) e sumia a comanda — sem lixeira, sem desfazer.
 -- Um clique errado custava o histórico, e o histórico é o que diz quanto o
--- salão faturou.
+-- restaurante faturou.
 --
 -- Arquivar guarda a linha e a tira da vista. O horário volta a ficar livre na
 -- hora (é por isso que `arquivado_em` entra na trava anti-choque acima e em
@@ -512,7 +512,7 @@ end $trava_choque$;
 -- `EXCLUDE` não atravessa duas tabelas, então a regra vira gatilho. Ele roda
 -- dos dois lados: ao marcar (contra os bloqueios que já existem) e ao
 -- bloquear (contra os atendimentos que já existem), senão dava para furar
--- invertendo a ordem. `profissional_id is null` num bloqueio quer dizer salão
+-- invertendo a ordem. `profissional_id is null` num bloqueio quer dizer restaurante
 -- inteiro fechado — vale para todo mundo da casa.
 create or replace function public.checar_bloqueio_agendamento()
 returns trigger
@@ -580,8 +580,8 @@ create trigger tg_bloqueio_vs_agend
   for each row execute function public.checar_agendamento_bloqueio();
 
 -- ── O TETO DO PLANO GRÁTIS ──────────────────────────────────────────────────
--- Nem todo salão vai assinar, e tudo bem: o grátis é plano de verdade, não
--- castigo. Mas ele precisa de um limite que cresça junto com o salão, senão o
+-- Nem todo restaurante vai assinar, e tudo bem: o grátis é plano de verdade, não
+-- castigo. Mas ele precisa de um limite que cresça junto com o restaurante, senão o
 -- plano Individual não vende para ninguém — um profissional com tudo liberado
 -- é exatamente o que o grátis já dá.
 --
@@ -611,7 +611,7 @@ begin
   teto := public.recurso_num(new.salao_id, 'agendamentos_mes');
   if teto is null then return new; end if;                    -- plano sem teto
 
-  -- O mês é o do salão, não o do servidor. Sem isto, um atendimento das 22h
+  -- O mês é o do restaurante, não o do servidor. Sem isto, um atendimento das 22h
   -- do dia 31 em São Paulo cairia no mês seguinte, porque o PostgREST fala
   -- UTC — é o mesmo erro que já apareceu na lista de espera.
   select coalesce(sl.fuso, 'America/Sao_Paulo') into v_fuso
@@ -653,7 +653,7 @@ create trigger tg_limite_agendamentos
 --    de verdade: cancelamento, falta de pagamento, fim de contrato.
 -- 2) E não pegava o caso mais comum de todos. Teste grátis vence sozinho: a
 --    data passa, `plano_efetivo` muda, e não existe UPDATE nenhum para
---    interceptar. O salão ficava com os 3 profissionais atendendo num plano
+--    interceptar. O restaurante ficava com os 3 profissionais atendendo num plano
 --    de 1, para sempre.
 --
 -- A regra certa é sobre USAR a vaga, não sobre contratá-la: um profissional
@@ -740,7 +740,7 @@ create index if not exists ix_ags_agend on public.agendamento_servicos(agendamen
 --
 -- Dia cheio é o momento em que a maioria dos sistemas perde o cliente: mostra
 -- "sem horário" e o cara fecha a página. Aqui ele deixa o nome, e quando
--- alguém cancela o salão já sabe para quem oferecer.
+-- alguém cancela o restaurante já sabe para quem oferecer.
 --
 -- Vale dos dois lados: o cliente não some, e a cadeira vaga não fica vazia —
 -- que é o buraco de faturamento que ninguém enxerga, porque cancelamento não
@@ -754,7 +754,7 @@ create table if not exists public.lista_espera (
   -- Nulo = aceita qualquer profissional. Quem aceita qualquer um entra na
   -- frente na hora de oferecer, porque a vaga que surgir serve para ele.
   profissional_id uuid references public.profissionais(id) on delete cascade,
-  -- O que a pessoa queria fazer, para o salão saber se a vaga cabe.
+  -- O que a pessoa queria fazer, para o restaurante saber se a vaga cabe.
   servicos        jsonb not null default '[]'::jsonb,
   duracao_min     int not null default 30 check (duracao_min > 0),
   -- Faixa de interesse. Mesma data nos dois campos = "só esse dia".
@@ -779,13 +779,13 @@ create index if not exists ix_espera_fila
 
 create index if not exists ix_espera_cliente on public.lista_espera(cliente_id);
 
--- Quem está esperando por uma vaga que acabou de abrir. O salão chama esta
+-- Quem está esperando por uma vaga que acabou de abrir. O restaurante chama esta
 -- função depois de um cancelamento; ela devolve a fila em ordem de chegada,
 -- já filtrada por quem serve para aquele buraco.
--- ⚠ TUDO AQUI ACONTECE NO FUSO DO SALÃO, e isso não é detalhe.
+-- ⚠ TUDO AQUI ACONTECE NO FUSO DO RESTAURANTE, e isso não é detalhe.
 --
 -- `inicio` é timestamptz, guardado em UTC. `extract(hour from ...)` e o cast
--- `::date` usam o fuso da SESSÃO, não o do salão — e a sessão do PostgREST
+-- `::date` usam o fuso da SESSÃO, não o do restaurante — e a sessão do PostgREST
 -- roda em UTC. Escrito do jeito ingênuo, um horário das 9h de São Paulo vira
 -- 12h para o Postgres, e quem pediu "manhã" nunca é chamado.
 --
@@ -794,7 +794,7 @@ create index if not exists ix_espera_cliente on public.lista_espera(cliente_id);
 -- só chamaria as pessoas erradas, calado, para sempre.
 --
 -- Por isso a conversão explícita com `at time zone`, que transforma o
--- timestamptz no horário de parede daquele salão.
+-- timestamptz no horário de parede daquele restaurante.
 create or replace function public.espera_para_vaga(
   p_salao uuid, p_profissional uuid, p_inicio timestamptz, p_fim timestamptz)
 returns setof public.lista_espera
@@ -803,7 +803,7 @@ language sql stable as $$
     select coalesce(nullif(fuso, ''), 'America/Sao_Paulo') as nome
       from public.saloes where id = p_salao
   ),
-  parede as (   -- o horário como quem está no salão o lê no relógio
+  parede as (   -- o horário como quem está no restaurante o lê no relógio
     select (p_inicio at time zone (select nome from tz)) as quando
   )
   select e.*
@@ -845,7 +845,7 @@ create table if not exists public.produtos (
   ativo        boolean not null default true
 );
 
--- Numeração por salão (comanda 1, 2, 3... em cada salão, não global).
+-- Numeração por restaurante (comanda 1, 2, 3... em cada restaurante, não global).
 -- Contador com UPDATE atômico: dois caixas fechando junto não tiram o mesmo
 -- número, que é o que aconteceria com "select max(numero)+1".
 create table if not exists public.contadores (
@@ -871,8 +871,8 @@ end $$;
    comanda, e gatilho roda como dono.
 
    Sem este `revoke` ela ficava aberta ao `anon` — e ela ESCREVE. Medido: três
-   chamadas anônimas com o id de um salão (que a vitrine pública entrega)
-   levaram o contador dele de 1 para 3. Num laço, a comanda seguinte do salão
+   chamadas anônimas com o id de um restaurante (que a vitrine pública entrega)
+   levaram o contador dele de 1 para 3. Num laço, a comanda seguinte do restaurante
    sairia numerada #847.302 em vez de #48, e esse número é o que a cliente vê
    no papel. */
 revoke all on function public.proximo_numero(uuid, text)
@@ -899,7 +899,7 @@ create index if not exists ix_comanda_salao on public.comandas(salao_id, aberta_
 /* ⚠ `security definer` aqui não é enfeite, e a falta dele já custou caro.
 
    Este era o ÚNICO gatilho do projeto sem definer. Rodando como quem fez a
-   operação, ele exige que a própria dona do salão tenha permissão de executar
+   operação, ele exige que a própria dona do restaurante tenha permissão de executar
    `proximo_numero` — e foi o que aconteceu quando revoguei essa função de
    `authenticated` achando que "gatilho roda como dono": abrir comanda passou a
    dar `permission denied`, em produção, e eu só descobri porque cinco suítes
@@ -911,7 +911,7 @@ create index if not exists ix_comanda_salao on public.comandas(salao_id, aberta_
 
    Não abre brecha: o `salao_id` que chega aqui ainda passa pelo `with check`
    da policy de `comandas` logo depois. Uma tentativa de numerar comanda de
-   outro salão incrementa o contador e em seguida é recusada — e o incremento
+   outro restaurante incrementa o contador e em seguida é recusada — e o incremento
    volta atrás junto, na mesma transação. */
 create or replace function public.comanda_numera()
 returns trigger language plpgsql security definer set search_path = public as $$
@@ -961,7 +961,7 @@ create table if not exists public.pagamentos (
                                'transferencia','cortesia','pacote')),
   valor       numeric(10,2) not null check (valor > 0),
   parcelas    smallint not null default 1 check (parcelas >= 1),
-  -- Taxa da maquininha: o salão recebe menos do que o cliente pagou.
+  -- Taxa da maquininha: o restaurante recebe menos do que o cliente pagou.
   taxa        numeric(10,2) not null default 0 check (taxa >= 0),
   recebido_em timestamptz not null default now()
 );
@@ -973,7 +973,7 @@ create index if not exists ix_pgto_comanda on public.pagamentos(comanda_id);
 --
 -- security_invoker = true é OBRIGATÓRIO aqui. Sem isso a vista roda com os
 -- poderes de quem a criou (postgres) e passa por cima do RLS das tabelas de
--- baixo — qualquer pessoa logada leria o faturamento de todos os salões.
+-- baixo — qualquer pessoa logada leria o faturamento de todos os restaurantes.
 -- É o furo mais silencioso que existe no Supabase: a tabela está protegida,
 -- a vista sobre ela não está.
 -- ⚠ `drop` + `create`, e NÃO `create or replace`.

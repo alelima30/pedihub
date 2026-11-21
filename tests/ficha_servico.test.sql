@@ -7,7 +7,7 @@
 --     o lixo (chave desconhecida, número no lugar de texto, dúvida sem
 --     resposta, lista enorme);
 --   · ficha vazia vira nula — serviço sem ficha continua como sempre;
---   · "comparar com" só aponta para serviço do MESMO salão, nunca para si;
+--   · "comparar com" só aponta para serviço do MESMO restaurante, nunca para si;
 --   · o link (sem login) lê só as fichas dos serviços que ele já mostra;
 --   · o "como fazer" da equipe nunca sai por ali;
 --   · a profissional e a recepção não escrevem ficha; o vizinho também não.
@@ -76,7 +76,7 @@ begin
       'dura', '3 a 4 semanas', 'manutencao', 'a cada 21 dias',
       'cuidadosAntes', 'Venha sem esmalte', 'cuidadosDepois', 'Use luvas',
       'duvidas', jsonb_build_array(
-         jsonb_build_object('p', 'Estraga a unha?', 'r', 'Não, se retirado no salão.'),
+         jsonb_build_object('p', 'Estraga a unha?', 'r', 'Não, se retirado no restaurante.'),
          jsonb_build_object('p', 'Sem resposta', 'r', ''),
          'texto solto'),
       'compararCom', '62100000-0000-0000-0000-0000000000A2',
@@ -89,7 +89,7 @@ begin
   perform t_igual('o incluso fica só com frases de verdade (sem vazio, sem número)', jsonb_array_length(f->'inclui'), 3);
   perform t_texto('na ordem em que a dona escreveu', f->'inclui'->>1, 'Cutilagem');
   perform t_igual('dúvida sem resposta e texto solto saem', jsonb_array_length(f->'duvidas'), 1);
-  perform t_texto('a dúvida boa fica', f->'duvidas'->0->>'r', 'Não, se retirado no salão.');
+  perform t_texto('a dúvida boa fica', f->'duvidas'->0->>'r', 'Não, se retirado no restaurante.');
   perform t_falso('chave desconhecida não é guardada', f ? 'script' or f ? 'preco');
   perform t_texto('comparar com: o id fica, em minúsculas', f->>'compararCom', '62100000-0000-0000-0000-0000000000a2');
   perform t_texto('dura', f->>'dura', '3 a 4 semanas');
@@ -126,7 +126,7 @@ begin
   perform t_verdade('ficha que não é objeto também vira nula', f is null);
 end $$;
 
--- ── 4) COMPARAR SÓ DENTRO DO SALÃO ─────────────────────────────────────────
+-- ── 4) COMPARAR SÓ DENTRO DO RESTAURANTE ─────────────────────────────────────────
 do $$
 declare f jsonb;
 begin
@@ -186,7 +186,7 @@ begin
     m->'62100000-0000-0000-0000-0000000000a1'->>'naoInclui', 'Decoração');
 
   e := t_como(null, $q$select public.fichas_dos_servicos('ficha-c')::text$q$);
-  perform t_texto('salão que não está ativo: nada', e, '{}');
+  perform t_texto('restaurante que não está ativo: nada', e, '{}');
   e := t_como(null, $q$select public.fichas_dos_servicos('nao-existe')::text$q$);
   perform t_texto('apelido que não existe: nada', e, '{}');
 

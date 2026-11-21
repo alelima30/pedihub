@@ -65,7 +65,7 @@ troca agendar.html \
   "style=\"background-image:url('\${salao.capa}');--foco:\${" \
   && rodar "a capa roda código"
 
-echo "2. link: salão que não existe mostra a demonstração"
+echo "2. link: restaurante que não existe mostra a demonstração"
 troca agendar.html \
   "  if(passo) passo.classList.add('so-recado');" \
   "  if(passo) passo.classList.add('x');" \
@@ -134,7 +134,7 @@ troca app.html \
   "       <div>\${aindaVem.map(a => a.id).join('')}</div>\`" \
   && rodar "Hoje diferente do mês"
 
-echo "13. painel: Dashboard de outro salão"
+echo "13. painel: Dashboard de outro restaurante"
 troca app.html \
   "  if(dashDados && dashSalao === salaoAtual && !forcar) return desenharDash();" \
   "  if(dashDados && !forcar) return desenharDash();" \
@@ -209,7 +209,7 @@ echo "24. painel: o link da demonstração vai para a nuvem"
 troca app.html \
   "function sufixoDemo(){ return NA_NUVEM ? '' : '&demo=1'; }" \
   "function sufixoDemo(){ return ''; }" \
-  && rodar "Salão não encontrado na demonstração"
+  && rodar "Restaurante não encontrado na demonstração"
 
 echo "25. painel: o passo a passo não preenche o funcionamento"
 troca app.html \
@@ -239,7 +239,7 @@ echo "29. link: o total de eu e mais alguém com pacote volta a R\$ 0"
 troca agendar.html \
   "  const total = real((coberto ? 0 : precoDela) + precoOutra - desc);" \
   "  const total = coberto ? 'R\$ 0,00' : real(precoDela + precoOutra - desc);" \
-  && rodar "a tela promete de graça e o salão cobra"
+  && rodar "a tela promete de graça e o restaurante cobra"
 
 echo "30. banco: cupom na loja sem conta"
 troca supabase/34_cupons.sql \

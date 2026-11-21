@@ -10,7 +10,7 @@
 --   1. O que conta como faturamento? (fechada, e pela data em que FECHOU)
 --   2. A comissão sai por PESSOA, do item, e não da comanda?
 --   3. Comanda aberta e cancelada ficam de fora?
---   4. O salão A lê o mês do salão B trocando o uuid?
+--   4. O restaurante A lê o mês do restaurante B trocando o uuid?
 -- ===========================================================================
 
 \set ON_ERROR_STOP on
@@ -24,9 +24,9 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do nothing;
 
 insert into public.saloes (id, slug, nome, tipo, fuso) values
-  ('f0000000-1111-0000-0000-00000000000a', 'salao-r', 'Salão R', 'salao',
+  ('f0000000-1111-0000-0000-00000000000a', 'salao-r', 'Restaurante R', 'salao',
    'America/Sao_Paulo'),
-  ('f0000000-1111-0000-0000-00000000000b', 'salao-s', 'Salão S', 'salao',
+  ('f0000000-1111-0000-0000-00000000000b', 'salao-s', 'Restaurante S', 'salao',
    'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('f0000000-1111-0000-0000-00000000000a', 'time', 'ativa'),
@@ -51,7 +51,7 @@ insert into public.clientes (id, salao_id, nome, telefone) values
 
 /* ── O CENÁRIO, com contas que dá para fazer de cabeça ─────────────────────
 
-   Março de 2026, no fuso do salão.
+   Março de 2026, no fuso do restaurante.
 
    FECHADA em 10/03 · Ana  · corte 100,00 · 40% → comissão 40,00
    FECHADA em 20/03 · Bia  · mecha 200,00 · 50% → comissão 100,00
@@ -162,7 +162,7 @@ select t_texto('a Ana tem 40,00 (40% de 100)',
   (:'r'::jsonb->'comissoes'->1->>'comissao'), '40.00');
 
 -- A comissão sai do ITEM: o desconto da comanda não a reduz. É de propósito e
--- é a prática do ramo — o desconto é do salão, não da profissional.
+-- é a prática do ramo — o desconto é do restaurante, não da profissional.
 select t_texto('e a comissão da Bia sai do item, não do total com desconto',
   (:'r'::jsonb->'comissoes'->0->>'vendido'), '200.00');
 
@@ -173,7 +173,7 @@ select t_igual('duas formas de pagamento',
   jsonb_array_length(:'r'::jsonb->'formas'), 2);
 select t_texto('o crédito foi o maior',
   (:'r'::jsonb->'formas'->0->>'forma'), 'credito');
-select t_texto('e a taxa dele aparece — o salão recebe menos do que a cliente pagou',
+select t_texto('e a taxa dele aparece — o restaurante recebe menos do que a cliente pagou',
   (:'r'::jsonb->'formas'->0->>'taxa'), '5.40');
 
 \echo ''
@@ -251,7 +251,7 @@ select t_texto('e 200,00 ficaram na mesa entre falta e cancelamento',
   (:'r4'::jsonb->'agenda'->>'perdido'), '200.00');
 
 \echo ''
-\echo 'O SALÃO S NÃO LÊ O MÊS DO SALÃO R'
+\echo 'O RESTAURANTE S NÃO LÊ O MÊS DO RESTAURANTE R'
 
 select set_config('request.jwt.claim.sub',
                   'f0000000-0000-0000-0000-00000000000b', false);
@@ -262,8 +262,8 @@ select t_verdade('trocar o uuid na chamada é RECUSADO',
   recusado($$select public.relatorio(
     'f0000000-1111-0000-0000-00000000000a', '2026-03-01', '2026-03-31')$$));
 
--- E o próprio salão dele, vazio, não estoura.
-select t_texto('o relatório do salão dele volta zerado, sem erro',
+-- E o próprio restaurante dele, vazio, não estoura.
+select t_texto('o relatório do restaurante dele volta zerado, sem erro',
   (public.relatorio('f0000000-1111-0000-0000-00000000000b',
                     '2026-03-01', '2026-03-31')->>'faturamento'), '0');
 

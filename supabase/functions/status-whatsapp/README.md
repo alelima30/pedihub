@@ -16,7 +16,7 @@ estimar.
 A Meta aceita a mensagem, devolve um `wam_id`, e a linha vira `enviado` — já
 tendo custado cota. Só depois ela descobre que não dá para entregar: número que
 não tem WhatsApp, bloqueio, aparelho que nunca voltou. **Sem esta função, essa
-linha diz "enviado" para sempre**, e o salão acha que avisou.
+linha diz "enviado" para sempre**, e o restaurante acha que avisou.
 
 E a cota volta sozinha: `mensagens_no_mes()` conta só enviado/entregue/lido,
 então sair para `falhou` devolve o crédito sem nenhuma conta a mais. Mensagem
@@ -69,7 +69,7 @@ o token diferente dos dois lados.
 
 Depois, em **Gerenciar**, assine o campo **`messages`** — é por ele que os
 status chegam. É o único que interessa: mensagem que a cliente escreve para o
-salão chega no mesmo campo e é **ignorada de propósito**, porque responder a
+restaurante chega no mesmo campo e é **ignorada de propósito**, porque responder a
 isso é chatbot, que está fora desta fase.
 
 ---

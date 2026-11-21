@@ -1,7 +1,7 @@
 -- ===========================================================================
--- PediHub — a cliente excluiu a conta: o salão fica sabendo (56)
+-- PediHub — a cliente excluiu a conta: o restaurante fica sabendo (56)
 --
--- No Salão da Ana: a Maria (com conta, horário marcado e pacote) exclui a
+-- No Restaurante da Ana: a Maria (com conta, horário marcado e pacote) exclui a
 -- conta; a Bia tem a ficha desligada por outro motivo (o perfil continua).
 --
 --   1. a conta some: a ficha fica, desligada, com o dia em que a conta sumiu;
@@ -26,7 +26,7 @@ insert into public.perfis (id, nome, telefone) values
   ('e5600000-0000-0000-0000-00000000000e', 'Bia Lima',    '+5511956000005')
 on conflict (id) do update set nome = excluded.nome, telefone = excluded.telefone;
 insert into public.saloes (id, slug, nome, tipo, status, fuso) values
-  ('55600000-0000-0000-0000-00000000000a', 'conta-ana', 'Salão da Ana', 'salao', 'ativo', 'America/Sao_Paulo');
+  ('55600000-0000-0000-0000-00000000000a', 'conta-ana', 'Restaurante da Ana', 'salao', 'ativo', 'America/Sao_Paulo');
 select public.hoje_no_salao('55600000-0000-0000-0000-00000000000a') as hoje \gset
 insert into public.assinaturas (salao_id, plano, status, vence_em) values
   ('55600000-0000-0000-0000-00000000000a', 'time', 'ativa', :'hoje'::date + 20);

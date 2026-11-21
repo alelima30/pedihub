@@ -23,7 +23,7 @@
    Este arquivo faz o caminho de uma pessoa de verdade: cria a conta contra um
    Postgres com o schema e o RLS de verdade, fecha o navegador, volta numa aba
    limpa — como quem entra no dia seguinte, de outro computador — e entra com
-   a senha que escolheu. No fim, o painel tem que mostrar o salão dela.
+   a senha que escolheu. No fim, o painel tem que mostrar o restaurante dela.
    =========================================================================== */
 import { createRequire } from 'node:module';
 import { diaDaSemana } from './dia.mjs';
@@ -70,7 +70,7 @@ const NOMESALAO = 'Studio Funil ' + marca;
 const ctx1 = await nav.newContext({ viewport: { width: 430, height: 780 } });
 const p = await abrir(ctx1);
 
-console.log('\nA conta e o salão, contra um Postgres de verdade');
+console.log('\nA conta e o restaurante, contra um Postgres de verdade');
 
 await p.goto(BASE + '/criar.html');
 await p.waitForTimeout(500);
@@ -116,7 +116,7 @@ verdade('e fica desabilitado, para o segundo clique não criar tudo de novo',
 await p.waitForTimeout(4000);
 igual('o cadastro chega ao passo 3', await passoAtual(p), 3);
 const link = await p.textContent('#linkFinal');
-verdade('e entrega o link da cliente com o apelido do salão',
+verdade('e entrega o link da cliente com o apelido do restaurante',
   /agendar\.html\?salao=studio-funil-/.test(link));
 /* O rodapé de demonstração ("nada é enviado para servidor nenhum") aparecia
    aqui, no fim do cadastro de verdade — logo depois de a conta ser criada no
@@ -183,21 +183,21 @@ await q.waitForTimeout(3500);
 igual('a senha escolhida no cadastro abre o painel', new URL(q.url()).pathname, '/app.html');
 
 const corpo = await q.evaluate(() => document.body.innerText.replace(/\s+/g, ' '));
-verdade('e o painel mostra o salão desta pessoa, não outro',
+verdade('e o painel mostra o restaurante desta pessoa, não outro',
   corpo.includes(NOMESALAO));
 
 /* ── O PASSO A PASSO DO PRIMEIRO DIA, NA NUVEM ────────────────────────────
    Este é o único teste que percorre o caminho de verdade: cadastro pela
    `criar.html`, login pela `entrar.html`, painel aberto pela primeira vez.
-   E o `criar_salao()` deixa o salão com uma profissional SEM jornada, nenhum
+   E o `criar_salao()` deixa o restaurante com uma profissional SEM jornada, nenhum
    serviço e nenhum horário — exatamente o estado em que o assistente deve
    aparecer. Se ele não aparecer aqui, ele não aparece para ninguém: o
-   `primeiro-dia.test.mjs` roda em `?demo=1`, onde o salão nasce semeado.
+   `primeiro-dia.test.mjs` roda em `?demo=1`, onde o restaurante nasce semeado.
 
    Depois ele é dispensado como "já fiz", porque o resto deste arquivo é
    sobre outra coisa e ele cobre a tela de propósito. A marca vai para o
-   `cfg` do salão, no banco, e por isso atravessa os reloads lá embaixo. */
-verdade('o passo a passo do primeiro dia abre sozinho no salão recém-criado',
+   `cfg` do restaurante, no banco, e por isso atravessa os reloads lá embaixo. */
+verdade('o passo a passo do primeiro dia abre sozinho no restaurante recém-criado',
   await q.evaluate(() => {
     const w = document.getElementById('primeiroDia');
     return !!w && !w.hidden
@@ -210,7 +210,7 @@ verdade('e sai da frente quando a dona diz que já fez',
 
 /* ── O CAIXA E A JORNADA ──────────────────────────────────────────────────
    Aqui moravam os quatro `400`. Eles não derrubavam a tela: viravam lista
-   vazia em silêncio, e o painel abria com cara de salão novo. Como o defeito
+   vazia em silêncio, e o painel abria com cara de restaurante novo. Como o defeito
    não fazia barulho, o teste tem que fazer — qualquer 4xx reprova. */
 igual('nenhuma pergunta malfeita chega ao banco', q.ruins.join(' | '), '');
 igual('e nenhum erro de JavaScript no painel', q.erros.length, 0);
@@ -298,12 +298,12 @@ await q.fill('#j2c', '14:00'); await q.fill('#j2d', '18:00');
    de FOLGA, e desde a Fase 1A folga é recusada: o painel oferece encaixe e o
    teste lê a confirmação como se fosse erro.
 
-   Preencher os dois é o cenário honesto: um salão que trabalha na terça e
+   Preencher os dois é o cenário honesto: um restaurante que trabalha na terça e
    também hoje. (Se hoje for terça, preenche duas vezes e não faz mal.)
 
-   ⚠ E "hoje" é o dia DO SALÃO, que é o que o painel usa para escolher o dia
+   ⚠ E "hoje" é o dia DO RESTAURANTE, que é o que o painel usa para escolher o dia
    da agenda. Aqui estava `new Date().getDay()` — o dia da semana do processo
-   Node, que roda em UTC na bancada e no CI. Com o salão em
+   Node, que roda em UTC na bancada e no CI. Com o restaurante em
    America/Sao_Paulo, das 00:00 às 03:00 UTC os dois caem em dias
    diferentes: a jornada era preenchida numa quarta e o painel marcava numa
    terça, o profissional aparecia de folga, e cinco verificações reprovavam
@@ -331,7 +331,7 @@ igual('o almoço no meio não se perde — volta às 14:00', await q.inputValue(
 igual('e a saída da tarde',                        await q.inputValue('#j2d'), '18:00');
 
 /* ── MARCAR E BLOQUEAR PELO PAINEL ────────────────────────────────────────
-   O uso diário do lado do salão: a recepção anota alguém no balcão, e o dono
+   O uso diário do lado do restaurante: a recepção anota alguém no balcão, e o dono
    bloqueia a própria folga. Os dois estavam quebrados na nuvem, e falhavam
    com a mensagem crua do Postgres:
 
@@ -354,7 +354,7 @@ const fecharModalAberto = () => q.evaluate(() => {
 });
 
 /* Sem serviço cadastrado, `abrirNovo()` mostra "Falta cadastro" em vez do
-   formulário — e está certo: não dá para marcar o que o salão não faz. */
+   formulário — e está certo: não dá para marcar o que o restaurante não faz. */
 await fecharModalAberto();
 await q.click('a:has-text("Serviços"), button:has-text("Serviços")');
 await q.waitForTimeout(700);
@@ -413,7 +413,7 @@ igual('e o serviço do atendimento também voltou', voltou && voltou.servicos, 1
        `0 + '80.00' + '45.00'` é '080.0045.00'. Faturamento do dia, comissão e
        total de comanda saem dessa conta.
 
-   O último é o que assusta: um sistema de salão que erra a conta do caixa não
+   O último é o que assusta: um sistema de restaurante que erra a conta do caixa não
    tem serventia nenhuma, e ele erraria em silêncio, com número plausível na
    tela. Por isso o teste confere o TIPO, não só o valor. */
 const agId = await q.evaluate(() =>

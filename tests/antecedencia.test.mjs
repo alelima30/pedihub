@@ -1,12 +1,12 @@
 /* ===========================================================================
-   PediHub — a antecedência mínima que o salão escolhe
+   PediHub — a antecedência mínima que o restaurante escolhe
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=… node tests/antecedencia.test.mjs
 
    ── O QUE ESTE AJUSTE FAZ ─────────────────────────────────────────────────
    Horário que começa em menos de N minutos some da agenda online. Era meia
-   hora fixa para todo mundo; virou escolha do salão, porque uma barbearia de
+   hora fixa para todo mundo; virou escolha do restaurante, porque uma barbearia de
    corte rápido atende quem aparece em 15 minutos e uma clínica precisa de
    horas para separar ficha e sala.
 
@@ -56,8 +56,8 @@ function novaAba(){
 const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`ant-${marca}@teste.com`, senha:'minhasenhaboa',
-  nome:'Dona do Salão', telefone:'+5551' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Antecedência ' + marca,
+  nome:'Dona do Restaurante', telefone:'+5551' + (100000000 + (Date.now() % 89999999)) });
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Antecedência ' + marca,
   p_tipo:'salao', p_telefone:'(51) 99887-6655', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 const prof = (await d.lista('profissionais', { salaoId: SALAO }))[0];
@@ -72,21 +72,21 @@ for(let i = 0; i <= 6; i++){
 }
 const sv = await d.inserir('servicos', { salaoId:SALAO, nome:'Corte', preco:50,
   duracaoMin:30, intervaloMin:0, ativo:true, aceitaOnline:true });
-ok('salão de teste, com a agenda aberta o dia inteiro');
+ok('restaurante de teste, com a agenda aberta o dia inteiro');
 
-/* ⚠ "HOJE" É O DIA DO SALÃO, NÃO O DIA EM UTC — e a diferença reprovava este
+/* ⚠ "HOJE" É O DIA DO RESTAURANTE, NÃO O DIA EM UTC — e a diferença reprovava este
    arquivo três horas por dia.
 
    `toISOString()` dá a data em UTC. Das 21h à meia-noite em São Paulo, isso já
    é o dia SEGUINTE: o teste pedia os horários de amanhã e media a distância
    até o começo de amanhã. Resultado, medido às 21h39: todos os valores da
-   régua devolviam 140 minutos — que era a distância até a meia-noite do salão,
+   régua devolviam 140 minutos — que era a distância até a meia-noite do restaurante,
    e não a antecedência de coisa nenhuma. Oito verificações reprovando juntas,
    com o motor funcionando perfeitamente.
 
    O `pacotes.test.mjs` caiu na mesma armadilha, na mesma noite, por escrever
    "ontem" em UTC. É a terceira vez que este projeto paga por isso — as datas
-   que o banco compara são SEMPRE as do fuso do salão. */
+   que o banco compara são SEMPRE as do fuso do restaurante. */
 const FUSO = 'America/Sao_Paulo';
 const hoje = () => new Intl.DateTimeFormat('en-CA', { timeZone: FUSO,
   year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
@@ -96,7 +96,7 @@ const maisDias = (data, n) => {
   return x.toISOString().slice(0, 10);
 };
 
-/* Quantos minutos faltam para a meia-noite DO SALÃO. Serve para o degrau
+/* Quantos minutos faltam para a meia-noite DO RESTAURANTE. Serve para o degrau
    abaixo, e é lido do relógio de lá, não do relógio desta máquina. */
 /* ⚠ COM OS SEGUNDOS, e não em minutos inteiros. Ver "O DEGRAU DOS SEGUNDOS"
    logo abaixo — a régua contava o relógio num grão mais grosso que o motor. */
@@ -155,7 +155,7 @@ const ateMeiaNoite = () => 24 * 60 - agoraNoSalao();
 const DUR = 30, PASSO = 15;
 
 /* O primeiro ponto da grade de 15 minutos em ou depois de `min` minutos
-   daqui, contado no relógio do salão — que é onde a grade está ancorada. */
+   daqui, contado no relógio do restaurante — que é onde a grade está ancorada. */
 const proximoNaGrade = (min) => {
   const agoraMin = agoraNoSalao();
   return Math.ceil((agoraMin + min) / PASSO) * PASSO - agoraMin;
@@ -192,7 +192,7 @@ const usar = async (min) => d.atualizar('saloes', SALAO,
 /* ══════════════════════════════════════════════════════════════════════════
    1 — SEM ESCOLHA NENHUMA, CONTINUA MEIA HORA
 
-   É o caso de todos os salões que já existem. Se a ausência da chave não
+   É o caso de todos os restaurantes que já existem. Se a ausência da chave não
    valesse 30, esta funcionalidade mudaria a agenda de quem está usando o
    sistema hoje sem ninguém ter pedido.
    ══════════════════════════════════════════════════════════════════════════ */
@@ -202,7 +202,7 @@ await usar(undefined);
 const padrao = await primeiroDaqui();
 verdade('o primeiro horário está a 30 min ou mais — ' + padrao + ' min',
   padrao !== null && padrao >= 30,
-  'o padrão deixou de ser meia hora, e salão antigo mudou de comportamento');
+  'o padrão deixou de ser meia hora, e restaurante antigo mudou de comportamento');
 /* O passo da agenda é de 15 minutos, então o primeiro horário cai entre 30 e
    45 minutos daqui. Sem este teto, `antecedenciaMin` grande passaria também —
    e o teste diria "está certo" para uma agenda fechada demais. */
@@ -282,7 +282,7 @@ verdade('e explica o motivo em português — ' + JSON.stringify(String(recusa).
    ⚠ O HORÁRIO DISTANTE SAI DO MOTOR, E NÃO DE UMA CONTA COM O RELÓGIO.
 
    Aqui estava `agora + 200 minutos`, arredondado para cima no passo de 15.
-   Às 20h do salão isso cai às 23h30 — e o corte de 30 minutos terminaria às
+   Às 20h do restaurante isso cai às 23h30 — e o corte de 30 minutos terminaria às
    00:00, fora da jornada, que vai até 23:59. O banco recusava com "Esse
    horário não está mais livre", dizendo a verdade, e a linha abaixo lia a
    recusa como se a antecedência tivesse barrado.
@@ -344,7 +344,7 @@ await d.atualizar('saloes', SALAO,
 const r8 = await d.chamar('horarios_livres_periodo', {
   p_profissionais:[prof.id], p_de:hoje(), p_ate:hoje(), p_servicos:[sv.id] });
 igual('999999 minutos não oferece nada hoje', (r8 || []).length, 0);
-const daqui8 = maisDias(hoje(), 8);        // no fuso do salão, como tudo aqui
+const daqui8 = maisDias(hoje(), 8);        // no fuso do restaurante, como tudo aqui
 const r9 = await d.chamar('horarios_livres_periodo', {
   p_profissionais:[prof.id], p_de:daqui8, p_ate:daqui8, p_servicos:[sv.id] });
 verdade('mas depois de 8 dias volta a oferecer — o teto de 7 dias segurou',

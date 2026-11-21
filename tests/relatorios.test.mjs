@@ -7,7 +7,7 @@
    ── O DEFEITO QUE ESTE ARQUIVO EXISTE PARA NÃO DEIXAR VOLTAR ───────────────
    O `relatorios.test.sql` já confere a conta: ele mesmo insere comandas
    FECHADAS e prova que a soma bate. Passava, e passava certo — e mesmo assim
-   o relatório de um salão de verdade voltava ZERADO.
+   o relatório de um restaurante de verdade voltava ZERADO.
 
    O motivo estava do lado de cá: a comanda nascia `aberta` e a tela nunca a
    fechava. `receber()` empilhava o pagamento e pronto. O dinheiro estava
@@ -60,7 +60,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`rel-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Dona Rita', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Relatório ' + marca,
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Relatório ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 
@@ -92,7 +92,7 @@ const MECHA = await d.inserir('servicos', { salaoId: SALAO, nome:'Mecha',
   duracaoMin:60, intervaloMin:0, preco:200, ativo:true, aceitaOnline:true,
   comissaoPct: 50 });
 
-// Hoje, no fuso do salão — é o dia que a tela abre e o período que ela soma.
+// Hoje, no fuso do restaurante — é o dia que a tela abre e o período que ela soma.
 const HOJE = new Intl.DateTimeFormat('en-CA',
   { timeZone:'America/Sao_Paulo' }).format(new Date());
 const desl = new Intl.DateTimeFormat('en-US', { timeZone:'America/Sao_Paulo',

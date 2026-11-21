@@ -13,18 +13,18 @@
 
 \set ON_ERROR_STOP on
 
--- ── Cenário: dois salões, duas clientes, uma dona, uma profissional ────────
+-- ── Cenário: dois restaurantes, duas clientes, uma dona, uma profissional ────────
 -- Montado como superusuário, então o RLS não atrapalha a preparação.
 
 insert into auth.users (id) values
-  ('a0000000-0000-0000-0000-00000000000a'),  -- Ana   — dona do salão A
+  ('a0000000-0000-0000-0000-00000000000a'),  -- Ana   — dona do restaurante A
   ('b0000000-0000-0000-0000-00000000000b'),  -- Bia   — profissional no A
   ('c0000000-0000-0000-0000-00000000000c'),  -- Maria — cliente do A e do B
   ('d0000000-0000-0000-0000-00000000000d'),  -- Joana — cliente só do A
-  ('e0000000-0000-0000-0000-00000000000e');  -- Zé    — dono do salão B
+  ('e0000000-0000-0000-0000-00000000000e');  -- Zé    — dono do restaurante B
 
 insert into public.saloes (id, slug, nome) values
-  ('5a100000-0000-0000-0000-00000000000a', 'salao-a', 'Salão A'),
+  ('5a100000-0000-0000-0000-00000000000a', 'salao-a', 'Restaurante A'),
   ('5a100000-0000-0000-0000-00000000000b', 'salao-b', 'Barbearia B');
 
 insert into public.assinaturas (salao_id, plano, status) values
@@ -64,7 +64,7 @@ insert into public.clientes (id, salao_id, perfil_id, nome, telefone) values
   ('c1100000-0000-0000-0000-00000000000d', '5a100000-0000-0000-0000-00000000000a',
    'd0000000-0000-0000-0000-00000000000d', 'Joana', '5511900000004');
 
--- Maria tem 1 no salão A e 1 no B. Joana tem 1 no A, com a Bia.
+-- Maria tem 1 no restaurante A e 1 no B. Joana tem 1 no A, com a Bia.
 insert into public.agendamentos (salao_id, cliente_id, profissional_id, inicio, fim) values
   ('5a100000-0000-0000-0000-00000000000a', 'c1100000-0000-0000-0000-00000000000a',
    '9b000000-0000-0000-0000-00000000000a', '2026-09-01 09:00-03', '2026-09-01 10:00-03'),
@@ -85,7 +85,7 @@ begin;
 
   -- O caso que motiva tudo: ela pede TODOS os agendamentos, sem filtro.
   do $$ begin perform t_igual(
-    'pedindo a agenda inteira, só enxerga os 2 dela (1 em cada salão)',
+    'pedindo a agenda inteira, só enxerga os 2 dela (1 em cada restaurante)',
     (select count(*) from public.agendamentos), 2); end $$;
 
   do $$ begin perform t_igual(
@@ -102,15 +102,15 @@ begin;
     'não alcança o telefone da Joana',
     (select count(*) from public.clientes where nome = 'Joana'), 0); end $$;
 
-  -- Perfil é identidade global: nem o próprio salão lê o dos outros.
+  -- Perfil é identidade global: nem o próprio restaurante lê o dos outros.
   do $$ begin perform t_igual(
     'só enxerga o próprio perfil',
     (select count(*) from public.perfis), 1); end $$;
 
   -- O cardápio dela é a `vitrine()` e as vistas públicas, e não a tabela:
   -- a tabela tem o telefone pessoal e a comissão de cada profissional. Era
-  -- 3 aqui ("vê os profissionais dos salões em que é cliente"), e qualquer
-  -- conta virava "cliente" de qualquer salão com um insert em `vinculos`.
+  -- 3 aqui ("vê os profissionais dos restaurantes em que é cliente"), e qualquer
+  -- conta virava "cliente" de qualquer restaurante com um insert em `vinculos`.
   do $$ begin perform t_igual(
     'não lê a tabela de profissionais (telefone e comissão da equipe)',
     (select count(*) from public.profissionais), 0); end $$;
@@ -141,35 +141,35 @@ begin;
     if recusado($q$insert into public.vinculos (perfil_id, salao_id, papel)
                    values ('c0000000-0000-0000-0000-00000000000c',
                            '5a100000-0000-0000-0000-00000000000a', 'dono')$q$)
-    then perform t_ok('não consegue se dar o papel de dona do salão');
-    else perform t_falha('SE PROMOVEU a dona do salão');
+    then perform t_ok('não consegue se dar o papel de dona do restaurante');
+    else perform t_falha('SE PROMOVEU a dona do restaurante');
     end if;
   end $$;
 rollback;
 
 
 \echo ''
-\echo 'A dona (Ana) — vê o salão dela, e só ele'
+\echo 'A dona (Ana) — vê o restaurante dela, e só ele'
 
 begin;
   set local role authenticated;
   set local request.jwt.claim.sub = 'a0000000-0000-0000-0000-00000000000a';
 
   do $$ begin perform t_igual(
-    'vê os 2 agendamentos do salão dela',
+    'vê os 2 agendamentos do restaurante dela',
     (select count(*) from public.agendamentos), 2); end $$;
 
   do $$ begin perform t_igual(
-    'não vê nada do salão do Zé',
+    'não vê nada do restaurante do Zé',
     (select count(*) from public.agendamentos
       where salao_id = '5a100000-0000-0000-0000-00000000000b'), 0); end $$;
 
   do $$ begin perform t_igual(
-    'vê as 2 fichas de cliente do salão dela',
+    'vê as 2 fichas de cliente do restaurante dela',
     (select count(*) from public.clientes), 2); end $$;
 
   do $$ begin perform t_igual(
-    'enxerga só o próprio salão na tabela de salões',
+    'enxerga só o próprio restaurante na tabela de restaurantes',
     (select count(*) from public.saloes), 1); end $$;
 rollback;
 
@@ -193,25 +193,25 @@ rollback;
 
 
 \echo ''
-\echo 'O dono do outro salão (Zé) — a fronteira entre clientes da plataforma'
+\echo 'O dono do outro restaurante (Zé) — a fronteira entre clientes da plataforma'
 
 begin;
   set local role authenticated;
   set local request.jwt.claim.sub = 'e0000000-0000-0000-0000-00000000000e';
 
   do $$ begin perform t_igual(
-    'não alcança um único agendamento do salão A',
+    'não alcança um único agendamento do restaurante A',
     (select count(*) from public.agendamentos
       where salao_id = '5a100000-0000-0000-0000-00000000000a'), 0); end $$;
 
   do $$ begin perform t_igual(
-    'não alcança a carteira de clientes do salão A',
+    'não alcança a carteira de clientes do restaurante A',
     (select count(*) from public.clientes
       where salao_id = '5a100000-0000-0000-0000-00000000000a'), 0); end $$;
 
-  -- Maria é cliente dos dois. O Zé vê a ficha dela NO SALÃO DELE, e só.
+  -- Maria é cliente dos dois. O Zé vê a ficha dela NO RESTAURANTE DELE, e só.
   do $$ begin perform t_igual(
-    'vê a Maria como cliente dele, sem enxergar o histórico dela no salão A',
+    'vê a Maria como cliente dele, sem enxergar o histórico dela no restaurante A',
     (select count(*) from public.clientes where nome = 'Maria'), 1); end $$;
 rollback;
 
@@ -242,21 +242,21 @@ begin;
 
   -- ── O CATÁLOGO NÃO PODE SER FOLHEADO ────────────────────────────────────
   -- Esta verificação já foi o contrário: ela exigia que a vitrine listasse os
-  -- 2 salões ativos para quem não fez login. Funcionava, e o isolamento entre
-  -- donos continuava intacto — nenhum salão lia agendamento ou cliente de
+  -- 2 restaurantes ativos para quem não fez login. Funcionava, e o isolamento entre
+  -- donos continuava intacto — nenhum restaurante lia agendamento ou cliente de
   -- outro.
   --
   -- Mas vazava outra coisa, e não é dado de cliente: é a lista de clientes DA
   -- PLATAFORMA. Com a chave publicável, que fica à vista no código da página,
-  -- um GET em saloes_publicos devolvia todos os salões com nome, endereço e
+  -- um GET em saloes_publicos devolvia todos os restaurantes com nome, endereço e
   -- WhatsApp — lista de prospecção pronta para um concorrente.
   do $$
   begin
     if recusado($q$select count(*) from public.saloes_publicos$q$)
-    then perform t_ok('o catálogo de salões é inalcançável sem login');
-    else perform t_falha('o catálogo de salões ainda pode ser folheado: '
+    then perform t_ok('o catálogo de restaurantes é inalcançável sem login');
+    else perform t_falha('o catálogo de restaurantes ainda pode ser folheado: '
                        || (select count(*) from public.saloes_publicos)::text
-                       || ' salões numa requisição');
+                       || ' restaurantes numa requisição');
     end if;
   end $$;
 
@@ -269,21 +269,21 @@ begin;
   end $$;
 
   -- ── MAS QUEM TEM O LINK ENTRA ───────────────────────────────────────────
-  -- O apelido não é segredo: quem recebeu o link tem o salão, e é assim que
-  -- deve ser. O que mudou é que ninguém ENUMERA — descobrir um salão passa a
+  -- O apelido não é segredo: quem recebeu o link tem o restaurante, e é assim que
+  -- deve ser. O que mudou é que ninguém ENUMERA — descobrir um restaurante passa a
   -- exigir já conhecê-lo.
   do $$
   declare v jsonb;
   begin
     v := public.vitrine('salao-a');
     if v is null then perform t_falha('a vitrine não respondeu para quem tem o link');
-    else perform t_ok('quem tem o apelido abre a vitrine daquele salão');
+    else perform t_ok('quem tem o apelido abre a vitrine daquele restaurante');
     end if;
 
-    perform t_texto('e vem o salão certo', v->'salao'->>'nome', 'Salão A');
-    -- O salão A tem 2 profissionais (Ana e Bia) e o B tem 1 (Zé). Vir 2 aqui
+    perform t_texto('e vem o restaurante certo', v->'salao'->>'nome', 'Restaurante A');
+    -- O restaurante A tem 2 profissionais (Ana e Bia) e o B tem 1 (Zé). Vir 2 aqui
     -- prova as duas coisas de uma vez: os de casa entram, e os do vizinho não.
-    perform t_igual('com os 2 profissionais dele, e nenhum do salão vizinho',
+    perform t_igual('com os 2 profissionais dele, e nenhum do restaurante vizinho',
                     jsonb_array_length(v->'profissionais')::bigint, 2);
     perform t_verdade('e a lista de serviços vem junto, mesmo vazia',
                       jsonb_typeof(v->'servicos') = 'array');
@@ -357,10 +357,10 @@ insert into public.comanda_itens (comanda_id, tipo, descricao, qtd, preco_unit)
 
 begin;
   set local role authenticated;
-  set local request.jwt.claim.sub = 'e0000000-0000-0000-0000-00000000000e';  -- Zé, salão B
+  set local request.jwt.claim.sub = 'e0000000-0000-0000-0000-00000000000e';  -- Zé, restaurante B
 
   do $$ begin perform t_igual(
-    'o dono do salão B não lê o faturamento do salão A pela vista',
+    'o dono do restaurante B não lê o faturamento do restaurante A pela vista',
     (select count(*) from public.comandas_totais), 0); end $$;
 rollback;
 
@@ -442,16 +442,16 @@ begin;
   set local request.jwt.claim.sub = 'a0000000-0000-0000-0000-00000000000a';  -- Ana, dona
 
   do $$ begin perform t_igual(
-    'a dona vê a fila inteira do salão dela',
+    'a dona vê a fila inteira do restaurante dela',
     (select count(*) from public.lista_espera), 2); end $$;
 rollback;
 
 begin;
   set local role authenticated;
-  set local request.jwt.claim.sub = 'e0000000-0000-0000-0000-00000000000e';  -- Zé, salão B
+  set local request.jwt.claim.sub = 'e0000000-0000-0000-0000-00000000000e';  -- Zé, restaurante B
 
   do $$ begin perform t_igual(
-    'o salão vizinho não vê a fila de espera do outro',
+    'o restaurante vizinho não vê a fila de espera do outro',
     (select count(*) from public.lista_espera), 0); end $$;
 rollback;
 
@@ -469,13 +469,13 @@ begin;
   set local role authenticated;
   set local request.jwt.claim.sub = 'f0000000-0000-0000-0000-00000000000f';
 
-  -- Sem a função, ele não cria salão nenhum: a policy só deixa is_super().
+  -- Sem a função, ele não cria restaurante nenhum: a policy só deixa is_super().
   do $$
   begin
     if recusado($q$insert into public.saloes (slug, nome)
                    values ('na-marra', 'Na Marra')$q$)
-    then perform t_ok('inserir salão direto na tabela é barrado');
-    else perform t_falha('CRIOU salão passando por cima da policy');
+    then perform t_ok('inserir restaurante direto na tabela é barrado');
+    else perform t_falha('CRIOU restaurante passando por cima da policy');
     end if;
   end $$;
 
@@ -493,15 +493,15 @@ begin;
     end if;
 
     if (select count(*) from public.saloes where id = r.salao_id) = 1
-    then perform t_ok('o salão é criado pela função');
-    else perform t_falha('o salão não apareceu');
+    then perform t_ok('o restaurante é criado pela função');
+    else perform t_falha('o restaurante não apareceu');
     end if;
 
     if (select papel from public.vinculos
          where salao_id = r.salao_id
            and perfil_id = 'f0000000-0000-0000-0000-00000000000f') = 'dono'
     then perform t_ok('quem criou já entra como dono');
-    else perform t_falha('o criador não virou dono — salão órfão');
+    else perform t_falha('o criador não virou dono — restaurante órfão');
     end if;
 
     if (select count(*) from public.profissionais where salao_id = r.salao_id) = 1
@@ -514,12 +514,12 @@ begin;
     else perform t_falha('assinatura não nasceu em trial');
     end if;
 
-    -- Trinta dias (61_teste_30_dias) contados no relógio do SALÃO (o fuso
+    -- Trinta dias (61_teste_30_dias) contados no relógio do RESTAURANTE (o fuso
     -- dele), e não no do servidor: depois das 21h em Brasília o servidor já
     -- está no dia seguinte.
     if (select trial_ate from public.assinaturas where salao_id = r.salao_id)
        = (now() at time zone 'America/Sao_Paulo')::date + 30
-    then perform t_ok('o teste tem prazo de 30 dias, no dia do salão');
+    then perform t_ok('o teste tem prazo de 30 dias, no dia do restaurante');
     else perform t_falha('prazo do teste saiu errado');
     end if;
 
@@ -587,7 +587,7 @@ begin;
   set local request.jwt.claim.sub = 'e0000000-0000-0000-0000-00000000000e';  -- Zé
 
   do $$ begin perform t_igual(
-    'o dono de um salão não lê o documento fiscal de outro',
+    'o dono de um restaurante não lê o documento fiscal de outro',
     (select count(*) from public.documentos_cobranca), 0); end $$;
 rollback;
 
@@ -614,21 +614,21 @@ begin;
   do $$
   begin
     if recusado($q$select public.criar_salao('Sem Login')$q$)
-    then perform t_ok('criar salão sem login é barrado');
-    else perform t_falha('CRIOU salão sem ninguém logado');
+    then perform t_ok('criar restaurante sem login é barrado');
+    else perform t_falha('CRIOU restaurante sem ninguém logado');
     end if;
   end $$;
 rollback;
 
 \echo ''
-\echo 'As imagens do salão (Storage)'
+\echo 'As imagens do restaurante (Storage)'
 
--- A logo e a foto do salão são públicas para LER — é a vitrine, e imagem atrás
+-- A logo e a foto do restaurante são públicas para LER — é a vitrine, e imagem atrás
 -- de login numa página pública é imagem que não carrega. O que precisa de
 -- trava é a ESCRITA: sem ela, qualquer dono logado troca a logo do concorrente
 -- por um palavrão, e o estrago aparece para os clientes dele.
 --
--- A policy decide pela primeira pasta do caminho, que é o uuid do salão. Os
+-- A policy decide pela primeira pasta do caminho, que é o uuid do restaurante. Os
 -- testes cercam os quatro caminhos possíveis: a própria pasta, a do vizinho,
 -- a raiz do balde e uma pasta com nome inventado.
 --
@@ -647,22 +647,22 @@ begin;
     insert into storage.objects (bucket_id, name)
     values ('salao', '5a100000-0000-0000-0000-00000000000a/logo.jpg');
     get diagnostics n = row_count;
-    if n = 1 then perform t_ok('a dona envia imagem na pasta do próprio salão');
+    if n = 1 then perform t_ok('a dona envia imagem na pasta do próprio restaurante');
     else perform t_falha('não conseguiu enviar na própria pasta'); end if;
   end $$;
 
   do $$ begin
     if recusado($q$insert into storage.objects (bucket_id, name)
                    values ('salao','5a100000-0000-0000-0000-00000000000b/logo.jpg')$q$)
-    then perform t_ok('não escreve na pasta de outro salão');
-    else perform t_falha('trocou a imagem do salão do vizinho'); end if;
+    then perform t_ok('não escreve na pasta de outro restaurante');
+    else perform t_falha('trocou a imagem do restaurante do vizinho'); end if;
   end $$;
 
   do $$ begin
     if recusado($q$insert into storage.objects (bucket_id, name)
                    values ('salao','solto.jpg')$q$)
     then perform t_ok('arquivo na raiz do balde, sem dono, é recusado');
-    else perform t_falha('entrou arquivo sem pasta de salão'); end if;
+    else perform t_falha('entrou arquivo sem pasta de restaurante'); end if;
   end $$;
 
   do $$ begin
@@ -720,7 +720,7 @@ begin
   -- Esta verificação já exigiu o CONTRÁRIO: que as 3 vistas continuassem
   -- abertas para anon, porque era delas que a página de agendamento vivia.
   -- Elas viviam, e vazavam o catálogo inteiro da plataforma junto — nome,
-  -- endereço e WhatsApp de todo salão, numa requisição.
+  -- endereço e WhatsApp de todo restaurante, numa requisição.
   --
   -- Agora quem serve a página é vitrine(), que pede o apelido. As vistas
   -- continuam existindo para o painel do dono, mas fecharam para fora.
@@ -747,7 +747,7 @@ do $$
 declare v_n int;
 begin
   -- Mas NÃO ganha escrita em assinaturas: é a linha que decide quanto ele
-  -- paga. Quem muda plano é a plataforma, nunca o salão.
+  -- paga. Quem muda plano é a plataforma, nunca o restaurante.
   select count(*) into v_n from information_schema.role_table_grants
    where grantee='authenticated' and table_schema='public'
      and table_name='assinaturas' and privilege_type in ('INSERT','UPDATE','DELETE');

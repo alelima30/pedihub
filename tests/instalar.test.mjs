@@ -10,7 +10,7 @@
       Safari não tem, nunca teve, e a Apple já disse que não vai ter: no
       iPhone instalar é Compartilhar → Adicionar à Tela de Início.
 
-      Ou seja: no aparelho de boa parte dos donos de salão, o único caminho
+      Ou seja: no aparelho de boa parte dos donos de restaurante, o único caminho
       para instalar era um botão que nunca aparecia — e a tela de instruções
       que já existia no código não tinha como ser aberta por ninguém.
 
@@ -123,10 +123,10 @@ await pg.close();
 /* ══════════════════════════════════════════════════════════════════════════
    A PÁGINA DA CLIENTE
 
-   O manifesto tem que ser DESTE salão. É o que decide o que abre quando a
+   O manifesto tem que ser DESTE restaurante. É o que decide o que abre quando a
    cliente toca no ícone — e era o painel do dono.
    ══════════════════════════════════════════════════════════════════════════ */
-secao('O salão instalado é o salão, não o painel do dono');
+secao('O restaurante instalado é o restaurante, não o painel do dono');
 
 const cli = await nav.newContext({ viewport:{ width:390, height:844 },
                                    isMobile:true, hasTouch:true });
@@ -147,11 +147,11 @@ const man = await cp.evaluate(async () => {
            apple: (document.querySelector('meta[name="apple-mobile-web-app-title"]') || {}).content };
 });
 verdade('a página monta um manifesto próprio', !!man, 'continuou no do sistema');
-igual('com o nome do salão', man && man.nome, 'Barbearia do Zé');
-verdade('e abrindo NO SALÃO, não no painel do dono',
+igual('com o nome do restaurante', man && man.nome, 'Barbearia do Zé');
+verdade('e abrindo NO RESTAURANTE, não no painel do dono',
   man && man.inicio.includes('salao=' + SLUG) && !man.inicio.includes('app.html'),
   JSON.stringify(man && man.inicio));
-verdade('com a cor do salão na barra do navegador',
+verdade('com a cor do restaurante na barra do navegador',
   man && /^#[0-9A-Fa-f]{6}$/.test(man.tema || ''), JSON.stringify(man && man.tema));
 verdade('e com ícone, senão o Android recusa instalar', man && man.icones >= 1);
 /* ⚠ O manifesto é um blob:, e endereço relativo dentro dele não se resolve
@@ -191,12 +191,12 @@ const convite = await cp.evaluate(() => {
   return { visivel: getComputedStyle(c).display !== 'none',
            diz: c.textContent.replace(/\s+/g,' ').trim() };
 });
-verdade('chamado, ele aparece com o nome do salão',
+verdade('chamado, ele aparece com o nome do restaurante',
   convite.visivel && /Barbearia do Zé/.test(convite.diz),
   JSON.stringify(convite.diz.slice(0, 90)));
 
 // E "agora não" tem que valer: convite que volta a cada horário marcado vira
-// propaganda dentro do app do salão.
+// propaganda dentro do app do restaurante.
 const depois = await cp.evaluate(() => {
   dispensarConvite();
   convidarAInstalar();

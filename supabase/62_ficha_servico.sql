@@ -23,7 +23,7 @@
 -- A vitrine é a função mais sensível do projeto (preço de verdade, campos
 -- nomeados um a um). Mexer nela para pendurar texto seria arriscar o resto.
 -- `fichas_dos_servicos(slug)` devolve só as fichas dos serviços que JÁ
--- aparecem no link: ativos, que aceitam marcação online, de salão ativo.
+-- aparecem no link: ativos, que aceitam marcação online, de restaurante ativo.
 -- O "como fazer" da equipe (`procedimento`, 41) não passa por aqui.
 -- ===========================================================================
 
@@ -91,7 +91,7 @@ begin
   end if;
   if jsonb_array_length(lista) > 0 then r := r || jsonb_build_object('duvidas', lista); end if;
 
-  -- Comparar com outro serviço: só o id; quem confere o salão é o gatilho.
+  -- Comparar com outro serviço: só o id; quem confere o restaurante é o gatilho.
   v := public.ficha_texto(p -> 'compararCom', 40);
   if v ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
     r := r || jsonb_build_object('compararCom', lower(v));
@@ -105,8 +105,8 @@ create or replace function public.tg_servico_ficha()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   new.ficha := public.ficha_limpa(new.ficha);
-  /* Comparar só com serviço do MESMO salão, e nunca consigo mesmo. Um id de
-     outro salão publicaria, no link deste, o nome e o preço do serviço de um
+  /* Comparar só com serviço do MESMO restaurante, e nunca consigo mesmo. Um id de
+     outro restaurante publicaria, no link deste, o nome e o preço do serviço de um
      concorrente. Apontou errado: a ligação cai, o resto da ficha fica. */
   if new.ficha ? 'compararCom' and (
        (new.ficha->>'compararCom')::uuid = new.id

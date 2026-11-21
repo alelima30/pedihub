@@ -56,7 +56,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random() * 1000);
 const d = novaAba();
 await d.criarConta({ email:`txc-${marca}@teste.com`, senha:'minhasenhaboa', nome:'Rita Alves',
   telefone:'+5511' + (100000000 + Math.floor(Math.random() * 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Megatop ' + marca, p_tipo:'salao',
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop ' + marca, p_tipo:'salao',
   p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 const escolhida = '#3A2A2E';

@@ -10,7 +10,7 @@
 
    Não é um contador errado. São duas contas diferentes sobre a mesma coisa:
 
-     · o contador usa `agendaDoDia(dia)` — TODO agendamento do salão naquele
+     · o contador usa `agendaDoDia(dia)` — TODO agendamento do restaurante naquele
        dia, seja de quem for, a que hora for;
      · a grade desenha só o que cabe em `profsAtivos()` e só entre `ABRE`
        (08:00) e `FECHA` (20:00), posicionando por `y(min)`.
@@ -19,7 +19,7 @@
    em silêncio: o dono vê o número, procura o cartão, não acha, e o que ele
    conclui é que o sistema perdeu o horário da cliente.
 
-   Três formas de cair nisso, e as três são rotina num salão:
+   Três formas de cair nisso, e as três são rotina num restaurante:
      1. horário fora de 08:00–20:00 (a recepção marca a que hora quiser);
      2. profissional desativado depois de já ter horário marcado;
      3. horário que começa dentro e termina depois das 20:00.
@@ -58,7 +58,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`grade-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Grade ' + marca,
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Grade ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 
@@ -158,7 +158,7 @@ igual('e os dois estão ao alcance', await alcancaveis(), 2);
 /* ══════════════════════════════════════════════════════════════════════════
    3. PROFISSIONAL DESATIVADO COM HORÁRIO JÁ MARCADO
    ══════════════════════════════════════════════════════════════════════════ */
-secao('A profissional saiu do salão, mas a cliente dela já estava marcada');
+secao('A profissional saiu do restaurante, mas a cliente dela já estava marcada');
 
 // O plano do teste grátis só comporta uma pessoa, e quem troca assinatura é a
 // plataforma — não o dono. Aqui a troca é feita por fora, como ela seria.

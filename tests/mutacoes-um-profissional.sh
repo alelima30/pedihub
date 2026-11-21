@@ -124,7 +124,7 @@ echo "12. o painel nasce em \"Ir direto\""
 troca app.html \
   "    pularComQuemEscolhido = (sl.cfg || {}).pularComQuem === true;" \
   "    pularComQuemEscolhido = true;" \
-  && rodar "salão acorda com o caminho mudado"
+  && rodar "restaurante acorda com o caminho mudado"
 
 echo ""
 echo "$morta mortas, $viva vivas"

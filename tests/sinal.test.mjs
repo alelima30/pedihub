@@ -5,7 +5,7 @@
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/sinal.test.mjs
 
    "Como fazer para colocar sinal?" — o caminho do Pix com a confirmação do
-   salão. O banco tem o tests/sinal.test.sql. Aqui, as telas:
+   restaurante. O banco tem o tests/sinal.test.sql. Aqui, as telas:
 
      1. Meu negócio: a seção do sinal aparece com Pix marcado, e grava;
      2. o link avisa o sinal antes de marcar;
@@ -200,7 +200,7 @@ secao('2 e 3. O link: avisa antes, e diz como pagar depois');
   verdade('até quando pagar, e que depois o horário é liberado',
     /Pague até .+ volta a ficar livre/.test(bolha.txt), bolha.txt);
   verdade('a regra de cancelamento', /Cancelamento: Devolvo o sinal/.test(bolha.txt), bolha.txt);
-  verdade('e o comprovante vai pelo WhatsApp do salão, com a mensagem pronta',
+  verdade('e o comprovante vai pelo WhatsApp do restaurante, com a mensagem pronta',
     /wa\.me\/5511981113251\?text=Olá! Paguei o sinal de R\$\s?8,00 do meu horário de /.test(bolha.zap), bolha.zap);
   const b = doBanco();
   igual('no banco: pendente, sinal de 8, nada pago', b, { status:'pendente', exigido:8, pago:0 });

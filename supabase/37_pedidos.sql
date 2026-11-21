@@ -9,7 +9,7 @@
 -- aceita, com taxa de entrega por bairro e pagamento na entrega.
 --
 -- ── ⚠ ISTO NÃO MEXE NA LOJA QUE JÁ EXISTE ──────────────────────────────────
--- A loja do salão (25_loja) continua exatamente como era: carrinho no
+-- A loja do restaurante (25_loja) continua exatamente como era: carrinho no
 -- navegador e o texto indo pelo WhatsApp DA CLIENTE, sem gravar nada. O modo
 -- Pedidos vale só para o tipo `restaurante`, e usa o MESMO cadastro de
 -- produtos — no restaurante eles são o cardápio.
@@ -177,7 +177,7 @@ $$;
 
 /* A cota por tipo (22_cotas), com os do pedido no lugar certo: os que vão
    para a CLIENTE seguem até o teto do plano, como a confirmação e o lembrete;
-   o aviso para o estabelecimento para antes, nos 90%, como os do salão. */
+   o aviso para o estabelecimento para antes, nos 90%, como os do restaurante. */
 create or replace function public.pode_enviar_tipo(p_salao uuid, p_tipo text)
 returns boolean language sql stable security definer set search_path = public as $$
   select case

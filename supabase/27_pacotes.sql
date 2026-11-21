@@ -33,9 +33,9 @@
 -- ── E A VALIDADE, E OS DIAS ───────────────────────────────────────────────
 -- Validade porque pacote vendido há dois anos que continua valendo é prejuízo
 -- esquecido. Dias porque é assim que o pacote enche segunda e terça: "vale de
--- segunda a quarta" é a regra que faz o desconto trabalhar pelo salão.
+-- segunda a quarta" é a regra que faz o desconto trabalhar pelo restaurante.
 --
--- ── FORA DOS DIAS: DUAS POSTURAS, E O SALÃO ESCOLHE ───────────────────────
+-- ── FORA DOS DIAS: DUAS POSTURAS, E O RESTAURANTE ESCOLHE ───────────────────────
 -- Fora dos dias o BENEFÍCIO nunca vale — isso não é opcional. O que é opcional
 -- é o que acontece em seguida, e mora na coluna `so_nos_dias`:
 --
@@ -49,24 +49,24 @@
 -- omissão transformaria um desconto num castigo, e faria isso nas costas de
 -- quem comprou.
 --
--- ⚠ E O QUE O BLOQUEIO NÃO É: ele não fecha a porta do salão, só a do LINK.
+-- ⚠ E O QUE O BLOQUEIO NÃO É: ele não fecha a porta do restaurante, só a do LINK.
 -- A recepção marca pelo painel em qualquer dia, cobrando — o painel grava na
 -- tabela direto, e nenhuma regra da agenda online passa por lá. Conferido no
 -- banco, não suposto: só `agendar()` e `horarios_livres()` chamam
 -- `porque_nao_agenda()`, e nenhum dos seis gatilhos de `agendamentos` chama.
 -- É essa a saída para "quero atender fora dos dias, pagando": quem decide a
--- exceção é gente do salão, com a pessoa na frente — igual ao encaixe.
+-- exceção é gente do restaurante, com a pessoa na frente — igual ao encaixe.
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
--- 1) O pacote que o salão oferece
+-- 1) O pacote que o restaurante oferece
 -- ---------------------------------------------------------------------------
 create table if not exists public.pacotes (
   id            uuid primary key default gen_random_uuid(),
   salao_id      uuid not null references public.saloes(id) on delete cascade,
   nome          text not null,
   descricao     text,
-  -- Quanto o salão cobra pelo pacote. Não é cobrado aqui: a venda é uma
+  -- Quanto o restaurante cobra pelo pacote. Não é cobrado aqui: a venda é uma
   -- comanda comum, como qualquer outra. Este número serve para o dono lembrar
   -- quanto combinou e para a tela mostrar.
   preco         numeric(10,2) not null default 0,
@@ -171,7 +171,7 @@ create index if not exists ix_agend_pacote
 --
 -- E a FALTA também gasta: "quando a cliente falta, a sessão do pacote deve
 -- ser descontada? Sim." O horário ficou guardado para ela e ninguém mais
--- pôde usar. Cancelar continua devolvendo — e, se o salão quiser perdoar
+-- pôde usar. Cancelar continua devolvendo — e, se o restaurante quiser perdoar
 -- uma falta, é só mudar o status para cancelado em vez de "faltou".
 -- ---------------------------------------------------------------------------
 create or replace function public.pacote_sessoes_restantes(p_pacote_cliente uuid)
@@ -223,8 +223,8 @@ begin
    where c.id = p_cliente;
   if v_fuso is null then return null; end if;
 
-  -- O dia é o do SALÃO, não o de quem está olhando. Uma cliente em Portugal
-  -- marcando às 3h da manhã dela para um salão de Porto Alegre tem que cair no
+  -- O dia é o do RESTAURANTE, não o de quem está olhando. Uma cliente em Portugal
+  -- marcando às 3h da manhã dela para um restaurante de Porto Alegre tem que cair no
   -- dia que é lá — senão o pacote de segunda vale no domingo.
   v_data := (p_quando at time zone v_fuso)::date;
   v_dia  := extract(dow from v_data)::smallint;
@@ -286,7 +286,7 @@ end $$;
 --   · o dia da semana tem que estar FORA da lista (`not ... = any`)
 --   · devolve texto, não uuid, porque recusa sem motivo escrito é a mesma
 --     coisa que horário que some: a Maria abre o link na quinta, não vê nada,
---     e conclui que o salão fechou
+--     e conclui que o restaurante fechou
 --
 -- E o resto é igual de propósito: o pacote precisa estar vivo, não vencido,
 -- com sessão sobrando e cobrindo TODOS os serviços pedidos. Um pacote sem
@@ -298,9 +298,9 @@ end $$;
 -- `pacote_que_cobre()`: quem exige `perfil_id = auth.uid()` é o `agendar()`.
 -- A consequência é honesta e precisa estar escrita: SEM LOGIN o bloqueio não
 -- pega, porque sem login o sistema não sabe que é a Maria. Ela marcaria a
--- quinta pagando o preço cheio — que é justamente o que o salão queria que
+-- quinta pagando o preço cheio — que é justamente o que o restaurante queria que
 -- acontecesse fora dos dias. O bloqueio protege a SESSÃO do pacote, não a
--- agenda do salão; quem fecha a agenda de verdade é a jornada.
+-- agenda do restaurante; quem fecha a agenda de verdade é a jornada.
 -- ---------------------------------------------------------------------------
 create or replace function public.pacote_fora_do_dia(
   p_cliente uuid, p_servicos uuid[], p_quando timestamptz)
@@ -322,7 +322,7 @@ begin
    where c.id = p_cliente;
   if v_fuso is null then return null; end if;
 
-  -- O dia é o do SALÃO, pelo mesmo motivo do `pacote_que_cobre()`.
+  -- O dia é o do RESTAURANTE, pelo mesmo motivo do `pacote_que_cobre()`.
   v_data := (p_quando at time zone v_fuso)::date;
   v_dia  := extract(dow from v_data)::smallint;
 
@@ -350,12 +350,12 @@ begin
      qual pacote, quais dias, e o que fazer agora. Sem a última ela fica
      parada na tela — e "não pode" sem saída é o que faz a cliente desistir. */
   return format(
-    'Seu pacote %s vale %s. Para marcar fora desses dias, chame o salão no '
+    'Seu pacote %s vale %s. Para marcar fora desses dias, chame o restaurante no '
     || 'WhatsApp — dá para atender pagando.',
     v_nome, public.dias_por_extenso(v_dias));
 end $$;
 
-/* O que a CLIENTE LOGADA vê sobre os próprios pacotes, naquele salão.
+/* O que a CLIENTE LOGADA vê sobre os próprios pacotes, naquele restaurante.
 
    Só os dela: o `where c.perfil_id = auth.uid()` é o filtro, e sem login
    `auth.uid()` é NULL e a lista sai vazia. É esta função que a página usa
@@ -420,11 +420,11 @@ begin
   -- Vender pacote é do Básico para cima (22_cotas, exigir_recurso).
   perform public.exigir_recurso(v_salao, 'pacotes', 'Vender pacote');
 
-  -- A ficha tem que ser DESTE salão. Sem isto, um gestor venderia pacote do
-  -- salão dele para a cliente de outro salão — e o benefício viajaria junto.
+  -- A ficha tem que ser DESTE restaurante. Sem isto, um gestor venderia pacote do
+  -- restaurante dele para a cliente de outro restaurante — e o benefício viajaria junto.
   if not exists (select 1 from public.clientes c
                   where c.id = p_cliente and c.salao_id = v_salao) then
-    raise exception 'Esta cliente não é deste salão.'
+    raise exception 'Esta cliente não é deste restaurante.'
       using errcode = 'check_violation';
   end if;
 
@@ -452,7 +452,7 @@ begin
 
   /* Cancelar NÃO apaga: marca. Os agendamentos que já usaram sessões continuam
      apontando para cá, e apagar a linha os deixaria órfãos — o histórico do
-     salão diria que aquele atendimento foi de graça sem dizer por quê. */
+     restaurante diria que aquele atendimento foi de graça sem dizer por quê. */
   update public.pacote_clientes set cancelado_em = now()
    where id = p_id and cancelado_em is null;
   /* As sessões que ainda VÃO acontecer saem da agenda (43_pacote_agenda.sql:
@@ -469,7 +469,7 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- 6) RLS
 --
--- Os pacotes do salão são cadastro: a equipe lê, o gestor escreve. As vendas
+-- Os pacotes do restaurante são cadastro: a equipe lê, o gestor escreve. As vendas
 -- também. O que a CLIENTE alcança é só o `meus_pacotes()`, que é
 -- `security definer` e filtra por `auth.uid()` — a tabela em si ela não lê.
 -- ---------------------------------------------------------------------------
@@ -557,4 +557,4 @@ comment on function public.pacote_que_cobre(uuid, uuid[], timestamptz) is
 comment on function public.pacote_fora_do_dia(uuid, uuid[], timestamptz) is
   'Frase de recusa quando o pacote tem so_nos_dias e o dia está fora da lista. NULL quando não há nada a barrar. Só o link usa: a recepção marca por fora.';
 comment on table public.pacotes is
-  'Pacotes que o salão vende. `dias` no padrão do Postgres: 0=domingo. `so_nos_dias` faz o link recusar fora dos dias; o painel marca assim mesmo.';
+  'Pacotes que o restaurante vende. `dias` no padrão do Postgres: 0=domingo. `so_nos_dias` faz o link recusar fora dos dias; o painel marca assim mesmo.';

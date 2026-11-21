@@ -1,14 +1,14 @@
 -- ===========================================================================
 -- PediHub — 12: os relatórios
 --
--- O salão já tinha todo o dado e nenhuma resposta. Comanda, item, pagamento e
+-- O restaurante já tinha todo o dado e nenhuma resposta. Comanda, item, pagamento e
 -- comissão estão gravados desde o começo; o que não existia era a pergunta
 -- "quanto eu faturei em outubro e quanto eu devo para a Ana".
 --
 -- ── POR QUE NO BANCO, E NÃO NO NAVEGADOR ───────────────────────────────────
 -- O painel já baixa perto de vinte tabelas ao abrir. Somar o mês no
--- JavaScript exigiria baixar TODO o histórico de comandas do salão — que
--- cresce para sempre — só para mostrar quatro números. Um salão com dois anos
+-- JavaScript exigiria baixar TODO o histórico de comandas do restaurante — que
+-- cresce para sempre — só para mostrar quatro números. Um restaurante com dois anos
 -- de casa passaria minutos carregando para ver o fechamento de um mês.
 --
 -- Aqui a conta é feita onde o dado mora, e volta um jsonb pequeno.
@@ -45,10 +45,10 @@ declare
 begin
   /* A permissão é de GESTÃO, não de equipe. Faturamento e comissão da casa
      inteira não são assunto da recepção nem de quem atende — e é a mesma
-     linha que impede o dono do salão B de ler o mês do salão A trocando o
+     linha que impede o dono do restaurante B de ler o mês do restaurante A trocando o
      uuid na chamada. */
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   -- Relatórios são do Básico para cima (22_cotas, exigir_recurso).
@@ -60,7 +60,7 @@ begin
   select fuso into v_fuso from public.saloes where id = p_salao;
   v_fuso := coalesce(v_fuso, 'America/Sao_Paulo');
 
-  /* O dia do salão, não o dia de quem está olhando. Um dono viajando lê o
+  /* O dia do restaurante, não o dia de quem está olhando. Um dono viajando lê o
      relatório do fuso dele e veria o dia 1º começar às 20h do dia 31. */
   v_ini := (p_de::timestamp) at time zone v_fuso;
   v_fim := ((p_ate + 1)::timestamp) at time zone v_fuso;   -- fim exclusivo
@@ -93,7 +93,7 @@ begin
 
     -- O MESMO período, imediatamente antes. É o que transforma "R$ 8.400" em
     -- "R$ 8.400, 12% acima do mês passado" — o número sozinho não diz se o
-    -- salão está melhorando.
+    -- restaurante está melhorando.
     'faturamentoAntes', coalesce((
       select round(sum(t.total), 2) from public.comandas_totais t
         join public.comandas c on c.id = t.id
@@ -101,7 +101,7 @@ begin
          and c.fechada_em >= v_ini_a and c.fechada_em < v_fim_a), 0),
 
     -- ── COMO ENTROU ───────────────────────────────────────────────────────
-    -- A taxa da maquininha vem junto: o salão recebe menos do que a cliente
+    -- A taxa da maquininha vem junto: o restaurante recebe menos do que a cliente
     -- pagou, e sem isso o "faturamento" mente sobre o que entra na conta.
     'formas', coalesce((
       select jsonb_agg(jsonb_build_object(
@@ -117,7 +117,7 @@ begin
                group by pg.forma) f), '[]'::jsonb),
 
     -- ── A COMISSÃO, POR PESSOA ────────────────────────────────────────────
-    -- O relatório mais pedido de salão, e o que hoje se faz na calculadora
+    -- O relatório mais pedido de restaurante, e o que hoje se faz na calculadora
     -- no fim do mês. Sai do item, não da comanda: o corte é do João e a
     -- escova é da Ana, na mesma cliente.
     'comissoes', coalesce((
@@ -216,7 +216,7 @@ begin
 
     -- ── QUEM VOLTOU ───────────────────────────────────────────────────────
     -- Cliente nova é a que não tinha atendimento concluído ANTES do período.
-    -- É a diferença entre um salão que cresce e um que troca de clientela.
+    -- É a diferença entre um restaurante que cresce e um que troca de clientela.
     'clientes', (
       select jsonb_build_object(
         'atendidas', count(distinct c.cliente_id),

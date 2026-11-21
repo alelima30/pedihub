@@ -86,7 +86,7 @@ await dona.inserir('servicos', { salaoId: SALAO, nome:'Escova',
    então com dois não "sobra" nada — e é exatamente aí que o "Ver todos os
    produtos" some, se ele ainda depender de sobrar. A tela da loja é a única
    que deixa mudar quantidade e enviar o pedido: vitrine sem saída é vitrine
-   quebrada, e um salão pequeno é quem mais cai nisso. */
+   quebrada, e um restaurante pequeno é quem mais cai nisso. */
 await dona.inserir('produtos', { salaoId: SALAO, nome:'Shampoo Reparador',
   preco:45, custo:20, ativo:true, vendaOnline:true, foto: arte('#065F46','#34D399') });
 await dona.inserir('produtos', { salaoId: SALAO, nome:'Máscara Nutritiva',
@@ -194,7 +194,7 @@ igual('"f" desliga', v.salao.loja, false);
    banco de verdade mostrou as quatro derrubando a `vitrine()` inteira.
 
    Este laço existe para a próxima chave: quem acrescentar uma sexta e usar
-   `::boolean` reprova aqui, e não no dia em que um salão sair do ar.
+   `::boolean` reprova aqui, e não no dia em que um restaurante sair do ar.
 
    ⚠ O LADO SEGURO NÃO É O MESMO EM TODAS, e por isso a tabela diz qual é.
    `precoNaCapa` é o único em que o erro custa dinheiro: lixo não pode
@@ -349,7 +349,7 @@ verdade('e a NÍTIDA fica na frente do borrão, que é o que faz ver o produto',
        && !/blur/.test(foto.frenteFiltro),
   JSON.stringify(foto));
 igual('o pé continua sendo o de agendar', m.peRotulo.trim(), 'Agendar horário');
-igual('e a cor é a do salão, não uma cor cravada', m.acao, COR.toUpperCase());
+igual('e a cor é a do restaurante, não uma cor cravada', m.acao, COR.toUpperCase());
 verdade('nada rola de lado', !m.rolaDeLado);
 await p.context().close();
 
@@ -414,19 +414,19 @@ await p.context().close();
 igual('nenhum erro de página nas quatro combinações', erros, []);
 
 /* ══════════════════════════════════════════════════════════════════════════
-   3e — A PRIMEIRA HORA DE UM SALÃO
+   3e — A PRIMEIRA HORA DE UM RESTAURANTE
    ══════════════════════════════════════════════════════════════════════════ */
 secao('3e · Módulo ligado e nada cadastrado ainda');
 
 /* ⚠ "NÃO VEIO SERVIÇO NENHUM" TEM DUAS CAUSAS, e elas pedem telas diferentes.
 
    A casa desligou o módulo, ou a casa acabou de nascer. A segunda é o estado
-   de TODO salão na primeira hora: o cadastro entrega o link no fim, e a dona
+   de TODO restaurante na primeira hora: o cadastro entrega o link no fim, e a dona
    manda para as clientes antes de lançar os serviços.
 
    Eu tratei as duas igual — o rodapé olhava a LISTA — e tirei o botão de
    entrada de quem tinha acabado de se cadastrar. A página já sabia dizer "o
-   salão ainda não publicou os serviços"; ninguém chegava nessa tela para ler.
+   restaurante ainda não publicou os serviços"; ninguém chegava nessa tela para ler.
    Quem pegou foi o `cliente-nuvem.test.mjs`, que guarda essa hora.
 
    Fica aqui também porque é a mesma decisão que esta suíte mede — e porque um
@@ -453,12 +453,12 @@ const zero = await pz.evaluate(() => {
   };
 });
 console.log('      ZERO: ' + JSON.stringify(zero));
-verdade('salão sem nada cadastrado continua com o botão do rodapé',
+verdade('restaurante sem nada cadastrado continua com o botão do rodapé',
   zero.peVisivel, JSON.stringify(zero));
 igual('e ele diz agendar', zero.peRotulo.trim(), 'Agendar horário');
 verdade('o cartão de boas-vindas também tem o caminho', zero.convite);
 /* ⚠ E NÃO GANHA "VER PRODUTOS". A loja nasce LIGADA no `cfg`: olhar o módulo
-   aqui poria esse botão na capa de todo salão que existe hoje, levando a uma
+   aqui poria esse botão na capa de todo restaurante que existe hoje, levando a uma
    prateleira vazia. Deste lado o vazio quer dizer "não vendemos", e não
    "ainda não". */
 verdade('mas não ganha um botão de produtos que ele não tem',
@@ -499,7 +499,7 @@ pd.on('pageerror', e => errosD.push(e.message));
 await pd.goto(ESTATICO + 'agendar.html?salao=studio-bella&demo=1');
 await pd.waitForTimeout(2200);
 
-// Como o dono desligaria: a chave no cfg do salão. Em demonstração ela chega
+// Como o dono desligaria: a chave no cfg do restaurante. Em demonstração ela chega
 // à tela sem passar por função nenhuma do banco.
 const demoCom = (valor) => pd.evaluate((v) => {
   const sl = bd.saloes.find(x => x.id === salao.id);
@@ -524,7 +524,7 @@ verdade('os serviços não vão junto', d.servicos > 0, JSON.stringify(d));
 
 /* ⚠ A STRING "false" É O CASO DE VERDADE. O jsonb do Postgres devolve texto,
    e `Boolean('false')` é `true`: uma peneira feita com `!!` traria a loja de
-   volta para todo salão que a desligou. */
+   volta para todo restaurante que a desligou. */
 d = await demoCom({ loja:'false' });
 igual('com a STRING "false", os produtos também somem', d.produtos, 0);
 
@@ -632,7 +632,7 @@ igual('nenhum erro no painel', errosP, []);
    Pedido dele: "quando desativo serviços e agendamento tem que sumir meus
    horários e quem atende". Os dois continuavam na capa com o módulo
    desligado — a equipe listada com o horário de cada uma, e o atalho para
-   uma agenda que o salão tinha acabado de tirar do link.
+   uma agenda que o restaurante tinha acabado de tirar do link.
 
    Medido com uma cliente que JÁ marcou antes (sessão no aparelho), porque é
    para ela que o atalho e o botão com o nome aparecem. Sem sessão, os dois

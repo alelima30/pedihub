@@ -81,7 +81,7 @@ const escondido = await produto(pizza, { nome:'Prato do dia', preco:30 });
 await q(`update public.produtos set preco_visivel = false where id = $1`, [escondido.id]);
 const foraDoLink = await produto(pizza, { nome:'Pizza congelada', preco:25, vendaOnline:false });
 const daOutra   = await produto(outra, { nome:'Lasanha', preco:40 });
-ok('dois restaurantes e um salão, com o cardápio montado');
+ok('dois restaurantes e um restaurante, com o cardápio montado');
 
 const cliente = aba();                       // a página: sem login
 const pedido = (extra) => Object.assign({ nome:'Bruna Costa', telefone:'(11) 96543-2100',
@@ -98,7 +98,7 @@ igual('o restaurante recebe, aberto, com os padrões de quem acabou de abrir',
   [casa.ligado, casa.aberto, casa.entrega, casa.retirada, Number(casa.taxaPadrao), Number(casa.minimo),
    casa.pagamentos, casa.servicosTambem],
   [true, true, true, true, 0, 0, ['pix', 'dinheiro', 'cartao'], false]);
-igual('o salão de beleza não recebe pedido', (await cliente.chamar('pedidos_da_casa', { p_slug: salao.slug })).ligado, false);
+igual('o restaurante de beleza não recebe pedido', (await cliente.chamar('pedidos_da_casa', { p_slug: salao.slug })).ligado, false);
 const doSalao = await recusa(() => cliente.chamar('fazer_pedido', { p_slug: salao.slug, p_pedido: pedido() }));
 verdade('e o banco recusa um pedido para ele', /não recebe pedidos pelo link/.test(doSalao || ''), doSalao);
 

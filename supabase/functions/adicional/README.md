@@ -7,7 +7,7 @@ passam por esta função, que roda no servidor.
 | ordem | o quê | onde |
 |---|---|---|
 | 1 | a conta: pode? quanto a mensalidade passa a ser? (não grava) | `preparar_adicional` (46) |
-| 2 | o valor da assinatura no cartão, se o salão paga no cartão | `PUT /preapproval/{id}` no Mercado Pago |
+| 2 | o valor da assinatura no cartão, se o restaurante paga no cartão | `PUT /preapproval/{id}` no Mercado Pago |
 | 3 | gravar, conferindo que a conta não mudou no meio | `aplicar_adicional` (46) |
 
 Se o passo 3 falhar depois do 2, o valor do cartão volta ao de antes.

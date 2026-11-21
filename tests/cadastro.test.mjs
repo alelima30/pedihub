@@ -30,7 +30,7 @@ const verdade = (m, c) => c ? ok(m) : nao(m, 'esperava verdadeiro');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 
-// Uma aba limpa por caso: o cadastro grava no localStorage, e o salão que um
+// Uma aba limpa por caso: o cadastro grava no localStorage, e o restaurante que um
 // caso cria faria o próximo recusar o apelido por já estar em uso.
 async function abrir() {
   const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 } });
@@ -162,7 +162,7 @@ console.log('\nO funil inteiro');
   await digitar(p, '#fZap', '51998876655');
   await p.waitForTimeout(200);
 
-  verdade('o link aparece enquanto se digita o nome do salão',
+  verdade('o link aparece enquanto se digita o nome do restaurante',
     (await p.textContent('.previa-link')).includes('studio-prado'));
 
   await p.click('button.grande:has-text("Criar minha agenda")');

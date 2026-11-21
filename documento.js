@@ -74,7 +74,7 @@ function mascara(el){
   el.value = v;
 }
 
-/* Só CPF: trava em onze dígitos. A cliente de um salão é pessoa, e deixar o
+/* Só CPF: trava em onze dígitos. A cliente de um restaurante é pessoa, e deixar o
    campo crescer até catorze só serviria para ela digitar um CNPJ sem que
    nada na tela dissesse que aquilo não cabe ali. */
 function mascaraCpf(el){

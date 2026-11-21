@@ -1,5 +1,5 @@
 -- ===========================================================================
--- PediHub — o fuso horário do salão (58_fuso.sql)
+-- PediHub — o fuso horário do restaurante (58_fuso.sql)
 --
 -- "Não posso perder nada sobre horários marcados."
 --
@@ -12,7 +12,7 @@
 --      cancelado, virando a meia-noite, arquivado — nem bloqueio;
 --   3. o lembrete e a campanha agendada acompanham; nada é "remarcado", e a
 --      cliente não recebe mensagem nenhuma por causa da troca;
---   4. o outro salão não é tocado, e os gatilhos da agenda voltam ligados;
+--   4. o outro restaurante não é tocado, e os gatilhos da agenda voltam ligados;
 --   5. por 90 segundos ninguém grava horário (o aparelho com a tela antiga);
 --   6. ida e volta devolve cada instante exatamente onde estava;
 --   7. para o leste e por duas horas; o prazo do sinal não passa do horário;
@@ -23,10 +23,10 @@
 \set ON_ERROR_STOP on
 
 insert into auth.users (id) values
-  ('a5800000-0000-0000-0000-00000000000a'),  -- Ana   — dona do salão A
+  ('a5800000-0000-0000-0000-00000000000a'),  -- Ana   — dona do restaurante A
   ('b5800000-0000-0000-0000-00000000000b'),  -- Rita  — recepção do A
   ('d5800000-0000-0000-0000-00000000000d'),  -- Ju    — profissional do A
-  ('e5800000-0000-0000-0000-00000000000e'),  -- Eva   — dona do salão B
+  ('e5800000-0000-0000-0000-00000000000e'),  -- Eva   — dona do restaurante B
   ('f5800000-0000-0000-0000-00000000000f');  -- Sol   — plataforma
 insert into public.perfis (id, nome, telefone, super_admin) values
   ('a5800000-0000-0000-0000-00000000000a', 'Ana',  '+5592958000001', false),
@@ -37,12 +37,12 @@ insert into public.perfis (id, nome, telefone, super_admin) values
 on conflict (id) do update set nome = excluded.nome, telefone = excluded.telefone,
                                super_admin = excluded.super_admin;
 
--- Os dois salões já existem há tempo (a trava de 90 s só vale para salão com
+-- Os dois restaurantes já existem há tempo (a trava de 90 s só vale para restaurante com
 -- mais de 10 minutos de vida; o recém-criado é o cadastro ajustando o fuso).
 insert into public.saloes (id, slug, nome, status, fuso, criado_em) values
-  ('58000000-0000-0000-0000-00000000000a', 'fuso-a', 'Salão de Manaus',  'ativo', 'America/Sao_Paulo', now() - interval '30 days'),
-  ('58000000-0000-0000-0000-00000000000b', 'fuso-b', 'Salão do Vizinho', 'ativo', 'America/Sao_Paulo', now() - interval '30 days'),
-  ('58000000-0000-0000-0000-00000000000c', 'fuso-c', 'Salão Antigo',     'ativo', 'America/Sao_Paulo', now() - interval '30 days');
+  ('58000000-0000-0000-0000-00000000000a', 'fuso-a', 'Restaurante de Manaus',  'ativo', 'America/Sao_Paulo', now() - interval '30 days'),
+  ('58000000-0000-0000-0000-00000000000b', 'fuso-b', 'Restaurante do Vizinho', 'ativo', 'America/Sao_Paulo', now() - interval '30 days'),
+  ('58000000-0000-0000-0000-00000000000c', 'fuso-c', 'Restaurante Antigo',     'ativo', 'America/Sao_Paulo', now() - interval '30 days');
 insert into public.assinaturas (salao_id, plano, status) values
   ('58000000-0000-0000-0000-00000000000a', 'time', 'ativa'),
   ('58000000-0000-0000-0000-00000000000b', 'time', 'ativa'),
@@ -101,7 +101,7 @@ create temporary table t_base as select current_date + 3 as d;
 create or replace function t_d() returns date language sql as $$ select d from t_base $$;
 select d from t_base \gset
 
--- ── A agenda do salão A ────────────────────────────────────────────────────
+-- ── A agenda do restaurante A ────────────────────────────────────────────────────
 insert into public.agendamentos
   (id, salao_id, cliente_id, profissional_id, inicio, fim, status, origem, valor_previsto, encaixe) values
   -- o mês passado, concluído
@@ -180,7 +180,7 @@ create temporary table antes_ca as
 
 do $$
 begin
-  perform t_igual('o salão A tem 8 horários no retrato', (select count(*) from antes_ag
+  perform t_igual('o restaurante A tem 8 horários no retrato', (select count(*) from antes_ag
      where salao_id = '58000000-0000-0000-0000-00000000000a'), 8);
   perform t_verdade('e o sistema já deixou lembretes marcados para os de daqui a três dias',
     (select count(*) from antes_no where tipo = 'lembrete' and anda) >= 3);
@@ -212,20 +212,20 @@ begin
   e := erro_de($q$update public.saloes set fuso = 'Marte/Olimpo' where id = '58000000-0000-0000-0000-00000000000a'$q$);
   perform t_verdade('direto na tabela também não entra — ' || coalesce(e, 'passou'), e like 'Não conheço o fuso horário "Marte/Olimpo"%');
   e := erro_de($q$update public.saloes set fuso = '' where id = '58000000-0000-0000-0000-00000000000a'$q$);
-  perform t_verdade('nem fica sem fuso', e like 'O salão precisa de um fuso horário%');
+  perform t_verdade('nem fica sem fuso', e like 'O restaurante precisa de um fuso horário%');
   e := erro_de($q$insert into public.saloes (slug, nome, fuso) values ('fuso-lixo', 'Lixo', 'Qualquer/Coisa')$q$);
-  perform t_verdade('salão novo com fuso inventado é recusado', e like 'Não conheço o fuso horário%');
+  perform t_verdade('restaurante novo com fuso inventado é recusado', e like 'Não conheço o fuso horário%');
 
   insert into public.saloes (id, slug, nome, fuso) values
     ('58000000-0000-0000-0000-0000000000d1', 'fuso-nulo', 'Sem Fuso', null);
-  perform t_texto('salão novo sem fuso nasce em Brasília',
+  perform t_texto('restaurante novo sem fuso nasce em Brasília',
     (select fuso from public.saloes where id = '58000000-0000-0000-0000-0000000000d1'), 'America/Sao_Paulo');
   insert into public.saloes (id, slug, nome, fuso) values
     ('58000000-0000-0000-0000-0000000000d2', 'fuso-acre', 'Do Acre', 'America/Rio_Branco');
   perform t_texto('e com um fuso de verdade nasce nele',
     (select fuso from public.saloes where id = '58000000-0000-0000-0000-0000000000d2'), 'America/Rio_Branco');
 
-  perform t_texto('depois de tanta recusa, o salão A continua onde estava',
+  perform t_texto('depois de tanta recusa, o restaurante A continua onde estava',
     (select fuso from public.saloes where id = '58000000-0000-0000-0000-00000000000a'), 'America/Sao_Paulo');
   perform t_igual('e nenhum horário saiu do lugar',
     (select count(*) from public.agendamentos a join antes_ag b using (id) where a.inicio <> b.inicio or a.fim <> b.fim), 0);
@@ -251,7 +251,7 @@ begin
     (r->>'lembretes')::bigint, (select count(*) from antes_no where anda and salao_id = '58000000-0000-0000-0000-00000000000a'));
   perform t_igual('e a campanha agendada para depois de amanhã', (r->>'campanhas')::bigint, 1);
 
-  perform t_texto('o salão agora está em Manaus',
+  perform t_texto('o restaurante agora está em Manaus',
     (select fuso from public.saloes where id = '58000000-0000-0000-0000-00000000000a'), 'America/Manaus');
 
   -- ⚠ O CORAÇÃO DO ARQUIVO.
@@ -281,7 +281,7 @@ begin
     (select count(*) from public.bloqueios a join antes_bl b using (id)
       where t_rot(a.inicio, 'America/Manaus') = b.rot_ini and t_rot(a.fim, 'America/Manaus') = b.rot_fim), 2);
 
-  perform t_igual('o salão vizinho não foi tocado',
+  perform t_igual('o restaurante vizinho não foi tocado',
     (select count(*) from public.agendamentos a join antes_ag b using (id)
       where a.salao_id = '58000000-0000-0000-0000-00000000000b' and a.inicio = b.inicio and a.fim = b.fim), 1);
 end $$;
@@ -375,21 +375,21 @@ begin
             '95800000-0000-0000-0000-0000000000a2', '%s 14:00:00 America/Sao_Paulo', '%s 15:00:00 America/Sao_Paulo',
             'confirmado', 'recepcao', 80) returning id::text$q$, t_d() + 5, t_d() + 5));
   perform t_verdade('a recepção não consegue marcar com o relógio antigo — ' || e,
-    e like 'ERRO: O relógio do salão acabou de ser ajustado%');
+    e like 'ERRO: O relógio do restaurante acabou de ser ajustado%');
   perform t_igual('e nada foi gravado',
     (select count(*) from public.agendamentos where salao_id = '58000000-0000-0000-0000-00000000000a'), 8);
 
   e := t_como('b5800000-0000-0000-0000-00000000000b', format($q$
     update public.agendamentos set inicio = '%s 16:00:00 America/Sao_Paulo', fim = '%s 17:00:00 America/Sao_Paulo'
      where id = 'a5810000-0000-0000-0000-000000000004' returning id::text$q$, t_d(), t_d()));
-  perform t_verdade('nem remarcar', e like 'ERRO: O relógio do salão acabou de ser ajustado%');
+  perform t_verdade('nem remarcar', e like 'ERRO: O relógio do restaurante acabou de ser ajustado%');
 
   e := t_como('a5800000-0000-0000-0000-00000000000a', format($q$
     insert into public.bloqueios (salao_id, profissional_id, inicio, fim, motivo)
     values ('58000000-0000-0000-0000-00000000000a', '95800000-0000-0000-0000-0000000000a2',
             '%s 08:00:00 America/Sao_Paulo', '%s 09:00:00 America/Sao_Paulo', 'Médico') returning id::text$q$,
     t_d() + 5, t_d() + 5));
-  perform t_verdade('nem bloquear', e like 'ERRO: O relógio do salão acabou de ser ajustado%');
+  perform t_verdade('nem bloquear', e like 'ERRO: O relógio do restaurante acabou de ser ajustado%');
 
   -- O que NÃO é horário continua: cancelar não espera.
   e := t_como('b5800000-0000-0000-0000-00000000000b', $q$
@@ -402,12 +402,12 @@ begin
     values ('58000000-0000-0000-0000-00000000000b', 'c5800000-0000-0000-0000-0000000000b1',
             '95800000-0000-0000-0000-0000000000b1', '%s 14:00:00 America/Sao_Paulo', '%s 15:00:00 America/Sao_Paulo',
             'confirmado', 'recepcao', 80) returning 'gravou'$q$, t_d() + 5, t_d() + 5));
-  perform t_texto('o salão vizinho marca normalmente', e, 'gravou');
+  perform t_texto('o restaurante vizinho marca normalmente', e, 'gravou');
 
   -- A dona não desliga a trava escrevendo no campo.
   e := t_como('a5800000-0000-0000-0000-00000000000a', $q$
     update public.saloes set fuso_mudou_em = null where id = '58000000-0000-0000-0000-00000000000a' returning 'ok'$q$);
-  perform t_verdade('quem é do salão não apaga o carimbo pela API',
+  perform t_verdade('quem é do restaurante não apaga o carimbo pela API',
     (select fuso_mudou_em is not null from public.saloes where id = '58000000-0000-0000-0000-00000000000a'));
 end $$;
 
@@ -511,11 +511,11 @@ begin
   e := t_como(null, $q$select public.mudar_fuso('58000000-0000-0000-0000-00000000000a', 'America/Manaus')::text$q$);
   perform t_verdade('visitante sem login nem chama — ' || e, e like 'ERRO: permission denied%');
   e := t_como('b5800000-0000-0000-0000-00000000000b', $q$select public.mudar_fuso('58000000-0000-0000-0000-00000000000a', 'America/Manaus')::text$q$);
-  perform t_verdade('a recepção não troca', e like 'ERRO: Só quem administra o salão troca o fuso horário%');
+  perform t_verdade('a recepção não troca', e like 'ERRO: Só quem administra o restaurante troca o fuso horário%');
   e := t_como('d5800000-0000-0000-0000-00000000000d', $q$select public.mudar_fuso('58000000-0000-0000-0000-00000000000a', 'America/Manaus')::text$q$);
   perform t_verdade('quem atende não troca', e like 'ERRO: Só quem administra%');
   e := t_como('e5800000-0000-0000-0000-00000000000e', $q$select public.mudar_fuso('58000000-0000-0000-0000-00000000000a', 'America/Manaus')::text$q$);
-  perform t_verdade('a dona do salão vizinho não troca o fuso deste', e like 'ERRO: Só quem administra%');
+  perform t_verdade('a dona do restaurante vizinho não troca o fuso deste', e like 'ERRO: Só quem administra%');
   perform t_texto('nada disso mexeu no fuso',
     (select fuso from public.saloes where id = '58000000-0000-0000-0000-00000000000a'), 'America/Rio_Branco');
 
@@ -539,7 +539,7 @@ begin
   update public.saloes set fuso_mudou_em = null where id = '58000000-0000-0000-0000-00000000000a';
 
   /* A plataforma atendendo um pedido ("troca o fuso para mim"): vale a regra
-     do modo suporte, como para qualquer outra alteração no salão de alguém —
+     do modo suporte, como para qualquer outra alteração no restaurante de alguém —
      sem "Liberar edição" é só leitura, e com ela fica registrado. */
   e := t_como('f5800000-0000-0000-0000-00000000000f', $q$select public.mudar_fuso('58000000-0000-0000-0000-00000000000a', 'America/Manaus')->>'fuso'$q$);
   perform t_verdade('a plataforma, sem liberar a edição, não troca — ' || e, e like 'ERRO: Modo suporte: só leitura%');
@@ -555,7 +555,7 @@ begin
   perform t_como('f5800000-0000-0000-0000-00000000000f',
     format($q$select public.liberar_edicao_suporte('%s')::text$q$, v_acesso));
   e := t_como('f5800000-0000-0000-0000-00000000000f', $q$select public.mudar_fuso('58000000-0000-0000-0000-00000000000a', 'America/Manaus')->>'fuso'$q$);
-  perform t_texto('com "Liberar edição", a plataforma troca pelo salão', e, 'America/Manaus');
+  perform t_texto('com "Liberar edição", a plataforma troca pelo restaurante', e, 'America/Manaus');
   perform t_igual('e os horários continuam na mesma hora de parede',
     (select count(*) from public.agendamentos a join antes_ag b using (id)
       where a.salao_id = '58000000-0000-0000-0000-00000000000a'
@@ -573,7 +573,7 @@ end $$;
 
 -- ===========================================================================
 \echo ''
-\echo '8b. Salão recém-criado: o cadastro ajusta o fuso sem travar o primeiro horário'
+\echo '8b. Restaurante recém-criado: o cadastro ajusta o fuso sem travar o primeiro horário'
 -- ===========================================================================
 insert into public.saloes (id, slug, nome, status) values
   ('58000000-0000-0000-0000-0000000000e1', 'fuso-novo', 'Acabou de Nascer', 'ativo');
@@ -593,7 +593,7 @@ begin
     with u as (update public.saloes set fuso = 'America/Manaus' where id = '58000000-0000-0000-0000-0000000000e1' returning fuso)
     select fuso from u$q$);
   perform t_texto('o cadastro grava o fuso do aparelho', e, 'America/Manaus');
-  perform t_verdade('sem carimbo: não há tela antiga aberta num salão de um minuto de vida',
+  perform t_verdade('sem carimbo: não há tela antiga aberta num restaurante de um minuto de vida',
     (select fuso_mudou_em is null from public.saloes where id = '58000000-0000-0000-0000-0000000000e1'));
   e := t_como('e5800000-0000-0000-0000-00000000000e', format($q$
     insert into public.agendamentos (salao_id, cliente_id, profissional_id, inicio, fim, status, origem, valor_previsto)
@@ -622,7 +622,7 @@ begin
   select inicio into v_ini from public.agendamentos where id = 'a5830000-0000-0000-0000-000000000001';
   e := t_como('a5800000-0000-0000-0000-00000000000a',
     $q$select public.mudar_fuso('58000000-0000-0000-0000-00000000000c', 'America/Sao_Paulo')->>'fuso'$q$);
-  perform t_texto('o salão com lixo no fuso consegue consertar', e, 'America/Sao_Paulo');
+  perform t_texto('o restaurante com lixo no fuso consegue consertar', e, 'America/Sao_Paulo');
   perform t_verdade('sem mexer em horário nenhum: não havia hora de parede para preservar',
     (select inicio = v_ini from public.agendamentos where id = 'a5830000-0000-0000-0000-000000000001'));
   perform t_verdade('e o histórico diz o porquê',

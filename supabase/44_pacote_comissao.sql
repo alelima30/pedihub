@@ -15,7 +15,7 @@
 --    ganha mais; e a soma nunca passa do que a cliente pagou.
 -- 2. AO ATENDER. A comissão conta no dia em que a sessão é concluída, mesmo
 --    com o pacote ainda a receber: a profissional trabalhou, e cobrar a
---    cliente é com o salão.
+--    cliente é com o restaurante.
 --
 -- ── QUEM GANHA ────────────────────────────────────────────────────────────
 -- Quem ATENDEU aquela sessão (`profissional_id` do horário), e não quem foi

@@ -23,7 +23,7 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do update set nome = excluded.nome, telefone = excluded.telefone;
 insert into public.saloes (id, slug, nome, tipo, status, fuso) values
   ('55500000-0000-0000-0000-00000000000a', 'rel-ana', 'Loja da Ana', 'salao', 'ativo', 'America/Sao_Paulo');
--- O dia do salão (o servidor está em UTC: à noite, o dia dele já é amanhã).
+-- O dia do restaurante (o servidor está em UTC: à noite, o dia dele já é amanhã).
 select public.hoje_no_salao('55500000-0000-0000-0000-00000000000a') as hoje \gset
 insert into public.assinaturas (salao_id, plano, status, vence_em) values
   ('55500000-0000-0000-0000-00000000000a', 'individual', 'ativa', :'hoje'::date + 20);
@@ -95,7 +95,7 @@ select t_verdade('o anon nem chama',
   not has_function_privilege('anon', 'public.relatorio_vendas(uuid,date,date)', 'execute'));
 select t_texto('a recepção não vê (é o dinheiro da casa, como o relatório de sempre)',
   erro_de(format($$select t_rel('b5500000-0000-0000-0000-00000000000b', %L, %L)$$, :'hoje'::date - 10, :'hoje'::date)),
-  'Sem permissão neste salão.');
+  'Sem permissão neste restaurante.');
 select t_texto('período ao contrário é recusado',
   erro_de(format($$select t_rel('a5500000-0000-0000-0000-00000000000a', %L, %L)$$, :'hoje'::date, :'hoje'::date - 10)),
   'Confira as datas do período.');

@@ -51,7 +51,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`prod-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Dona do Balcão', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Produto ' + marca,
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Produto ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444',
   p_documento:'11222333000181', p_origem:null });
 const SALAO = cr[0].salao_id;
@@ -72,7 +72,7 @@ const comoATelaMonta = (extra) => Object.assign({
 secao('O produto cadastrado na tela chega ao banco');
 
 const antes = await d.baixar(SALAO);
-igual('o salão começa sem produto nenhum', (antes.produtos || []).length, 0);
+igual('o restaurante começa sem produto nenhum', (antes.produtos || []).length, 0);
 
 const agora = JSON.parse(JSON.stringify(antes));
 const novo = comoATelaMonta();

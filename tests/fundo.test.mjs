@@ -129,7 +129,7 @@ async function pagina(){
        A primeira versão deste teste lia o <body> — e o <body> estava certo,
        escondido atrás da coluna da página, que no celular cobre tudo. O
        teste passava, e no print dele o fundo escolhido aparecia só nas
-       margens do computador. Aqui sobe-se do nome do salão até o primeiro
+       margens do computador. Aqui sobe-se do nome do restaurante até o primeiro
        elemento que pinta alguma coisa: é isso que o olho vê atrás do texto. */
     const atrasDe = el => {
       for(let e = el; e; e = e.parentElement){
@@ -261,7 +261,7 @@ secao('3 · O que ele escolhe chega na página da cliente');
   const pg1 = await pagina();
   igual('a página pinta o fundo escolhido ATRÁS DO CONTEÚDO, no celular', pg1.atras.cor, '#0B1220');
   verdade('com as letras claras', pg1.escuro, JSON.stringify(pg1));
-  verdade('e o nome do salão se lê sobre ele',
+  verdade('e o nome do restaurante se lê sobre ele',
     pg1.nome && pg1.nome !== '#172033', pg1.nome);
 
   /* ⚠ GRADIENTE SEM MEXER NOS SELETORES. Os dois apareciam preenchidos, e
@@ -303,7 +303,7 @@ secao('4 · A foto: quem nunca escolheu fica com ela, quem escolheu cor não');
   await fechar();
 
   /* Quem salvou com o painel anterior tem `cor` gravado junto com a foto: o
-     painel antigo sempre gravava `cor`. Para a página esse salão é igual ao
+     painel antigo sempre gravava `cor`. Para a página esse restaurante é igual ao
      que nunca escolheu — a foto que ele vê hoje não pode sumir. */
   await porCfg({ fundo: FOTO, fundoTipo: 'cor' });
   verdade('foto com "cor" gravado pelo painel antigo: continua', (await pagina()).foto);
@@ -458,7 +458,7 @@ secao('8 · Gradiente de três cores');
   verdade('a página da cliente pinta as três, na ordem',
     /#1a1330 0%, #a000ff 50%, #1a1330 100%/i.test(pg.grad), pg.grad);
   /* ⚠ E ATRÁS DO CONTEÚDO — com gradiente e SEM cor sólida salva, que é o
-     caso do print. Na seção 3 o salão ainda tinha um papel escolhido, e o
+     caso do print. Na seção 3 o restaurante ainda tinha um papel escolhido, e o
      papel sozinho já tirava a coluna da frente: a mutação que esquecia o
      gradiente nessa regra sobreviveu por isso. */
   igual('sem cor sólida salva, nada de papel escolhido', (await cfgDe()).cores || {}, {});

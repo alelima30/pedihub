@@ -71,7 +71,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
               then 'FALTA' else 'certo' end, ''
 
   union all
-  -- Sem o gatilho, desligar a comanda no painel faz o mês do salão ir a
+  -- Sem o gatilho, desligar a comanda no painel faz o mês do restaurante ir a
   -- zero: o atendimento concluído deixa de virar dinheiro em lugar nenhum.
   -- E existir não basta: a versão antiga do gatilho cobrava a sessão de
   -- pacote pelo preço cheio e esquecia o desconto do cupom.
@@ -204,7 +204,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
      `(cfg->>'loja')::boolean` as duas chaves aparecem no texto da função e
      tudo parece no lugar — até o dia em que um caractere estranho entra no
      `cfg` e a `vitrine()` LEVANTA. Aí não é a loja que some: é a página
-     inteira da cliente, com o link que o salão mandou no WhatsApp.
+     inteira da cliente, com o link que o restaurante mandou no WhatsApp.
 
      Por isso o teste é o `lower(btrim(`: é a assinatura da peneira de letra,
      a mesma do `usa_comanda()`. */
@@ -432,7 +432,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
   union all
   /* A cliente que precisa de confirmação: a marca na ficha, e o agendar()
      que respeita ela. A função não pode estar aberta: diria a qualquer um,
-     pelo telefone, quem está marcada no salão. */
+     pelo telefone, quem está marcada no restaurante. */
   select 23, 'cliente que precisa de confirmação',
          case
            when not exists (select 1 from information_schema.columns
@@ -607,7 +607,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
                || 'que a cliente escolhe não é gravada'
            else '' end
   union all
-  /* O número do WhatsApp é do PediHub, um só para todos os salões. A
+  /* O número do WhatsApp é do PediHub, um só para todos os restaurantes. A
      confirmação e o lembrete têm de levar o nome da casa — e o modelo
      cadastrado na Meta espera SEIS variáveis. Com cinco, a Meta recusa cada
      mensagem com o erro 132000.
@@ -617,9 +617,9 @@ with conferencia(ordem, item, veredito, detalhe) as (
      marketing e não chegava), e o resumo do dia é 'pedihub_agenda_hoje' (o curto,
      com botão). Nome que não existe lá volta 132001. */
   /* Com "mensagens com valor" ligado no admin, o aviso e o lembrete do
-     salão vão pelos modelos `_pagamento` (item 40): o sufixo é tirado antes
+     restaurante vão pelos modelos `_pagamento` (item 40): o sufixo é tirado antes
      de comparar, senão estas duas linhas acusavam FALTA num banco certo. */
-  select 28, 'mensagens do WhatsApp: salão no texto e os modelos certos',
+  select 28, 'mensagens do WhatsApp: restaurante no texto e os modelos certos',
          case
            when to_regprocedure('public.variaveis_agendamento(uuid,text)') is null
              or pg_get_functiondef(to_regprocedure('public.variaveis_agendamento(uuid,text)'))
@@ -641,13 +641,13 @@ with conferencia(ordem, item, veredito, detalhe) as (
                   is distinct from 'pedihub_aviso_profissional'
              or public.modelo_de('resumo') is distinct from 'pedihub_agenda_hoje'
              then 'cole o 00_tudo.sql de novo (21_notificacoes): as mensagens saem '
-               || 'sem o nome do salão ou com nome de modelo que a Meta não tem'
+               || 'sem o nome do restaurante ou com nome de modelo que a Meta não tem'
            else '' end
   union all
-  /* O lembrete para o salão: a vontade de cada pessoa, o tipo novo na fila,
+  /* O lembrete para o restaurante: a vontade de cada pessoa, o tipo novo na fila,
      o modelo, e a varredura de carona no agendador (sem ela, ligar o lembrete
      não valeria para o que já estava marcado). */
-  select 29, 'lembrete para o salão (quem atende / dono)',
+  select 29, 'lembrete para o restaurante (quem atende / dono)',
          case
            when not exists (select 1 from information_schema.columns
                              where table_schema = 'public' and table_name = 'profissionais'
@@ -677,7 +677,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
              or pg_get_functiondef(to_regprocedure('public.gerar_resumos(timestamptz)'))
                   not like '%gerar_lembretes_equipe%'
              then 'cole o 00_tudo.sql de novo (21_notificacoes): o lembrete para '
-               || 'o salão não está instalado'
+               || 'o restaurante não está instalado'
            else '' end
   union all
   /* A franquia nova (teste 100, Essencial 500…), a reserva da cliente no
@@ -713,9 +713,9 @@ with conferencia(ordem, item, veredito, detalhe) as (
                || 'nova ou a reserva da cliente não está instalada'
            else '' end
   union all
-  /* O preço especial por salão (13, 1b) lido pelo Pix, e a campanha presa
+  /* O preço especial por restaurante (13, 1b) lido pelo Pix, e a campanha presa
      ao plano e à franquia (22, 2c) — a porta dos fundos do limite. */
-  select 31, 'preço especial por salão e campanha dentro do limite',
+  select 31, 'preço especial por restaurante e campanha dentro do limite',
          case
            when not exists (select 1 from information_schema.columns
                              where table_schema = 'public' and table_name = 'assinaturas'
@@ -794,7 +794,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
            else '' end
   union all
   /* O botão Excluir conta (36_excluir_conta): as duas funções que a tela
-     chama, nenhuma aberta a quem não entrou, e a que apaga o salão inteiro
+     chama, nenhuma aberta a quem não entrou, e a que apaga o restaurante inteiro
      fechada até para quem entrou — só a excluir_minha_conta() a chama. */
   select 35, 'Excluir conta',
          case
@@ -864,7 +864,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
              then 'cole o 00_tudo.sql de novo (10_campanhas e 22_cotas)'
            else '' end
   union all
-  /* O modo suporte: a plataforma abre o painel de um salão só olhando, e só
+  /* O modo suporte: a plataforma abre o painel de um restaurante só olhando, e só
      grava depois de "Liberar edição" — com o que mudou registrado. */
   select 38, 'Modo suporte (só leitura, com "Liberar edição")',
          case
@@ -964,10 +964,10 @@ with conferencia(ordem, item, veredito, detalhe) as (
              then 'cole o 00_tudo.sql de novo (21_notificacoes)'
            else '' end
   union all
-  /* O lembrete para o salão SAI na hora dele: antes da correção, a varredura
+  /* O lembrete para o restaurante SAI na hora dele: antes da correção, a varredura
      que roda antes de cada envio o cancelava exatamente na hora de sair
      ("o horário, quem atende ou o ajuste do lembrete mudou"). */
-  select 43, 'Lembrete para o salão sai na hora dele',
+  select 43, 'Lembrete para o restaurante sai na hora dele',
          case
            when not exists (select 1 from pg_proc where proname = 'refazer_lembrete_equipe'
                               and prosrc like '%v_chegou%')
@@ -1061,7 +1061,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
   /* O Crediário (47_crediario): a venda a prazo, as parcelas e o que entra
      no caixa, no relatório e na comissão. */
   /* Senha para marcar (25) e excluir pacote (50). */
-  select 60, 'Senha para marcar pelo link (opção do salão)',
+  select 60, 'Senha para marcar pelo link (opção do restaurante)',
          case when not exists (select 1 from pg_proc where proname = 'vitrine' and prosrc like '%exigeSenha%')
               then 'FALTA' else 'certo' end,
          case when not exists (select 1 from pg_proc where proname = 'vitrine' and prosrc like '%exigeSenha%')
@@ -1086,7 +1086,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
               then 'cole as duas partes de novo (51_google)' else '' end
   union all
   /* Pacote (27 e 45): a falta gasta a sessão; a lista sai sem a profissional
-     (com o salão); o lembrete de pagamento não sai mais. */
+     (com o restaurante); o lembrete de pagamento não sai mais. */
   select 63, 'Pacote: falta desconta a sessão, mensagens novas',
          case when not exists (select 1 from pg_proc where proname = 'pacote_sessoes_restantes' and prosrc like '%faltou%')
                 or not exists (select 1 from pg_proc where proname = 'agenda_do_pacote' and prosrc like '%Local: %'
@@ -1232,7 +1232,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
               then 'cole a parte 2 de novo (25_loja)' else '' end
   union all
   /* A consulta do plano fechada (57): quem é de fora não pergunta ao banco
-     que plano um salão paga nem quanto ele usa. */
+     que plano um restaurante paga nem quanto ele usa. */
   select 75, 'Consulta do plano fechada para quem é de fora',
          case when exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                             where n.nspname = 'public'
@@ -1251,8 +1251,8 @@ with conferencia(ordem, item, veredito, detalhe) as (
                                    or has_function_privilege('authenticated', p.oid, 'execute')))
               then 'cole a parte 2 de novo (57_plano_fechado)' else '' end
   union all
-  /* O fuso do salão (58): escolher, e trocar sem mexer em horário marcado. */
-  select 76, 'Fuso horário do salão: escolha e troca sem mexer nos horários',
+  /* O fuso do restaurante (58): escolher, e trocar sem mexer em horário marcado. */
+  select 76, 'Fuso horário do restaurante: escolha e troca sem mexer nos horários',
          case when to_regprocedure('public.mudar_fuso(uuid,text)') is null
                 or not exists (select 1 from pg_trigger where tgname = 'tg_salao_fuso_mover'
                                  and tgrelid = 'public.saloes'::regclass)
@@ -1364,7 +1364,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
               then 'cole o 00_tudo.sql de novo (08_conta e 48_cadastro_link)' else '' end
   union all
   /* O freio do link (09): conta só o que a cliente marcou pelo link — as
-     sessões que o salão marcou (pacote com agenda fixa) não travam mais. */
+     sessões que o restaurante marcou (pacote com agenda fixa) não travam mais. */
   select 57, 'Freio do link conta só o que a cliente marcou',
          case when not exists (select 1 from pg_proc where proname = 'agendar'
                                  and prosrc like '%origem = ''online''%v_abertos >= 3%')
@@ -1383,7 +1383,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or not exists (select 1 from pg_proc where proname = 'receber_pacote' and prosrc like '%confirmadas%')
               then 'cole o 00_tudo.sql de novo (43_pacote_agenda)' else '' end
   union all
-  /* Remarcar pelo painel (49_remarcar): o salão move o horário, mantendo o
+  /* Remarcar pelo painel (49_remarcar): o restaurante move o horário, mantendo o
      pacote, os serviços e o valor. */
   select 56, 'Remarcar pelo painel',
          case
@@ -1400,7 +1400,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
            else '' end
   union all
   /* O cadastro pelo link (48_cadastro_link): a cliente cria a conta pelo
-     link do salão e a ficha nasce em Clientes, marcada "cadastrou pelo link". */
+     link do restaurante e a ficha nasce em Clientes, marcada "cadastrou pelo link". */
   select 55, 'Cadastro da cliente pelo link (sem agendar)',
          case
            when to_regprocedure('public.cadastrar_minha_ficha(uuid)') is null
@@ -1568,7 +1568,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
            else '' end
   union all
   /* As travas da auditoria de segurança (42_travas e 14_motor): o status do
-     salão é da plataforma, a linha do salão é da equipe, e o porquê de um
+     restaurante é da plataforma, a linha do restaurante é da equipe, e o porquê de um
      horário não caber (com nome de cliente) só a equipe lê. */
   select 49, 'Travas da auditoria de segurança',
          case
@@ -1577,7 +1577,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
              or not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'saloes'
                               and policyname = 'salao_ler' and qual like '%e_equipe%')
              or not exists (select 1 from pg_proc where proname = 'porque_nao_cabe'
-                              and prosrc like '%Só a equipe do salão consulta a agenda%')
+                              and prosrc like '%Só a equipe do restaurante consulta a agenda%')
              then 'FALTA'
            else 'certo' end,
          case
@@ -1586,7 +1586,7 @@ with conferencia(ordem, item, veredito, detalhe) as (
              or not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'saloes'
                               and policyname = 'salao_ler' and qual like '%e_equipe%')
              or not exists (select 1 from pg_proc where proname = 'porque_nao_cabe'
-                              and prosrc like '%Só a equipe do salão consulta a agenda%')
+                              and prosrc like '%Só a equipe do restaurante consulta a agenda%')
              then 'cole o 00_tudo.sql de novo (42_travas e 14_motor)'
            else '' end
   union all

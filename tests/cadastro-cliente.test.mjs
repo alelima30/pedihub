@@ -25,7 +25,7 @@
        marcação. É a única coisa que impede o silêncio da tela de virar
        exigência escondida: sem etiqueta e barrando, a pessoa descobriria que
        o campo era obrigatório ao ser barrada por ele;
-     · que o que ela digitou não sobrescreva o que o salão corrigiu.
+     · que o que ela digitou não sobrescreva o que o restaurante corrigiu.
 
    ⚠ E a ficha do painel: a coluna `clientes.email` existia desde o começo e
    não tinha campo na tela. Enquanto ninguém digitava, ninguém sentia falta.
@@ -231,7 +231,7 @@ const mascarou = await p.evaluate(() => {
 e('a máscara pontua enquanto digita — ' + mascarou.pontuado,
   mascarou.pontuado === '529.982.247-25', mascarou.pontuado);
 /* Travar em onze é o que impede a pessoa de digitar um CNPJ sem que nada na
-   tela diga que aquilo não cabe ali. A cliente de um salão é pessoa. */
+   tela diga que aquilo não cabe ali. A cliente de um restaurante é pessoa. */
 e('e trava em onze dígitos — ' + mascarou.travado,
   mascarou.travado === '529.982.247-25', mascarou.travado);
 
@@ -307,7 +307,7 @@ e('inclusive o CPF, pontuado de volta — ' + lembrou.cpf,
 e('e diz de quem ele está lembrando, para quem não for ela poder trocar',
   /Marta Prado/.test(lembrou.recado), lembrou.recado);
 
-/* ⚠ QUEM MANDA NA FICHA É O SALÃO — a mesma regra do `agendar()` no
+/* ⚠ QUEM MANDA NA FICHA É O RESTAURANTE — a mesma regra do `agendar()` no
    09_cliente.sql, que aqui precisa valer igual porque na demonstração não há
    banco para aplicá-la. Se as duas divergirem, o mesmo gesto dá resultado
    diferente na demonstração e na nuvem, e quem descobre é o dono achando que

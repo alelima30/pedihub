@@ -3,7 +3,7 @@
 --
 -- Cole no SQL Editor do Supabase e rode UMA vez. Serve para desfazer o teste
 -- de R$ 1,00: o Essencial a R$ 1 (no plano ou como "preço especial" de um
--- salão) volta ao valor certo, e nenhum salão fica com preço diferente.
+-- restaurante) volta ao valor certo, e nenhum restaurante fica com preço diferente.
 --
 -- Por que é um arquivo à parte, e não parte do 00_tudo.sql: preço é decisão
 -- comercial. O 00_tudo, colado de novo, NUNCA mexe em preço — senão um preço
@@ -28,9 +28,9 @@ update public.planos p
        ) as v(codigo, preco)
  where p.codigo = v.codigo;
 
--- Os preços especiais por salão (13_cobranca, 1b) também saem: todo mundo
--- paga a tabela. Para dar desconto a um salão depois, use o preço especial
--- dele de novo — os cupons do sistema são do salão para as clientes dele, e
+-- Os preços especiais por restaurante (13_cobranca, 1b) também saem: todo mundo
+-- paga a tabela. Para dar desconto a um restaurante depois, use o preço especial
+-- dele de novo — os cupons do sistema são do restaurante para as clientes dele, e
 -- não descontam a mensalidade do PediHub.
 update public.assinaturas
    set precos_especiais = '{}'::jsonb

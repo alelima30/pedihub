@@ -1,14 +1,14 @@
 /* ===========================================================================
    PediHub — QR code
 
-   O painel promete, há muito tempo, que o link do salão "imprime como QR no
+   O painel promete, há muito tempo, que o link do restaurante "imprime como QR no
    espelho". Não imprimia: não havia QR nenhum.
 
    ── POR QUE NÃO UM SERVIÇO DE FORA ────────────────────────────────────────
    Existem endereços que devolvem a imagem pronta — `api.qrserver.com` e
    parecidos, uma linha de código. Três razões para não usar:
 
-     · o endereço do salão passaria a ser mandado para um servidor alheio toda
+     · o endereço do restaurante passaria a ser mandado para um servidor alheio toda
        vez que a tela desenha o quadradinho;
      · sem internet, ou no dia em que aquele serviço sair do ar, o QR vira um
        retângulo quebrado dentro do painel;
@@ -27,7 +27,7 @@
    disso serve para endereço de internet, e cada um seria mais código para
    manter sem ninguém usar.
 
-   ⚠ E POR QUE CORREÇÃO M, E NÃO L: o QR do salão vai para o espelho, para o
+   ⚠ E POR QUE CORREÇÃO M, E NÃO L: o QR do restaurante vai para o espelho, para o
    balcão, para o vidro da porta. Vai ser fotografado torto, com dedo em
    cima, com reflexo. O L economiza uns módulos e devolve um código que
    desiste na primeira sujeira; o M lê com 15% do desenho perdido.

@@ -47,7 +47,7 @@ const m = Date.now().toString(36);
 const dona = aba();
 await dona.criarConta({ email:`rank-${m}@t.com`, senha:'minhasenhaboa',
   nome:'Dona do Ranking', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Ranking ' + m,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Ranking ' + m,
   p_tipo:'salao', p_telefone:'(11) 99887-6655', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 await banco.query(`update public.assinaturas set plano = 'salao', status = 'ativa', trial_ate = null where salao_id = $1`, [SALAO]);
@@ -109,7 +109,7 @@ async function abrir(caminho, sessao, op = {}){
   }, [BASE, sessao || null]);
   await p.goto(BASE + caminho, op.referer ? { referer: op.referer } : {});
   await p.waitForTimeout(3500);
-  // O passo a passo do primeiro dia abre sozinho num salão novo; aqui não é o assunto.
+  // O passo a passo do primeiro dia abre sozinho num restaurante novo; aqui não é o assunto.
   await p.evaluate(() => { const w = document.getElementById('primeiroDia'); if(w) w.hidden = true; });
   return p;
 }

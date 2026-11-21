@@ -5,7 +5,7 @@
      node tests/auditoria.test.mjs
 
    Esta suíte não confere se a tela desenha. Confere se a AGENDA está certa —
-   que é outra coisa, e é a que faz o salão perder cliente quando erra.
+   que é outra coisa, e é a que faz o restaurante perder cliente quando erra.
 
    A pergunta que ela responde, e que nenhuma outra respondia inteira:
    dá para dois clientes ocuparem a mesma cadeira? Dá para marcar em cima do
@@ -20,7 +20,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
-/* Conexão direta ao banco, só para uma coisa: subir o plano do salão de teste.
+/* Conexão direta ao banco, só para uma coisa: subir o plano do restaurante de teste.
    A cota de profissionais é travada por gatilho, e `assinaturas` é escrita
    SÓ pela plataforma — de propósito, para o dono não se promover sozinho.
    Uma auditoria de agenda precisa de dois profissionais na casa, então o
@@ -70,15 +70,15 @@ async function anon(fn, args){
 const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`aud-${marca}@teste.com`, senha:'minhasenhaboa',
-  nome:'Dona do Salão', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const criado = await d.chamar('criar_salao', { p_nome_salao:'Salão Auditoria ' + marca,
+  nome:'Dona do Restaurante', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
+const criado = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Auditoria ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = criado[0].salao_id, SLUG = criado[0].slug;
 
 const salao = (await d.lista('saloes', { id: SALAO }))[0];
 const FUSO = salao.fuso;
 
-/* Dois profissionais: um é o que veio com o salão, o outro é criado aqui. É
+/* Dois profissionais: um é o que veio com o restaurante, o outro é criado aqui. É
    o par mínimo para provar que a agenda de um não tranca a do outro. */
 /* E o horizonte da agenda vai a 300 dias. O padrão é 30 — e é correto: a
    auditoria precisa de datas espalhadas, mas isso é necessidade do TESTE, não
@@ -88,7 +88,7 @@ const FUSO = salao.fuso;
 
    Esta suíte marca dezenas de horários com telefone novo a cada um, em
    segundos, porque é assim que se mede a geometria da agenda: sobreposição,
-   duração, almoço, fechamento. Um salão de verdade não faz isso — vinte
+   duração, almoço, fechamento. Um restaurante de verdade não faz isso — vinte
    desconhecidas marcando em um minuto é justamente o padrão que o
    19_teto_online.sql existe para frear.
 
@@ -135,11 +135,11 @@ const emDias = n => {
 const DIA = emDias(3), DIA2 = emDias(4), DIA3 = emDias(5);
 
 /* O instante que o banco entende. A jornada é hora de parede no fuso do
-   salão, então a conta tem que ser feita nesse fuso — fazer no fuso de quem
+   restaurante, então a conta tem que ser feita nesse fuso — fazer no fuso de quem
    roda o teste é o erro clássico, e ele passa despercebido em UTC. */
 function instante(dia, hhmm){
   const [h, m] = hhmm.split(':').map(Number);
-  // Descobre o deslocamento do fuso do salão naquele dia.
+  // Descobre o deslocamento do fuso do restaurante naquele dia.
   const meioDia = new Date(`${dia}T12:00:00Z`);
   const fmt = new Intl.DateTimeFormat('en-US', { timeZone: FUSO, timeZoneName:'longOffset' });
   const desl = fmt.formatToParts(meioDia).find(p => p.type === 'timeZoneName').value
@@ -222,7 +222,7 @@ const venceram = [c1, c2].filter(x => x.ok).length;
 igual('exatamente UM consegue — o outro é recusado pelo banco', venceram, 1);
 /* ⚠ E o recado não pode trazer o nome de quem ganhou.
    `agendar()` é alcançável por `anon`. A primeira versão do gatilho da Fase
-   1A repassava a mensagem de `porque_nao_cabe()` — "Dona do Salão já tem
+   1A repassava a mensagem de `porque_nao_cabe()` — "Dona do Restaurante já tem
    Corrida A das 14:00 às 15:00" — e foi ESTA asserção que pegou o vazamento. */
 verdade('e quem perdeu recebe recado de gente, não erro de banco',
   venceram !== 1 || /hor[áa]rio|livre|marc/i.test(([c1,c2].find(x => !x.ok) || {}).erro || ''),
@@ -349,7 +349,7 @@ secao('F. Bloqueio de horário (o almoço)');
   verdade('e o almoço de um não fecha a agenda do outro', temHora(l2, dia, '12:00'));
 }
 
-secao('F2. Bloqueio do salão inteiro fecha todo mundo');
+secao('F2. Bloqueio do restaurante inteiro fecha todo mundo');
 {
   const dia = emDias(8);
   await d.inserir('bloqueios', { salaoId: SALAO, profissionalId: null,
@@ -391,7 +391,7 @@ secao('G. Cancelar devolve a cadeira');
 /* ══════════════════════════════════════════════════════════════════════════
    H. ISOLAMENTO ENTRE ESTABELECIMENTOS
    ══════════════════════════════════════════════════════════════════════════ */
-secao('H. Um salão não enxerga o outro');
+secao('H. Um restaurante não enxerga o outro');
 {
   const outra = novaAba();
   await outra.criarConta({ email:`pet-${marca}@teste.com`, senha:'minhasenhaboa',
@@ -401,7 +401,7 @@ secao('H. Um salão não enxerga o outro');
   const SALAO_B = cr[0].salao_id;
 
   const vistos = await outra.lista('agendamentos', {});
-  igual('o dono do Pet Shop não vê nenhum agendamento do outro salão',
+  igual('o dono do Pet Shop não vê nenhum agendamento do outro restaurante',
     vistos.filter(a => a.salaoId === SALAO).length, 0);
   const clis = await outra.lista('clientes', {});
   igual('nem os clientes', clis.filter(c => c.salaoId === SALAO).length, 0);
@@ -431,7 +431,7 @@ secao('I. Cliente → estabelecimento → profissional → serviço → hora →
 
   const a = (await d.lista('agendamentos', { salaoId: SALAO })).find(x => x.id === feito.id);
   verdade('o agendamento existe na agenda do dono', !!a);
-  verdade('com salão', a && a.salaoId === SALAO);
+  verdade('com restaurante', a && a.salaoId === SALAO);
   verdade('com cliente', !!(a && a.clienteId));
   verdade('com profissional', a && a.profissionalId === P1.id);
   verdade('com início e fim', !!(a && a.inicio && a.fim));
@@ -619,7 +619,7 @@ secao('N3. O dono marcando fora do horário de funcionamento');
   /* Isto NÃO é bug: a recepção precisa poder encaixar a cliente antiga às 7h.
      O que o teste fixa é que a porta é só do dono — pelo link, ninguém entra
      fora da jornada. Se um dia alguém "consertar" isso fechando os dois
-     lados, o salão perde um encaixe legítimo e vai reclamar sem saber por quê.
+     lados, o restaurante perde um encaixe legítimo e vai reclamar sem saber por quê.
 
      ⚠ O QUE MUDOU NA FASE 1A: a porta continua aberta, mas deixou de ser
      silenciosa. Antes, marcar às 7h e marcar às 7h POR ENGANO entravam no

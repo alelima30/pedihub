@@ -194,7 +194,7 @@ returns table (cliente_id uuid, nome text, telefone text)
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   return query
   select c.id, c.nome, c.telefone
@@ -477,7 +477,7 @@ declare
   pr public.profissionais%rowtype;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Só quem administra o salão pode convidar.'
+    raise exception 'Só quem administra o restaurante pode convidar.'
       using errcode = 'insufficient_privilege';
   end if;
   if p_papel not in ('admin','recepcao','profissional') then
@@ -490,7 +490,7 @@ begin
     end if;
     select * into pr from public.profissionais where id = p_profissional;
     if pr.id is null or pr.salao_id <> p_salao then
-      raise exception 'Esta agenda não é deste salão.' using errcode = 'check_violation';
+      raise exception 'Esta agenda não é deste restaurante.' using errcode = 'check_violation';
     end if;
     if pr.perfil_id is not null then
       raise exception 'A agenda de % já tem login.', pr.nome
@@ -549,7 +549,7 @@ begin
      or c.usado_em is not null
      or c.revogado_em is not null
      or c.expira_em < now() then
-    raise exception 'Este convite não vale mais. Peça outro ao salão.'
+    raise exception 'Este convite não vale mais. Peça outro ao restaurante.'
       using errcode = 'check_violation';
   end if;
   if exists (select 1 from public.vinculos v
@@ -577,7 +577,7 @@ returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   return coalesce((
@@ -603,7 +603,7 @@ declare
   v_donos int;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Só quem administra o salão pode mexer nos acessos.'
+    raise exception 'Só quem administra o restaurante pode mexer nos acessos.'
       using errcode = 'insufficient_privilege';
   end if;
   if p_papel = 'dono' then
@@ -614,7 +614,7 @@ begin
     select count(*) into v_donos from public.vinculos
      where salao_id = p_salao and papel = 'dono' and status = 'ativo';
     if v_donos <= 1 then
-      raise exception 'Este é o único dono do salão. Passe a titularidade antes.'
+      raise exception 'Este é o único dono do restaurante. Passe a titularidade antes.'
         using errcode = 'check_violation';
     end if;
   end if;
@@ -662,7 +662,7 @@ declare
   v_fim_a timestamptz;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   perform public.exigir_recurso(p_salao, 'relatorios', 'O relatório');
@@ -849,7 +849,7 @@ begin
          where v.perfil_id = p_quem and v.salao_id = p_salao
            and v.status = 'ativo' and v.papel in ('dono','admin'))
      and not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   if p_metodo = 'boleto' then
@@ -976,7 +976,7 @@ returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   return jsonb_build_object(
@@ -1007,7 +1007,7 @@ declare v public.cobrancas;
 begin
   select * into v from public.cobrancas where id = p_cobranca for update;
   if not found or not public.e_gestor(v.salao_id) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   if v.status <> 'pendente' or v.metodo = 'cartao' then
     return false;
@@ -1053,7 +1053,7 @@ alter table public.agendamentos
   add column if not exists encaixe_por uuid references public.perfis(id)
     on delete set null;
 comment on column public.agendamentos.encaixe is
-  'Marcado fora da jornada, com confirmação explícita de quem tem acesso ao salão.';
+  'Marcado fora da jornada, com confirmação explícita de quem tem acesso ao restaurante.';
 create or replace function public.jornada_costurada(
   p_profissional uuid, p_data date)
 returns table (inicio timestamptz, fim timestamptz)
@@ -1153,14 +1153,14 @@ begin
   end if;
   if coalesce(current_setting('role', true), 'none') in ('anon', 'authenticated')
      and not public.e_equipe(v_prof.salao_id) then
-    raise exception 'Só a equipe do salão consulta a agenda.'
+    raise exception 'Só a equipe do restaurante consulta a agenda.'
       using errcode = 'insufficient_privilege';
   end if;
   if not v_prof.ativo then
     return format('%s está desativado(a) na equipe.', v_prof.nome);
   end if;
   if v_prof.status_salao <> 'ativo' then
-    return 'Este salão está suspenso.';
+    return 'Este restaurante está suspenso.';
   end if;
   v_fuso := coalesce(v_prof.fuso, 'America/Sao_Paulo');
   v_outro := public.ha_choque(p_profissional, p_inicio, p_fim, p_ignorar);
@@ -1923,7 +1923,7 @@ begin
     raise exception 'Caixa não encontrado.' using errcode = 'no_data_found';
   end if;
   if not public.ve_agenda_toda(k.salao_id) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   select (select coalesce(sum(g.valor), 0) from public.pagamentos g
            where g.caixa_id = p_caixa and g.forma = 'dinheiro')
@@ -1990,7 +1990,7 @@ begin
     raise exception 'Caixa não encontrado.' using errcode = 'no_data_found';
   end if;
   if not public.ve_agenda_toda(k.salao_id) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   if k.fechado_em is not null then
     raise exception 'Este caixa já foi fechado.' using errcode = 'check_violation';
@@ -2022,12 +2022,12 @@ declare
   v_caixa uuid;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   select fuso into v_fuso from public.saloes where id = p_salao;
   if not found then
-    raise exception 'Salão não encontrado.' using errcode = 'no_data_found';
+    raise exception 'Restaurante não encontrado.' using errcode = 'no_data_found';
   end if;
   v_fuso := coalesce(v_fuso, 'America/Sao_Paulo');
   v_hoje := coalesce(p_dia, (now() at time zone v_fuso)::date);
@@ -2115,7 +2115,7 @@ begin
   );
 end $$;
 comment on function public.painel_hoje(uuid, date) is
-  'O dia do salão num jsonb só: agenda, dinheiro, gaveta e quem ainda vem.';
+  'O dia do restaurante num jsonb só: agenda, dinheiro, gaveta e quem ainda vem.';
 revoke all on function public.painel_hoje(uuid, date) from public, anon;
 grant execute on function public.painel_hoje(uuid, date) to authenticated;
 
@@ -2193,7 +2193,7 @@ begin
     return 'Este profissional não está atendendo pela agenda online.';
   end if;
   if not public.recurso_bool(v_salao, 'agenda_online') then
-    return 'Este salão não está aceitando marcação pela internet.';
+    return 'Este restaurante não está aceitando marcação pela internet.';
   end if;
   if exists (
     select 1 from unnest(p_servicos) as pedido(id)
@@ -2221,19 +2221,19 @@ begin
     v_pedido := public.duracao_dos_servicos(p_profissional, p_servicos);
     if (v_online + v_pedido) * 100 > v_jornada * public.teto_online_pct(v_salao) then
       return 'Este dia já está quase todo marcado. '
-          || 'Chame o salão no WhatsApp que a gente encaixa você.';
+          || 'Chame o restaurante no WhatsApp que a gente encaixa você.';
     end if;
   end if;
   if public.rajada_online(v_salao) >= public.teto_online_rajada(v_salao) then
     return 'A marcação pela internet está congestionada agora. '
-        || 'Tente daqui a pouco, ou chame o salão no WhatsApp.';
+        || 'Tente daqui a pouco, ou chame o restaurante no WhatsApp.';
   end if;
   return null;
 end $$;
 comment on function public.teto_online_pct(uuid) is
   'Quanto da jornada de um profissional o link pode ocupar num dia. cfg.tetoOnlinePct, padrão 70.';
 comment on function public.teto_online_rajada(uuid) is
-  'Quantas pessoas NOVAS o link aceita no salão em 10 minutos. cfg.tetoOnlineRajada, padrão 10.';
+  'Quantas pessoas NOVAS o link aceita no restaurante em 10 minutos. cfg.tetoOnlineRajada, padrão 10.';
 
 create or replace function public.travar_agenda(p_salao uuid)
 returns void language sql set search_path = public as $$
@@ -2328,7 +2328,7 @@ begin
   return new;
 end $$;
 comment on function public.travar_agenda(uuid) is
-  'Trava consultiva por salão, até o fim da transação. Bloqueio e atendimento não se cruzam.';
+  'Trava consultiva por restaurante, até o fim da transação. Bloqueio e atendimento não se cruzam.';
 
 alter table public.profissionais
   add column if not exists telefone text;
@@ -2464,7 +2464,7 @@ begin
       when v_pacote then 'R$ 0,00 — sessão do pacote'
       else 'R$ ' || translate(to_char(v_total, 'FM999,999,990.00'), ',.', '.,') end,
     'pagamento', case
-      when v_pacote and v_pacote_a_pagar then 'Pacote a pagar no salão'
+      when v_pacote and v_pacote_a_pagar then 'Pacote a pagar no restaurante'
       when v_pacote and v_pc_pago and v_pc_valor > 0 then 'Pacote já pago' || coalesce(' (' || case v_pc_forma
              when 'pix' then 'Pix' when 'dinheiro' then 'dinheiro'
              when 'debito' then 'cartão de débito' when 'credito' then 'cartão de crédito'
@@ -2475,7 +2475,7 @@ begin
       when to_jsonb(a)->>'forma_pagamento' = 'debito'   then 'Cartão de débito'
       when to_jsonb(a)->>'forma_pagamento' = 'credito'  then 'Cartão de crédito'
       when v_total <= 0 then 'Sem custo'
-      else 'A combinar no salão' end);
+      else 'A combinar no restaurante' end);
 end $$;
 create table if not exists public.plataforma_ajustes (
   chave         text primary key,
@@ -2494,7 +2494,7 @@ create or replace function public.linha_pagamento(p_pecas jsonb)
 returns text language sql stable security definer set search_path = public as $$
   select case when public.mensagens_com_pagamento()
               then E'\n💰 Valor: ' || coalesce(p_pecas->>'valor', '—')
-                || E'\n💳 Pagamento: ' || coalesce(p_pecas->>'pagamento', 'A combinar no salão')
+                || E'\n💳 Pagamento: ' || coalesce(p_pecas->>'pagamento', 'A combinar no restaurante')
               else '' end
 $$;
 create or replace function public.texto_agendamento(
@@ -3160,7 +3160,7 @@ begin
   v_min := public.lembrete_minutos(a.salao_id);
   if v_min <= 0 then
     update public.notificacoes
-       set status = 'cancelado', motivo = 'o lembrete foi desligado no salão'
+       set status = 'cancelado', motivo = 'o lembrete foi desligado no restaurante'
      where agendamento_id = a.id and tipo = 'lembrete' and status = 'pendente';
     return;
   end if;
@@ -3321,7 +3321,7 @@ revoke all on function public.gerar_lembretes_cliente()
 comment on table public.notificacoes is
   'Fila das mensagens que nascem da agenda: confirmação, lembrete, resumo e aviso ao profissional.';
 comment on function public.gerar_resumos(timestamptz) is
-  'Põe o resumo do dia na fila para os salões cuja hora já chegou. Idempotente por dia.';
+  'Põe o resumo do dia na fila para os restaurantes cuja hora já chegou. Idempotente por dia.';
 
 update public.planos set recursos = recursos || jsonb_build_object(
     'max_clientes',   30, 'max_servicos',   5, 'mensagens_mes',   0,
@@ -3408,7 +3408,7 @@ begin
     having count(*) > 12) x;
   if v_estourando > 0 then
     raise exception '%',
-      'Há ' || v_estourando || ' salão(ões) no plano Salão com mais de 12 '
+      'Há ' || v_estourando || ' restaurante(ões) no plano Restaurante com mais de 12 '
       || 'profissionais ativos. Reduzir a vaga agora os deixaria acima do '
       || 'teto. Resolva com eles antes, ou mantenha 20 vagas e ajuste só o '
       || 'preço.'
@@ -3522,7 +3522,7 @@ begin
   if teto is null then return new; end if;
   select count(*) into usados from public.clientes where salao_id = new.salao_id;
   if usados >= teto then
-    raise exception 'O seu plano cobre % clientes, e o salão já tem %. Mude de plano para cadastrar mais.',
+    raise exception 'O seu plano cobre % clientes, e o restaurante já tem %. Mude de plano para cadastrar mais.',
       teto, usados using errcode = 'check_violation';
   end if;
   return new;
@@ -3538,7 +3538,7 @@ begin
   if teto is null then return new; end if;
   select count(*) into usados from public.servicos where salao_id = new.salao_id;
   if usados >= teto then
-    raise exception 'O seu plano cobre % serviços, e o salão já tem %. Mude de plano para cadastrar mais.',
+    raise exception 'O seu plano cobre % serviços, e o restaurante já tem %. Mude de plano para cadastrar mais.',
       teto, usados using errcode = 'check_violation';
   end if;
   return new;
@@ -3554,7 +3554,7 @@ declare
   v_preco numeric;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   select a.plano, pl.nome, pl.preco_mes into v_plano, v_nome, v_preco
     from public.assinaturas a
@@ -3682,7 +3682,7 @@ grant execute on function public.notificacao_status(text, text, text, text)
 comment on function public.uso_do_plano(uuid) is
   'Uso e teto de profissionais, clientes, serviços e mensagens do mês, num jsonb só.';
 comment on function public.notificacao_proxima(int) is
-  'Fila do worker. Só service_role: contorna o RLS para atender todos os salões.';
+  'Fila do worker. Só service_role: contorna o RLS para atender todos os restaurantes.';
 comment on function public.notificacao_status(text, text, text, text) is
   'Webhook de status da Meta: entregue, lido e falhou, casados pelo wam_id. Nunca anda para trás.';
 
@@ -3699,7 +3699,7 @@ returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   return jsonb_build_object(
@@ -3747,7 +3747,7 @@ begin
          where v.perfil_id = p_quem and v.salao_id = p_salao
            and v.status = 'ativo' and v.papel in ('dono','admin'))
      and not public.is_super() then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   select preco_mes, nome into v_preco, v_nome
@@ -3762,7 +3762,7 @@ begin
   select mp_preapproval into v_pre
     from public.assinaturas where salao_id = p_salao;
   if not found then
-    raise exception 'Este salão não tem assinatura para renovar.'
+    raise exception 'Este restaurante não tem assinatura para renovar.'
       using errcode = 'check_violation';
   end if;
   v_pag := public.dados_do_pagador(p_salao);
@@ -3784,7 +3784,7 @@ declare
   v_tocado uuid;
 begin
   if p_salao is null or coalesce(p_preapproval,'') = '' then
-    raise exception 'Faltou o salão ou a pré-aprovação.'
+    raise exception 'Faltou o restaurante ou a pré-aprovação.'
       using errcode = 'check_violation';
   end if;
   select salao_id into v_dono from public.assinaturas
@@ -3821,7 +3821,7 @@ begin
          where v.perfil_id = p_quem and v.salao_id = p_salao
            and v.status = 'ativo' and v.papel in ('dono','admin'))
      and not public.is_super() then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   select mp_preapproval into v_pre
@@ -3842,7 +3842,7 @@ begin
          where v.perfil_id = p_quem and v.salao_id = p_salao
            and v.status = 'ativo' and v.papel in ('dono','admin'))
      and not public.is_super() then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   update public.assinaturas
@@ -3930,7 +3930,7 @@ language plpgsql stable security definer set search_path = public as $$
 declare a public.assinaturas;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   select * into a from public.assinaturas where salao_id = p_salao;
@@ -3962,7 +3962,7 @@ grant execute on function public.meu_cartao(uuid) to authenticated, service_role
 comment on function public.registrar_recorrencia(text, text, numeric, text) is
   'A cobrança mensal do cartão: cria a linha do mês e entrega ao registrar_pagamento.';
 comment on function public.meu_cartao(uuid) is
-  'Se o salão está no cartão e quando é a próxima. Não devolve o id da pré-aprovação.';
+  'Se o restaurante está no cartão e quando é a próxima. Não devolve o id da pré-aprovação.';
 
 alter table public.produtos add column if not exists foto text;
 alter table public.produtos add column if not exists descricao text;
@@ -3993,7 +3993,7 @@ begin
   if teto is null then return new; end if;
   select count(*) into usados from public.produtos where salao_id = new.salao_id;
   if usados >= teto then
-    raise exception 'O seu plano cobre % produtos, e o salão já tem %. Mude de plano para cadastrar mais.',
+    raise exception 'O seu plano cobre % produtos, e o restaurante já tem %. Mude de plano para cadastrar mais.',
       teto, usados using errcode = 'check_violation';
   end if;
   return new;
@@ -4009,7 +4009,7 @@ declare
   v_preco numeric;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   select a.plano, pl.nome, pl.preco_mes into v_plano, v_nome, v_preco
     from public.assinaturas a
@@ -4404,7 +4404,7 @@ begin
    limit 1;
   if v_nome is null then return null; end if;
   return format(
-    'Seu pacote %s vale %s. Para marcar fora desses dias, chame o salão no '
+    'Seu pacote %s vale %s. Para marcar fora desses dias, chame o restaurante no '
     || 'WhatsApp — dá para atender pagando.',
     v_nome, public.dias_por_extenso(v_dias));
 end $$;
@@ -4447,7 +4447,7 @@ begin
   perform public.exigir_recurso(v_salao, 'pacotes', 'Vender pacote');
   if not exists (select 1 from public.clientes c
                   where c.id = p_cliente and c.salao_id = v_salao) then
-    raise exception 'Esta cliente não é deste salão.'
+    raise exception 'Esta cliente não é deste restaurante.'
       using errcode = 'check_violation';
   end if;
   insert into public.pacote_clientes (pacote_id, cliente_id, sessoes, vence_em)
@@ -4533,7 +4533,7 @@ comment on function public.pacote_que_cobre(uuid, uuid[], timestamptz) is
 comment on function public.pacote_fora_do_dia(uuid, uuid[], timestamptz) is
   'Frase de recusa quando o pacote tem so_nos_dias e o dia está fora da lista. NULL quando não há nada a barrar. Só o link usa: a recepção marca por fora.';
 comment on table public.pacotes is
-  'Pacotes que o salão vende. `dias` no padrão do Postgres: 0=domingo. `so_nos_dias` faz o link recusar fora dos dias; o painel marca assim mesmo.';
+  'Pacotes que o restaurante vende. `dias` no padrão do Postgres: 0=domingo. `so_nos_dias` faz o link recusar fora dos dias; o painel marca assim mesmo.';
 
 create or replace function public.usa_comanda(p_salao uuid)
 returns boolean language sql stable set search_path = public as $$
@@ -4545,7 +4545,7 @@ returns boolean language sql stable set search_path = public as $$
     and coalesce(public.recurso_bool(p_salao, 'caixa'), false)
 $$;
 comment on function public.usa_comanda(uuid) is
-  'O salão trabalha com comanda e caixa? cfg.usaComanda, padrão LIGADO. Desligado, o atendimento concluído vira comanda sozinho.';
+  'O restaurante trabalha com comanda e caixa? cfg.usaComanda, padrão LIGADO. Desligado, o atendimento concluído vira comanda sozinho.';
 do $$
 declare v_nome text;
 begin
@@ -4569,7 +4569,7 @@ alter table public.pagamentos
 alter table public.comandas
   add column if not exists automatica boolean not null default false;
 comment on column public.comandas.automatica is
-  'Nasceu sozinha ao concluir o atendimento, num salão sem comanda. Desmarcar o atendimento a apaga.';
+  'Nasceu sozinha ao concluir o atendimento, num restaurante sem comanda. Desmarcar o atendimento a apaga.';
 create or replace function public.tg_agendamento_sem_comanda()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare
@@ -4630,7 +4630,7 @@ returns boolean language sql stable security definer set search_path = public as
     true)
 $$;
 comment on function public.confirma_automatico(uuid) is
-  'O link confirma sozinho? cfg.confirmaAuto, padrão SIM. Desligado, o agendamento nasce pendente e espera o salão.';
+  'O link confirma sozinho? cfg.confirmaAuto, padrão SIM. Desligado, o agendamento nasce pendente e espera o restaurante.';
 drop trigger if exists tg_notif_agend_confirmado on public.agendamentos;
 create trigger tg_notif_agend_confirmado
   after update of status on public.agendamentos
@@ -4648,7 +4648,7 @@ declare
   v_hoje  date;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   select fuso into v_fuso from public.saloes where id = p_salao;
@@ -4758,7 +4758,7 @@ begin
   if v_nome is null then return null; end if;
   return format(
     '%s: só %s. Escolha um desses dias, tire este serviço do pedido, '
-    || 'ou chame o salão no WhatsApp.',
+    || 'ou chame o restaurante no WhatsApp.',
     v_nome, public.dias_por_extenso(v_dias));
 end $$;
 comment on function public.servico_fora_do_dia(uuid[], date) is
@@ -4811,7 +4811,7 @@ begin
     return 'Este profissional não está atendendo pela agenda online.';
   end if;
   if not public.recurso_bool(v_salao, 'agenda_online') then
-    return 'Este salão não está aceitando marcação pela internet.';
+    return 'Este restaurante não está aceitando marcação pela internet.';
   end if;
   if exists (
     select 1 from unnest(p_servicos) as pedido(id)
@@ -4843,12 +4843,12 @@ begin
     v_pedido := public.duracao_dos_servicos(p_profissional, p_servicos);
     if (v_online + v_pedido) * 100 > v_jornada * public.teto_online_pct(v_salao) then
       return 'Este dia já está quase todo marcado. '
-          || 'Chame o salão no WhatsApp que a gente encaixa você.';
+          || 'Chame o restaurante no WhatsApp que a gente encaixa você.';
     end if;
   end if;
   if public.rajada_online(v_salao) >= public.teto_online_rajada(v_salao) then
     return 'A marcação pela internet está congestionada agora. '
-        || 'Tente daqui a pouco, ou chame o salão no WhatsApp.';
+        || 'Tente daqui a pouco, ou chame o restaurante no WhatsApp.';
   end if;
   return null;
 end $$;
@@ -5007,7 +5007,7 @@ begin
     raise exception 'Produto não encontrado.' using errcode = 'no_data_found';
   end if;
   if not public.e_gestor(v_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   return coalesce((
@@ -5481,7 +5481,7 @@ begin
       using errcode = 'check_violation';
   end if;
   if a.inicio <= now() + interval '2 hours' then
-    raise exception 'Faltam menos de 2 horas. Fale com o salão para desmarcar.'
+    raise exception 'Faltam menos de 2 horas. Fale com o restaurante para desmarcar.'
       using errcode = 'check_violation';
   end if;
   update public.agendamentos
@@ -6266,11 +6266,11 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare v_id uuid; v_nome text;
 begin
   if not public.is_super() then
-    raise exception 'Só a plataforma abre o painel de outro salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Só a plataforma abre o painel de outro restaurante.' using errcode = 'insufficient_privilege';
   end if;
   select nome into v_nome from public.saloes where id = p_salao;
   if v_nome is null then
-    raise exception 'Salão não encontrado.' using errcode = 'check_violation';
+    raise exception 'Restaurante não encontrado.' using errcode = 'check_violation';
   end if;
   update public.suporte_acessos set encerrado_em = now()
    where perfil_id = auth.uid() and salao_id = p_salao and encerrado_em is null;
@@ -6387,7 +6387,7 @@ begin
      and edicao_desde is not null and edicao_desde > now() - interval '2 hours'
    order by edicao_desde desc limit 1;
   if v_acesso is null then
-    raise exception 'Modo suporte: só leitura. Toque em "Liberar edição" para mexer neste salão.'
+    raise exception 'Modo suporte: só leitura. Toque em "Liberar edição" para mexer neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   insert into public.suporte_alteracoes (acesso_id, salao_id, tabela, operacao, registro, antes, depois)
@@ -6420,7 +6420,7 @@ language plpgsql security definer set search_path = public as $$
 declare v_antes text;
 begin
   if not public.is_super() then
-    raise exception 'Só a plataforma suspende salão.'
+    raise exception 'Só a plataforma suspende restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   if p_status not in ('ativo','suspenso','cancelado') then
@@ -6428,7 +6428,7 @@ begin
   end if;
   select status into v_antes from public.saloes where id = p_salao;
   if v_antes is null then
-    raise exception 'Salão não encontrado.' using errcode = 'check_violation';
+    raise exception 'Restaurante não encontrado.' using errcode = 'check_violation';
   end if;
   perform set_config('pedihub.plataforma', 'sim', true);
   update public.saloes set status = p_status where id = p_salao;
@@ -6775,7 +6775,7 @@ begin
     v_itens := v_itens || public.saude_item('falhas', 'problema', 'Envio pelo WhatsApp',
       'mais falhas que envios nas últimas 24h (' || v_falhou24 || ' falharam, '
       || v_enviadas || ' saíram). Motivo mais comum: ' || public.saude_erro_meta(v_cod_24),
-      'Veja o histórico em Notificações, num salão, para o motivo de cada uma.');
+      'Veja o histórico em Notificações, num restaurante, para o motivo de cada uma.');
   elsif v_falhando > 0 or v_falhou24 > 0 then
     v_itens := v_itens || public.saude_item('falhas', 'atencao', 'Envio pelo WhatsApp',
       concat_ws(' ',
@@ -6799,13 +6799,13 @@ begin
    where x.teto > 0 and x.pct >= 0.9;
   if v_lista is not null then
     v_negocio := v_negocio || public.saude_item('franquia', 'atencao',
-      'Salões com as mensagens acabando', v_lista || '.',
+      'Restaurantes com as mensagens acabando', v_lista || '.',
       'Ofereça um plano maior ou mensagens extras.');
   end if;
   if v_bloqueadas > 0 then
     v_negocio := v_negocio || public.saude_item('franquia_parada', 'atencao',
       'Mensagens paradas pela franquia', v_bloqueadas
-      || ' mensagem(ns) esperando porque a franquia do salão acabou.');
+      || ' mensagem(ns) esperando porque a franquia do restaurante acabou.');
   end if;
   select string_agg(s.nome || case when a.vence_em >= current_date
                                    then ' vence em ' else ' venceu em ' end
@@ -6886,7 +6886,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if not exists (select 1 from public.clientes c
                   where c.id = new.cliente_id and c.salao_id = new.salao_id) then
-    raise exception 'Esta cliente não é deste salão.' using errcode = 'check_violation';
+    raise exception 'Esta cliente não é deste restaurante.' using errcode = 'check_violation';
   end if;
   new.marcas := coalesce(array(
     select m from (select left(btrim(x), 40) as m, min(o) as o
@@ -6936,7 +6936,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.servico_id is not null and not exists (
        select 1 from public.servicos s where s.id = new.servico_id and s.salao_id = new.salao_id) then
-    raise exception 'Este serviço não é deste salão.' using errcode = 'check_violation';
+    raise exception 'Este serviço não é deste restaurante.' using errcode = 'check_violation';
   end if;
   new.nome := btrim(new.nome);
   new.produtos := nullif(btrim(coalesce(new.produtos, '')), '');
@@ -6976,11 +6976,11 @@ begin
     return new;
   end if;
   if new.status is distinct from old.status then
-    raise exception 'Só a plataforma muda a situação do salão (ativo, suspenso ou cancelado).'
+    raise exception 'Só a plataforma muda a situação do restaurante (ativo, suspenso ou cancelado).'
       using errcode = 'insufficient_privilege';
   end if;
   if new.criado_em is distinct from old.criado_em then
-    raise exception 'A data de criação do salão não muda.'
+    raise exception 'A data de criação do restaurante não muda.'
       using errcode = 'insufficient_privilege';
   end if;
   return new;
@@ -7207,7 +7207,7 @@ begin
   perform public.exigir_recurso(v_pac.salao_id, 'pacotes', 'Vender pacote');
   if not exists (select 1 from public.clientes c
                   where c.id = p_cliente and c.salao_id = v_pac.salao_id) then
-    raise exception 'Esta cliente não é deste salão.' using errcode = 'check_violation';
+    raise exception 'Esta cliente não é deste restaurante.' using errcode = 'check_violation';
   end if;
   if p_valor is not null and p_valor < 0 then
     raise exception 'O valor do pacote não pode ser negativo.' using errcode = 'check_violation';
@@ -7505,7 +7505,7 @@ begin
                     || ', ' || to_char(v_ult.inicio at time zone v_fuso, 'DD/MM "às" HH24:MI');
   end if;
   v_motivo := coalesce(v_comum, case
-    when not public.notif_liga(r.salao_id, 'notifPacoteRenova', true) then 'desligado pelo salão'
+    when not public.notif_liga(r.salao_id, 'notifPacoteRenova', true) then 'desligado pelo restaurante'
     when exists (select 1 from public.pacote_clientes y
                   where y.cliente_id = r.cliente_id and y.pacote_id = r.pacote_id
                     and y.id <> r.id and y.cancelado_em is null and y.criado_em > r.criado_em)
@@ -7523,7 +7523,7 @@ begin
     jsonb_build_array(v_nome, public.variavel_limpa(r.pacote),
                       public.variavel_limpa(v_quando_txt), public.variavel_limpa(r.casa)));
   perform public.gravar_aviso_do_pacote(r.salao_id, 'pacote_pagamento', 'pacote_pagamento:' || r.id,
-    'sem lembrete de pagamento: o pacote confirma quando o salão registra o pagamento',
+    'sem lembrete de pagamento: o pacote confirma quando o restaurante registra o pagamento',
     null, interval '1 hour', v_prim.inicio, v_tel, r.cliente_id, v_prim.id, null, null);
 end $$;
 create or replace function public.refazer_avisos_de_pacote(p_salao uuid default null)
@@ -7870,7 +7870,7 @@ begin
   end if;
   select * into a from public.assinaturas where salao_id = p_salao;
   if a.salao_id is null then
-    raise exception 'Este salão não tem assinatura.' using errcode = 'check_violation';
+    raise exception 'Este restaurante não tem assinatura.' using errcode = 'check_violation';
   end if;
   select * into r from public.salao_adicionais where salao_id = p_salao and adicional = p_adicional;
   v_em_dia := a.status = 'ativa' and (a.vence_em is null or a.vence_em >= current_date);
@@ -8032,7 +8032,7 @@ returns jsonb language plpgsql stable security definer set search_path = public 
 declare a public.assinaturas%rowtype; v_ativos jsonb; v_recursos jsonb;
 begin
   if not public.e_equipe(p_salao) and not public.is_super() then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   select coalesce(jsonb_agg(ad.codigo order by ad.ordem), '[]'::jsonb)
     into v_ativos
@@ -8322,7 +8322,7 @@ begin
   end if;
   if p_profissional is not null and not exists (
        select 1 from public.profissionais pr where pr.id = p_profissional and pr.salao_id = p_salao) then
-    raise exception 'Quem vendeu não é deste salão.' using errcode = 'check_violation';
+    raise exception 'Quem vendeu não é deste restaurante.' using errcode = 'check_violation';
   end if;
   insert into public.comandas (salao_id, cliente_id, status) values (p_salao, p_cliente, 'aberta')
     returning id into v_com;
@@ -8336,7 +8336,7 @@ begin
       select pr.nome, pr.preco into v_desc, v_preco from public.produtos pr
        where pr.id = (x->>'id')::uuid and pr.salao_id = p_salao;
       if v_desc is null then
-        raise exception 'Um dos produtos não é deste salão.' using errcode = 'check_violation';
+        raise exception 'Um dos produtos não é deste restaurante.' using errcode = 'check_violation';
       end if;
       insert into public.comanda_itens (comanda_id, tipo, produto_id, descricao, qtd, preco_unit, profissional_id)
            values (v_com, 'produto', (x->>'id')::uuid, v_desc, v_qtd, v_preco, p_profissional);
@@ -8344,7 +8344,7 @@ begin
       select sv.nome, sv.preco into v_desc, v_preco from public.servicos sv
        where sv.id = (x->>'id')::uuid and sv.salao_id = p_salao;
       if v_desc is null then
-        raise exception 'Um dos serviços não é deste salão.' using errcode = 'check_violation';
+        raise exception 'Um dos serviços não é deste restaurante.' using errcode = 'check_violation';
       end if;
       insert into public.comanda_itens (comanda_id, tipo, servico_id, descricao, qtd, preco_unit, profissional_id)
            values (v_com, 'servico', (x->>'id')::uuid, v_desc, v_qtd, v_preco, p_profissional);
@@ -8832,7 +8832,7 @@ begin
       raise exception 'Falta o WhatsApp com DDD.' using errcode = 'check_violation';
     end if;
     if exists (select 1 from public.perfis o where o.telefone = v_tel and o.id <> v_eu) then
-      raise exception 'Este WhatsApp já está em outra conta. Entre com o e-mail e a senha dela, ou fale com o salão.'
+      raise exception 'Este WhatsApp já está em outra conta. Entre com o e-mail e a senha dela, ou fale com o restaurante.'
         using errcode = 'check_violation';
     end if;
     update public.perfis set telefone = v_tel where id = v_eu;
@@ -8959,7 +8959,7 @@ begin
   v_nome := public.variavel_limpa(split_part(btrim(coalesce(r.cliente, 'cliente')), ' ', 1));
   v_pix := case when coalesce(r.cfg->'pagamentos'->'formas', '[]'::jsonb) ? 'pix'
                 then 'Pix (chave: ' || nullif(btrim(coalesce(r.cfg->'pagamentos'->>'pix', '')), '') || ')' end;
-  v_pag := coalesce(v_pix, 'combine com o salão');
+  v_pag := coalesce(v_pix, 'combine com o restaurante');
   v_comum := case
     when r.desfeito_em is not null then 'venda desfeita'
     when not public.mensagens_do_crediario() then 'mensagens do crediário desligadas'
@@ -8971,14 +8971,14 @@ begin
     into v_lista
     from public.crediario_parcelas pa2 where pa2.crediario_id = r.id;
   v_motivo := coalesce(v_comum, case
-    when not public.notif_liga(r.salao_id, 'notifCredCompra', true) then 'desligado pelo salão' end);
+    when not public.notif_liga(r.salao_id, 'notifCredCompra', true) then 'desligado pelo restaurante' end);
   perform public.gravar_aviso_do_pacote(r.salao_id, 'crediario_compra', 'crediario_compra:' || r.id,
     v_motivo, r.criado_em, interval '-1 hour', r.criado_em + interval '6 hours',
     v_tel, r.cliente_id, null,
     'Olá, ' || v_nome || '. Resumo da sua compra no crediário em ' || r.casa || '.'
       || E'\n\n💰 Valor no crediário: ' || public.reais(r.valor)
       || E'\n🗓️ Parcelas: ' || coalesce(v_lista, '—')
-      || E'\n\nGuarde esta mensagem. Mensagem automática do sistema do salão.',
+      || E'\n\nGuarde esta mensagem. Mensagem automática do sistema do restaurante.',
     jsonb_build_array(v_nome, public.variavel_limpa(r.casa),
                       public.variavel_limpa(public.reais(r.valor)), public.variavel_limpa(v_lista)));
   for pa in select p.id, p.numero, p.valor, p.vence_em from public.crediario_parcelas p
@@ -8989,7 +8989,7 @@ begin
     v_10h := ((pa.vence_em - 2) + time '10:00') at time zone r.fuso;
     v_motivo := coalesce(v_comum, case
       when v_saldo <= 0 then 'parcela paga'
-      when not public.notif_liga(r.salao_id, 'notifCredLembrete', true) then 'desligado pelo salão' end);
+      when not public.notif_liga(r.salao_id, 'notifCredLembrete', true) then 'desligado pelo restaurante' end);
     perform public.gravar_aviso_do_pacote(r.salao_id, 'crediario_lembrete', 'crediario_lembrete:' || pa.id,
       v_motivo, v_10h, interval '0', (pa.vence_em + time '00:00') at time zone r.fuso,
       v_tel, r.cliente_id, null,
@@ -8997,26 +8997,26 @@ begin
         || E'\n\n💰 Valor: ' || public.reais(v_saldo)
         || E'\n📅 Vencimento: ' || v_venc
         || E'\n💳 Pagamento: ' || v_pag
-        || E'\n\nSe você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do salão.',
+        || E'\n\nSe você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do restaurante.',
       jsonb_build_array(v_nome, v_qual, public.variavel_limpa(r.casa),
                         public.variavel_limpa(public.reais(v_saldo)), v_venc, public.variavel_limpa(v_pag)));
     v_10h := (pa.vence_em + time '10:00') at time zone r.fuso;
     v_motivo := coalesce(v_comum, case
       when v_saldo <= 0 then 'parcela paga'
-      when not public.notif_liga(r.salao_id, 'notifCredVenceHoje', true) then 'desligado pelo salão' end);
+      when not public.notif_liga(r.salao_id, 'notifCredVenceHoje', true) then 'desligado pelo restaurante' end);
     perform public.gravar_aviso_do_pacote(r.salao_id, 'crediario_vence_hoje', 'crediario_vence_hoje:' || pa.id,
       v_motivo, v_10h, interval '0', ((pa.vence_em + 1) + time '00:00') at time zone r.fuso,
       v_tel, r.cliente_id, null,
       'Olá, ' || v_nome || '. A parcela ' || v_qual || ' do seu crediário em ' || r.casa || ' vence hoje.'
         || E'\n\n💰 Valor: ' || public.reais(v_saldo)
         || E'\n💳 Pagamento: ' || v_pag
-        || E'\n\nSe você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do salão.',
+        || E'\n\nSe você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do restaurante.',
       jsonb_build_array(v_nome, v_qual, public.variavel_limpa(r.casa),
                         public.variavel_limpa(public.reais(v_saldo)), public.variavel_limpa(v_pag)));
     v_10h := ((pa.vence_em + 1) + time '10:00') at time zone r.fuso;
     v_motivo := coalesce(v_comum, case
       when v_saldo <= 0 then 'parcela paga'
-      when not public.notif_liga(r.salao_id, 'notifCredAtraso', true) then 'desligado pelo salão' end);
+      when not public.notif_liga(r.salao_id, 'notifCredAtraso', true) then 'desligado pelo restaurante' end);
     perform public.gravar_aviso_do_pacote(r.salao_id, 'crediario_atraso', 'crediario_atraso:' || pa.id,
       v_motivo, v_10h, interval '0', ((pa.vence_em + 2) + time '00:00') at time zone r.fuso,
       v_tel, r.cliente_id, null,
@@ -9024,7 +9024,7 @@ begin
         || ' venceu em ' || v_venc || ' e ainda aparece em aberto.'
         || E'\n\n💰 Valor: ' || public.reais(v_saldo)
         || E'\n💳 Pagamento: ' || v_pag
-        || E'\n\nSe você já pagou, desconsidere esta mensagem. Em caso de dúvida, fale com o salão. Mensagem automática do sistema do salão.',
+        || E'\n\nSe você já pagou, desconsidere esta mensagem. Em caso de dúvida, fale com o restaurante. Mensagem automática do sistema do restaurante.',
       jsonb_build_array(v_nome, v_qual, public.variavel_limpa(r.casa), v_venc,
                         public.variavel_limpa(public.reais(v_saldo)), public.variavel_limpa(v_pag)));
   end loop;
@@ -9131,7 +9131,7 @@ begin
             || E'\n🕐 Novo horário: ' || (d->>'hora')
             || E'\n✂️ Serviço: ' || (d->>'servico')
             || E'\n👤 Profissional: ' || (d->>'prof')
-            || E'\n\nSe o novo horário não for bom para você, fale com o salão. Aviso automático do sistema de agendamento.',
+            || E'\n\nSe o novo horário não for bom para você, fale com o restaurante. Aviso automático do sistema de agendamento.',
           'remarcado:' || a.id || ':' || to_char(clock_timestamp(), 'YYYYMMDDHH24MISSUS'),
           public.modelo_de('remarcado'),
           jsonb_build_array(public.variavel_limpa(d->>'primeiro'), public.variavel_limpa(d->>'casa'),
@@ -9265,16 +9265,16 @@ begin
   end if;
   select s.cfg into v_cfg from public.saloes s where s.id = p_salao and s.status = 'ativo';
   if not found then
-    raise exception 'Este salão não está recebendo pedidos agora.' using errcode = 'check_violation';
+    raise exception 'Este restaurante não está recebendo pedidos agora.' using errcode = 'check_violation';
   end if;
   if lower(btrim(coalesce(v_cfg->>'loja', 'true'))) in ('false', 'f', '0', 'no', 'nao', 'não') then
-    raise exception 'Este salão não está recebendo pedidos agora.' using errcode = 'check_violation';
+    raise exception 'Este restaurante não está recebendo pedidos agora.' using errcode = 'check_violation';
   end if;
   if p_itens is null or jsonb_typeof(p_itens) <> 'array' or jsonb_array_length(p_itens) = 0 then
     raise exception 'O carrinho está vazio.' using errcode = 'check_violation';
   end if;
   if jsonb_array_length(p_itens) > 50 then
-    raise exception 'Pedido grande demais: combine com o salão pelo WhatsApp.' using errcode = 'check_violation';
+    raise exception 'Pedido grande demais: combine com o restaurante pelo WhatsApp.' using errcode = 'check_violation';
   end if;
   select c.id into v_cliente from public.clientes c
    where c.salao_id = p_salao and c.perfil_id = v_eu order by c.criado_em limit 1;
@@ -9291,7 +9291,7 @@ begin
       if f->>'motivo' = 'sem_telefone' then
         raise exception 'Falta o seu WhatsApp no cadastro: complete e envie de novo.' using errcode = 'check_violation';
       end if;
-      raise exception 'Não consegui fazer seu cadastro neste salão. Fale com ele pelo WhatsApp.'
+      raise exception 'Não consegui fazer seu cadastro neste restaurante. Fale com ele pelo WhatsApp.'
         using errcode = 'check_violation';
     end if;
   end if;
@@ -9309,7 +9309,7 @@ begin
   if v_id is null then
     if (select count(*) from public.pedidos_loja p
          where p.salao_id = p_salao and p.cliente_id = v_cliente and p.status = 'novo') >= 5 then
-      raise exception 'Você já tem pedidos esperando o salão. Aguarde a resposta pelo WhatsApp.'
+      raise exception 'Você já tem pedidos esperando o restaurante. Aguarde a resposta pelo WhatsApp.'
         using errcode = 'check_violation';
     end if;
     perform pg_advisory_xact_lock(hashtext('pedido_loja:' || p_salao::text));
@@ -9393,7 +9393,7 @@ begin
   end if;
   if p_profissional is not null and not exists (
        select 1 from public.profissionais pr where pr.id = p_profissional and pr.salao_id = p.salao_id) then
-    raise exception 'Quem vendeu não é deste salão.' using errcode = 'check_violation';
+    raise exception 'Quem vendeu não é deste restaurante.' using errcode = 'check_violation';
   end if;
   insert into public.comandas (salao_id, cliente_id, status) values (p.salao_id, p.cliente_id, 'aberta')
     returning id into v_com;
@@ -9405,7 +9405,7 @@ begin
     select pr.nome, pr.preco into v_desc, v_preco from public.produtos pr
      where pr.id = nullif(x->>'id', '')::uuid and pr.salao_id = p.salao_id;
     if v_desc is null then
-      raise exception 'Um dos produtos não é deste salão.' using errcode = 'check_violation';
+      raise exception 'Um dos produtos não é deste restaurante.' using errcode = 'check_violation';
     end if;
     insert into public.comanda_itens (comanda_id, tipo, produto_id, descricao, qtd, preco_unit, profissional_id)
          values (v_com, 'produto', nullif(x->>'id', '')::uuid, v_desc, v_qtd, coalesce(v_preco, 0), p_profissional);
@@ -9535,7 +9535,7 @@ declare
   v_uso int; v_teto int; s record; v_cfg jsonb; v_nomes text[]; v_hor int; v_pac int;
 begin
   if auth.uid() is null or p_salao is null or not public.e_equipe(p_salao) then
-    raise exception 'Só a equipe do salão vê os avisos.' using errcode = 'insufficient_privilege';
+    raise exception 'Só a equipe do restaurante vê os avisos.' using errcode = 'insufficient_privilege';
   end if;
   v_toda   := public.ve_agenda_toda(p_salao);
   v_gestor := public.e_gestor(p_salao);
@@ -9674,7 +9674,7 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare v_id uuid; v_titulo text := btrim(coalesce(p_titulo, '')); v_texto text := btrim(coalesce(p_texto, ''));
 begin
   if not public.is_super() then
-    raise exception 'Só a plataforma publica avisos para os salões.' using errcode = 'insufficient_privilege';
+    raise exception 'Só a plataforma publica avisos para os restaurantes.' using errcode = 'insufficient_privilege';
   end if;
   if length(v_titulo) < 3 or length(v_titulo) > 120 then
     raise exception 'O título precisa ter de 3 a 120 letras.' using errcode = 'check_violation';
@@ -9689,7 +9689,7 @@ begin
     raise exception 'A data de saída já passou.' using errcode = 'check_violation';
   end if;
   if p_salao is not null and not exists (select 1 from public.saloes s where s.id = p_salao) then
-    raise exception 'Não achei esse salão.' using errcode = 'check_violation';
+    raise exception 'Não achei esse restaurante.' using errcode = 'check_violation';
   end if;
   insert into public.avisos_plataforma (titulo, texto, para, ate, criado_por, salao_id)
        values (v_titulo, v_texto, coalesce(p_para, 'gestao'), p_ate, auth.uid(), p_salao)
@@ -9733,7 +9733,7 @@ returns jsonb language plpgsql stable security definer set search_path = public 
 declare v_fuso text; v_ini timestamptz; v_fim timestamptz;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   perform public.exigir_recurso(p_salao, 'relatorios', 'O relatório');
   if p_de is null or p_ate is null or p_ate < p_de then
@@ -9973,7 +9973,7 @@ begin
     return new;
   end if;
   if new.fuso is null then
-    raise exception 'O salão precisa de um fuso horário.' using errcode = 'check_violation';
+    raise exception 'O restaurante precisa de um fuso horário.' using errcode = 'check_violation';
   end if;
   if new.fuso is distinct from old.fuso then
     if not public.fuso_valido(new.fuso) then
@@ -10011,7 +10011,7 @@ begin
               where s.id = new.salao_id
                 and s.fuso_mudou_em is not null
                 and s.fuso_mudou_em > now() - interval '90 seconds') then
-    raise exception 'O relógio do salão acabou de ser ajustado. Espere um minuto, atualize a página e tente de novo.'
+    raise exception 'O relógio do restaurante acabou de ser ajustado. Espere um minuto, atualize a página e tente de novo.'
       using errcode = 'object_not_in_prerequisite_state';
   end if;
   return new;
@@ -10033,7 +10033,7 @@ declare
 begin
   if auth.uid() is null or p_salao is null
      or not (public.e_gestor(p_salao) or public.is_super()) then
-    raise exception 'Só quem administra o salão troca o fuso horário.'
+    raise exception 'Só quem administra o restaurante troca o fuso horário.'
       using errcode = 'insufficient_privilege';
   end if;
   if v_para is null or not public.fuso_valido(v_para) then
@@ -10042,7 +10042,7 @@ begin
   end if;
   select s.fuso into v_de from public.saloes s where s.id = p_salao for update;
   if not found then
-    raise exception 'Não achei este salão.' using errcode = 'no_data_found';
+    raise exception 'Não achei este restaurante.' using errcode = 'no_data_found';
   end if;
   if v_de = v_para then
     return jsonb_build_object('ok', true, 'mudou', false, 'fuso', v_para);
@@ -10113,7 +10113,7 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare n int;
 begin
   if auth.uid() is null or not public.e_equipe(p_salao) then
-    raise exception 'Só a equipe do salão liga os avisos.' using errcode = 'insufficient_privilege';
+    raise exception 'Só a equipe do restaurante liga os avisos.' using errcode = 'insufficient_privilege';
   end if;
   select count(*) into n from public.push_aparelhos
    where salao_id = p_salao and perfil_id = auth.uid();
@@ -10265,7 +10265,7 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare n int;
 begin
   if auth.uid() is null or not public.e_equipe(p_salao) then
-    raise exception 'Só a equipe do salão testa os avisos.' using errcode = 'insufficient_privilege';
+    raise exception 'Só a equipe do restaurante testa os avisos.' using errcode = 'insufficient_privilege';
   end if;
   n := public.push_avisar(p_salao, array[auth.uid()], 'Aviso de teste',
          'Se você está lendo isto, os avisos do PediHub chegam neste aparelho.',
@@ -10439,7 +10439,7 @@ declare
   r        jsonb;
 begin
   if auth.uid() is null or p_salao is null or not public.e_equipe(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   v_gestor := coalesce(public.e_gestor(p_salao), false);
   if not v_gestor then
@@ -10447,7 +10447,7 @@ begin
      where p.salao_id = p_salao and p.perfil_id = auth.uid() and p.ativo
      order by p.criado_em limit 1;
     if v_prof is null then
-      raise exception 'O Ranking é da gestão do salão e de quem atende.'
+      raise exception 'O Ranking é da gestão do restaurante e de quem atende.'
         using errcode = 'insufficient_privilege';
     end if;
   end if;
@@ -10651,11 +10651,11 @@ declare
   v_dias   int := 30;
 begin
   if v_perfil is null then
-    raise exception 'Faça login antes de criar o salão.'
+    raise exception 'Faça login antes de criar o restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   if not exists (select 1 from public.perfis where id = v_perfil) then
-    raise exception 'Complete seu cadastro antes de criar o salão.'
+    raise exception 'Complete seu cadastro antes de criar o restaurante.'
       using errcode = 'foreign_key_violation';
   end if;
   if length(btrim(coalesce(p_nome_salao,''))) < 2 then
@@ -11218,7 +11218,7 @@ begin
       using errcode = 'check_violation';
   end if;
   if a.inicio <= now() + interval '2 hours' then
-    raise exception 'Faltam menos de 2 horas. Fale com o salão para desmarcar.'
+    raise exception 'Faltam menos de 2 horas. Fale com o restaurante para desmarcar.'
       using errcode = 'check_violation';
   end if;
   update public.agendamentos
@@ -11265,7 +11265,7 @@ begin
   end if;
   if not exists (select 1 from public.saloes
                   where id = p_salao and status = 'ativo') then
-    raise exception 'Este salão não está aceitando pedidos agora.'
+    raise exception 'Este restaurante não está aceitando pedidos agora.'
       using errcode = 'check_violation';
   end if;
   if exists (

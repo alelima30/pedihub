@@ -13,7 +13,7 @@
 
      1. a CONTA, no banco (`preparar_adicional`): pode? quanto passa a ser?
         Não grava nada.
-     2. o VALOR NO CARTÃO, na API do Mercado Pago — só se o salão está no
+     2. o VALOR NO CARTÃO, na API do Mercado Pago — só se o restaurante está no
         cartão e o valor muda.
      3. só então GRAVAR (`aplicar_adicional`), conferindo que a conta não
         mudou no meio. Se o banco recusar, o valor do cartão volta ao de antes.
@@ -22,7 +22,7 @@
    Pix já nasce com o valor novo (13, `abrir_cobranca`).
 
    ── O VALOR NUNCA VEM DA TELA ──────────────────────────────────────────────
-   A tela manda o salão, o módulo e a ação. O preço é lido do banco — a mesma
+   A tela manda o restaurante, o módulo e a ação. O preço é lido do banco — a mesma
    regra do checkout (criar-cobranca) e do cartão (assinar-cartao).
 
    ── A CREDENCIAL QUE SÓ EXISTE AQUI ────────────────────────────────────────
@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
       return responder({ ok: true, efeito: conta?.efeito, mensalidade: Number(conta?.antes) });
     }
 
-    // 2) O valor no cartão, se o salão está no cartão e o valor muda.
+    // 2) O valor no cartão, se o restaurante está no cartão e o valor muda.
     const antes = Number(conta.antes), depois = Number(conta.depois);
     const pre = conta.preapproval ? String(conta.preapproval) : '';
     let mudouCartao = false;

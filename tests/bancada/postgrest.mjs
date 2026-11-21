@@ -59,8 +59,8 @@ const sessoes = new Map();
    Aqui ele não morria nunca, e essa diferença escondeu um defeito inteiro:
    o `dados.js` guardava o `refresh_token` e NUNCA o usava. Em produção, uma
    hora depois do login toda requisição volta 401, o `baixar()` engolia como
-   "é o RLS funcionando" e o painel abria com tudo vazio — "nenhum salão
-   nesta conta" para quem tem salão. Na bancada isso era impossível de
+   "é o RLS funcionando" e o painel abria com tudo vazio — "nenhum restaurante
+   nesta conta" para quem tem restaurante. Na bancada isso era impossível de
    reproduzir, porque o token era eterno.
 
    Então agora ele expira, dá para renová-lo, e dá para matá-lo na hora pela
@@ -208,7 +208,7 @@ const http_ = http.createServer(async (req, res) => {
            Esta parte já inseria em `public.perfis` também, imitando um
            gatilho que não existia no schema. O resultado: a suíte inteira
            verde e o cadastro quebrado em produção — quem se cadastrasse no
-           Supabase levaria "Complete seu cadastro antes de criar o salão"
+           Supabase levaria "Complete seu cadastro antes de criar o restaurante"
            com a conta metade criada e o e-mail preso.
 
            Agora a bancada faz o que o Supabase faz: cria a conta com os
@@ -433,7 +433,7 @@ const http_ = http.createServer(async (req, res) => {
        precisa da foto depois que o teste termina.
 
        O caminho `<salao_id>/<arquivo>` é a convenção de que a policy do balde
-       depende. Aqui não há policy — mas o teste que confere se um salão
+       depende. Aqui não há policy — mas o teste que confere se um restaurante
        alcança a pasta do outro é de banco, em 04_imagens.sql, não daqui. */
     /* A LISTAGEM DE UMA PASTA, como a do Storage de verdade: POST com
        { prefix }, e a resposta é a lista dos arquivos com o nome RELATIVO à
@@ -491,7 +491,7 @@ const http_ = http.createServer(async (req, res) => {
            A bancada mandava a chamada para o Postgres e devolvia o 42883
            dele, com outra frase, outro código e status 400. Diferença que
            parece detalhe e não é: o `dados.js` traduz PGRST202 numa
-           instrução para quem é dono de salão ("cole o 98_modulos.sql"), e
+           instrução para quem é dono de restaurante ("cole o 98_modulos.sql"), e
            essa tradução não tinha como ser testada aqui — a bancada nunca
            produzia o código que ela trata.
 
@@ -545,7 +545,7 @@ const http_ = http.createServer(async (req, res) => {
            `vitrine()` devolve o jsonb cru, `slug_disponivel()` devolve `true`.
            A bancada devolvia a linha inteira — [{"vitrine":{...}}] — e o
            dados.js, que procurava `.salao` ali dentro, achava undefined e
-           concluía que o salão não existia.
+           concluía que o restaurante não existia.
 
            Bancada que responde diferente do real é bancada que aprova código
            quebrado, ou reprova código certo. Aqui foi a segunda: o defeito

@@ -20,7 +20,7 @@
         o próprio container, e a regra precisa vir DEPOIS da que sobrescreve;
      2. os pontinhos do carrossel DENTRO da foto. `position:absolute` sem
         ancestral posicionado os mandou para cima do botão fixo do rodapé;
-     3. a cor continua sendo a do salão. Esta é a regra escrita em maiúsculas
+     3. a cor continua sendo a do restaurante. Esta é a regra escrita em maiúsculas
         no pedido, e a mais fácil de furar sem querer numa mudança visual.
    =========================================================================== */
 import fs from 'node:fs';
@@ -63,7 +63,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = novaAba();
 await dona.criarConta({ email:`cv-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -75,7 +75,7 @@ await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte feminino',
   duracaoMin:30, intervaloMin:0, preco:90, ativo:true, aceitaOnline:true,
   categoria:'Cabelo', foto: arte('#7C3AED', '#C084FC') });
 
-/* ⚠ A COR NÃO É A PADRÃO DO APP. Se o salão ficasse com o azul de fábrica,
+/* ⚠ A COR NÃO É A PADRÃO DO APP. Se o restaurante ficasse com o azul de fábrica,
    toda verificação de "respeitou a cor escolhida" passaria por acidente —
    inclusive num código que ignorasse a escolha por completo. */
 const COR = '#6D28D9';
@@ -88,7 +88,7 @@ await dona.atualizar('saloes', SALAO, {
          galeria:[{ url: arte('#4C1D95','#9333EA'), tipo:'imagem', legenda:'' },
                   { url: arte('#7C3AED','#F0ABFC'), tipo:'imagem', legenda:'' }],
          slideDe:'galeria' } });
-ok('salão criado, com capa, logo, galeria e a cor dele');
+ok('restaurante criado, com capa, logo, galeria e a cor dele');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
@@ -173,7 +173,7 @@ verdade('e o alvo de toque deles continua com 40px', m.pontoAlvo >= 40,
 
 /* ⚠ A REGRA ESCRITA EM MAIÚSCULAS NO PEDIDO: o visual novo obedece à
    personalização. Cor cravada no CSS passaria em tudo acima e furaria isto. */
-igual('a cor da página é a que o salão escolheu', m.acao, COR);
+igual('a cor da página é a que o restaurante escolheu', m.acao, COR);
 verdade('e a página não rola de lado', !m.rolaDeLado);
 await cel.close();
 
@@ -373,7 +373,7 @@ igual('tocando de novo, o contador vai para 2',
    e botão que leva a lugar nenhum é pior que botão nenhum. */
 await p3.close();
 /* ⚠ OS DOIS CAMPOS, e não só o `whatsapp`. O `zapDoSalao()` cai no
-   `telefone` quando não há whatsapp cadastrado — e está certo: salão pequeno
+   `telefone` quando não há whatsapp cadastrado — e está certo: restaurante pequeno
    usa o mesmo número para as duas coisas, e exigir que ele digite duas vezes
    é atrito à toa. Limpando só um, a fita continuava aparecendo e a premissa
    deste teste é que era falsa, não o código. */
@@ -384,11 +384,11 @@ const semZap = await p5.evaluate(() => {
   if(pr) mudarNoCarrinho(pr.id, 1);
   return document.getElementById('carrinhoFita').style.display;
 });
-igual('salão sem WhatsApp nenhum não ganha a fita', semZap, 'none');
+igual('restaurante sem WhatsApp nenhum não ganha a fita', semZap, 'none');
 await p5.close();
 await p2.close();
 
-/* ⚠ E O PRODUTO SAI DAQUI. A seção 3 mede o salão SEM LOJA, e o produto que
+/* ⚠ E O PRODUTO SAI DAQUI. A seção 3 mede o restaurante SEM LOJA, e o produto que
    esta seção cadastrou ficaria de herança — a verificação de lá passou a
    reprovar porque o convite passou a (corretamente) falar em produtos.
    Cenário que vaza para o seguinte é defeito de teste, e dos que acusam o
@@ -479,12 +479,12 @@ await dona.atualizar('saloes', SALAO, { cfg: Object.assign({},
   (await dona.lista('saloes', { id: SALAO }))[0].cfg, { slideForma:'panoramico' }) });
 
 /* ══════════════════════════════════════════════════════════════════════════
-   3 — ⚠ O SALÃO SEM FOTO NENHUMA
+   3 — ⚠ O RESTAURANTE SEM FOTO NENHUMA
 
-   Metade dos salões não sobe capa. A beira curva não pode virar um arco
+   Metade dos restaurantes não sobe capa. A beira curva não pode virar um arco
    recortado no papel da página quando não há imagem para recortar.
    ══════════════════════════════════════════════════════════════════════════ */
-secao('O salão que não subiu capa');
+secao('O restaurante que não subiu capa');
 
 await dona.atualizar('saloes', SALAO, { capa: null });
 const sem = await abrir(412, 915);
@@ -500,7 +500,7 @@ verdade('a logo continua lá', s2.temSelo);
 verdade('o serviço continua na capa', s2.temServico > 0);
 verdade('e o botão de marcar continua lá', s2.temBotao);
 
-/* ⚠ E O TEXTO DO CARTÃO NÃO PROMETE O QUE O SALÃO NÃO TEM. Este salão não
+/* ⚠ E O TEXTO DO CARTÃO NÃO PROMETE O QUE O RESTAURANTE NÃO TEM. Este restaurante não
    vende produto; mandar a cliente "conferir nossos produtos" é mandá-la
    procurar uma seção que não existe — e ela conclui que a página quebrou. */
 const semLoja = await sem.evaluate(() =>

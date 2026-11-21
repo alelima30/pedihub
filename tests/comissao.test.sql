@@ -2,7 +2,7 @@
 -- PediHub — a comissão é do banco, não do navegador
 --
 -- As perguntas que este arquivo responde são as que, erradas, tiram dinheiro
--- do salão ou do bolso de quem atende:
+-- do restaurante ou do bolso de quem atende:
 --
 --   0. O defeito original volta se a trava sair?
 --   1. O que o navegador manda na taxa é ignorado?
@@ -18,7 +18,7 @@
 \set ON_ERROR_STOP on
 
 insert into public.saloes (id, slug, nome, tipo) values
-  ('c0000000-1111-0000-0000-00000000000a', 'salao-comissao', 'Salão Comissão', 'salao');
+  ('c0000000-1111-0000-0000-00000000000a', 'salao-comissao', 'Restaurante Comissão', 'salao');
 insert into public.assinaturas (salao_id, plano, status) values
   ('c0000000-1111-0000-0000-00000000000a', 'time', 'ativa');
 
@@ -90,7 +90,7 @@ select t_verdade('e o valor sai de 50% de 200 = 100',
     where id = 'c0000000-bbbb-0000-0000-000000000002') = 100.00);
 
 -- Mandar zero também é mandar: não dá para zerar a comissão de alguém pela
--- tela. Este é o lado do defeito que rouba de quem atende, não do salão.
+-- tela. Este é o lado do defeito que rouba de quem atende, não do restaurante.
 insert into public.comanda_itens
   (id, comanda_id, tipo, servico_id, descricao, qtd, preco_unit,
    profissional_id, comissao_pct)
@@ -164,7 +164,7 @@ delete from public.servicos_profissionais
 \echo '3) Um degrau que diz ZERO ganha do degrau de baixo'
 
 -- "A Ana ganha 40% em tudo, MENOS na cortesia da casa." Se zero fosse lido
--- como "não disse nada", a Ana receberia 40% de um serviço que o salão dá
+-- como "não disse nada", a Ana receberia 40% de um serviço que o restaurante dá
 -- de graça — e ninguém perceberia, porque o item some no meio da comanda.
 insert into public.comanda_itens
   (id, comanda_id, tipo, servico_id, descricao, qtd, preco_unit, profissional_id)
@@ -278,7 +278,7 @@ select t_verdade('o item de 300 vira base 270, e 30% dele = 81',
     where id = 'c0000000-bbbb-0000-0000-000000000041') = 81.00);
 
 -- E o mesmo cenário no BRUTO tem que voltar a dar 130: é a prova de que a
--- regra é lida da comanda, e não do salão no momento da consulta.
+-- regra é lida da comanda, e não do restaurante no momento da consulta.
 update public.comandas set comissao_sobre = 'bruto'
  where id = 'c0000000-aaaa-0000-0000-00000000000b';
 
@@ -292,7 +292,7 @@ update public.comandas set comissao_sobre = 'liquido'
 \echo ''
 \echo '6) O acréscimo fica FORA da comissão'
 
--- Taxa de domingo é do salão. Se entrasse na base, quem atende ganharia
+-- Taxa de domingo é do restaurante. Se entrasse na base, quem atende ganharia
 -- comissão sobre uma cobrança que não é serviço de ninguém.
 update public.comandas set acrescimo = 100
  where id = 'c0000000-aaaa-0000-0000-00000000000b';

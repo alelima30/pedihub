@@ -41,7 +41,7 @@ Na mesma aplicação que você já usa para o Pix
    | **Pagamentos de assinaturas** (`subscription_authorized_payment`) | a cobrança de todo mês |
 
    > **Sem o segundo evento a assinatura funciona no mês 1 e para no mês 2**, em
-   > silêncio, com o salão achando que está em dia. É o defeito mais caro
+   > silêncio, com o restaurante achando que está em dia. É o defeito mais caro
    > possível de deixar passar aqui, porque só aparece trinta dias depois e
    > parece culpa do cliente.
 
@@ -52,7 +52,7 @@ Na mesma aplicação que você já usa para o Pix
 Assinaturas exigem a conta com dados fiscais completos, como o Pix. E há uma
 recusa que confunde todo mundo na primeira tentativa: **o Mercado Pago não
 deixa alguém assinar de si mesmo**. Se o e-mail do responsável no cadastro do
-salão for o mesmo da conta que recebe, o pedido volta com *"Invalid users
+restaurante for o mesmo da conta que recebe, o pedido volta com *"Invalid users
 involved"*. A borda traduz isso numa frase legível — mas se você estiver
 testando com a sua própria conta, é isso.
 
@@ -123,7 +123,7 @@ Sem `PAINEL_URL`, a borda cai no `PAINEL_ORIGEM`; sem os dois, ela responde
    o dono autoriza lá
         │
         ├─ webhook  subscription_preapproval (authorized)
-        │     └─ lê /preapproval/{id} na API  →  ligar_cartao(salão, id)
+        │     └─ lê /preapproval/{id} na API  →  ligar_cartao(restaurante, id)
         │
         ├─ webhook  subscription_authorized_payment   ← todo mês, sozinho
         │     └─ lê /authorized_payments/{id} na API
@@ -140,7 +140,7 @@ Três coisas que valem reparar:
 **A borda não liga o cartão.** Chegar em `assinar-cartao` é ter clicado num
 botão; não é ter autorizado nada. Quem liga é o webhook, com o dado relido da
 API do Mercado Pago. Se fosse a borda, bastaria clicar e fechar a aba para o
-salão constar como pagante.
+restaurante constar como pagante.
 
 **A cobrança do mês 2 não tem clique nenhum atrás dela.** É por isso que
 existe `registrar_recorrencia()`: ela cria a linha do mês — com o preço lido
@@ -156,7 +156,7 @@ local. Se a ordem fosse a outra, um erro de rede deixaria o painel dizendo
 ## 5. Trocar de plano
 
 Não dá para trocar direto: é **desligar e assinar de novo**, dois cliques. A
-borda recusa uma segunda pré-aprovação no mesmo salão de propósito — duas
+borda recusa uma segunda pré-aprovação no mesmo restaurante de propósito — duas
 ativas é cobrança dobrada todo mês, e o dono só descobre na fatura.
 
 ---
@@ -185,10 +185,10 @@ E de ponta a ponta, com credenciais `TEST-` e um usuário de teste:
 | escolher a própria mensalidade | `transaction_amount` vem de `planos`, no banco; a tela manda só o código do plano |
 | marcar-se como pagante sem pagar | a borda não liga cartão; quem liga é o webhook, com o dado relido da API |
 | forjar o aviso de autorização | HMAC-SHA256 com `MP_WEBHOOK_SECRET`, o mesmo do Pix |
-| mentir no corpo do aviso | o `external_reference` que diz de qual salão é vem da API do Mercado Pago |
+| mentir no corpo do aviso | o `external_reference` que diz de qual restaurante é vem da API do Mercado Pago |
 | reenviar o aviso da cobrança mensal | `cobrancas.mp_id` é único; a segunda chegada responde `ja_registrada` |
-| apontar a assinatura para outro salão | `ux_assinatura_preapproval` é único, e `ligar_cartao` recusa pré-aprovação de outro |
+| apontar a assinatura para outro restaurante | `ux_assinatura_preapproval` é único, e `ligar_cartao` recusa pré-aprovação de outro |
 | pagar o plano pequeno e levar o grande | o valor é conferido contra o preço do plano antes de ativar |
 | ligar cartão pelo console do navegador | `ligar_cartao`, `registrar_recorrencia` e `desligar_cartao` são negadas a `anon` e `authenticated` |
-| descobrir o e-mail do dono de qualquer salão | `preparar_cartao` confere o vínculo de quem pediu, e não é alcançável do navegador |
+| descobrir o e-mail do dono de qualquer restaurante | `preparar_cartao` confere o vínculo de quem pediu, e não é alcançável do navegador |
 | um mês recusado travar os seguintes | o índice de cobrança aberta ignora `metodo = 'cartao'` |

@@ -57,11 +57,11 @@ partes = [limpar(a) for a in auxiliares]
 # ⚠ O GATILHO QUE NUMERA A COMANDA, E O REVOKE QUE SÓ É SEGURO COM ELE.
 #
 # `comanda_numera` era o ÚNICO gatilho do projeto sem `security definer`, e por
-# isso rodava como QUEM FEZ a operação — exigindo que a própria dona do salão
+# isso rodava como QUEM FEZ a operação — exigindo que a própria dona do restaurante
 # tivesse permissão de executar `proximo_numero`.
 #
 # Isso importa porque `proximo_numero` ESCREVE e não confere nada: aberta ao
-# `anon`, deixava qualquer um inflar a numeração de comanda de qualquer salão.
+# `anon`, deixava qualquer um inflar a numeração de comanda de qualquer restaurante.
 # Medido: três chamadas anônimas levaram o contador de 1 para 3.
 #
 # Os dois têm que viajar JUNTOS e NESTA ORDEM. Revogar sem o definer quebra
@@ -79,7 +79,7 @@ partes.append('revoke all on function public.proximo_numero(uuid, text)\n'
 
 # ⚠ O 06_vitrine.sql pega carona aqui, e ele NÃO é um módulo.
 #
-# É a função que a página da cliente chama para saber tudo sobre o salão, e
+# É a função que a página da cliente chama para saber tudo sobre o restaurante, e
 # ela mora nos arquivos de base — que só chegam ao banco de produção pelo
 # 00_tudo.sql, de 170 KB, que ninguém cola por vontade própria.
 #

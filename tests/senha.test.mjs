@@ -6,7 +6,7 @@
 
    POR QUE ESTE ARQUIVO EXISTE
    "Esqueci minha senha" era um texto explicativo mandando falar no WhatsApp.
-   Numa ferramenta que o salão abre todo dia, isso não é um recurso faltando:
+   Numa ferramenta que o restaurante abre todo dia, isso não é um recurso faltando:
    é um cliente parado no balcão sem conseguir abrir a agenda, e um recado
    para você às sete da manhã de sábado.
 
@@ -58,7 +58,7 @@ await dona.criarConta({ email: EMAIL, senha: VELHA, nome: 'Marta Prado',
   telefone: '+5551' + (100000000 + (Date.now() % 99999999)) });
 await dona.chamar('criar_salao', { p_nome_salao: 'Salao Senha ' + marca,
   p_tipo:'salao', p_telefone:'(51) 99887-6655', p_documento:null, p_origem:null });
-ok('conta e salão criados');
+ok('conta e restaurante criados');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 } });

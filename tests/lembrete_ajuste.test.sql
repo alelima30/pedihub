@@ -97,7 +97,7 @@ select ajuste('{"notifLembrete": false}');
 select public.gerar_lembretes_cliente();
 select t_verdade('4. o pendente sai da fila, dizendo por quê',
   (lembrete('1a500000-0000-0000-0000-000000000001')).status = 'cancelado'
-  and (lembrete('1a500000-0000-0000-0000-000000000001')).motivo = 'o lembrete foi desligado no salão');
+  and (lembrete('1a500000-0000-0000-0000-000000000001')).motivo = 'o lembrete foi desligado no restaurante');
 
 \echo ''
 \echo 'Ligou de novo, "2 horas antes"'

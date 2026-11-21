@@ -1,5 +1,5 @@
 -- ===========================================================================
--- 49_remarcar.sql — o salão remarca um horário
+-- 49_remarcar.sql — o restaurante remarca um horário
 --
 -- O pedido: "na onde entro para remarcar caso precise?" — e não havia onde.
 -- A janela do atendimento só mudava a situação e a forma de pagamento. O
@@ -118,7 +118,7 @@ begin
   perform public.refazer_lembrete_cliente(a.id);
 
   -- E a cliente fica sabendo: o horário de antes e o novo (52, depois que
-  -- a plataforma liga o modelo e se o salão não desligou a chave). A guarda
+  -- a plataforma liga o modelo e se o restaurante não desligou a chave). A guarda
   -- é para o banco que ainda não tem o 52.
   if to_regprocedure('public.avisar_remarcado(uuid,timestamptz,uuid)') is not null then
     perform public.avisar_remarcado(a.id, a.inicio, a.profissional_id);

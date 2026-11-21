@@ -5,7 +5,7 @@
      node tests/pacotes.test.mjs
 
    ── O QUE O PACOTE É ───────────────────────────────────────────────────────
-   O salão cria "Pacote Unha em Dia": 4 manutenções, 90 dias de validade, de
+   O restaurante cria "Pacote Unha em Dia": 4 manutenções, 90 dias de validade, de
    segunda a quarta. Vincula a Maria. A Maria, LOGADA, marca manutenção pelo
    link e o atendimento sai por R$ 0,00 — ela já pagou o pacote.
 
@@ -15,7 +15,7 @@
    que o número seja de quem digitou.
 
    Sem essa exigência, qualquer pessoa que soubesse o telefone da Maria
-   marcaria de graça no lugar dela, e o salão só descobriria com a cliente
+   marcaria de graça no lugar dela, e o restaurante só descobriria com a cliente
    sentada na cadeira. É a seção 3 daqui, e é a razão de este arquivo existir.
 
    ── E O PREÇO É DO BANCO ──────────────────────────────────────────────────
@@ -52,16 +52,16 @@ function novaAba(){
 const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const tel = n => '+5551' + String(900000000 + n + (Date.now() % 89000000)).slice(0, 9);
 
-// ── O salão, com a dona ────────────────────────────────────────────────────
+// ── O restaurante, com a dona ────────────────────────────────────────────────────
 const dona = novaAba();
 await dona.criarConta({ email:`pac-dona-${marca}@teste.com`, senha:'minhasenhaboa',
-  nome:'Dona do Salão', telefone: tel(1) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Pacote ' + marca,
+  nome:'Dona do Restaurante', telefone: tel(1) });
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Pacote ' + marca,
   p_tipo:'salao', p_telefone:'(51) 99887-6655', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 /* ⚠ O FREIO DE RAJADA E O TETO DO LINK, AFROUXADOS SÓ AQUI.
 
-   O salão protege a agenda de duas formas: o link não pode tomar mais que uma
+   O restaurante protege a agenda de duas formas: o link não pode tomar mais que uma
    fatia do dia (`tetoOnlinePct`) e não pode marcar muitas vezes seguidas
    (`tetoOnlineRajada`). As duas são certas, e as duas barram este arquivo —
    que marca dezenas de horários em segundos, coisa que cliente nenhuma faz.
@@ -70,7 +70,7 @@ const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
    como "a marcação está congestionada", e eu passaria a tarde procurando no
    lugar errado. As duas travas têm suíte própria (`teto-online.test.mjs`).
 
-   ⚠ E é `cfg` inteiro de propósito: o salão nasce sem nenhuma dessas chaves, e
+   ⚠ E é `cfg` inteiro de propósito: o restaurante nasce sem nenhuma dessas chaves, e
    um `Object.assign` aqui esconderia o dia em que o padrão mudasse. */
 await dona.atualizar('saloes', SALAO,
   { cfg:{ diasLiberados:60, tetoOnlinePct:100, tetoOnlineRajada:100 } });
@@ -85,7 +85,7 @@ const manutencao = await dona.inserir('servicos', { salaoId:SALAO,
   ativo:true, aceitaOnline:true });
 const escova = await dona.inserir('servicos', { salaoId:SALAO, nome:'Escova',
   preco:50, duracaoMin:60, intervaloMin:0, ativo:true, aceitaOnline:true });
-ok('salão com dois serviços: manutenção (R$ 40) e escova (R$ 50)');
+ok('restaurante com dois serviços: manutenção (R$ 40) e escova (R$ 50)');
 
 /* O pacote cobre TODOS os dias nesta montagem. Os dias da semana têm seção
    própria (5) — misturá-los aqui faria uma falha de "cobre o serviço" parecer
@@ -121,7 +121,7 @@ const marcar = (quem, servicos, quando, nome, telefone) => quem.chamar('agendar'
 /* ⚠ A TRAVA DOS 3 HORÁRIOS ABERTOS É REAL, e este arquivo esbarrou nela.
 
    O `agendar()` recusa a quarta marcação em aberto da mesma cliente. Faz
-   sentido no salão — evita quem marca cinco horários "para decidir depois" —
+   sentido no restaurante — evita quem marca cinco horários "para decidir depois" —
    e obriga o teste a limpar atrás de si.
 
    São dois jeitos de limpar, e a diferença IMPORTA para o que está sendo
@@ -318,7 +318,7 @@ const fichaAna = (await dona.lista('clientes', { salaoId: SALAO }))
   .find(c => nacional(c.telefone) === nacional(TEL_ANA));
 await dona.chamar('vender_pacote', { p_pacote: so2a.id, p_cliente: fichaAna.id });
 
-/* Acha a próxima segunda e a próxima quarta, no fuso do salão. Fixar "daqui a
+/* Acha a próxima segunda e a próxima quarta, no fuso do restaurante. Fixar "daqui a
    N dias" daria um dia da semana diferente a cada dia em que o teste rodasse —
    é a armadilha que fez a `corrida.test.mjs` reprovar uma hora por dia. */
 const proximo = (dow, horaUTC = 15) => {
@@ -345,7 +345,7 @@ const rQua = await marcar(ana, [escova.id], naQuarta, 'Ana Segunda', TEL_ANA);
    criado: quem comprou pacote antes continua marcando em qualquer dia.
 
    A seção 5b mede o outro lado, com a coluna ligada. As duas juntas são o
-   ponto: o salão escolhe, e nenhuma das duas posturas é imposta. */
+   ponto: o restaurante escolhe, e nenhuma das duas posturas é imposta. */
 igual('na quarta ela marca do mesmo jeito, pagando os R$ 50',
   Number(rQua[0].valor), 50);
 await desmarcar(rQua[0].id);
@@ -359,10 +359,10 @@ await desmarcar(rQua[0].id);
      · a recepção marca a quarta-feira dela pelo painel, cobrando — é a saída
        para "quero atender fora dos dias, pagando"
      · quem não tem o pacote marca a mesma quarta pelo link, normalmente — o
-       bloqueio de uma pessoa não fecha o dia do salão
+       bloqueio de uma pessoa não fecha o dia do restaurante
 
    Sem estas duas medidas, "bloqueia" seria uma palavra sem tamanho, e o
-   primeiro salão a ligar a coluna descobriria o tamanho sozinho.
+   primeiro restaurante a ligar a coluna descobriria o tamanho sozinho.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Pacote que BLOQUEIA fora dos dias');
 
@@ -408,7 +408,7 @@ verdade('e a recusa diz o nome do pacote', /Manutenção Segunda/.test(barrou ||
   barrou);
 verdade('e escreve os dias que valem', /segunda/i.test(barrou || ''), barrou);
 /* Recusa sem saída é cliente que fecha a página. A frase tem que dizer o que
-   fazer agora — e o que fazer agora é falar com o salão, que marca pagando. */
+   fazer agora — e o que fazer agora é falar com o restaurante, que marca pagando. */
 verdade('e aponta uma saída, não só o não',
   /whatsapp|sal[ãa]o/i.test(barrou || ''), barrou);
 
@@ -442,7 +442,7 @@ verdade('a recepção marca essa MESMA quarta pelo painel, cobrando',
               + 'exceção que ela mesma quis dar');
 if(peloBalcao) await desmarcar(peloBalcao.id);
 
-// ── E o dia do SALÃO não encolheu ─────────────────────────────────────────
+// ── E o dia do RESTAURANTE não encolheu ─────────────────────────────────────────
 const carla = novaAba();
 const TEL_CARLA = tel(5);
 await carla.criarConta({ email:`pac-carla-${marca}@teste.com`,
@@ -467,7 +467,7 @@ verdade('junto com os dias em que vale',
    mutações NÃO derrubavam: a cliente gastou tudo, o pacote acabou, e se ele
    continuasse barrando a quarta ela ficaria presa a segunda-feira para sempre
    — por um benefício que não existe mais. Castigo sem dono: ela não entende, e
-   o salão não sabe de onde veio.
+   o restaurante não sabe de onde veio.
 
    Uma sessão só, de propósito: gastar dez para medir isto seria dez marcações
    para uma pergunta de uma linha. */
@@ -520,11 +520,11 @@ await desmarcar(depoisDoCancelamento[0].id);
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Pacote vencido');
 
-/* ⚠ ONTEM NO SALÃO, NÃO ONTEM EM UTC — e a diferença reprovava este arquivo
+/* ⚠ ONTEM NO RESTAURANTE, NÃO ONTEM EM UTC — e a diferença reprovava este arquivo
    três horas por dia.
 
    `new Date(Date.now() - 864e5).toISOString()` dá ontem em UTC. Entre 21h e
-   meia-noite em São Paulo, "ontem em UTC" ainda é HOJE no salão: o pacote
+   meia-noite em São Paulo, "ontem em UTC" ainda é HOJE no restaurante: o pacote
    vencia num dia que ainda não tinha chegado, e o `meus_pacotes()` — que
    compara com `hoje_no_salao()` — devolvia o pacote, corretamente.
 
@@ -534,7 +534,7 @@ secao('Pacote vencido');
 
    É a mesma armadilha que o `proximo()` desta página já resolve para o dia da
    semana, e que a `corrida.test.mjs` pagou para aprender. Aqui a data sai do
-   fuso do salão, ancorada ao meio-dia para nenhum horário de verão empurrá-la
+   fuso do restaurante, ancorada ao meio-dia para nenhum horário de verão empurrá-la
    para o dia vizinho. */
 const diaNoSalao = (deslocamento) => {
   const hojeLa = new Intl.DateTimeFormat('en-CA', {

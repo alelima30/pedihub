@@ -15,7 +15,7 @@ cat > "$SAIDA" <<'CAB'
 --   01_schema.sql      as tabelas
 --   02_rls.sql         quem enxerga o quê
 --   03_onboarding.sql  criar_salao(), o cadastro em uma transação
---   04_imagens.sql     as pastas de foto, uma por salão
+--   04_imagens.sql     as pastas de foto, uma por restaurante
 --   05_agenda.sql      horarios_livres() e agendar(), o lado da cliente
 --   06_vitrine.sql     vitrine(), e o catálogo fechado para quem não tem o link
 --   07_plataforma.sql  o painel de quem é dono do PediHub
@@ -31,38 +31,38 @@ cat > "$SAIDA" <<'CAB'
 --   17_caixa.sql       o caixa do dia, a sangria, o suprimento e o estorno
 --   18_painel.sql      o painel do dia: agenda, dinheiro, gaveta e quem vem
 --   19_teto_online.sql o teto do link público, para telefone descartável
---                      não fechar o dia do salão
+--                      não fechar o dia do restaurante
 --   20_corrida.sql     bloqueio e atendimento param de passar juntos
 --                      quando as duas transações abrem ao mesmo tempo
 --   21_notificacoes.sql confirmação, lembrete e resumo do dia
 --   22_cotas.sql       as cotas do plano e o consumo de mensagem
 --   23_assinatura_cartao.sql  a assinatura no cartão, que renova sozinha
---   24_produtos.sql           os produtos que o salão vende
+--   24_produtos.sql           os produtos que o restaurante vende
 --   25_loja.sql               a loja na página da cliente
 --   26_estoque.sql            a comanda dá baixa no estoque
 --   27_pacotes.sql            pacotes de serviço, vinculados à cliente
---   28_sem_comanda.sql        o salão que trabalha sem comanda e sem caixa
---   29_confirmacao.sql        o salão confirma à mão, ou o link confirma só
+--   28_sem_comanda.sql        o restaurante que trabalha sem comanda e sem caixa
+--   29_confirmacao.sql        o restaurante confirma à mão, ou o link confirma só
 --   30_painel.sql            os números que o dashboard desenha
 --   31_dias_servico.sql      o serviço que só é feito em certos dias
 --   32_produto_cadastro.sql  preço escondido, comissão por pessoa, histórico
 --   33_preco_regras.sql      preço por vigência, dia da semana e horário
 --   34_cupons.sql            cupons de desconto no agendamento e na loja
 --   35_acesso.sql            quem lê o quê: catálogo só da equipe, ficha só pelo agendar()
---   36_excluir_conta.sql     o botão Excluir conta: a dona apaga o salão inteiro, na hora
+--   36_excluir_conta.sql     o botão Excluir conta: a dona apaga o restaurante inteiro, na hora
 --   37_pedidos.sql           o modo Pedidos: restaurante, cardápio, entrega e o andamento
---   38_suporte.sql           o modo suporte: a plataforma olha o painel do salão, e só edita liberando
+--   38_suporte.sql           o modo suporte: a plataforma olha o painel do restaurante, e só edita liberando
 --   39_teste_unico.sql       o teste grátis é um por pessoa: excluir e voltar não ganha mais 7 dias
 --   40_saude.sql             o check-up do sistema: a fila do WhatsApp anda? (admin e UptimeRobot)
 --   41_ficha_equipe.sql      só da equipe: o como fazer, os procedimentos e os lembretes sobre a cliente
---   42_travas.sql            o que a auditoria de segurança achou: status do salão e a linha do salão
+--   42_travas.sql            o que a auditoria de segurança achou: status do restaurante e a linha do restaurante
 --   43_pacote_agenda.sql     o pacote com agenda fixa (as semanas já marcadas) e o pagamento do pacote
 --   44_pacote_comissao.sql   a comissão da sessão de pacote: proporcional, de quem atendeu, ao atender
 --   45_pacote_mensagens.sql  as mensagens do pacote: aviso de renovação e lembrete do pagamento
 --   46_adicionais.sql        os módulos adicionais (o Crediário): a mensalidade é plano + adicionais
 --   47_crediario.sql         o Crediário: vender parcelado no fiado, as parcelas, o a receber
 --   48_cadastro_link.sql     a cliente se cadastra pelo link, sem agendar, e ganha a ficha
---   49_remarcar.sql          o salão remarca um horário (move, mantendo pacote e serviços)
+--   49_remarcar.sql          o restaurante remarca um horário (move, mantendo pacote e serviços)
 --   50_pacote_excluir.sql    excluir pacote: só sem cliente nele; com histórico, arquiva
 --   51_google.sql            entrar com o Google: completar o cadastro (WhatsApp e aniversário)
 --   52_mensagens_novas.sql   as mensagens do Crediário (franquia própria) e a de horário remarcado
@@ -71,7 +71,7 @@ cat > "$SAIDA" <<'CAB'
 --   55_relatorio_vendas.sql  a loja pelo link e os pacotes no Relatórios
 --   56_conta_excluida.sql    a cliente excluiu a conta: a marca na ficha e o aviso no sino
 --   57_plano_fechado.sql     a consulta do plano e do uso deixa de responder a quem é de fora
---   58_fuso.sql              o fuso do salão: escolher, e trocar sem mexer em nenhum horário marcado
+--   58_fuso.sql              o fuso do restaurante: escolher, e trocar sem mexer em nenhum horário marcado
 --   64_so_restaurante.sql    no PediHub toda casa é restaurante (o tipo é travado no banco)
 --   59_push.sql              os avisos no celular (push): aparelhos, fila e gatilhos
 --   60_dashboard.sql         o Ranking: clientes, profissionais, novas e recorrentes, visitas do link

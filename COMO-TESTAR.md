@@ -9,7 +9,7 @@ Supabase de verdade.
 
 Baixe a pasta inteira e abra **`app.html`** no navegador.
 
-Já vem com dois salões, cinco profissionais, dez serviços e a agenda de hoje
+Já vem com dois restaurantes, cinco profissionais, dez serviços e a agenda de hoje
 preenchida. Tudo fica guardado no próprio navegador. O botão **Recomeçar**
 devolve ao estado inicial quando você bagunçar.
 
@@ -18,12 +18,12 @@ Os três aplicativos, na ordem em que a vida acontece:
 | Arquivo | Quem usa |
 |---|---|
 | `criar.html` | o dono, para abrir a conta |
-| `app.html` | o salão: agenda, clientes, caixa, plano |
+| `app.html` | o restaurante: agenda, clientes, caixa, plano |
 | `agendar.html?salao=studio-bella` | o cliente, para marcar |
 
 Vale conferir:
 
-- Troque de salão no seletor do topo — um não enxerga o outro
+- Troque de restaurante no seletor do topo — um não enxerga o outro
 - Clique num espaço vazio da agenda; tente marcar em cima de alguém
 - Aba **Ver como cliente** → copie o link → abra `agendar.html`
 - Abra `agendar.html?salao=barbearia-do-ze`: o sistema passa a dizer
@@ -92,7 +92,7 @@ Sirva a pasta por http (o navegador bloqueia várias coisas em `file://`):
 cd pedihub && python3 -m http.server 8000
 ```
 
-Abra `http://localhost:8000/criar.html`, crie sua conta e siga. O salão, a
+Abra `http://localhost:8000/criar.html`, crie sua conta e siga. O restaurante, a
 assinatura em teste, seu vínculo de dono e o primeiro profissional nascem
 juntos, numa transação só.
 
@@ -144,7 +144,7 @@ node tests/nuvem.test.mjs        # noutro
 # O funil inteiro na nuvem: cadastrar, sair, voltar e entrar — 13 verificações
 node tests/funil-nuvem.test.mjs
 
-# O link da cliente: da dona montando o salão até o horário existir no
+# O link da cliente: da dona montando o restaurante até o horário existir no
 # banco, com o preço que o BANCO calculou — 33 verificações
 node tests/cliente-nuvem.test.mjs
 ```

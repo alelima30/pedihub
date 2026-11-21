@@ -9,7 +9,7 @@ https://iarmxniueeqntshhjxuw.supabase.co/functions/v1/saude
 - **200**: tudo certo (ou só "atenção", que não merece alerta).
 - **503**: problema. O monitor avisa você.
 
-O corpo diz o nível e as chaves do que está errado, sem nenhum dado de salão:
+O corpo diz o nível e as chaves do que está errado, sem nenhum dado de restaurante:
 
 ```json
 { "nivel": "problema", "problemas": ["despertador"], "atencao": [], "verificadoEm": "…" }

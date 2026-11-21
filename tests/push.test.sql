@@ -20,7 +20,7 @@ insert into auth.users (id) values
   ('d5900000-0000-0000-0000-00000000000d'),  -- Ju   — profissional
   ('d5900000-0000-0000-0000-00000000000e'),  -- Bia  — profissional
   ('c5900000-0000-0000-0000-00000000000c'),  -- Maria — cliente com conta
-  ('e5900000-0000-0000-0000-00000000000e');  -- Eva  — dona de outro salão
+  ('e5900000-0000-0000-0000-00000000000e');  -- Eva  — dona de outro restaurante
 insert into public.perfis (id, nome, telefone) values
   ('a5900000-0000-0000-0000-00000000000a', 'Ana',   '+5511959000001'),
   ('b5900000-0000-0000-0000-00000000000b', 'Rita',  '+5511959000002'),
@@ -31,8 +31,8 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do update set nome = excluded.nome;
 
 insert into public.saloes (id, slug, nome, status, fuso, cfg) values
-  ('59000000-0000-0000-0000-00000000000a', 'push-a', 'Salão do Aviso', 'ativo', 'America/Sao_Paulo', '{}'),
-  ('59000000-0000-0000-0000-00000000000b', 'push-b', 'Salão Vizinho',  'ativo', 'America/Sao_Paulo', '{}');
+  ('59000000-0000-0000-0000-00000000000a', 'push-a', 'Restaurante do Aviso', 'ativo', 'America/Sao_Paulo', '{}'),
+  ('59000000-0000-0000-0000-00000000000b', 'push-b', 'Restaurante Vizinho',  'ativo', 'America/Sao_Paulo', '{}');
 insert into public.assinaturas (salao_id, plano, status) values
   ('59000000-0000-0000-0000-00000000000a', 'time', 'ativa'),
   ('59000000-0000-0000-0000-00000000000b', 'time', 'ativa');
@@ -107,15 +107,15 @@ begin
   e := t_ligar(null, '59000000-0000-0000-0000-00000000000a', 'https://push.exemplo/visitante');
   perform t_verdade('visitante sem login nem chama — ' || e, e like 'ERRO: permission denied%');
   e := t_ligar('c5900000-0000-0000-0000-00000000000c', '59000000-0000-0000-0000-00000000000a', 'https://push.exemplo/maria');
-  perform t_verdade('a cliente com conta não liga aviso do salão', e like 'ERRO: Só a equipe do salão%');
+  perform t_verdade('a cliente com conta não liga aviso do restaurante', e like 'ERRO: Só a equipe do restaurante%');
   e := t_ligar('e5900000-0000-0000-0000-00000000000e', '59000000-0000-0000-0000-00000000000a', 'https://push.exemplo/eva');
-  perform t_verdade('a dona do salão vizinho não liga aviso neste', e like 'ERRO: Só a equipe do salão%');
+  perform t_verdade('a dona do restaurante vizinho não liga aviso neste', e like 'ERRO: Só a equipe do restaurante%');
 
   perform t_verdade('a dona liga',      t_ligar('a5900000-0000-0000-0000-00000000000a', '59000000-0000-0000-0000-00000000000a', 'https://push.exemplo/ana')  like '{"ok": true}');
   perform t_verdade('a recepção liga',  t_ligar('b5900000-0000-0000-0000-00000000000b', '59000000-0000-0000-0000-00000000000a', 'https://push.exemplo/rita') like '{"ok": true}');
   perform t_verdade('a Ju liga',        t_ligar('d5900000-0000-0000-0000-00000000000d', '59000000-0000-0000-0000-00000000000a', 'https://push.exemplo/ju')   like '{"ok": true}');
   perform t_verdade('a Bia liga',       t_ligar('d5900000-0000-0000-0000-00000000000e', '59000000-0000-0000-0000-00000000000a', 'https://push.exemplo/bia')  like '{"ok": true}');
-  perform t_verdade('a Eva, no salão dela, também',
+  perform t_verdade('a Eva, no restaurante dela, também',
     t_ligar('e5900000-0000-0000-0000-00000000000e', '59000000-0000-0000-0000-00000000000b', 'https://push.exemplo/eva') like '{"ok": true}');
 
   e := t_ligar('a5900000-0000-0000-0000-00000000000a', '59000000-0000-0000-0000-00000000000a', 'http://inseguro/x');
@@ -184,7 +184,7 @@ begin
   perform t_igual('a recepção recebe',  t_avisos('b5900000-0000-0000-0000-00000000000b'), 1);
   perform t_igual('a Ju (quem vai atender) recebe', t_avisos('d5900000-0000-0000-0000-00000000000d'), 1);
   perform t_igual('a Bia, que não tem nada com isso, não', t_avisos('d5900000-0000-0000-0000-00000000000e'), 0);
-  perform t_igual('nem a dona do salão vizinho', t_avisos('e5900000-0000-0000-0000-00000000000e'), 0);
+  perform t_igual('nem a dona do restaurante vizinho', t_avisos('e5900000-0000-0000-0000-00000000000e'), 0);
   select * into f from public.push_fila order by id limit 1;
   perform t_texto('o título', f.titulo, 'Horário novo pelo link');
   perform t_texto('a linha diz quem, quando e com quem', f.corpo,
@@ -353,7 +353,7 @@ begin
   perform t_igual('tocar de novo no mesmo minuto não manda outro', (select count(*) from public.push_fila), 1);
   e := t_como('e5900000-0000-0000-0000-00000000000e',
     $q$select public.push_testar('59000000-0000-0000-0000-00000000000a')::text$q$);
-  perform t_verdade('quem é de fora do salão não testa', e like 'ERRO: Só a equipe%');
+  perform t_verdade('quem é de fora do restaurante não testa', e like 'ERRO: Só a equipe%');
 end $$;
 
 -- ===========================================================================
@@ -361,7 +361,7 @@ end $$;
 \echo '10. Nada disto conta na franquia de mensagens'
 -- ===========================================================================
 do $$ begin
-  perform t_igual('a franquia de WhatsApp do salão continua em zero',
+  perform t_igual('a franquia de WhatsApp do restaurante continua em zero',
     public.mensagens_no_mes('59000000-0000-0000-0000-00000000000a'), 0);
   perform t_verdade('e o aviso no celular não passa pela fila do WhatsApp',
     not exists (select 1 from public.notificacoes where corpo like 'Horário novo pelo link%'

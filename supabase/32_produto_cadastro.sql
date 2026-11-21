@@ -20,7 +20,7 @@
 -- produto aparece, com foto e nome, e o valor sai por WhatsApp.
 --
 -- Não é firula de vitrine. Produto de revenda com preço tabelado pelo
--- fabricante, produto que o salão vende mais caro que a farmácia da esquina,
+-- fabricante, produto que o restaurante vende mais caro que a farmácia da esquina,
 -- e produto cujo preço muda toda semana — nos três casos o dono quer mostrar
 -- que tem, e não quer publicar quanto custa.
 --
@@ -62,7 +62,7 @@ comment on table public.produtos_profissionais is
 alter table public.produtos_profissionais enable row level security;
 
 /* As mesmas duas policies de `servicos_profissionais`, pelo mesmo desenho:
-   quem tem acesso ao salão LÊ, quem é gestão ESCREVE.
+   quem tem acesso ao restaurante LÊ, quem é gestão ESCREVE.
 
    ⚠ E separadas por verbo, nunca `for all` numa só. Policy `for all` vale
    também para SELECT, e o Postgres soma as permissivas com OU: uma policy de
@@ -188,7 +188,7 @@ revoke all on function public.comissao_de(text, uuid, uuid, uuid)
 --
 -- ⚠ O aviso é `set_config(..., true)` — LOCAL À TRANSAÇÃO. Sem o `true` ele
 -- valeria para a conexão inteira, e a conexão é reaproveitada: o próximo
--- ajuste à mão de qualquer salão sairia rotulado como venda daquela comanda.
+-- ajuste à mão de qualquer restaurante sairia rotulado como venda daquela comanda.
 -- ---------------------------------------------------------------------------
 create table if not exists public.estoque_mov (
   id         uuid primary key default gen_random_uuid(),
@@ -209,7 +209,7 @@ comment on table public.estoque_mov is
 
 alter table public.estoque_mov enable row level security;
 
-/* ⚠ SÓ LEITURA, E SÓ PARA QUEM TEM ACESSO AO SALÃO. Não existe policy de
+/* ⚠ SÓ LEITURA, E SÓ PARA QUEM TEM ACESSO AO RESTAURANTE. Não existe policy de
    escrita de propósito: quem grava é o gatilho, que é `security definer` e
    não passa por RLS. Histórico que a tela pode escrever não é histórico — é
    um campo de texto com outro nome. */
@@ -311,7 +311,7 @@ comment on function public.tg_comanda_estoque() is
 -- 3c) Ler o histórico de um produto
 --
 -- Gestão only, pelo mesmo motivo do relatório: o histórico mostra quanto o
--- salão comprou e vendeu de cada coisa.
+-- restaurante comprou e vendeu de cada coisa.
 -- ---------------------------------------------------------------------------
 create or replace function public.estoque_historico(p_produto uuid, p_limite int default 50)
 returns jsonb language plpgsql stable security definer set search_path = public as $$
@@ -322,7 +322,7 @@ begin
     raise exception 'Produto não encontrado.' using errcode = 'no_data_found';
   end if;
   if not public.e_gestor(v_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 

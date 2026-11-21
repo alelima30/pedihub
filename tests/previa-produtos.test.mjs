@@ -12,7 +12,7 @@
    Agendar horário e ir direto para a configuração? Ou clicar em cima da
    moldura e configurar também?"
 
-   Medido antes de mexer, com um salão igual ao dele:
+   Medido antes de mexer, com um restaurante igual ao dele:
      · a prévia não tinha o convite do Bem-vindo, nem o "Ver produtos", nem a
        vitrine de produtos;
      · o slide da prévia era 4:3 com "1 de 5"; o do link, 16:8, com o nome e
@@ -63,7 +63,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`pp-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -82,12 +82,12 @@ await dona.inserir('produtos', { salaoId: SALAO, nome:'Máscara', preco:60, cust
 await dona.atualizar('saloes', SALAO, { whatsapp:'11988887777',
   endereco:{ logradouro:'Rua Avanhandava', numero:'10', bairro:'Cidade Nova', cidade:'Itu', uf:'SP' },
   logo: arte('#4C1D95', '#A78BFA'), capa: arte('#141414', '#E8C3A0') });
-/* O salão do print: letras claras, fundo liso, botão roxo, moldura curvada —
+/* O restaurante do print: letras claras, fundo liso, botão roxo, moldura curvada —
    e um véu baixo guardado de quando ele testou a foto de fundo. */
 const SEMANA = [0,1,2,3,4,5,6].reduce((o, d) => (o[d] = [['00:00','00:00']], o), {});
 const BASE_CFG = { diasLiberados:30, cor:'#1D4ED8', tema:'escuro', fundoTipo:'solida',
   moldura:'elegante', veu:10, cores:{ botao:'#5B21B6' },
-  funcionamento: SEMANA, pagamentos:{ formas:['pix'] }, sobre:'Salão de beleza' };
+  funcionamento: SEMANA, pagamentos:{ formas:['pix'] }, sobre:'Restaurante de beleza' };
 const porCfg = extra => dona.atualizar('saloes', SALAO, { cfg: Object.assign({}, BASE_CFG, extra) });
 await porCfg({});
 const cfgDe = async () => (await dona.lista('saloes', { id: SALAO }))[0].cfg || {};

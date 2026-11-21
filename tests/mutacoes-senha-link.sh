@@ -110,7 +110,7 @@ troca dados.js \
 
 echo "10. a cliente vê os textos do painel"
 troca nova-senha.html \
-  "  a.href = VOLTA; a.textContent = 'Voltar para o salão';" \
+  "  a.href = VOLTA; a.textContent = 'Voltar para o restaurante';" \
   "" \
   && rodar "o caminho de volta é a tela de entrar do painel"
 

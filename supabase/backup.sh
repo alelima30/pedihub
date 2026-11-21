@@ -13,7 +13,7 @@
 # problema na conta — e não havia volta.
 #
 # ── O QUE ENTRA ────────────────────────────────────────────────────────────
-#   public   tudo do sistema: salões, agenda, clientes, serviços, assinaturas…
+#   public   tudo do sistema: restaurantes, agenda, clientes, serviços, assinaturas…
 #   auth     as contas de login (para quem entra continuar entrando)
 #   storage  o registro das fotos (os ARQUIVOS das fotos moram fora do banco,
 #            no armazenamento do Supabase, e não entram aqui)

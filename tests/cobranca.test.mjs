@@ -54,7 +54,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`cob-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Dona Paula', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Cobrança ' + marca,
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Cobrança ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444',
   p_documento:'11222333000181', p_origem:null });
 const SALAO = cr[0].salao_id;
@@ -143,7 +143,7 @@ await pg.waitForTimeout(2500);
 igual('a borda foi chamada uma vez', pedidos.length, 1);
 const enviado = pedidos[0] || { corpo:{}, auth:'' };
 
-igual('mandou o salão', enviado.corpo.salaoId, SALAO);
+igual('mandou o restaurante', enviado.corpo.salaoId, SALAO);
 igual('e o código do plano', enviado.corpo.plano, 'salao');
 igual('e a forma', enviado.corpo.metodo, 'pix');
 
@@ -171,7 +171,7 @@ secao('O código aparece para pagar');
 const texto = await pg.evaluate(() =>
   (document.getElementById('fundo') || {}).textContent || '');
 verdade('a janela mostra o plano e o valor',
-  /Salão/.test(texto) && /R\$/.test(texto), texto.slice(0, 200));
+  /Restaurante/.test(texto) && /R\$/.test(texto), texto.slice(0, 200));
 igual('o copia-e-cola está na tela',
   await pg.evaluate(() => (document.getElementById('pixCodigo') || {}).value),
   '00020126580014BR.GOV.BCB.PIX0136teste-copia-e-cola');
@@ -257,15 +257,15 @@ await pg.waitForTimeout(600);
 verdade('e o código volta sem chamar a borda de novo',
   await pg.evaluate(() => !!document.getElementById('pixCodigo')));
 
-/* ⚠ O FALSO "CONFIRMADO". Este salão JÁ está ativo (pagou o Salão acima) e
+/* ⚠ O FALSO "CONFIRMADO". Este restaurante JÁ está ativo (pagou o Restaurante acima) e
    agora tem um Pix do Equipe em aberto, sem pagar. "Já paguei" olhava a
    assinatura — ativa — e dizia "Pagamento confirmado". Foi o que aconteceu
-   no primeiro Pix de verdade, num salão com o plano posto à mão. A pergunta
+   no primeiro Pix de verdade, num restaurante com o plano posto à mão. A pergunta
    certa é se ESTA cobrança foi paga. */
 recados.length = 0;
 await pg.evaluate(() => conferirPagamento());
 await pg.waitForTimeout(2500);
-falso('salão já ativo com Pix em aberto: "Já paguei" NÃO diz confirmado',
+falso('restaurante já ativo com Pix em aberto: "Já paguei" NÃO diz confirmado',
   recados.some(t => /confirmado/i.test(t)), JSON.stringify(recados));
 verdade('diz que ainda não caiu',
   await pg.evaluate(() => /ainda não caiu/i.test(
@@ -295,13 +295,13 @@ igual('o Pix vira cancelado no banco',
 igual('e a assinatura não mexe', JSON.stringify(await assinatura()), JSON.stringify(planoAntes));
 igual('a caixa some da tela',
   await pg.evaluate(() => (document.getElementById('cobrancaPendente') || {}).innerText.trim()), '');
-// Outra conta não cancela o Pix deste salão.
+// Outra conta não cancela o Pix deste restaurante.
 const intrusa = novaAba();
 await intrusa.criarConta({ email:`intrusa-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Intrusa', telefone:'+5511' + (100000000 + Math.floor(Math.random()*89999999)) });
 const recusaIntrusa = await intrusa.chamar('cancelar_minha_cobranca', { p_cobranca: pend.id })
   .then(() => null).catch(e => e.message);
-verdade('outra conta não consegue cancelar o Pix deste salão', recusaIntrusa !== null, String(recusaIntrusa));
+verdade('outra conta não consegue cancelar o Pix deste restaurante', recusaIntrusa !== null, String(recusaIntrusa));
 // Pago mesmo assim: credita.
 const pago = (await banco.query(`select public.registrar_pagamento($1, $2, 'approved') as r`,
   [pend.mp_id, pend.valor])).rows[0].r;
@@ -317,7 +317,7 @@ igual('a cobrança fica paga', (await banco.query(`select status from public.cob
 
    E a segunda coisa que este bloco existe para provar: a tela NÃO liga o
    cartão. Ela abre um link. Quem liga é o webhook, com o dado relido da API do
-   Mercado Pago — se bastasse clicar e fechar a aba, o salão constaria como
+   Mercado Pago — se bastasse clicar e fechar a aba, o restaurante constaria como
    pagante sem ter autorizado nada.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('O painel não escolhe a mensalidade do cartão');
@@ -343,7 +343,7 @@ await pg.waitForTimeout(1500);
 igual('a borda do cartão foi chamada uma vez', pedidosCartao.length, 1);
 const noCartao = pedidosCartao[0] || { corpo:{}, auth:'' };
 
-igual('mandou o salão', noCartao.corpo.salaoId, SALAO);
+igual('mandou o restaurante', noCartao.corpo.salaoId, SALAO);
 igual('e o código do plano', noCartao.corpo.plano, 'salao');
 
 const vazouCartao = camposProibidos.filter(k => k in noCartao.corpo);
@@ -397,7 +397,7 @@ verdade('e diz onde o cartão está guardado',
   /Mercado Pago/i.test(blocoCartao), blocoCartao.slice(0, 200));
 
 /* Deixar o botão de assinar ali seria convidar para uma segunda
-   pré-aprovação — e duas ativas no mesmo salão é cobrança dobrada todo mês,
+   pré-aprovação — e duas ativas no mesmo restaurante é cobrança dobrada todo mês,
    descoberta só na fatura.
 
    ⚠ Aqui também a busca é na ABA INTEIRA. Estava presa ao `#botoesAssinar`,
@@ -445,7 +445,7 @@ await pg.evaluate(() => cancelarCartao());
 await pg.waitForTimeout(2500);
 
 igual('a borda do cancelamento foi chamada uma vez', pedidosCancelar.length, 1);
-igual('com o salão', (pedidosCancelar[0] || {}).salaoId, SALAO);
+igual('com o restaurante', (pedidosCancelar[0] || {}).salaoId, SALAO);
 
 /* ⚠ O aviso precisa dizer que o plano CONTINUA valendo. Sem isso o dono adia
    o cancelamento por medo de perder a agenda no meio do mês que ele pagou —
@@ -473,7 +473,7 @@ igual('e o plano NÃO caiu junto', semCartao.rows[0].status, statusAntes);
 /* ══════════════════════════════════════════════════════════════════════════
    7. QUEM NÃO É GESTÃO NÃO ASSINA
    ══════════════════════════════════════════════════════════════════════════ */
-secao('A recepção não assina pelo salão');
+secao('A recepção não assina pelo restaurante');
 
 await pg.evaluate(() => fecharModal());
 // Rebaixa o vínculo desta conta e recarrega: é o que a recepção enxerga.
@@ -501,7 +501,7 @@ const recusou = await pg.evaluate(async s => {
   catch(e){ return e.message || 'recusado'; }
 }, SALAO);
 verdade('e o BANCO recusa até a leitura da cobrança para ela', recusou !== null,
-  'a recepção leu a cobrança do salão');
+  'a recepção leu a cobrança do restaurante');
 
 secao('Sem erro de JavaScript');
 igual('nenhum erro no console', erros.length, 0, erros.join(' | '));

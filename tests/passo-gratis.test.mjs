@@ -6,9 +6,9 @@
 
    ── O RELATO ───────────────────────────────────────────────────────────────
    Print do passo 6: "NÃO consegui salvar no banco: o seu plano cobre 0
-   produtos, e o salão já tem 0". E logo depois: "mas eu não tenho uma
+   produtos, e o restaurante já tem 0". E logo depois: "mas eu não tenho uma
    semana?". O teste grátis é UM por pessoa (39_teste_unico): o mesmo e-mail
-   (ou WhatsApp) já tinha usado o dele, e o salão novo nasceu no Grátis. Nada
+   (ou WhatsApp) já tinha usado o dele, e o restaurante novo nasceu no Grátis. Nada
    dizia isso, e o passo a passo oferecia o que o Grátis não tem.
 
    ── O QUE ESTE ARQUIVO PROTEGE ─────────────────────────────────────────────
@@ -99,8 +99,8 @@ igual('no banco: a primeira ganhou o teste; a segunda, com o mesmo e-mail (ponto
 const { ctx, p } = await painel(B.d);
 await passo(p, 1);
 const aviso = await texto(p, '#pdAvisoGratis');
-verdade('o passo 1 diz que o salão está no Grátis, e que o teste de 30 dias é um por pessoa',
-  /Este salão está no plano Grátis/.test(aviso) && /teste grátis de 30 dias/.test(aviso) && /um por pessoa/.test(aviso), aviso);
+verdade('o passo 1 diz que o restaurante está no Grátis, e que o teste de 30 dias é um por pessoa',
+  /Este restaurante está no plano Grátis/.test(aviso) && /teste grátis de 30 dias/.test(aviso) && /um por pessoa/.test(aviso), aviso);
 verdade('   com os limites do plano: 1 profissional, até 5 serviços, sem produtos',
   /1 profissional/.test(aviso) && /até 5 serviços/.test(aviso) && /sem produtos/.test(aviso), aviso);
 
@@ -111,8 +111,8 @@ for(let i = 0; i < 5; i++)
     preco:30, ativo:true, aceitaOnline:true });
 await p.evaluate(async () => { const n = await carregarTudo(); if(n) bd = n; });
 await passo(p, 4);
-verdade('com 5 serviços: "O seu plano cobre até 5 serviços — o salão tem 5"',
-  /cobre até 5 serviços — o salão tem 5/.test(await texto(p, '#pdTetoServicos')), await texto(p, '#pdTetoServicos'));
+verdade('com 5 serviços: "O seu plano cobre até 5 serviços — o restaurante tem 5"',
+  /cobre até 5 serviços — o restaurante tem 5/.test(await texto(p, '#pdTetoServicos')), await texto(p, '#pdTetoServicos'));
 alertas.length = 0;
 await p.evaluate(async () => { await pdVirarServico('barba', 0); });
 await p.waitForTimeout(800);

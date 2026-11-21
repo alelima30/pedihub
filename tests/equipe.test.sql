@@ -1,14 +1,14 @@
 -- ===========================================================================
--- PediHub — convite de equipe: um uso, um salão, uma pessoa
+-- PediHub — convite de equipe: um uso, um restaurante, uma pessoa
 --
--- Um convite é uma cadeira dentro de um salão. As perguntas que este arquivo
+-- Um convite é uma cadeira dentro de um restaurante. As perguntas que este arquivo
 -- responde são as que, erradas, entregam essa cadeira a quem não devia:
 --
 --   1. O link serve mais de uma vez? (dois cliques, dois aparelhos)
---   2. O link de um salão dá acesso a outro?
+--   2. O link de um restaurante dá acesso a outro?
 --   3. Quem não administra consegue criar convite?
 --   4. Um convite vencido ou revogado ainda entra?
---   5. Dá para um salão ficar sem dono?
+--   5. Dá para um restaurante ficar sem dono?
 --   6. `ver_convite` — que `anon` alcança — vaza mais do que precisa?
 -- ===========================================================================
 
@@ -26,8 +26,8 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do nothing;
 
 insert into public.saloes (id, slug, nome, tipo) values
-  ('e0000000-1111-0000-0000-00000000000a', 'salao-da-ju', 'Salão da Ju', 'salao'),
-  ('e0000000-1111-0000-0000-00000000000b', 'outro-salao', 'Outro Salão', 'salao');
+  ('e0000000-1111-0000-0000-00000000000a', 'salao-da-ju', 'Restaurante da Ju', 'salao'),
+  ('e0000000-1111-0000-0000-00000000000b', 'outro-salao', 'Outro Restaurante', 'salao');
 insert into public.assinaturas (salao_id, plano, status) values
   ('e0000000-1111-0000-0000-00000000000a', 'time', 'ativa'),
   ('e0000000-1111-0000-0000-00000000000b', 'time', 'ativa');
@@ -41,7 +41,7 @@ insert into public.profissionais (id, salao_id, nome) values
   ('e0000000-5555-0000-0000-00000000000a',
    'e0000000-1111-0000-0000-00000000000a', 'Bia'),
   ('e0000000-5555-0000-0000-00000000000b',
-   'e0000000-1111-0000-0000-00000000000b', 'Do outro salão');
+   'e0000000-1111-0000-0000-00000000000b', 'Do outro restaurante');
 
 \echo ''
 \echo 'A dona cria um convite'
@@ -58,16 +58,16 @@ select t_verdade('o convite nasceu com um segredo', :'tk' is not null);
 
 select t_verdade('e ele vale',
   (public.ver_convite(:'tk'::uuid)->>'valido')::boolean);
-select t_texto('dizendo de que salão é',
-  public.ver_convite(:'tk'::uuid)->>'salao', 'Salão da Ju');
+select t_texto('dizendo de que restaurante é',
+  public.ver_convite(:'tk'::uuid)->>'salao', 'Restaurante da Ju');
 select t_texto('e com que papel', public.ver_convite(:'tk'::uuid)->>'papel', 'recepcao');
 
 -- `ver_convite` é a ÚNICA função deste módulo que `anon` alcança: a página do
--- convite precisa dizer de que salão se trata antes de a pessoa ter conta.
+-- convite precisa dizer de que restaurante se trata antes de a pessoa ter conta.
 -- Então ela não pode devolver nada além disso.
 select t_falso('ver_convite NÃO devolve quem convidou',
   (public.ver_convite(:'tk'::uuid)) ? 'criadoPor');
-select t_falso('nem o id do salão',
+select t_falso('nem o id do restaurante',
   (public.ver_convite(:'tk'::uuid)) ? 'salaoId');
 select t_falso('nem quem já é da equipe',
   (public.ver_convite(:'tk'::uuid)) ? 'equipe');
@@ -80,7 +80,7 @@ select set_config('request.jwt.claim.sub',
 set role authenticated;
 select t_texto('rodando como authenticated', current_user, 'authenticated');
 
-select t_verdade('um estranho não cria convite no salão dos outros',
+select t_verdade('um estranho não cria convite no restaurante dos outros',
   recusado($$select public.criar_convite(
     'e0000000-1111-0000-0000-00000000000a', 'recepcao', 'eu mesmo')$$));
 
@@ -119,7 +119,7 @@ select t_igual('e passa a ter vínculo de recepção',
       and salao_id = 'e0000000-1111-0000-0000-00000000000a'
       and papel = 'recepcao' and status = 'ativo'), 1);
 
-select t_verdade('o papel dela no salão é recepção',
+select t_verdade('o papel dela no restaurante é recepção',
   public.papel_no_salao('e0000000-1111-0000-0000-00000000000a') = 'recepcao');
 
 -- É o ponto do desenho: o link circula pelo WhatsApp e pode ser encaminhado.
@@ -128,7 +128,7 @@ select set_config('request.jwt.claim.sub',
 select t_texto('o MESMO link não serve para uma segunda pessoa,
                 e a recusa explica o que houve',
   erro_de(format($$select public.aceitar_convite(%L::uuid)$$, :'tk')),
-  'Este convite não vale mais. Peça outro ao salão.');
+  'Este convite não vale mais. Peça outro ao restaurante.');
 
 select t_igual('o estranho continua sem vínculo nenhum',
   (select count(*) from public.vinculos
@@ -168,7 +168,7 @@ select t_verdade('e nenhum dos dois deixa entrar',
 reset role;
 
 \echo ''
-\echo 'O SALÃO NÃO PODE FICAR SEM DONO'
+\echo 'O RESTAURANTE NÃO PODE FICAR SEM DONO'
 
 select set_config('request.jwt.claim.sub',
                   'e0000000-0000-0000-0000-00000000000d', false);
@@ -222,11 +222,11 @@ select t_texto('convite de profissional sem ficha e recusado',
   'Escolha de quem é a agenda. Cadastre a pessoa em Equipe antes de dar o login.');
 
 -- Ficha de outro salao seria dar acesso a agenda alheia.
-select t_texto('e ficha de outro salão também',
+select t_texto('e ficha de outro restaurante também',
   erro_de($$select public.criar_convite(
     'e0000000-1111-0000-0000-00000000000a', 'profissional', 'Alheia',
     'e0000000-5555-0000-0000-00000000000b')$$),
-  'Esta agenda não é deste salão.');
+  'Esta agenda não é deste restaurante.');
 
 select (public.criar_convite('e0000000-1111-0000-0000-00000000000a',
           'profissional', 'Bia',

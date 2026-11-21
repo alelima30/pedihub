@@ -6,7 +6,7 @@
 #    bash tests/mutacoes-confirmacao-visual.sh
 #
 #  Cada mutação que sobreviver é um jeito de a tela prometer um status que o
-#  salão não escolheu, de uma cor escrita escapar do tema, ou de um botão
+#  restaurante não escolheu, de uma cor escrita escapar do tema, ou de um botão
 #  levar ao lugar errado.
 # ===========================================================================
 set -u

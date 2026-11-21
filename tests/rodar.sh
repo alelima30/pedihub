@@ -34,7 +34,7 @@ carregar() {
 # Cada arquivo de teste ganha um banco recém-criado.
 #
 # Não é exagero: enquanto os dois arquivos dividiam o mesmo banco, o teste da
-# vitrine pública contava 4 salões em vez de 2 — os 2 dele mais os 2 que o
+# vitrine pública contava 4 restaurantes em vez de 2 — os 2 dele mais os 2 que o
 # arquivo anterior tinha deixado. O teste falhou por sujeira, não por defeito,
 # e a leitura do erro apontava para o lugar errado.
 preparar() {

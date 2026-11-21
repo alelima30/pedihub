@@ -9,7 +9,7 @@
      1. as telas sensíveis (painel, administração, entrar, criar conta, nova
         senha, convite) não abrem dentro de um quadro de outro site — o
         "clickjacking", que o GitHub Pages não deixa barrar por cabeçalho;
-     2. o link da cliente abre num quadro, de propósito (o salão pode pôr o
+     2. o link da cliente abre num quadro, de propósito (o restaurante pode pôr o
         agendamento no próprio site);
      3. aberto normalmente, o painel aparece como sempre;
      4. o e-mail digitado na tela de entrar volta escapado: código dentro

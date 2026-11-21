@@ -15,7 +15,7 @@
    `delivered` e `read` são informação. `failed` é correção: a Meta aceitou a
    mensagem, devolveu um wam_id, a linha virou 'enviado' e já custou cota — e
    só depois ela descobre que não dá para entregar. Sem este arquivo, essa
-   linha diz "enviado" para sempre, e o salão acha que avisou.
+   linha diz "enviado" para sempre, e o restaurante acha que avisou.
 
    ── ESTE ENDEREÇO É PÚBLICO POR OBRIGAÇÃO ─────────────────────────────────
    A Meta precisa alcançá-lo sem login, então qualquer pessoa na internet pode

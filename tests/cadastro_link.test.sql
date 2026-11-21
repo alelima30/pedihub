@@ -2,15 +2,15 @@
 -- PediHub — a cliente se cadastra pelo link, sem agendar (48_cadastro_link)
 --
 --   1. sem login não há o que cadastrar; o anon nem chama;
---   2. conta nova sem ficha: a ficha NASCE no salão, marcada "pelo link",
+--   2. conta nova sem ficha: a ficha NASCE no restaurante, marcada "pelo link",
 --      com nome, WhatsApp (sem o 55) e e-mail da conta;
 --   3. chamar de novo não duplica;
---   4. a ficha que o salão já tinha (mesmo WhatsApp, mesmo nome) é LIGADA,
+--   4. a ficha que o restaurante já tinha (mesmo WhatsApp, mesmo nome) é LIGADA,
 --      sem marca e sem ficha nova;
 --   5. mesmo WhatsApp com outro nome: não duplica, e diz por quê;
 --   6. conta sem telefone (o número já era de outra conta): não cria;
 --   7. o teto do plano: a ficha não nasce e a conta segue, sem erro;
---   8. salão suspenso: nada;
+--   8. restaurante suspenso: nada;
 --   9. o caminho de sempre (`ligar_minha_ficha`) continua sem criar ficha.
 -- ===========================================================================
 \set ON_ERROR_STOP on
@@ -35,8 +35,8 @@ on conflict (id) do update set nome = excluded.nome, telefone = excluded.telefon
 
 insert into public.saloes (id, slug, nome, tipo, fuso) values
   ('54800000-0000-0000-0000-00000000000a', 'cadlink-ana',   'Studio da Ana',  'salao', 'America/Sao_Paulo'),
-  ('54800000-0000-0000-0000-00000000000b', 'cadlink-cheio', 'Salão Lotado',   'salao', 'America/Sao_Paulo'),
-  ('54800000-0000-0000-0000-00000000000c', 'cadlink-susp',  'Salão Suspenso', 'salao', 'America/Sao_Paulo');
+  ('54800000-0000-0000-0000-00000000000b', 'cadlink-cheio', 'Restaurante Lotado',   'salao', 'America/Sao_Paulo'),
+  ('54800000-0000-0000-0000-00000000000c', 'cadlink-susp',  'Restaurante Suspenso', 'salao', 'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status, vence_em, trial_ate) values
   ('54800000-0000-0000-0000-00000000000a', 'individual', 'ativa', current_date + 20, null),
   ('54800000-0000-0000-0000-00000000000b', 'gratuito',   'ativa', null, null),
@@ -44,13 +44,13 @@ insert into public.assinaturas (salao_id, plano, status, vence_em, trial_ate) va
 update public.saloes set status = 'suspenso' where id = '54800000-0000-0000-0000-00000000000c';
 insert into public.vinculos (perfil_id, salao_id, papel, status) values
   ('a4800000-0000-0000-0000-00000000000a', '54800000-0000-0000-0000-00000000000a', 'dono', 'ativo');
--- As fichas que o salão já tinha, feitas no balcão: a Mariana (gravada com
+-- As fichas que o restaurante já tinha, feitas no balcão: a Mariana (gravada com
 -- o 55, como as antigas) e a Joana, mãe da Beatriz — a filha criou a conta
 -- com o WhatsApp que está na ficha da mãe.
 insert into public.clientes (salao_id, nome, telefone) values
   ('54800000-0000-0000-0000-00000000000a', 'Mariana', '5511948000002'),
   ('54800000-0000-0000-0000-00000000000a', 'Joana Lopes', '11948000003');
--- O Salão Lotado já tem as 30 do plano grátis.
+-- O Restaurante Lotado já tem as 30 do plano grátis.
 insert into public.clientes (salao_id, nome, telefone)
   select '54800000-0000-0000-0000-00000000000b', 'Cliente ' || g, '119480100' || lpad(g::text, 2, '0')
     from generate_series(1, 30) g;
@@ -107,10 +107,10 @@ set role authenticated;
 select public.cadastrar_minha_ficha('54800000-0000-0000-0000-00000000000a') as r3 \gset
 reset role;
 select t_falso('não cria', (:'r3'::jsonb->>'criada')::boolean);
-select t_verdade('liga a ficha que o salão tinha',
+select t_verdade('liga a ficha que o restaurante tinha',
   (select perfil_id = 'c4800000-0000-0000-0000-000000000002' and nome = 'Mariana' and not pelo_link
      from public.clientes where id = (:'r3'::jsonb->>'ficha')::uuid));
-select t_igual('e o salão continua com uma ficha nesse WhatsApp',
+select t_igual('e o restaurante continua com uma ficha nesse WhatsApp',
   (select count(*)::int from public.clientes
     where salao_id = '54800000-0000-0000-0000-00000000000a'
       and public.telefone_nacional(telefone) = '11948000002'), 1);
@@ -145,11 +145,11 @@ select public.cadastrar_minha_ficha('54800000-0000-0000-0000-00000000000b') as r
 reset role;
 select t_verdade('sem ficha', :'r6'::jsonb->>'ficha' is null);
 select t_texto('o motivo', :'r6'::jsonb->>'motivo', 'nao_coube');
-select t_igual('o salão continua com as 30',
+select t_igual('o restaurante continua com as 30',
   (select count(*)::int from public.clientes where salao_id = '54800000-0000-0000-0000-00000000000b'), 30);
 
 \echo ''
-\echo '8. Salão suspenso: nada'
+\echo '8. Restaurante suspenso: nada'
 select t_como('c4800000-0000-0000-0000-000000000006');
 set role authenticated;
 select t_verdade('devolve nada',

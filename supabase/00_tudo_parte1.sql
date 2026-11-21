@@ -35,7 +35,7 @@ end $$;
 --
 -- A diferença de fundo em relação ao AdminPro: lá um usuário pertence a UM
 -- condomínio (coluna `condominio_id` em `usuarios`). Aqui a mesma pessoa pode
--- ser cliente de vários salões e profissional em outro. Por isso a identidade
+-- ser cliente de vários restaurantes e profissional em outro. Por isso a identidade
 -- é global (`perfis`) e o pertencimento é uma tabela à parte (`vinculos`).
 -- ===========================================================================
 
@@ -60,7 +60,7 @@ create table if not exists public.saloes (
   tipo      text not null default 'salao'
             check (tipo in ('salao','barbearia','estetica','manicure',
                             'clinica','tatuagem','pet','outro')),
-  -- Imagens do salão. Guardam ENDEREÇO, não bytes: em produção apontam para o
+  -- Imagens do restaurante. Guardam ENDEREÇO, não bytes: em produção apontam para o
   -- Supabase Storage; na demonstração são `data:` URL no próprio navegador.
   -- Coluna text nos dois casos, então a tela não precisa saber a diferença.
   logo      text,
@@ -73,13 +73,13 @@ create table if not exists public.saloes (
             check (status in ('ativo','suspenso','cancelado')),
   -- Regras do agendamento online: antecedência mínima e máxima, prazo de
   -- cancelamento, se exige sinal. Cabe em JSON porque é configuração que só o
-  -- próprio salão lê — não é dado que se cruza em relatório.
+  -- próprio restaurante lê — não é dado que se cruza em relatório.
   cfg       jsonb not null default '{}'::jsonb,
   criado_em timestamptz not null default now()
 );
 
 -- ---------------------------------------------------------------------------
--- 1b) O QUE O SALÃO PAGA
+-- 1b) O QUE O RESTAURANTE PAGA
 --
 -- O AdminPro não tem isso, e a documentação dele reconhece: "o sistema não
 -- sabe quem é o cliente, só qual é o condomínio". Com poucos clientes e Pix
@@ -104,7 +104,7 @@ create table if not exists public.assinaturas (
   plano        text not null references public.planos(codigo),
   status       text not null default 'trial'
                check (status in ('trial','ativa','inadimplente','cancelada')),
-  -- Fim do teste grátis. Passou disso sem virar 'ativa', o salão para.
+  -- Fim do teste grátis. Passou disso sem virar 'ativa', o restaurante para.
   trial_ate    date,
   vence_em     date,
   -- Por onde o dono chegou até nós. É a única forma de saber qual parceria
@@ -115,7 +115,7 @@ create table if not exists public.assinaturas (
   atualizado_em timestamptz not null default now()
 );
 
--- Qual plano vale HOJE para este salão.
+-- Qual plano vale HOJE para este restaurante.
 --
 -- Toda regra de cobrança passa por aqui, e existe um motivo: antes, a data de
 -- validade estava escrita dentro do `limite_profissionais`, e só a do teste
@@ -124,8 +124,8 @@ create table if not exists public.assinaturas (
 -- tudo, para sempre, até alguém marcar 'inadimplente' na mão. E não havia nada
 -- que marcasse.
 --
--- Quando a assinatura não está em vigor, o salão NÃO para: ele cai no plano
--- 'gratuito'. É de propósito. Salão que não quer pagar continua usando com um
+-- Quando a assinatura não está em vigor, o restaurante NÃO para: ele cai no plano
+-- 'gratuito'. É de propósito. Restaurante que não quer pagar continua usando com um
 -- teto; se caísse para nada, o dono voltava para o caderno e a gente perdia o
 -- canal por onde ele um dia assina.
 create or replace function public.plano_efetivo(p_salao uuid)
@@ -144,7 +144,7 @@ returns text language sql stable security definer set search_path = public as $$
     'gratuito')
 $$;
 
--- Quantos profissionais este salão pode ter, agora.
+-- Quantos profissionais este restaurante pode ter, agora.
 create or replace function public.limite_profissionais(p_salao uuid)
 returns int language sql stable security definer set search_path = public as $$
   select coalesce(
@@ -174,12 +174,12 @@ $$;
 -- `agendamentos_mes` ausente (ou null) = sem teto.
 --
 -- Por que o grátis tem teto de agendamento, e não de funcionalidade: o teto
--- precisa crescer junto com o salão. Cortar a agenda online do plano grátis
+-- precisa crescer junto com o restaurante. Cortar a agenda online do plano grátis
 -- mataria justamente o que faz o dono adotar o sistema. Já 40 horários por mês
--- é um salão que ainda não é negócio; a 120 ele é, e aí R$ 57 sai de um corte.
+-- é um restaurante que ainda não é negócio; a 120 ele é, e aí R$ 57 sai de um corte.
 --
 -- O lembrete no WhatsApp fica de fora do grátis por um motivo de caixa, não de
--- marketing: cada mensagem enviada é dinheiro que sai, por salão que não paga.
+-- marketing: cada mensagem enviada é dinheiro que sai, por restaurante que não paga.
 insert into public.planos
   (codigo, nome, max_profissionais, preco_mes, ordem, recursos) values
   ('gratuito',  'Grátis',       1,  0.00, 0,
@@ -194,7 +194,7 @@ insert into public.planos
      '{"lembrete_whatsapp":true,"agenda_online":true}'),
   ('equipe',    'Equipe',       6,297.00, 5,
      '{"lembrete_whatsapp":true,"agenda_online":true}'),
-  ('salao',     'Salão',       12,497.00, 6,
+  ('salao',     'Restaurante',       12,497.00, 6,
      '{"lembrete_whatsapp":true,"agenda_online":true}')
 on conflict (codigo) do update
    set nome = excluded.nome,
@@ -205,7 +205,7 @@ on conflict (codigo) do update
        -- e rodar o schema de novo não pode remarcar o preço de ninguém.
 
 -- ---------------------------------------------------------------------------
--- 2) QUEM É A PESSOA (global) E ONDE ELA ENTRA (por salão)
+-- 2) QUEM É A PESSOA (global) E ONDE ELA ENTRA (por restaurante)
 -- ---------------------------------------------------------------------------
 
 -- Uma linha por telefone no sistema inteiro. É o espelho de auth.users.
@@ -217,12 +217,12 @@ create table if not exists public.perfis (
   email      text,
   nascimento date,
   foto       text,
-  -- Dono da plataforma (você). Enxerga todos os salões, para dar suporte.
+  -- Dono da plataforma (você). Enxerga todos os restaurantes, para dar suporte.
   super_admin boolean not null default false,
   criado_em  timestamptz not null default now()
 );
 
--- A mesma pessoa pode ter N vínculos: cliente no salão A, profissional no B.
+-- A mesma pessoa pode ter N vínculos: cliente no restaurante A, profissional no B.
 create table if not exists public.vinculos (
   perfil_id uuid not null references public.perfis(id) on delete cascade,
   salao_id  uuid not null references public.saloes(id) on delete cascade,
@@ -240,7 +240,7 @@ create index if not exists ix_vinculos_salao on public.vinculos(salao_id, papel)
   where status = 'ativo';
 
 -- ---------------------------------------------------------------------------
--- 3) O QUE O SALÃO OFERECE
+-- 3) O QUE O RESTAURANTE OFERECE
 -- ---------------------------------------------------------------------------
 
 create table if not exists public.profissionais (
@@ -294,7 +294,7 @@ begin
       from public.assinaturas a join public.planos pl on pl.codigo = a.plano
      where a.salao_id = new.salao_id;
     raise exception
-      'O plano % permite % profissional(is) ativo(s), e o salão já tem %. '
+      'O plano % permite % profissional(is) ativo(s), e o restaurante já tem %. '
       'Troque de plano ou desative alguém antes de cadastrar mais.',
       coalesce(nome_plano, 'atual'), limite, usados
       using errcode = 'check_violation';
@@ -380,8 +380,8 @@ create table if not exists public.jornadas (
 
 create index if not exists ix_jornada_prof on public.jornadas(profissional_id, dia_semana);
 
--- Exceção pontual: férias, médico, feriado, ou o salão fechado inteiro.
--- profissional_id nulo = vale para o salão todo.
+-- Exceção pontual: férias, médico, feriado, ou o restaurante fechado inteiro.
+-- profissional_id nulo = vale para o restaurante todo.
 create table if not exists public.bloqueios (
   id              uuid primary key default gen_random_uuid(),
   salao_id        uuid not null references public.saloes(id) on delete cascade,
@@ -396,12 +396,12 @@ create table if not exists public.bloqueios (
 create index if not exists ix_bloq_salao on public.bloqueios(salao_id, inicio);
 
 -- ---------------------------------------------------------------------------
--- 5) O CLIENTE DO SALÃO
+-- 5) O CLIENTE DO RESTAURANTE
 -- ---------------------------------------------------------------------------
 
--- Ficha do cliente DENTRO de um salão. A mesma pessoa (mesmo `perfil_id`) tem
--- uma ficha em cada salão que frequenta, com histórico e observações próprias
--- — e um salão não enxerga a ficha do outro.
+-- Ficha do cliente DENTRO de um restaurante. A mesma pessoa (mesmo `perfil_id`) tem
+-- uma ficha em cada restaurante que frequenta, com histórico e observações próprias
+-- — e um restaurante não enxerga a ficha do outro.
 --
 -- perfil_id nulo = cliente que a recepção cadastrou e nunca instalou o app.
 -- Quando essa pessoa se cadastrar com o mesmo telefone, os dois se juntam.
@@ -420,7 +420,7 @@ create table if not exists public.clientes (
   criado_em  timestamptz not null default now()
 );
 
--- A mesma pessoa não pode ter duas fichas no mesmo salão.
+-- A mesma pessoa não pode ter duas fichas no mesmo restaurante.
 create unique index if not exists ux_cli_perfil
   on public.clientes(salao_id, perfil_id) where perfil_id is not null;
 create unique index if not exists ux_cli_tel
@@ -498,7 +498,7 @@ create index if not exists ix_agend_cliente on public.agendamentos(cliente_id, i
 -- "Excluir" apagava a linha. Sumia o atendimento, sumiam os serviços dele (o
 -- banco apaga em cascata) e sumia a comanda — sem lixeira, sem desfazer.
 -- Um clique errado custava o histórico, e o histórico é o que diz quanto o
--- salão faturou.
+-- restaurante faturou.
 --
 -- Arquivar guarda a linha e a tira da vista. O horário volta a ficar livre na
 -- hora (é por isso que `arquivado_em` entra na trava anti-choque acima e em
@@ -540,7 +540,7 @@ end $trava_choque$;
 -- `EXCLUDE` não atravessa duas tabelas, então a regra vira gatilho. Ele roda
 -- dos dois lados: ao marcar (contra os bloqueios que já existem) e ao
 -- bloquear (contra os atendimentos que já existem), senão dava para furar
--- invertendo a ordem. `profissional_id is null` num bloqueio quer dizer salão
+-- invertendo a ordem. `profissional_id is null` num bloqueio quer dizer restaurante
 -- inteiro fechado — vale para todo mundo da casa.
 create or replace function public.checar_bloqueio_agendamento()
 returns trigger
@@ -608,8 +608,8 @@ create trigger tg_bloqueio_vs_agend
   for each row execute function public.checar_agendamento_bloqueio();
 
 -- ── O TETO DO PLANO GRÁTIS ──────────────────────────────────────────────────
--- Nem todo salão vai assinar, e tudo bem: o grátis é plano de verdade, não
--- castigo. Mas ele precisa de um limite que cresça junto com o salão, senão o
+-- Nem todo restaurante vai assinar, e tudo bem: o grátis é plano de verdade, não
+-- castigo. Mas ele precisa de um limite que cresça junto com o restaurante, senão o
 -- plano Individual não vende para ninguém — um profissional com tudo liberado
 -- é exatamente o que o grátis já dá.
 --
@@ -639,7 +639,7 @@ begin
   teto := public.recurso_num(new.salao_id, 'agendamentos_mes');
   if teto is null then return new; end if;                    -- plano sem teto
 
-  -- O mês é o do salão, não o do servidor. Sem isto, um atendimento das 22h
+  -- O mês é o do restaurante, não o do servidor. Sem isto, um atendimento das 22h
   -- do dia 31 em São Paulo cairia no mês seguinte, porque o PostgREST fala
   -- UTC — é o mesmo erro que já apareceu na lista de espera.
   select coalesce(sl.fuso, 'America/Sao_Paulo') into v_fuso
@@ -681,7 +681,7 @@ create trigger tg_limite_agendamentos
 --    de verdade: cancelamento, falta de pagamento, fim de contrato.
 -- 2) E não pegava o caso mais comum de todos. Teste grátis vence sozinho: a
 --    data passa, `plano_efetivo` muda, e não existe UPDATE nenhum para
---    interceptar. O salão ficava com os 3 profissionais atendendo num plano
+--    interceptar. O restaurante ficava com os 3 profissionais atendendo num plano
 --    de 1, para sempre.
 --
 -- A regra certa é sobre USAR a vaga, não sobre contratá-la: um profissional
@@ -768,7 +768,7 @@ create index if not exists ix_ags_agend on public.agendamento_servicos(agendamen
 --
 -- Dia cheio é o momento em que a maioria dos sistemas perde o cliente: mostra
 -- "sem horário" e o cara fecha a página. Aqui ele deixa o nome, e quando
--- alguém cancela o salão já sabe para quem oferecer.
+-- alguém cancela o restaurante já sabe para quem oferecer.
 --
 -- Vale dos dois lados: o cliente não some, e a cadeira vaga não fica vazia —
 -- que é o buraco de faturamento que ninguém enxerga, porque cancelamento não
@@ -782,7 +782,7 @@ create table if not exists public.lista_espera (
   -- Nulo = aceita qualquer profissional. Quem aceita qualquer um entra na
   -- frente na hora de oferecer, porque a vaga que surgir serve para ele.
   profissional_id uuid references public.profissionais(id) on delete cascade,
-  -- O que a pessoa queria fazer, para o salão saber se a vaga cabe.
+  -- O que a pessoa queria fazer, para o restaurante saber se a vaga cabe.
   servicos        jsonb not null default '[]'::jsonb,
   duracao_min     int not null default 30 check (duracao_min > 0),
   -- Faixa de interesse. Mesma data nos dois campos = "só esse dia".
@@ -807,13 +807,13 @@ create index if not exists ix_espera_fila
 
 create index if not exists ix_espera_cliente on public.lista_espera(cliente_id);
 
--- Quem está esperando por uma vaga que acabou de abrir. O salão chama esta
+-- Quem está esperando por uma vaga que acabou de abrir. O restaurante chama esta
 -- função depois de um cancelamento; ela devolve a fila em ordem de chegada,
 -- já filtrada por quem serve para aquele buraco.
--- ⚠ TUDO AQUI ACONTECE NO FUSO DO SALÃO, e isso não é detalhe.
+-- ⚠ TUDO AQUI ACONTECE NO FUSO DO RESTAURANTE, e isso não é detalhe.
 --
 -- `inicio` é timestamptz, guardado em UTC. `extract(hour from ...)` e o cast
--- `::date` usam o fuso da SESSÃO, não o do salão — e a sessão do PostgREST
+-- `::date` usam o fuso da SESSÃO, não o do restaurante — e a sessão do PostgREST
 -- roda em UTC. Escrito do jeito ingênuo, um horário das 9h de São Paulo vira
 -- 12h para o Postgres, e quem pediu "manhã" nunca é chamado.
 --
@@ -822,7 +822,7 @@ create index if not exists ix_espera_cliente on public.lista_espera(cliente_id);
 -- só chamaria as pessoas erradas, calado, para sempre.
 --
 -- Por isso a conversão explícita com `at time zone`, que transforma o
--- timestamptz no horário de parede daquele salão.
+-- timestamptz no horário de parede daquele restaurante.
 create or replace function public.espera_para_vaga(
   p_salao uuid, p_profissional uuid, p_inicio timestamptz, p_fim timestamptz)
 returns setof public.lista_espera
@@ -831,7 +831,7 @@ language sql stable as $$
     select coalesce(nullif(fuso, ''), 'America/Sao_Paulo') as nome
       from public.saloes where id = p_salao
   ),
-  parede as (   -- o horário como quem está no salão o lê no relógio
+  parede as (   -- o horário como quem está no restaurante o lê no relógio
     select (p_inicio at time zone (select nome from tz)) as quando
   )
   select e.*
@@ -873,7 +873,7 @@ create table if not exists public.produtos (
   ativo        boolean not null default true
 );
 
--- Numeração por salão (comanda 1, 2, 3... em cada salão, não global).
+-- Numeração por restaurante (comanda 1, 2, 3... em cada restaurante, não global).
 -- Contador com UPDATE atômico: dois caixas fechando junto não tiram o mesmo
 -- número, que é o que aconteceria com "select max(numero)+1".
 create table if not exists public.contadores (
@@ -899,8 +899,8 @@ end $$;
    comanda, e gatilho roda como dono.
 
    Sem este `revoke` ela ficava aberta ao `anon` — e ela ESCREVE. Medido: três
-   chamadas anônimas com o id de um salão (que a vitrine pública entrega)
-   levaram o contador dele de 1 para 3. Num laço, a comanda seguinte do salão
+   chamadas anônimas com o id de um restaurante (que a vitrine pública entrega)
+   levaram o contador dele de 1 para 3. Num laço, a comanda seguinte do restaurante
    sairia numerada #847.302 em vez de #48, e esse número é o que a cliente vê
    no papel. */
 revoke all on function public.proximo_numero(uuid, text)
@@ -927,7 +927,7 @@ create index if not exists ix_comanda_salao on public.comandas(salao_id, aberta_
 /* ⚠ `security definer` aqui não é enfeite, e a falta dele já custou caro.
 
    Este era o ÚNICO gatilho do projeto sem definer. Rodando como quem fez a
-   operação, ele exige que a própria dona do salão tenha permissão de executar
+   operação, ele exige que a própria dona do restaurante tenha permissão de executar
    `proximo_numero` — e foi o que aconteceu quando revoguei essa função de
    `authenticated` achando que "gatilho roda como dono": abrir comanda passou a
    dar `permission denied`, em produção, e eu só descobri porque cinco suítes
@@ -939,7 +939,7 @@ create index if not exists ix_comanda_salao on public.comandas(salao_id, aberta_
 
    Não abre brecha: o `salao_id` que chega aqui ainda passa pelo `with check`
    da policy de `comandas` logo depois. Uma tentativa de numerar comanda de
-   outro salão incrementa o contador e em seguida é recusada — e o incremento
+   outro restaurante incrementa o contador e em seguida é recusada — e o incremento
    volta atrás junto, na mesma transação. */
 create or replace function public.comanda_numera()
 returns trigger language plpgsql security definer set search_path = public as $$
@@ -989,7 +989,7 @@ create table if not exists public.pagamentos (
                                'transferencia','cortesia','pacote')),
   valor       numeric(10,2) not null check (valor > 0),
   parcelas    smallint not null default 1 check (parcelas >= 1),
-  -- Taxa da maquininha: o salão recebe menos do que o cliente pagou.
+  -- Taxa da maquininha: o restaurante recebe menos do que o cliente pagou.
   taxa        numeric(10,2) not null default 0 check (taxa >= 0),
   recebido_em timestamptz not null default now()
 );
@@ -1001,7 +1001,7 @@ create index if not exists ix_pgto_comanda on public.pagamentos(comanda_id);
 --
 -- security_invoker = true é OBRIGATÓRIO aqui. Sem isso a vista roda com os
 -- poderes de quem a criou (postgres) e passa por cima do RLS das tabelas de
--- baixo — qualquer pessoa logada leria o faturamento de todos os salões.
+-- baixo — qualquer pessoa logada leria o faturamento de todos os restaurantes.
 -- É o furo mais silencioso que existe no Supabase: a tabela está protegida,
 -- a vista sobre ela não está.
 -- ⚠ `drop` + `create`, e NÃO `create or replace`.
@@ -1060,7 +1060,7 @@ with (security_invoker = true) as
 -- Se o RLS deixar, o dado sai.
 --
 -- A mudança em relação ao AdminPro: lá a pergunta era "qual é o seu
--- condomínio?", uma coluna só. Aqui é "você tem vínculo com ESTE salão, e em
+-- condomínio?", uma coluna só. Aqui é "você tem vínculo com ESTE restaurante, e em
 -- que papel?" — porque a mesma pessoa pode ser cliente em um e profissional
 -- em outro.
 -- ===========================================================================
@@ -1079,7 +1079,7 @@ language sql stable security definer set search_path = public as $$
   select coalesce((select super_admin from public.perfis where id = auth.uid()), false)
 $$;
 
--- Papel mais alto que a pessoa tem neste salão. Null = nenhum vínculo ativo.
+-- Papel mais alto que a pessoa tem neste restaurante. Null = nenhum vínculo ativo.
 create or replace function public.papel_no_salao(p_salao uuid) returns text
 language sql stable security definer set search_path = public as $$
   select papel
@@ -1104,7 +1104,7 @@ $$;
 
    um NULL vira `not NULL` = NULL, o `if` NÃO dispara, e a função segue como
    se a permissão existisse. Foi assim, exatamente, que `placar_campanha()`
-   devolveu o placar da campanha de outro salão para quem só tinha o uuid na
+   devolveu o placar da campanha de outro restaurante para quem só tinha o uuid na
    mão — achado pelo tests/campanhas.test.sql antes de ir para o ar.
 
    O `coalesce` fecha a classe inteira, para o auxiliar de hoje e para o
@@ -1114,7 +1114,7 @@ language sql stable security definer set search_path = public as $$
   select coalesce(is_super() or papel_no_salao(p_salao) is not null, false)
 $$;
 
--- Equipe = trabalha no salão. Cliente NÃO é equipe.
+-- Equipe = trabalha no restaurante. Cliente NÃO é equipe.
 create or replace function public.e_equipe(p_salao uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select coalesce(is_super()
@@ -1133,7 +1133,7 @@ language sql stable security definer set search_path = public as $$
   select coalesce(is_super() or papel_no_salao(p_salao) in ('dono','admin','recepcao'), false)
 $$;
 
--- A ficha DESTA pessoa NESTE salão. É o que amarra o cliente logado aos
+-- A ficha DESTA pessoa NESTE restaurante. É o que amarra o cliente logado aos
 -- próprios agendamentos, sem deixá-lo perto dos agendamentos dos outros.
 create or replace function public.meu_cliente_id(p_salao uuid) returns uuid
 language sql stable security definer set search_path = public as $$
@@ -1142,7 +1142,7 @@ language sql stable security definer set search_path = public as $$
    limit 1
 $$;
 
--- O profissional logado, dentro deste salão.
+-- O profissional logado, dentro deste restaurante.
 create or replace function public.meu_profissional_id(p_salao uuid) returns uuid
 language sql stable security definer set search_path = public as $$
   select id from public.profissionais
@@ -1153,7 +1153,7 @@ $$;
 -- ── Três atalhos para a comanda, e o motivo de existirem ──────────────────
 --
 -- A policy de `comandas` precisa saber se o profissional tem item nela; a de
--- `comanda_itens` precisa saber de que salão é a comanda. Escritas como
+-- `comanda_itens` precisa saber de que restaurante é a comanda. Escritas como
 -- subconsulta comum, uma dispara a policy da outra e o Postgres para com
 -- "infinite recursion detected in policy" — foi o que aconteceu aqui.
 --
@@ -1207,7 +1207,7 @@ alter table public.planos                 enable row level security;
 alter table public.assinaturas            enable row level security;
 
 -- ---------------------------------------------------------------------------
--- 3) SALÃO
+-- 3) RESTAURANTE
 -- ---------------------------------------------------------------------------
 
 drop policy if exists salao_ler on public.saloes;
@@ -1218,7 +1218,7 @@ drop policy if exists salao_gerir on public.saloes;
 create policy salao_gerir on public.saloes for update to authenticated
   using ( e_gestor(id) ) with check ( e_gestor(id) );
 
--- Criar e apagar salão é ato da plataforma, não do salão.
+-- Criar e apagar restaurante é ato da plataforma, não do restaurante.
 drop policy if exists salao_criar on public.saloes;
 create policy salao_criar on public.saloes for insert to authenticated
   with check ( is_super() );
@@ -1259,8 +1259,8 @@ create policy assin_gerir on public.assinaturas for all to authenticated
 -- 4) PERFIL — a identidade global
 --
 -- Ninguém lê o perfil de ninguém. Nem a recepção: para ela existe a ficha do
--- cliente (`clientes`), que é a cópia daquele salão. Assim o telefone que a
--- pessoa deu na barbearia não aparece no salão do outro lado da rua.
+-- cliente (`clientes`), que é a cópia daquele restaurante. Assim o telefone que a
+-- pessoa deu na barbearia não aparece no restaurante do outro lado da rua.
 -- ---------------------------------------------------------------------------
 
 drop policy if exists perfil_meu on public.perfis;
@@ -1279,14 +1279,14 @@ create policy perfil_editar on public.perfis for update to authenticated
 -- não por INSERT vindo do navegador. Por isso não existe policy de insert.
 
 -- ---------------------------------------------------------------------------
--- 5) VÍNCULOS — quem entra em qual salão
+-- 5) VÍNCULOS — quem entra em qual restaurante
 -- ---------------------------------------------------------------------------
 
 drop policy if exists vinc_meus on public.vinculos;
 create policy vinc_meus on public.vinculos for select to authenticated
   using ( perfil_id = auth.uid() or e_equipe(salao_id) );
 
--- Virar CLIENTE de um salão é livre: é o que acontece quando a pessoa abre o
+-- Virar CLIENTE de um restaurante é livre: é o que acontece quando a pessoa abre o
 -- link e agenda pela primeira vez. Virar equipe, não — o dono precisa liberar.
 drop policy if exists vinc_virar_cliente on public.vinculos;
 create policy vinc_virar_cliente on public.vinculos for insert to authenticated
@@ -1302,7 +1302,7 @@ create policy vinc_gerir on public.vinculos for all to authenticated
 -- A EQUIPE lê, só a gestão ESCREVE.
 --
 -- ⚠ ERA `tem_acesso()`, que inclui o papel "cliente" — e virar cliente de um
--- salão é livre (`vinc_virar_cliente`, logo acima). Qualquer conta criava um
+-- restaurante é livre (`vinc_virar_cliente`, logo acima). Qualquer conta criava um
 -- vínculo de cliente com o id que a vitrine pública mostra e passava a ler a
 -- tabela inteira: o TELEFONE pessoal de cada profissional, a comissão de cada
 -- um e de cada serviço, os serviços desligados, a jornada. Achado pelo
@@ -1379,7 +1379,7 @@ drop policy if exists cli_eu on public.clientes;
 create policy cli_eu on public.clientes for select to authenticated
   using ( perfil_id = auth.uid() );
 
--- Virar cliente de um salão é ato da própria pessoa: é o que acontece na
+-- Virar cliente de um restaurante é ato da própria pessoa: é o que acontece na
 -- primeira vez que ela marca pelo link. Sem esta policy o autoatendimento
 -- simplesmente não funciona — e era o caso: o furo só apareceu no teste
 -- ponta a ponta contra um Postgres de verdade, porque no modo demonstração
@@ -1393,7 +1393,7 @@ create policy cli_eu on public.clientes for select to authenticated
 -- `agendar()`, que é `security definer` e decide campo a campo o que
 -- aproveitar. Com o UPDATE aberto, a cliente marcada pelo dono como "precisa
 -- de confirmação" tirava a marca sozinha (`exige_confirmacao = false`), e
--- reescrevia a anotação do salão e o próprio telefone — reproduzido pela API.
+-- reescrevia a anotação do restaurante e o próprio telefone — reproduzido pela API.
 -- Com o INSERT aberto, uma conta criava antes uma ficha com o telefone de
 -- outra pessoa, e as marcações dessa pessoa pelo link caíam na ficha dela.
 drop policy if exists cli_eu_criar on public.clientes;
@@ -1486,7 +1486,7 @@ create policy ags_apagar on public.agendamento_servicos for delete to authentica
 --
 -- Mesma regra da agenda: a equipe vê a fila inteira, o cliente vê só o lugar
 -- dele. Uma fila aberta diria a todo mundo quem mais quer horário naquele
--- salão — e com nome e ficha junto, porque `cliente_id` leva a `clientes`.
+-- restaurante — e com nome e ficha junto, porque `cliente_id` leva a `clientes`.
 -- ---------------------------------------------------------------------------
 
 drop policy if exists espera_ler on public.lista_espera;
@@ -1511,7 +1511,7 @@ create policy espera_apagar on public.lista_espera for delete to authenticated
 -- ---------------------------------------------------------------------------
 -- 9) DINHEIRO — comanda, itens, pagamento, produto
 --
--- Profissional vê o que é dele (a comissão dele). Faturamento do salão é da
+-- Profissional vê o que é dele (a comissão dele). Faturamento do restaurante é da
 -- gestão. Cliente vê a própria conta, que é o recibo dele.
 -- ---------------------------------------------------------------------------
 
@@ -1575,7 +1575,7 @@ create policy pgto_caixa on public.pagamentos for all to authenticated
 -- ---------------------------------------------------------------------------
 -- 10) A VITRINE PÚBLICA (sem login)
 --
--- A página de agendamento precisa mostrar o salão, os serviços e quem atende
+-- A página de agendamento precisa mostrar o restaurante, os serviços e quem atende
 -- ANTES de a pessoa se cadastrar. Isso sai por vistas de colunas escolhidas a
 -- dedo — nunca liberando a tabela para `anon`.
 --
@@ -1615,7 +1615,7 @@ create or replace view public.profissionais_publicos as
 --
 -- Conferido num projeto de verdade: as 20 tabelas apareceram liberadas para
 -- `anon`. Ninguém leu nada — o RLS segurou, e escrever levou "new row
--- violates row-level security policy". A dona do salão também não conseguiu
+-- violates row-level security policy". A dona do restaurante também não conseguiu
 -- se promover de plano: `update 0`.
 --
 -- Mas depender só do RLS é usar uma camada quando dá para ter duas. Com o
@@ -1639,7 +1639,7 @@ create or replace view public.profissionais_publicos as
 --
 -- O que NÃO funciona é reaplicar só este arquivo depois, que é a coisa mais
 -- natural do mundo quando se quer reforçar a segurança. Ele zera e ninguém
--- devolve nada: todo dono de salão logado perde `minha_assinatura` e o painel
+-- devolve nada: todo dono de restaurante logado perde `minha_assinatura` e o painel
 -- do plano passa a responder "permission denied for view minha_assinatura".
 -- Aconteceu numa bancada aqui, e o erro não fala em permissão revogada — fala
 -- como se a tela estivesse errada.
@@ -1667,7 +1667,7 @@ alter default privileges in schema public
 --   grant select on public.profissionais_publicos to anon, authenticated;
 --
 -- O 06_vitrine.sql desfaz as três, porque um `GET /rest/v1/saloes_publicos`
--- devolvia a plataforma inteira — nome, endereço e WhatsApp de todo salão
+-- devolvia a plataforma inteira — nome, endereço e WhatsApp de todo restaurante
 -- cliente. Como o 06 roda depois, na instalação completa o resultado ficava
 -- certo, e por isso a contradição passava despercebida.
 --
@@ -1685,7 +1685,7 @@ alter default privileges in schema public
 --
 -- O RLS filtra LINHA; o grant decide se a pessoa chega na TABELA. Precisa dos
 -- dois. `anon` quase não recebe nada: quem não fez login enxerga a lista de
--- planos (a página de preços precisa dela) e chega no salão pela função
+-- planos (a página de preços precisa dela) e chega no restaurante pela função
 -- `vitrine()` do 06, que pede o apelido. Nada além disso.
 -- ---------------------------------------------------------------------------
 
@@ -1714,7 +1714,7 @@ revoke all on public.contadores from anon, authenticated;
 -- O dono se cadastra sozinho. Rodar DEPOIS do 01 e do 02.
 --
 -- O problema que este arquivo resolve: a policy `salao_criar` só deixa
--- `is_super()` inserir salão, e isso está certo — criar inquilino é ato da
+-- `is_super()` inserir restaurante, e isso está certo — criar inquilino é ato da
 -- plataforma. Mas se só a plataforma cria, alguém precisa atender o telefone
 -- toda vez que um barbeiro quiser testar às 23h de domingo.
 --
@@ -1725,7 +1725,7 @@ revoke all on public.contadores from anon, authenticated;
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
--- 1) O APELIDO DO SALÃO NO ENDEREÇO
+-- 1) O APELIDO DO RESTAURANTE NO ENDEREÇO
 -- ---------------------------------------------------------------------------
 
 -- "Barbearia Os Meninos dá Vila" -> "barbearia-os-meninos-da-vila"
@@ -1795,13 +1795,13 @@ create policy doc_gerir on public.documentos_cobranca for all to authenticated
 grant select on public.documentos_cobranca to authenticated;
 
 -- ---------------------------------------------------------------------------
--- 2) CRIAR O SALÃO
+-- 2) CRIAR O RESTAURANTE
 --
--- Uma chamada faz tudo o que precisa acontecer junto: o salão, a assinatura
+-- Uma chamada faz tudo o que precisa acontecer junto: o restaurante, a assinatura
 -- em teste, o vínculo de dono e o primeiro profissional. Se qualquer parte
 -- falhar, nada fica pela metade — é uma função, logo uma transação.
 --
--- Meia criação seria o pior resultado possível: um salão sem dono é um
+-- Meia criação seria o pior resultado possível: um restaurante sem dono é um
 -- registro que ninguém alcança nem para apagar, porque o RLS pede vínculo.
 -- ---------------------------------------------------------------------------
 
@@ -1823,12 +1823,12 @@ declare
   v_dias   int := 30;                     -- duração do teste grátis (61_teste_30_dias)
 begin
   if v_perfil is null then
-    raise exception 'Faça login antes de criar o salão.'
+    raise exception 'Faça login antes de criar o restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
   if not exists (select 1 from public.perfis where id = v_perfil) then
-    raise exception 'Complete seu cadastro antes de criar o salão.'
+    raise exception 'Complete seu cadastro antes de criar o restaurante.'
       using errcode = 'foreign_key_violation';
   end if;
 
@@ -1837,7 +1837,7 @@ begin
       using errcode = 'check_violation';
   end if;
 
-  -- Uma pessoa dona de muitos salões é possível (rede de barbearias), mas
+  -- Uma pessoa dona de muitos restaurantes é possível (rede de barbearias), mas
   -- dezenas viram fábrica de teste grátis. O limite é folgado de propósito.
   if (select count(*) from public.vinculos
        where perfil_id = v_perfil and papel = 'dono') >= 10 then
@@ -1861,7 +1861,7 @@ begin
 
   insert into public.assinaturas
     (salao_id, plano, status, trial_ate, origem, indicado_por)
-  /* O "hoje" do teste é o do SALÃO, e não o do servidor (UTC). Depois das
+  /* O "hoje" do teste é o do RESTAURANTE, e não o do servidor (UTC). Depois das
      21h em Brasília o servidor já está no dia seguinte, e o teste nascia
      com um dia a mais do que a tela prometia. */
   values (v_salao, 'trial', 'trial',
@@ -1877,7 +1877,7 @@ begin
   insert into public.profissionais (salao_id, perfil_id, nome, comissao_pct)
   select v_salao, v_perfil, p.nome, 100 from public.perfis p where p.id = v_perfil;
 
-  -- O documento é da COBRANÇA, não do salão: guardar CPF junto do cadastro
+  -- O documento é da COBRANÇA, não do restaurante: guardar CPF junto do cadastro
   -- público seria expor documento em tabela que o cliente final lê.
   --
   -- ⚠ Repare no `documentos_cobranca.salao_id` escrito por extenso. Esta
@@ -1886,7 +1886,7 @@ begin
   -- dentro para o Postgres com "column reference is ambiguous" — foi
   -- exatamente o que aconteceu na primeira versão. Dentro de plpgsql com
   -- OUT params, qualifique sempre.
-  -- Insert simples, sem `on conflict`: o salão nasceu duas linhas acima,
+  -- Insert simples, sem `on conflict`: o restaurante nasceu duas linhas acima,
   -- então não existe documento para conflitar. E o alvo do `on conflict` é
   -- um dos poucos lugares do SQL que NÃO aceita qualificação por tabela,
   -- então ali a ambiguidade não teria conserto.
@@ -1951,7 +1951,7 @@ grant select on public.minha_assinatura to authenticated;
 -- ###########################################################################
 
 -- ===========================================================================
--- PediHub — imagens do salão (Supabase Storage)
+-- PediHub — imagens do restaurante (Supabase Storage)
 -- ---------------------------------------------------------------------------
 -- Logo, foto da fachada/equipe e foto por serviço. São três imagens com o
 -- mesmo destino e a mesma regra, então um balde só resolve.
@@ -1960,8 +1960,8 @@ grant select on public.minha_assinatura to authenticated;
 -- existem para aparecer na vitrine, que abre antes de qualquer login. Uma
 -- imagem atrás de autenticação numa página pública é imagem que não carrega.
 --
--- O que NÃO é público é a escrita. Só quem é dono ou gerente do salão escreve,
--- e só dentro da pasta do próprio salão.
+-- O que NÃO é público é a escrita. Só quem é dono ou gerente do restaurante escreve,
+-- e só dentro da pasta do próprio restaurante.
 --
 -- Convenção de caminho — é ela que a policy usa para saber de quem é o arquivo:
 --
@@ -1969,8 +1969,8 @@ grant select on public.minha_assinatura to authenticated;
 --     <salao_id>/capa.jpg
 --     <salao_id>/servico-<servico_id>.jpg
 --
--- A primeira pasta é sempre o uuid do salão. Sem isso, qualquer dono logado
--- sobrescreveria a logo do salão do vizinho.
+-- A primeira pasta é sempre o uuid do restaurante. Sem isso, qualquer dono logado
+-- sobrescreveria a logo do restaurante do vizinho.
 --
 -- Rode DEPOIS do 01, 02 e 03.
 -- ===========================================================================
@@ -1988,10 +1988,10 @@ on conflict (id) do update
 -- e um balde sem limite é conta de armazenamento crescendo sozinha.
 
 -- ---------------------------------------------------------------------------
--- De qual salão é este arquivo
+-- De qual restaurante é este arquivo
 -- ---------------------------------------------------------------------------
 -- `storage.foldername(name)` devolve as pastas do caminho. A primeira é o uuid
--- do salão. O regexp antes do cast não é preciosismo: um arquivo solto na raiz
+-- do restaurante. O regexp antes do cast não é preciosismo: um arquivo solto na raiz
 -- do balde, ou numa pasta com nome qualquer, faria o `::uuid` levantar exceção
 -- dentro da policy — e policy que levanta exceção derruba a consulta inteira,
 -- em vez de simplesmente negar.
@@ -2016,7 +2016,7 @@ drop policy if exists img_apagar   on storage.objects;
 create policy img_ler on storage.objects for select to anon, authenticated
   using ( bucket_id = 'salao' );
 
--- Escrever: só gestor, só na pasta do próprio salão.
+-- Escrever: só gestor, só na pasta do próprio restaurante.
 create policy img_enviar on storage.objects for insert to authenticated
   with check (
     bucket_id = 'salao'
@@ -2053,7 +2053,7 @@ grant execute on function public.salao_do_arquivo(text) to anon, authenticated;
 -- ── POR QUE `security definer` ─────────────────────────────────────────────
 -- Quem abre o link é `anon`: não fez login, e o RLS não deixa ele chegar em
 -- `agendamentos`, `jornadas` nem `bloqueios` — e está certo, porque a lista de
--- clientes do salão não é pública. Mas o horário vago é. Estas funções rodam
+-- clientes do restaurante não é pública. Mas o horário vago é. Estas funções rodam
 -- com o dono delas, olham o que precisam, e devolvem SÓ o horário.
 --
 -- Toda função aqui leva `set search_path = public`. Sem isso, quem consegue
@@ -2094,7 +2094,7 @@ $$;
 
    Então compara só o PRIMEIRO nome, e por prefixo nos dois sentidos: "ju"
    casa com "juliana", "maria" não casa com "ana". Dois caracteres é o mínimo
-   — abaixo disso qualquer inicial casaria com meio salão.
+   — abaixo disso qualquer inicial casaria com meio restaurante.
 
    Isto erra nos dois sentidos e não tem como não errar: duas Marias
    diferentes no mesmo número passam, e "Bia"/"Beatriz" não passa. É o preço
@@ -2111,7 +2111,7 @@ returns boolean language sql immutable set search_path = public as $$
   ) end
 $$;
 
--- Até quando o salão aceita marcação. Serve para dois problemas reais: quem
+-- Até quando o restaurante aceita marcação. Serve para dois problemas reais: quem
 -- marca para daqui a seis meses quase sempre falta, e agenda aberta até o
 -- infinito tira do dono a liberdade de mudar jornada, preço ou equipe.
 create or replace function public.dias_liberados(p_salao uuid)
@@ -2121,8 +2121,8 @@ returns int language sql stable set search_path = public as $$
                where id = p_salao and cfg->>'diasLiberados' ~ '^[0-9]+$'), 30)))
 $$;
 
--- Hoje NO FUSO DO SALÃO, que não é o fuso de quem está olhando. Uma cliente
--- em Portugal abrindo o link de um salão de Porto Alegre às 3h da manhã dela
+-- Hoje NO FUSO DO RESTAURANTE, que não é o fuso de quem está olhando. Uma cliente
+-- em Portugal abrindo o link de um restaurante de Porto Alegre às 3h da manhã dela
 -- tem que ver o dia que é lá, não o dela.
 create or replace function public.hoje_no_salao(p_salao uuid)
 returns date language sql stable set search_path = public as $$
@@ -2166,7 +2166,7 @@ $$;
 -- Este profissional faz TODOS estes serviços?
 --
 -- Sem nenhuma linha em `servicos_profissionais`, considera-se que ele faz
--- tudo. É como um salão pequeno começa — um profissional, cinco serviços,
+-- tudo. É como um restaurante pequeno começa — um profissional, cinco serviços,
 -- nenhum cruzamento cadastrado — e exigir o cadastro antes de usar é o tipo
 -- de exigência que faz o dono desistir na primeira tarde.
 create or replace function public.profissional_faz(
@@ -2184,7 +2184,7 @@ returns boolean language sql stable set search_path = public as $$
 $$;
 
 -- ---------------------------------------------------------------------------
--- 3) O salão aceita marcação online agora?
+-- 3) O restaurante aceita marcação online agora?
 --
 -- Uma função só, porque as duas pontas precisam da MESMA resposta.
 -- `horarios_livres()` usa para não oferecer, e `agendar()` usa para não
@@ -2216,7 +2216,7 @@ begin
     return 'Este profissional não está atendendo pela agenda online.';
   end if;
 
-  -- O profissional existe e está ativo, mas o salão caiu para um plano que
+  -- O profissional existe e está ativo, mas o restaurante caiu para um plano que
   -- não comporta a equipe inteira. O gatilho de cota recusaria a marcação lá
   -- na frente; melhor não oferecer o horário do que oferecer e voltar atrás.
   if not public.profissional_na_cota(p_profissional) then
@@ -2224,11 +2224,11 @@ begin
   end if;
 
   if not public.recurso_bool(v_salao, 'agenda_online') then
-    return 'Este salão não está aceitando marcação pela internet.';
+    return 'Este restaurante não está aceitando marcação pela internet.';
   end if;
 
-  -- Todo serviço pedido tem que ser deste salão, estar ativo e aceitar
-  -- online. Sem esta conferência, dá para marcar um serviço de OUTRO salão
+  -- Todo serviço pedido tem que ser deste restaurante, estar ativo e aceitar
+  -- online. Sem esta conferência, dá para marcar um serviço de OUTRO restaurante
   -- colando o id na chamada — e o preço que entraria na comanda seria o de lá.
   if exists (
     select 1 from unnest(p_servicos) as pedido(id)
@@ -2262,7 +2262,7 @@ end $$;
 -- 4) horarios_livres()
 --
 -- Devolve os inícios possíveis, em timestamptz. A tela formata no fuso do
--- salão (que vem em `saloes_publicos.fuso`), não no fuso do aparelho.
+-- restaurante (que vem em `saloes_publicos.fuso`), não no fuso do aparelho.
 --
 -- O passo é de 15 minutos e a última vaga é a que ainda TERMINA dentro da
 -- jornada: com jornada até 19:00 e serviço de 40 minutos, 18:20 é oferecido e
@@ -2334,8 +2334,8 @@ begin
       from grupos group by g order by 1
   loop
     -- A hora da jornada é hora de parede ("09:00 de segunda"). Vira instante
-    -- no fuso do salão — e é isso que faz a agenda continuar certa na semana
-    -- em que o horário de verão muda, porque o salão abre às 9 dos dois lados
+    -- no fuso do restaurante — e é isso que faz a agenda continuar certa na semana
+    -- em que o horário de verão muda, porque o restaurante abre às 9 dos dois lados
     -- da virada, não "9 menos uma hora".
     v_ini := ((p_data + j.inicio) at time zone v_fuso);
     v_ate := ((p_data + j.fim)    at time zone v_fuso);
@@ -2398,7 +2398,7 @@ update public.clientes
 -- número. Juntar fichas é mover agendamento, comanda e histórico de uma para
 -- outra, e isso NAO se faz por migração automática — some dinheiro ou some
 -- atendimento, e ninguém fica sabendo qual. As que colidem ficam como estão,
--- à espera de o salão decidir qual é qual.
+-- à espera de o restaurante decidir qual é qual.
 with alvo as (
   select c.id,
          public.so_digitos(c.telefone) as limpo,
@@ -2445,18 +2445,18 @@ end $trava$;
    esta) e `entrar_na_fila()`. Três cópias, e a regra estava errada nas três
    do mesmo jeito — procurava-se a ficha SÓ pelo telefone.
 
-   O estrago: quem já tinha ficha no salão e marcava digitando um número
+   O estrago: quem já tinha ficha no restaurante e marcava digitando um número
    diferente do que estava lá (trocou de chip, digitou o do marido, corrigiu
    o DDD) não era encontrado, caía no insert, e o insert batia na trava
    `ux_cli_perfil` — que existe justamente para a mesma pessoa não ter duas
-   fichas no mesmo salão. O que a cliente via, no fim de um agendamento
+   fichas no mesmo restaurante. O que a cliente via, no fim de um agendamento
    inteiro preenchido:
 
        Não consegui marcar.
        duplicate key value violates unique constraint "ux_cli_perfil"
 
    Erro de banco em inglês na cara de quem só queria marcar horário, e sem
-   saída nenhuma: tentar de novo dava o mesmo. O salão perde a marcação e nem
+   saída nenhuma: tentar de novo dava o mesmo. O restaurante perde a marcação e nem
    fica sabendo que perdeu.
 
    Agora quem está logado é procurado PELO PERFIL primeiro — é a identidade
@@ -2507,10 +2507,10 @@ begin
   /* Reencontrou a ficha. Só preenche o que falta: sobrescrever o nome
      apagaria a correção que a recepção fez na ficha.
 
-     O telefone novo entra apenas se ninguém mais o tiver neste salão — a
+     O telefone novo entra apenas se ninguém mais o tiver neste restaurante — a
      outra trava, `ux_cli_tel`, derrubaria a marcação inteira, e a pessoa
      está aqui para marcar horário, não para arrumar cadastro. Na dúvida fica
-     o que já estava, e o salão conserta pelo painel. */
+     o que já estava, e o restaurante conserta pelo painel. */
   update public.clientes c
      set perfil_id = case
            when c.perfil_id is not null then c.perfil_id
@@ -2652,10 +2652,10 @@ begin
 
      A ficha é reencontrada pelo telefone, e sem SMS não há prova de que o
      número seja de quem digitou. Se alguém marca com o número da mãe, o
-     horário cai na ficha da mãe — e o salão liga para a mãe perguntando de
+     horário cai na ficha da mãe — e o restaurante liga para a mãe perguntando de
      um horário que ela não marcou.
 
-     Não dá para impedir sem verificar o número de verdade. Dá para o salão
+     Não dá para impedir sem verificar o número de verdade. Dá para o restaurante
      saber: o nome informado fica registrado em `atendido_nome`, que o painel
      mostra como "Quem vem". Melhor um nome a mais na tela do que um telefone
      errado em silêncio. */
@@ -2670,13 +2670,13 @@ begin
 
   -- ── Freio de spam ────────────────────────────────────────────────────────
   -- Marcação online sem senha é um formulário aberto na internet. Sem limite,
-  -- um número só entope a agenda inteira de um salão em dois minutos — e o
+  -- um número só entope a agenda inteira de um restaurante em dois minutos — e o
   -- prejuízo é do dono, que passa o dia ligando para horários fantasma.
   --
   -- Três marcações futuras em aberto atende a cliente de verdade (o corte
   -- desta semana, a escova do casamento, a manutenção do mês) e trava quem
   -- está brincando. Cancelou ou foi atendida, libera vaga na conta.
-  -- Só o que ela marcou pelo link: o que o salão marcou não é spam (ver o 09).
+  -- Só o que ela marcou pelo link: o que o restaurante marcou não é spam (ver o 09).
   select count(*) into v_abertos from public.agendamentos a
    where a.cliente_id = v_cliente
      and a.origem = 'online'
@@ -2709,7 +2709,7 @@ begin
         using errcode = 'check_violation';
   end;
 
-  -- Duração, preço e comissão são COPIADOS agora. Se o salão reajustar a
+  -- Duração, preço e comissão são COPIADOS agora. Se o restaurante reajustar a
   -- tabela amanhã, o que foi combinado com a cliente hoje continua valendo —
   -- e a comissão do profissional é calculada sobre o combinado, não sobre o
   -- preço novo.
@@ -2766,7 +2766,7 @@ declare
   v_dia   date;
   v_prof  uuid;
   -- Teto de segurança. A janela que a tela pede é de 28 dias; 62 dá folga
-  -- para relatório e para o dia em que alguém aumentar a janela do salão,
+  -- para relatório e para o dia em que alguém aumentar a janela do restaurante,
   -- sem deixar uma chamada de fora pedir dois anos de agenda de uma vez.
   v_ate   date := least(p_ate, p_de + 62);
 begin
@@ -2792,11 +2792,11 @@ end $$;
 -- Note que `anon` continua SEM chegar em `agendamentos`, `clientes`,
 -- `jornadas` e `bloqueios` — o grant é da função, não das tabelas. Ele
 -- consegue marcar e consegue ver horário vago; não consegue ler a agenda do
--- salão nem a lista de clientes.
+-- restaurante nem a lista de clientes.
 -- ---------------------------------------------------------------------------
 /* ⚠ `ficha_do_cliente()` NÃO é para ser chamada de fora. Ela é `security
    definer` e escreve em `clientes`: solta, deixaria qualquer visitante criar
-   e alterar ficha em QUALQUER salão, inclusive tomar um telefone de outra
+   e alterar ficha em QUALQUER restaurante, inclusive tomar um telefone de outra
    pessoa. Postgres dá execute ao público em toda função nova, então tirar é
    obrigatório — ela existe só para `agendar()` e `entrar_na_fila()`, que já
    conferem tudo antes de chegar nela. */
@@ -2826,7 +2826,7 @@ grant execute on function public.so_digitos(text)       to anon, authenticated;
 -- 7) Conserto na vitrine pública
 --
 -- `profissionais_publicos` mostrava todo profissional ativo que aceita
--- online, sem olhar a cota do plano. O salão que caiu do plano de 5 para o
+-- online, sem olhar a cota do plano. O restaurante que caiu do plano de 5 para o
 -- gratuito continuava com os 5 na tela: a cliente escolhia a Bia, e o gatilho
 -- de cota recusava na hora de marcar. Erro do lado errado do funil.
 -- ---------------------------------------------------------------------------
@@ -2850,7 +2850,7 @@ create or replace view public.profissionais_publicos as
 -- Só que "certo porque roda na ordem" não sobrevive a reaplicar só este
 -- arquivo, que é o que se faz ao mexer numa função da agenda. Medido: `anon`
 -- volta a ler a vista, e uma requisição sem filtro devolve TODOS os
--- profissionais de TODOS os salões, com o salao_id de cada um. É a mesma
+-- profissionais de TODOS os restaurantes, com o salao_id de cada um. É a mesma
 -- enumeração da carteira de clientes que o 06 existe para fechar, entrando
 -- por outra porta.
 --
@@ -2863,12 +2863,12 @@ create or replace view public.profissionais_publicos as
 -- ###########################################################################
 
 -- ===========================================================================
--- PediHub — 06: a vitrine de UM salão
+-- PediHub — 06: a vitrine de UM restaurante
 --
 -- ── O PROBLEMA QUE ESTE ARQUIVO FECHA ──────────────────────────────────────
 -- As vistas `saloes_publicos`, `servicos_publicos` e `profissionais_publicos`
 -- estavam liberadas para `anon` sem nenhum filtro. Funcionava, e o isolamento
--- entre donos continuava intacto: nenhum salão lia agendamento, cliente ou
+-- entre donos continuava intacto: nenhum restaurante lia agendamento, cliente ou
 -- faturamento de outro — isso o RLS garante e os testes provam.
 --
 -- Mas havia outra coisa vazando, e não é dado de cliente: é a SUA LISTA DE
@@ -2877,22 +2877,22 @@ create or replace view public.profissionais_publicos as
 --
 --     GET /rest/v1/saloes_publicos
 --
--- e recebia TODOS os salões da plataforma, com nome, endereço e WhatsApp. Um
+-- e recebia TODOS os restaurantes da plataforma, com nome, endereço e WhatsApp. Um
 -- concorrente monta com isso uma lista de prospecção pronta: exatamente quem
 -- usa o PediHub, onde fica e por onde falar. Você levou meses para reunir
 -- essa lista; ela sai numa requisição.
 --
 -- ── O QUE MUDA ─────────────────────────────────────────────────────────────
--- A cliente chega por um link com o apelido do salão. Ela NUNCA precisa de um
--- catálogo — precisa de um salão, o dela. Então o catálogo deixa de existir
+-- A cliente chega por um link com o apelido do restaurante. Ela NUNCA precisa de um
+-- catálogo — precisa de um restaurante, o dela. Então o catálogo deixa de existir
 -- para quem não fez login, e no lugar entra esta função, que só responde
 -- quando alguém já sabe o apelido.
 --
--- Isso não torna o apelido secreto: quem tem o link tem o salão, e é assim
--- que deve ser. O que muda é que ninguém mais ENUMERA. Descobrir um salão
+-- Isso não torna o apelido secreto: quem tem o link tem o restaurante, e é assim
+-- que deve ser. O que muda é que ninguém mais ENUMERA. Descobrir um restaurante
 -- passa a exigir já conhecê-lo.
 --
--- Vem tudo de uma vez — salão, serviços e profissionais — em vez de três
+-- Vem tudo de uma vez — restaurante, serviços e profissionais — em vez de três
 -- idas ao servidor. No 3G da cliente, isso é a diferença entre a tela abrir
 -- e a tela demorar.
 -- ===========================================================================
@@ -2911,7 +2911,7 @@ language sql stable security definer set search_path = public as $$
       -- regra — e não ter como discordar dela.
       'diasLiberados', public.dias_liberados(s.id),
 
-      /* ── A APARÊNCIA QUE O SALÃO ESCOLHEU ──────────────────────────────
+      /* ── A APARÊNCIA QUE O RESTAURANTE ESCOLHEU ──────────────────────────────
          Só as três chaves visuais, nomeadas uma a uma — nunca o `cfg`
          inteiro. `cfg` é jsonb e vai crescer; devolvê-lo por atacado
          significa publicar para qualquer visitante toda configuração que
@@ -2919,7 +2919,7 @@ language sql stable security definer set search_path = public as $$
          aparece aqui se for escrita aqui, de propósito.
 
          Nulo quer dizer "não escolheu", e a tela usa o padrão dela — assim
-         salão antigo, criado antes disto existir, continua bonito sem
+         restaurante antigo, criado antes disto existir, continua bonito sem
          precisar de migração. */
       'cor',  s.cfg->>'cor',
       'tema', s.cfg->>'tema',
@@ -2927,7 +2927,7 @@ language sql stable security definer set search_path = public as $$
          `'abacaxi'::boolean` e `'abacaxi'::int` LEVANTAM no Postgres — não
          devolvem nulo. Dentro da `vitrine()` isso não é "o ajuste não pega":
          é a função inteira caindo, e ela é a ÚNICA porta da página da
-         cliente. A casa sai do ar por um caractere, com o link que o salão
+         cliente. A casa sai do ar por um caractere, com o link que o restaurante
          mandou no WhatsApp.
 
          Medido, uma chave por vez, num banco de verdade: as quatro derrubavam
@@ -2948,10 +2948,10 @@ language sql stable security definer set search_path = public as $$
                        in ('true', 't', '1', 'yes', 'sim'),
       -- A imagem de fundo da página, que o dono anexa em Identidade visual.
       -- Mora no `cfg` e não numa coluna própria de propósito: `cfg` é jsonb
-      -- e já existe, então nenhum salão precisa de migração de tabela.
+      -- e já existe, então nenhum restaurante precisa de migração de tabela.
       'fundo', s.cfg->>'fundo',
       -- O brilho do botão principal. Ausente quer dizer LIGADO: é o padrão, e
-      -- assim salão criado antes disto existir já nasce com ele.
+      -- assim restaurante criado antes disto existir já nasce com ele.
       'brilho', lower(btrim(coalesce(s.cfg->>'brilho', 'true')))
                   not in ('false', 'f', '0', 'no', 'nao', 'não'),
       -- A letra do nome na capa. Nulo = a tela decide pelo tipo do negócio.
@@ -2970,7 +2970,7 @@ language sql stable security definer set search_path = public as $$
                   then (s.cfg->>'veu')::int end,
       /* Quanto os cartões fecham sobre a foto de fundo: 'auto', 'vidro' ou
          'fechado'. Nulo = 'auto', que é o que a tela faz sozinha — então
-         salão criado antes disto não precisa de migração nenhuma.
+         restaurante criado antes disto não precisa de migração nenhuma.
 
          ⚠ Precisa ESTAR AQUI para existir. O `cfg` inteiro nunca é
          devolvido, cada chave é nomeada uma a uma, e ajuste que não aparece
@@ -2979,7 +2979,7 @@ language sql stable security definer set search_path = public as $$
       'cartoes', s.cfg->>'cartoes',
 
       /* A FORMA do cartão de serviço: `reta` (o de sempre) ou
-         `elegante`. Ausente vale `reta`, então salão criado antes
+         `elegante`. Ausente vale `reta`, então restaurante criado antes
          disto existir não muda de aparência e não há migração.
 
          ⚠ É outro eixo, e não um valor de `cartoes`. Aquele decide o
@@ -2989,15 +2989,15 @@ language sql stable security definer set search_path = public as $$
       'moldura', coalesce(s.cfg->>'moldura', 'reta'),
 
       /* ── A CAMADA DE PERSONALIZAÇÃO POR ESTABELECIMENTO ────────────────
-         Cinco chaves, e as cinco AUSENTES no salão que nunca mexeu — que é
-         o estado de todo salão que já existe. Ausente aqui não é "vazio": é
+         Cinco chaves, e as cinco AUSENTES no restaurante que nunca mexeu — que é
+         o estado de todo restaurante que já existe. Ausente aqui não é "vazio": é
          "faça como sempre fez", e a página da cliente trata assim.
 
          ⚠ `cores` É UM OBJETO COM BURACOS, DE PROPÓSITO. Cada cor que o dono
          NÃO escolheu fica de fora, e a tela a calcula a partir da principal,
          como faz desde sempre — medindo contraste para decidir a letra. Se
          gravássemos as nove sempre, a conta de hoje congelaria dentro do
-         salão, e melhorar o cálculo depois não chegaria em ninguém.
+         restaurante, e melhorar o cálculo depois não chegaria em ninguém.
 
          `modo` ausente vale `atual`: o visual de hoje, sem nada novo ligado.
          É o que garante que ninguém acorde com a página diferente. */
@@ -3008,7 +3008,7 @@ language sql stable security definer set search_path = public as $$
       -- A forma da caixa do carrossel. `panoramico` é o 16/8 de antes.
       'slideForma', coalesce(s.cfg->>'slideForma', 'panoramico'),
       /* ── A FITA DO CARRINHO, EM METAL ─────────────────────────────────
-         Cinco chaves, e as cinco AUSENTES no salão que nunca mexeu. Ausente
+         Cinco chaves, e as cinco AUSENTES no restaurante que nunca mexeu. Ausente
          não quer dizer "desligado": quer dizer "o metal de fábrica", que é o
          mesmo do botão de agendar.
 
@@ -3063,7 +3063,7 @@ language sql stable security definer set search_path = public as $$
       select jsonb_agg(jsonb_build_object(
                'id', p.id, 'nome', coalesce(p.apelido, p.nome),
                'foto', p.foto,
-               -- Lista vazia = faz tudo. É como um salão pequeno começa, e a
+               -- Lista vazia = faz tudo. É como um restaurante pequeno começa, e a
                -- tela já trata assim.
                'servicos', (select coalesce(jsonb_agg(sp.servico_id), '[]'::jsonb)
                               from public.servicos_profissionais sp
@@ -3103,10 +3103,10 @@ grant execute on function public.vitrine(text) to anon, authenticated;
 -- PediHub — 07: o painel de quem é dono da plataforma
 --
 -- O `super_admin` já existia no schema e já destrancava tudo: `tem_acesso()`
--- devolve verdadeiro para ele em qualquer salão, e as policies de `planos` e
+-- devolve verdadeiro para ele em qualquer restaurante, e as policies de `planos` e
 -- `assinaturas` só deixam ELE escrever. O que faltava era o outro lado — um
 -- lugar de onde olhar o negócio inteiro, e um jeito de mudar o plano de um
--- salão sem digitar UPDATE na mão às onze da noite.
+-- restaurante sem digitar UPDATE na mão às onze da noite.
 --
 -- ── COMO ALGUÉM VIRA SUPER_ADMIN ───────────────────────────────────────────
 -- Só por SQL, rodado no painel do Supabase. Não existe tela, não existe botão,
@@ -3116,14 +3116,14 @@ grant execute on function public.vitrine(text) to anon, authenticated;
 --     ✓ não consegue se tornar dona da plataforma
 --
 -- É de propósito. Uma conta super_admin lê a clientela e o faturamento de
--- TODOS os salões. Se houvesse caminho pela aplicação, esse caminho seria o
+-- TODOS os restaurantes. Se houvesse caminho pela aplicação, esse caminho seria o
 -- alvo — e um dia alguém acharia a ponta solta. Sem caminho, a única porta é
 -- o painel do Supabase, que já exige a senha do projeto.
 --
 -- O comando está em tests/promover_admin.sql, com as instruções.
 --
 -- ── DUAS COISAS QUE VALEM A DISCIPLINA ─────────────────────────────────────
--- 1. Use uma conta SEPARADA da que você usa como dono de salão. Se um dia
+-- 1. Use uma conta SEPARADA da que você usa como dono de restaurante. Se um dia
 --    você emprestar a tela para alguém ver, ou deixar a sessão aberta num
 --    computador, o estrago é do tamanho da conta que estava logada.
 -- 2. Ligue a verificação em dois passos nessa conta, no painel do Supabase.
@@ -3157,7 +3157,7 @@ begin
         'saloes',        count(*) filter (where s.status = 'ativo'),
         'suspensos',     count(*) filter (where s.status <> 'ativo'),
         -- Pagante é quem está num plano com preço, em vigor. Trial não é
-        -- receita: é esperança. Contar os dois juntos é como um dono de salão
+        -- receita: é esperança. Contar os dois juntos é como um dono de restaurante
         -- somar orçamento com caixa.
         'pagantes',      count(*) filter (
                            where s.status = 'ativo'
@@ -3173,7 +3173,7 @@ begin
                              and coalesce(pl.preco_mes, 0) = 0
                              and coalesce(pl.codigo, 'gratuito') <> 'trial'),
         'inadimplentes', count(*) filter (where a.status = 'inadimplente'),
-        -- Receita recorrente do mês: a soma do que os salões ativos pagam
+        -- Receita recorrente do mês: a soma do que os restaurantes ativos pagam
         -- HOJE, pelo plano que vale hoje.
         'mrr',           coalesce(sum(pl.preco_mes) filter (
                            where s.status = 'ativo'), 0)
@@ -3184,7 +3184,7 @@ begin
     ),
 
     -- ── Quem precisa de um telefonema esta semana ─────────────────────────
-    -- O teste que vence é o momento em que o salão decide ficar ou sumir, e é
+    -- O teste que vence é o momento em que o restaurante decide ficar ou sumir, e é
     -- a única hora em que uma ligação muda o resultado. Depois de vencido, já
     -- virou "aquele sistema que eu testei uma vez".
     'vencendo', coalesce((
@@ -3227,8 +3227,8 @@ begin
           'profissionais', (select count(*) from public.profissionais p
                              where p.salao_id = s.id and p.ativo),
           'limite', public.limite_profissionais(s.id),
-          -- Uso do mês corrente, no fuso do salão. É o número que diz se o
-          -- salão está VIVO — plano pago com zero agendamento é cancelamento
+          -- Uso do mês corrente, no fuso do restaurante. É o número que diz se o
+          -- restaurante está VIVO — plano pago com zero agendamento é cancelamento
           -- esperando acontecer.
           'agendamentosMes', (
             select count(*) from public.agendamentos ag
@@ -3255,13 +3255,13 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 2) Mudar o plano de um salão
+-- 2) Mudar o plano de um restaurante
 --
 -- A policy já deixa o super_admin escrever direto em `assinaturas`. Esta
 -- função existe mesmo assim por dois motivos:
 --
 --   · UPDATE na mão erra. Trocar o plano sem mexer no `status`, ou marcar
---     'ativa' esquecendo o `vence_em`, deixa o salão num estado que só
+--     'ativa' esquecendo o `vence_em`, deixa o restaurante num estado que só
 --     aparece semanas depois — no dia em que ele para de funcionar sem
 --     motivo, ou continua funcionando sem pagar.
 --   · `atualizado_em` passa a ser sempre verdade. Sem isso a coluna mente, e
@@ -3289,7 +3289,7 @@ begin
     raise exception 'Status % não existe.', p_status using errcode = 'check_violation';
   end if;
 
-  -- Assinatura 'ativa' sem data de vencimento é a que nunca vence: o salão
+  -- Assinatura 'ativa' sem data de vencimento é a que nunca vence: o restaurante
   -- fica com o plano cheio para sempre, de graça, e ninguém percebe porque
   -- nada quebra. Trinta dias é o padrão de quem acabou de pagar o mês.
   insert into public.assinaturas (salao_id, plano, status, vence_em, atualizado_em)
@@ -3310,21 +3310,21 @@ begin
     'plano', v_linha.plano,
     'status', v_linha.status,
     'venceEm', v_linha.vence_em,
-    -- O que o salão passa a ter de verdade, já pela regra do banco. Serve de
+    -- O que o restaurante passa a ter de verdade, já pela regra do banco. Serve de
     -- conferência imediata: se você marcou 'ativa' com data vencida, o efetivo
     -- volta 'gratuito' e você vê o engano na hora, não no mês que vem.
     'planoEfetivo', public.plano_efetivo(v_linha.salao_id));
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 3) Suspender e religar um salão
+-- 3) Suspender e religar um restaurante
 --
 -- Suspenso, ele some da vitrine e para de aceitar marcação — o link que a
 -- cliente salvou deixa de funcionar na hora. É o que se usa para quem parou
 -- de pagar de vez, ou pediu para sair.
 --
 -- Não apaga nada: o dono volta amanhã e encontra a agenda inteira. Apagar
--- salão é outra conversa, e não deve caber num clique.
+-- restaurante é outra conversa, e não deve caber num clique.
 -- ---------------------------------------------------------------------------
 create or replace function public.definir_status_salao(p_salao uuid, p_status text)
 returns jsonb
@@ -3332,7 +3332,7 @@ language plpgsql security definer set search_path = public as $$
 declare v_antes text;
 begin
   if not public.is_super() then
-    raise exception 'Só a plataforma suspende salão.'
+    raise exception 'Só a plataforma suspende restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -3342,7 +3342,7 @@ begin
 
   select status into v_antes from public.saloes where id = p_salao;
   if v_antes is null then
-    raise exception 'Salão não encontrado.' using errcode = 'check_violation';
+    raise exception 'Restaurante não encontrado.' using errcode = 'check_violation';
   end if;
 
   update public.saloes set status = p_status where id = p_salao;
@@ -3377,7 +3377,7 @@ grant execute on function public.definir_status_salao(uuid, text) to authenticat
 -- em seguida `criar_salao()`. Só que `criar_salao()` começa assim:
 --
 --     if not exists (select 1 from public.perfis where id = v_perfil) then
---       raise exception 'Complete seu cadastro antes de criar o salão.';
+--       raise exception 'Complete seu cadastro antes de criar o restaurante.';
 --
 -- E nada, em lugar nenhum, criava essa linha. Quem se cadastrasse no Supabase
 -- de verdade levaria essa frase na cara, com a conta metade criada: existe em
@@ -3452,7 +3452,7 @@ begin
 
   -- Telefone já usado por outra pessoa? Fica nulo, e a conta nasce mesmo
   -- assim. Perder o telefone é um aborrecimento — dá para completar depois
-  -- em Meu salão. Barrar o cadastro por causa dele é perder o cliente na
+  -- em Meu restaurante. Barrar o cadastro por causa dele é perder o cliente na
   -- porta, e por um motivo que ele não entenderia.
   if v_tel is not null
      and exists (select 1 from public.perfis where telefone = v_tel) then
@@ -3549,7 +3549,7 @@ grant execute on function public.para_e164(text) to anon, authenticated;
 -- ele tem três propriedades que importam aqui:
 --
 --   · não dá para adivinhar: uuid v4 tem 122 bits de acaso;
---   · não dá para enumerar: saber o telefone, o nome ou o id do salão não
+--   · não dá para enumerar: saber o telefone, o nome ou o id do restaurante não
 --     ajuda em nada;
 --   · funciona no WhatsApp: o mesmo link vai na mensagem de confirmação, e
 --     aí a pessoa gerencia do celular dela mesmo depois de limpar o
@@ -3566,7 +3566,7 @@ grant execute on function public.para_e164(text) to anon, authenticated;
 -- Coluna nova nas duas tabelas em que a cliente mexe. `default` cobre as
 -- linhas que já existem e as que entrarem por outro caminho — inclusive as
 -- que a recepção criar pelo painel, que assim também podem ser gerenciadas
--- pela cliente se o salão mandar o link.
+-- pela cliente se o restaurante mandar o link.
 -- ---------------------------------------------------------------------------
 alter table public.agendamentos
   add column if not exists gerenciar_token uuid not null default gen_random_uuid();
@@ -3597,10 +3597,10 @@ create unique index if not exists ix_espera_token on public.lista_espera (gerenc
 --     cadastro todo. Quem garante o formato é a normalização nos dois pontos
 --     de escrita: aqui no `agendar()` e no painel;
 --
---   · um índice único por salão recusaria a marcação quando duas fichas
+--   · um índice único por restaurante recusaria a marcação quando duas fichas
 --     acabassem com o mesmo CPF — e a recusa cairia sobre a CLIENTE, no
 --     meio de marcar, por causa de uma duplicidade de cadastro que é do
---     salão resolver. Ficha repetida é problema de cadastro, não motivo para
+--     restaurante resolver. Ficha repetida é problema de cadastro, não motivo para
 --     alguém não conseguir marcar um corte.
 -- ---------------------------------------------------------------------------
 alter table public.clientes add column if not exists cpf text;
@@ -3609,12 +3609,12 @@ alter table public.clientes add column if not exists cpf text;
 -- 1d) Como a cliente vai pagar
 --
 -- Ela escolhe no link, na hora de confirmar — Pix, dinheiro, débito ou
--- crédito —, e o salão vê na agenda antes de ela chegar. É a INTENÇÃO, e
+-- crédito —, e o restaurante vê na agenda antes de ela chegar. É a INTENÇÃO, e
 -- não o pagamento: quem registra o dinheiro continua sendo a comanda
 -- (`pagamentos`), que já nasce com esta forma escolhida no painel.
 --
 -- Os mesmos quatro nomes de `Funcionamento.PAGAMENTOS` (funcionamento.js),
--- que é a lista que o salão marca em "Formas de pagamento". O `check` vale
+-- que é a lista que o restaurante marca em "Formas de pagamento". O `check` vale
 -- para o painel também; o `agendar()` normaliza antes, e forma estranha vira
 -- nula em vez de derrubar a marcação.
 -- ---------------------------------------------------------------------------
@@ -3658,9 +3658,9 @@ create trigger tg_notif_pagamento
 -- 1e) O sinal por Pix, para garantir o horário
 --
 -- "Como fazer para colocar sinal?" — o caminho do Pix com a confirmação do
--- salão: quem marca pelo link paga uma parte para a chave Pix do próprio
--- salão, manda o comprovante pelo WhatsApp, e o dono confirma. O dinheiro vai
--- direto para o salão; o PediHub não toca nele.
+-- restaurante: quem marca pelo link paga uma parte para a chave Pix do próprio
+-- restaurante, manda o comprovante pelo WhatsApp, e o dono confirma. O dinheiro vai
+-- direto para o restaurante; o PediHub não toca nele.
 --
 -- Mora em `cfg.pagamentos.sinal`, junto da chave Pix (funcionamento.js):
 --     { tipo: 'pct' | 'fixo', valor: 10, prazoMin: 60, titular, regra }
@@ -3798,21 +3798,21 @@ revoke all on function public.liberar_sinais_vencidos()     from public, anon, a
 -- ---------------------------------------------------------------------------
 -- 1c) A cliente que precisa de confirmação
 --
--- O salão que confirma sozinho às vezes tem UMA cliente que ele quer olhar
+-- O restaurante que confirma sozinho às vezes tem UMA cliente que ele quer olhar
 -- antes: a que falta, a que desmarca em cima da hora, a que ele prefere não
 -- atender. Na ficha dela o dono marca `exige_confirmacao`, e o horário que
--- ela marca pelo link nasce PENDENTE — esperando o "sim" do salão — mesmo
+-- ela marca pelo link nasce PENDENTE — esperando o "sim" do restaurante — mesmo
 -- com a confirmação automática ligada para todo o resto.
 --
 -- ⚠ QUEM DECIDE É O agendar(), AQUI NO BANCO. A tela do link não sabe da
 -- marca e não tem como saber: a função é security definer e não é liberada
 -- para ninguém (nem anon, nem authenticated) — senão qualquer um descobriria,
--- digitando um telefone, se aquele número está marcado no salão.
+-- digitando um telefone, se aquele número está marcado no restaurante.
 --
 -- ⚠ E VALE PELO TELEFONE TAMBÉM, não só pela ficha encontrada. A ficha é
 -- reencontrada por telefone E primeiro nome; quem trocasse o nome ("Bia" em
 -- vez de "Beatriz") cairia numa ficha nova, sem a marca, e escaparia. Por
--- isso qualquer ficha do salão com o mesmo WhatsApp e a marca basta.
+-- isso qualquer ficha do restaurante com o mesmo WhatsApp e a marca basta.
 -- ---------------------------------------------------------------------------
 alter table public.clientes
   add column if not exists exige_confirmacao boolean not null default false;
@@ -3974,7 +3974,7 @@ begin
 
      O link pede e-mail e aniversário antes de confirmar. Eles chegam aqui e
      pousam na ficha — que é o único lugar onde servem para alguma coisa: o
-     salão abre a ficha e vê, e o aniversário do mês sai de `nascimento`.
+     restaurante abre a ficha e vê, e o aniversário do mês sai de `nascimento`.
 
      ⚠ `is null` NAS DUAS PONTAS, E ESSA É A REGRA INTEIRA.
 
@@ -3982,14 +3982,14 @@ begin
 
        · a recepção pode ter arrumado um e-mail digitado errado, e o
          preenchimento automático do navegador da cliente mandaria o errado
-         de volta na marcação seguinte — a correção do salão duraria até o
+         de volta na marcação seguinte — a correção do restaurante duraria até o
          próximo corte;
 
        · campo em branco no formulário não pode zerar o que já estava lá.
          `coalesce` sozinho não bastaria: `nullif(btrim(...), '')` é o que
          transforma "  " em null antes de a conta começar.
 
-     Quem manda na ficha é o salão. A cliente só preenche o que falta.
+     Quem manda na ficha é o restaurante. A cliente só preenche o que falta.
      ══════════════════════════════════════════════════════════════════════ */
   /* ⚠ O CPF É NORMALIZADO AQUI, E CPF TORTO É IGNORADO EM SILÊNCIO.
 
@@ -4014,10 +4014,10 @@ begin
 
      A ficha é reencontrada pelo telefone, e sem SMS não há prova de que o
      número seja de quem digitou. Se alguém marca com o número da mãe, o
-     horário cai na ficha da mãe — e o salão liga para a mãe perguntando de
+     horário cai na ficha da mãe — e o restaurante liga para a mãe perguntando de
      um horário que ela não marcou.
 
-     Não dá para impedir sem verificar o número de verdade. Dá para o salão
+     Não dá para impedir sem verificar o número de verdade. Dá para o restaurante
      saber: o nome informado fica registrado em `atendido_nome`, que o painel
      mostra como "Quem vem". Melhor um nome a mais na tela do que um telefone
      errado em silêncio. */
@@ -4042,7 +4042,7 @@ begin
      `ficha_do_cliente()` diz, no 05_agenda.sql, que sem SMS não existe prova
      de que o número seja de quem digitou. Sem esta condição, qualquer pessoa
      que soubesse o telefone da Maria marcaria de graça no lugar dela — e o
-     salão só descobriria na hora de fechar a conta, com a cliente na cadeira.
+     restaurante só descobriria na hora de fechar a conta, com a cliente na cadeira.
 
      Com login, `auth.uid()` é prova: senha é algo que só ela sabe.
 
@@ -4081,7 +4081,7 @@ begin
        `porque_nao_agenda()`. Aquela função responde sobre o DIA e o
        PROFISSIONAL — ela não sabe quem está do outro lado, e o 19_teto_online
        já explica por quê. Um bloqueio de pacote colocado lá fecharia a
-       quinta-feira para o salão inteiro por causa do pacote de uma pessoa. */
+       quinta-feira para o restaurante inteiro por causa do pacote de uma pessoa. */
     if v_pacote is null then
       v_motivo := public.pacote_fora_do_dia(v_cliente, p_servicos, p_inicio);
       if v_motivo is not null then
@@ -4109,12 +4109,12 @@ begin
   end if;
 
   /* O SINAL (1e): sobre o que ela vai pagar de fato, já com pacote e cupom.
-     Com sinal, o horário entra pendente, mesmo no salão que confirma sozinho:
+     Com sinal, o horário entra pendente, mesmo no restaurante que confirma sozinho:
      quem confirma é o dono, quando o comprovante chega. */
   v_sinal := public.sinal_do_salao(v_salao, v_valor, p_servicos, p_profissional, p_inicio);
 
   /* ⚠ SÓ O QUE ELA MESMA MARCOU PELO LINK (`origem = 'online'`). O freio é
-     contra spam no formulário aberto; o que o SALÃO marcou para ela não é
+     contra spam no formulário aberto; o que o RESTAURANTE marcou para ela não é
      spam. Contando tudo, a cliente do pacote com agenda fixa (43: as quatro
      terças já marcadas pela recepção) nunca mais marcava nada pelo link —
      "Você já tem 3 horários marcados aqui", visto pelo dono no teste. */
@@ -4130,13 +4130,13 @@ begin
       using errcode = 'check_violation';
   end if;
 
-  /* ⚠ O STATUS SAI DA CONFIGURAÇÃO DO SALÃO, e não escrito à mão.
+  /* ⚠ O STATUS SAI DA CONFIGURAÇÃO DO RESTAURANTE, e não escrito à mão.
 
      Aqui estava `'confirmado'` fixo, e o `'pendente'` era uma porta que o
      schema tinha desde o começo e ninguém abria: `ha_choque`, a cota e o
      `porque_nao_agenda` já contavam pendente, mas nada criava um.
 
-     O salão que confirma à mão recebe pendente — e a cadeira fica reservada
+     O restaurante que confirma à mão recebe pendente — e a cadeira fica reservada
      enquanto ele decide, porque `ha_choque()` conta pendente. Se não contasse,
      duas pessoas marcariam o mesmo horário durante a espera, e uma delas
      ouviria "não" depois de já ter combinado o dia.
@@ -4145,9 +4145,9 @@ begin
      `confirma_automatico()` no 29 tem o padrão do lado de quem já usa.
 
      E a cliente marcada na ficha (1c, lá em cima) recebe pendente mesmo no
-     salão que confirma sozinho. */
+     restaurante que confirma sozinho. */
   begin
-    /* A forma de pagamento: só uma das quatro, e só uma que o salão aceita
+    /* A forma de pagamento: só uma das quatro, e só uma que o restaurante aceita
        (quando ele marcou quais aceita). Fora disso fica nula — a marcação
        não cai por causa da preferência de pagamento. Atendimento que sai por
        R$ 0 (pacote) não tem o que pagar. */
@@ -4257,7 +4257,7 @@ language sql stable security definer set search_path = public as $$
       -- Como ela disse que ia pagar (1d), para "Meus horários" e a remarcação.
       'forma_pagamento', a.forma_pagamento,
       /* O sinal (1e): quanto, até quando, e para onde mandar. A chave, quem
-         recebe e a regra são as que o salão mostra no link de todo jeito;
+         recebe e a regra são as que o restaurante mostra no link de todo jeito;
          o valor é o que ESTE banco calculou para ESTE horário. */
       'sinal', case when coalesce(a.sinal_exigido, 0) > 0 then jsonb_build_object(
           'valor',    a.sinal_exigido,
@@ -4310,7 +4310,7 @@ $$;
 -- 4) Cancelar
 --
 -- As DUAS horas de antecedência não são burocracia: cadeira cancelada em cima
--- da hora não é revendida, e o prejuízo é do salão. Quem precisa cancelar
+-- da hora não é revendida, e o prejuízo é do restaurante. Quem precisa cancelar
 -- depois disso fala com a casa — e aí é uma conversa, não um botão.
 -- ---------------------------------------------------------------------------
 create or replace function public.cancelar_agendamento(p_token uuid)
@@ -4337,7 +4337,7 @@ begin
   end if;
 
   if a.inicio <= now() + interval '2 hours' then
-    raise exception 'Faltam menos de 2 horas. Fale com o salão para desmarcar.'
+    raise exception 'Faltam menos de 2 horas. Fale com o restaurante para desmarcar.'
       using errcode = 'check_violation';
   end if;
 
@@ -4399,12 +4399,12 @@ begin
 
   if not exists (select 1 from public.saloes
                   where id = p_salao and status = 'ativo') then
-    raise exception 'Este salão não está aceitando pedidos agora.'
+    raise exception 'Este restaurante não está aceitando pedidos agora.'
       using errcode = 'check_violation';
   end if;
 
-  -- Serviço tem que ser DESTE salão e estar aberto ao online, pela mesma
-  -- razão de `agendar()`: sem conferir, dá para entrar na fila de um salão
+  -- Serviço tem que ser DESTE restaurante e estar aberto ao online, pela mesma
+  -- razão de `agendar()`: sem conferir, dá para entrar na fila de um restaurante
   -- pedindo o serviço de outro, colando o id na chamada.
   if exists (
     select 1 from unnest(p_servicos) as pedido(id)
@@ -4547,7 +4547,7 @@ grant execute on function public.agendar(uuid, timestamptz, uuid[], text, text, 
 -- A cliente passa a poder criar conta (e-mail e senha) e entrar pelo próprio
 -- link. Duas coisas precisam do banco para isso valer:
 --
---   · ligar a ficha que o salão já tinha à conta dela — sem isto o pacote
+--   · ligar a ficha que o restaurante já tinha à conta dela — sem isto o pacote
 --     vendido no balcão não aparece nem dá desconto, porque os dois exigem
 --     `clientes.perfil_id = auth.uid()`;
 --   · "Meus horários" em qualquer aparelho — hoje a lista sai dos segredos
@@ -4559,12 +4559,12 @@ grant execute on function public.agendar(uuid, timestamptz, uuid[], text, text, 
    se entrar ligasse por uma regra e marcar por outra, a cliente veria o
    pacote num caminho e não no outro.
 
-     1. já existe ficha DESTE salão ligada à conta → é ela;
+     1. já existe ficha DESTE restaurante ligada à conta → é ela;
      2. senão, a ficha com o telefone do perfil, ainda sem conta, e com o
         mesmo primeiro nome (`mesmo_primeiro_nome`) → liga.
 
    ⚠ NÃO CRIA FICHA. Entrar não é marcar: quem só entrou para olhar não vira
-   cliente do salão na lista do dono. A ficha nasce na primeira marcação,
+   cliente do restaurante na lista do dono. A ficha nasce na primeira marcação,
    como sempre.
 
    ⚠ E O LIMITE CONTINUA ESCRITO, porque continua valendo: e-mail e senha
@@ -4660,9 +4660,9 @@ grant execute on function public.meus_agendamentos_da_conta() to authenticated;
 -- PediHub — 10: Campanhas de WhatsApp
 --
 -- Mandar mensagem para a clientela é o pedido mais repetido de quem tem
--- salão, e é também o mais fácil de fazer errado de um jeito que custa o
+-- restaurante, e é também o mais fácil de fazer errado de um jeito que custa o
 -- número do dono. Este arquivo é a metade que mora no banco: as tabelas, o
--- isolamento por salão e a FILA.
+-- isolamento por restaurante e a FILA.
 --
 -- A outra metade é a função de borda (supabase/functions/enviar-campanha),
 -- que roda no servidor do Supabase e é a única que enxerga o token da Meta.
@@ -4671,7 +4671,7 @@ grant execute on function public.meus_agendamentos_da_conta() to authenticated;
 -- Nenhuma credencial. Nem token, nem id de número, nem segredo de webhook.
 -- Eles vivem nas variáveis de ambiente da função de borda. O painel do dono é
 -- HTML servido do GitHub Pages: tudo o que chega nele é público por
--- construção, e um token da Cloud API vazado manda mensagem em nome do salão
+-- construção, e um token da Cloud API vazado manda mensagem em nome do restaurante
 -- até alguém revogar.
 --
 -- ── A REGRA DA META QUE MUDA O DESENHO ─────────────────────────────────────
@@ -4691,9 +4691,9 @@ grant execute on function public.meus_agendamentos_da_conta() to authenticated;
 --
 -- Antes de qualquer tabela de campanha: o direito de não receber. Sem isto o
 -- módulo nasce ilegal — LGPD, art. 18 — e, pior no dia a dia, queima o
--- número do salão em denúncia de spam.
+-- número do restaurante em denúncia de spam.
 --
--- `default true` é decisão consciente: quem já é cliente do salão e deu o
+-- `default true` é decisão consciente: quem já é cliente do restaurante e deu o
 -- telefone no balcão tem relação com a casa. O que não pode é não haver saída
 -- — e a saída existe, na ficha e pelo pedido da própria pessoa.
 -- ---------------------------------------------------------------------------
@@ -4801,13 +4801,13 @@ create index if not exists ix_dest_fila
   where status = 'pendente';
 
 -- ---------------------------------------------------------------------------
--- 4) RLS — O SALÃO A NÃO ENXERGA O SALÃO B
+-- 4) RLS — O RESTAURANTE A NÃO ENXERGA O RESTAURANTE B
 --
 -- Este é o requisito que não admite engano. As duas tabelas ligam RLS, e a
 -- policy usa os mesmos auxiliares do resto do sistema: `e_gestor()` para
 -- escrever, `e_equipe()` para ler.
 --
--- Campanha é assunto de quem manda no salão — quem atende não precisa ver a
+-- Campanha é assunto de quem manda no restaurante — quem atende não precisa ver a
 -- lista de telefone da casa inteira para trabalhar.
 -- ---------------------------------------------------------------------------
 alter table public.campanhas               enable row level security;
@@ -4850,7 +4850,7 @@ grant select, insert, update, delete on public.campanha_destinatarios to authent
 -- da regra é como o resumo passa a prometer 127 e a fila mandar 119.
 --
 -- `security definer` com `search_path` fixo, e a PRIMEIRA linha confere se
--- quem chamou manda neste salão. Sem essa linha, `security definer` seria uma
+-- quem chamou manda neste restaurante. Sem essa linha, `security definer` seria uma
 -- porta para ler a clientela alheia trocando o uuid na chamada — que é o
 -- IDOR que o pedido manda procurar.
 -- ---------------------------------------------------------------------------
@@ -4864,7 +4864,7 @@ returns table (cliente_id uuid, nome text, telefone text)
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
 
   return query
@@ -5055,13 +5055,13 @@ grant execute on function public.placar_campanha(uuid) to authenticated;
 --
 -- ⚠ TUDO NESTA SEÇÃO É SÓ PARA `service_role`.
 --
--- Estas funções contornam o RLS de propósito: o worker não é dono de salão
+-- Estas funções contornam o RLS de propósito: o worker não é dono de restaurante
 -- nenhum e precisa atender todos. É por isso que elas NÃO são concedidas a
 -- `authenticated` nem a `anon` — quem as chama é a função de borda, com a
 -- chave secreta que só existe no servidor.
 --
 -- Se alguma delas aparecer concedida a `authenticated`, é falha grave: dá
--- para varrer telefone de qualquer salão da plataforma.
+-- para varrer telefone de qualquer restaurante da plataforma.
 -- ===========================================================================
 
 /* Pega o próximo da fila e marca como 'processando' NA MESMA transação.
@@ -5214,7 +5214,7 @@ grant execute on function public.fila_resultado(uuid, boolean, text, text, text,
 --
 -- O banco já sabia lidar com `recepcao` e `profissional`: as policies estão
 -- escritas desde o 02_rls.sql, e a policy `vinc_gerir` até deixa o dono criar
--- vínculo no próprio salão. O que faltava era o CAMINHO.
+-- vínculo no próprio restaurante. O que faltava era o CAMINHO.
 --
 -- ── POR QUE UM CONVITE, E NÃO UM CAMPO DE E-MAIL ───────────────────────────
 -- Para criar o vínculo é preciso o `perfil_id` da pessoa. O dono não tem como
@@ -5228,7 +5228,7 @@ grant execute on function public.fila_resultado(uuid, boolean, text, text, text,
 --
 -- ── O LINK VAI PELO WHATSAPP, NÃO POR E-MAIL ───────────────────────────────
 -- Não há servidor de e-mail neste projeto, e não vale inventar um para isto:
--- o dono já manda o link do salão pelo WhatsApp o dia inteiro. O convite é
+-- o dono já manda o link do restaurante pelo WhatsApp o dia inteiro. O convite é
 -- mais um link, no mesmo canal, com o mesmo gesto.
 --
 -- Isso tem uma consequência de segurança que o desenho leva em conta: um link
@@ -5244,7 +5244,7 @@ create table if not exists public.convites_equipe (
   salao_id   uuid not null references public.saloes(id) on delete cascade,
 
   -- O papel que a pessoa vai ter. `cliente` não entra: para ser cliente
-  -- basta abrir o link do salão, e `dono` não se convida — transferir a casa
+  -- basta abrir o link do restaurante, e `dono` não se convida — transferir a casa
   -- é outra operação, com outras perguntas.
   papel      text not null check (papel in ('admin','recepcao','profissional')),
 
@@ -5287,7 +5287,7 @@ create table if not exists public.convites_equipe (
    O estrago aparecia longe daqui. A função de quatro argumentos era criada
    sem reclamar — corpo plpgsql não é conferido contra o schema na hora do
    `create` — o PostgREST passava a enxergá-la, o painel parava de acusar
-   "Could not find the function", e só no clique do dono, no salão de verdade,
+   "Could not find the function", e só no clique do dono, no restaurante de verdade,
    é que estourava `column "profissional_id" does not exist`. Instalação
    "bem-sucedida", convite quebrado.
 
@@ -5309,7 +5309,7 @@ create policy conv_gerir on public.convites_equipe for all to authenticated
   using ( public.e_gestor(salao_id) ) with check ( public.e_gestor(salao_id) );
 
 -- `anon` não lê esta tabela nem por acidente: quem tiver acesso a ela tem
--- todos os tokens do sistema, e cada token é uma cadeira dentro de um salão.
+-- todos os tokens do sistema, e cada token é uma cadeira dentro de um restaurante.
 revoke all on public.convites_equipe from anon;
 grant select, insert, update, delete on public.convites_equipe to authenticated;
 
@@ -5332,7 +5332,7 @@ declare
   pr public.profissionais%rowtype;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Só quem administra o salão pode convidar.'
+    raise exception 'Só quem administra o restaurante pode convidar.'
       using errcode = 'insufficient_privilege';
   end if;
   if p_papel not in ('admin','recepcao','profissional') then
@@ -5345,9 +5345,9 @@ begin
         using errcode = 'check_violation';
     end if;
     select * into pr from public.profissionais where id = p_profissional;
-    -- Ficha de OUTRO salão seria dar acesso à agenda alheia.
+    -- Ficha de OUTRO restaurante seria dar acesso à agenda alheia.
     if pr.id is null or pr.salao_id <> p_salao then
-      raise exception 'Esta agenda não é deste salão.' using errcode = 'check_violation';
+      raise exception 'Esta agenda não é deste restaurante.' using errcode = 'check_violation';
     end if;
     -- E ficha que já tem dono não se entrega duas vezes: seria roubar a
     -- agenda de quem já entra com ela.
@@ -5373,8 +5373,8 @@ end $$;
 -- 3) O QUE A PESSOA CONVIDADA VÊ ANTES DE ENTRAR
 --
 -- Chamável por quem NÃO fez login: é a página do convite, e ela precisa dizer
--- de que salão se trata antes de pedir a conta. Devolve o mínimo — nome do
--- salão e papel — e nada mais. Nem quem convidou, nem quem já é da equipe,
+-- de que restaurante se trata antes de pedir a conta. Devolve o mínimo — nome do
+-- restaurante e papel — e nada mais. Nem quem convidou, nem quem já é da equipe,
 -- nem o id de coisa nenhuma.
 --
 -- Token inválido e token vencido dão a MESMA resposta genérica de propósito:
@@ -5415,7 +5415,7 @@ end $$;
 --
 -- Quem aceita é sempre `auth.uid()`. Não há parâmetro de "para quem" — se
 -- houvesse, um convite vazado viraria a chance de colocar OUTRA pessoa
--- dentro do salão.
+-- dentro do restaurante.
 -- ---------------------------------------------------------------------------
 create or replace function public.aceitar_convite(p_token uuid)
 returns jsonb
@@ -5439,7 +5439,7 @@ begin
      or c.usado_em is not null
      or c.revogado_em is not null
      or c.expira_em < now() then
-    raise exception 'Este convite não vale mais. Peça outro ao salão.'
+    raise exception 'Este convite não vale mais. Peça outro ao restaurante.'
       using errcode = 'check_violation';
   end if;
 
@@ -5489,7 +5489,7 @@ returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -5512,14 +5512,14 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- 6) TIRAR O ACESSO
 --
--- Duas recusas, e as duas evitam um salão sem dono:
+-- Duas recusas, e as duas evitam um restaurante sem dono:
 --   · ninguém tira o próprio acesso de dono (ficaria de fora da própria casa,
 --     sem caminho de volta pela tela);
 --   · não se tira o ÚLTIMO dono, mesmo sendo outra pessoa a fazer isso.
 --
 -- Tirar o acesso NÃO apaga a ficha de profissional nem o histórico: são
 -- coisas diferentes. Quem sai da equipe para de entrar no sistema; os
--- atendimentos que ela fez continuam no caixa do salão.
+-- atendimentos que ela fez continuam no caixa do restaurante.
 -- ---------------------------------------------------------------------------
 create or replace function public.remover_acesso(
   p_salao uuid, p_perfil uuid, p_papel text)
@@ -5529,7 +5529,7 @@ declare
   v_donos int;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Só quem administra o salão pode mexer nos acessos.'
+    raise exception 'Só quem administra o restaurante pode mexer nos acessos.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -5541,7 +5541,7 @@ begin
     select count(*) into v_donos from public.vinculos
      where salao_id = p_salao and papel = 'dono' and status = 'ativo';
     if v_donos <= 1 then
-      raise exception 'Este é o único dono do salão. Passe a titularidade antes.'
+      raise exception 'Este é o único dono do restaurante. Passe a titularidade antes.'
         using errcode = 'check_violation';
     end if;
   end if;
@@ -5574,8 +5574,8 @@ end $$;
 -- 8) PERMISSÕES
 --
 -- `ver_convite` é a única que `anon` alcança, e é por desenho: a página do
--- convite precisa dizer de que salão se trata ANTES de a pessoa ter conta.
--- Ela devolve nome do salão e papel, nada mais.
+-- convite precisa dizer de que restaurante se trata ANTES de a pessoa ter conta.
+-- Ela devolve nome do restaurante e papel, nada mais.
 -- ---------------------------------------------------------------------------
 revoke all on function public.criar_convite(uuid, text, text, uuid) from public;
 revoke all on function public.ver_convite(uuid)                 from public;
@@ -5598,14 +5598,14 @@ grant execute on function public.revogar_convite(uuid)            to authenticat
 -- ===========================================================================
 -- PediHub — 12: os relatórios
 --
--- O salão já tinha todo o dado e nenhuma resposta. Comanda, item, pagamento e
+-- O restaurante já tinha todo o dado e nenhuma resposta. Comanda, item, pagamento e
 -- comissão estão gravados desde o começo; o que não existia era a pergunta
 -- "quanto eu faturei em outubro e quanto eu devo para a Ana".
 --
 -- ── POR QUE NO BANCO, E NÃO NO NAVEGADOR ───────────────────────────────────
 -- O painel já baixa perto de vinte tabelas ao abrir. Somar o mês no
--- JavaScript exigiria baixar TODO o histórico de comandas do salão — que
--- cresce para sempre — só para mostrar quatro números. Um salão com dois anos
+-- JavaScript exigiria baixar TODO o histórico de comandas do restaurante — que
+-- cresce para sempre — só para mostrar quatro números. Um restaurante com dois anos
 -- de casa passaria minutos carregando para ver o fechamento de um mês.
 --
 -- Aqui a conta é feita onde o dado mora, e volta um jsonb pequeno.
@@ -5642,10 +5642,10 @@ declare
 begin
   /* A permissão é de GESTÃO, não de equipe. Faturamento e comissão da casa
      inteira não são assunto da recepção nem de quem atende — e é a mesma
-     linha que impede o dono do salão B de ler o mês do salão A trocando o
+     linha que impede o dono do restaurante B de ler o mês do restaurante A trocando o
      uuid na chamada. */
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   -- Relatórios são do Básico para cima (22_cotas, exigir_recurso).
@@ -5657,7 +5657,7 @@ begin
   select fuso into v_fuso from public.saloes where id = p_salao;
   v_fuso := coalesce(v_fuso, 'America/Sao_Paulo');
 
-  /* O dia do salão, não o dia de quem está olhando. Um dono viajando lê o
+  /* O dia do restaurante, não o dia de quem está olhando. Um dono viajando lê o
      relatório do fuso dele e veria o dia 1º começar às 20h do dia 31. */
   v_ini := (p_de::timestamp) at time zone v_fuso;
   v_fim := ((p_ate + 1)::timestamp) at time zone v_fuso;   -- fim exclusivo
@@ -5690,7 +5690,7 @@ begin
 
     -- O MESMO período, imediatamente antes. É o que transforma "R$ 8.400" em
     -- "R$ 8.400, 12% acima do mês passado" — o número sozinho não diz se o
-    -- salão está melhorando.
+    -- restaurante está melhorando.
     'faturamentoAntes', coalesce((
       select round(sum(t.total), 2) from public.comandas_totais t
         join public.comandas c on c.id = t.id
@@ -5698,7 +5698,7 @@ begin
          and c.fechada_em >= v_ini_a and c.fechada_em < v_fim_a), 0),
 
     -- ── COMO ENTROU ───────────────────────────────────────────────────────
-    -- A taxa da maquininha vem junto: o salão recebe menos do que a cliente
+    -- A taxa da maquininha vem junto: o restaurante recebe menos do que a cliente
     -- pagou, e sem isso o "faturamento" mente sobre o que entra na conta.
     'formas', coalesce((
       select jsonb_agg(jsonb_build_object(
@@ -5714,7 +5714,7 @@ begin
                group by pg.forma) f), '[]'::jsonb),
 
     -- ── A COMISSÃO, POR PESSOA ────────────────────────────────────────────
-    -- O relatório mais pedido de salão, e o que hoje se faz na calculadora
+    -- O relatório mais pedido de restaurante, e o que hoje se faz na calculadora
     -- no fim do mês. Sai do item, não da comanda: o corte é do João e a
     -- escova é da Ana, na mesma cliente.
     'comissoes', coalesce((
@@ -5813,7 +5813,7 @@ begin
 
     -- ── QUEM VOLTOU ───────────────────────────────────────────────────────
     -- Cliente nova é a que não tinha atendimento concluído ANTES do período.
-    -- É a diferença entre um salão que cresce e um que troca de clientela.
+    -- É a diferença entre um restaurante que cresce e um que troca de clientela.
     'clientes', (
       select jsonb_build_object(
         'atendidas', count(distinct c.cliente_id),
@@ -5853,7 +5853,7 @@ grant execute on function public.relatorio(uuid, date, date) to authenticated;
 --    `planos` no servidor, pelo código do plano — e é por isso que
 --    `abrir_cobranca()` recebe o CÓDIGO do plano, nunca o valor.
 --
--- 2. O SALÃO NÃO EDITA A PRÓPRIA ASSINATURA.
+-- 2. O RESTAURANTE NÃO EDITA A PRÓPRIA ASSINATURA.
 --    Já era verdade antes deste arquivo (`assinaturas` só tem `grant select`
 --    para `authenticated`, e a policy de escrita exige `is_super()`), e
 --    continua sendo: quem move `plano` e `vence_em` é `registrar_pagamento()`,
@@ -5868,7 +5868,7 @@ grant execute on function public.relatorio(uuid, date, date) to authenticated;
 --    não é fonte de nada.
 --
 -- ── POR QUE PIX E BOLETO, E NÃO CARTÃO RECORRENTE ─────────────────────────
--- Pix não exige cartão salvo — e dono de salão pequeno resiste a deixar
+-- Pix não exige cartão salvo — e dono de restaurante pequeno resiste a deixar
 -- cartão em arquivo. Em compensação, Pix avulso NÃO se renova sozinho: quem
 -- renova é a gente, com aviso antes do vencimento e uma folga depois. É o que
 -- as funções do fim deste arquivo fazem.
@@ -5881,7 +5881,7 @@ grant execute on function public.relatorio(uuid, date, date) to authenticated;
 -- ---------------------------------------------------------------------------
 -- 1) A COBRANÇA
 --
--- Uma linha por tentativa de pagamento. Não é o extrato do salão (isso é
+-- Uma linha por tentativa de pagamento. Não é o extrato do restaurante (isso é
 -- `comandas`, o dinheiro que ele RECEBE) — é o que ele nos paga.
 -- ---------------------------------------------------------------------------
 create table if not exists public.cobrancas (
@@ -5931,7 +5931,7 @@ create index if not exists ix_cobranca_salao
    nas cobranças de antes dos adicionais — eram só o plano. */
 alter table public.cobrancas add column if not exists itens jsonb;
 
-/* ⚠ UMA COBRANÇA ABERTA POR SALÃO, E SÓ UMA.
+/* ⚠ UMA COBRANÇA ABERTA POR RESTAURANTE, E SÓ UMA.
    Sem isto, cada clique em "Assinar" abre uma cobrança nova no Mercado Pago.
    O dono acaba com seis Pix na mão sem saber qual vale, paga dois, e a gente
    fica devendo devolução — que é o pior jeito de começar uma assinatura.
@@ -5943,7 +5943,7 @@ create unique index if not exists ux_cobranca_aberta
 
 alter table public.cobrancas enable row level security;
 
-/* Ler: só a gestão do próprio salão. É onde está o Pix copia-e-cola dele.
+/* Ler: só a gestão do próprio restaurante. É onde está o Pix copia-e-cola dele.
    Escrever: ninguém, por aqui. Quem cria é `abrir_cobranca()` e quem conclui
    é `registrar_pagamento()`, ambas `security definer` — a tabela em si não
    aceita INSERT nem UPDATE vindo de sessão de navegador. */
@@ -5959,18 +5959,18 @@ revoke all on public.cobrancas from anon, authenticated;
 grant select on public.cobrancas to authenticated;
 
 -- ---------------------------------------------------------------------------
--- 1b) PREÇO ESPECIAL POR SALÃO
+-- 1b) PREÇO ESPECIAL POR RESTAURANTE
 --
--- O preço é do PLANO, e vale para todo salão. Mas tem casos de um salão só:
--- o salão de teste do dono da plataforma (o Essencial a R$ 1 para pagar um
+-- O preço é do PLANO, e vale para todo restaurante. Mas tem casos de um restaurante só:
+-- o restaurante de teste do dono da plataforma (o Essencial a R$ 1 para pagar um
 -- Pix de verdade sem gastar R$ 97), um combinado com um cliente, um
 -- desconto de lançamento. Mudar o preço do plano para isso mudaria para
 -- todos — e foi exatamente a armadilha de abrir a venda com o Essencial a
 -- R$ 1 na tabela.
 --
--- `precos_especiais` é por salão, por plano: {"individual": 1.00}. Plano
+-- `precos_especiais` é por restaurante, por plano: {"individual": 1.00}. Plano
 -- fora do mapa usa o preço normal. Quem escreve é só a plataforma: a tabela
--- `assinaturas` já não aceita escrita do salão (policy `is_super()`), então
+-- `assinaturas` já não aceita escrita do restaurante (policy `is_super()`), então
 -- ninguém dá desconto a si mesmo. Quem lê o preço — Pix, cartão e a
 -- recorrência do cartão — lê por `preco_do_plano()`, e só por ela.
 -- ---------------------------------------------------------------------------
@@ -6029,14 +6029,14 @@ begin
          where v.perfil_id = p_quem and v.salao_id = p_salao
            and v.status = 'ativo' and v.papel in ('dono','admin'))
      and not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   /* ⚠ BOLETO SAIU DA VENDA — mas a coluna e o histórico ficam.
 
      A tarifa do boleto é FIXA por emissão. Num plano de entrada de R$ 57 ela
      pesava mais de 6% da mensalidade: cinco vezes o que pesa num plano de
-     R$ 297. Somado à compensação de até três dias úteis, com o salão sem plano
+     R$ 297. Somado à compensação de até três dias úteis, com o restaurante sem plano
      enquanto espera, ele não se pagava.
 
      A recusa mora AQUI, e não só no botão da tela: esconder botão não é
@@ -6054,7 +6054,7 @@ begin
     raise exception 'Forma de pagamento desconhecida.' using errcode = 'check_violation';
   end if;
 
-  -- O preço do plano PARA ESTE SALÃO (1b): o normal, ou o especial dele —
+  -- O preço do plano PARA ESTE RESTAURANTE (1b): o normal, ou o especial dele —
   -- mais os módulos adicionais que ele contratou (46_adicionais).
   if not exists (select 1 from public.planos where codigo = p_plano) then
     raise exception 'Plano não encontrado.' using errcode = 'check_violation';
@@ -6181,7 +6181,7 @@ grant execute on function public.dados_do_pagador(uuid) to service_role;
 -- ⚠ IDEMPOTENTE POR CONSTRUÇÃO. O Mercado Pago reenvia o mesmo aviso até
 -- receber 200, e reenvia de novo em cada mudança do pagamento. Sem a trava do
 -- `status <> 'paga'` abaixo, cada reenvio somaria mais um mês de assinatura —
--- e o salão que pagou uma vez ficaria com meio ano de graça.
+-- e o restaurante que pagou uma vez ficaria com meio ano de graça.
 -- ---------------------------------------------------------------------------
 create or replace function public.registrar_pagamento(
   p_mp_id text, p_valor numeric, p_status text)
@@ -6252,7 +6252,7 @@ end $$;
 
 /* ⚠ ESTAS DUAS NÃO SÃO DE NINGUÉM QUE ESTEJA NUM NAVEGADOR.
    `anotar_cobranca` escreve o instrumento; `registrar_pagamento` estende a
-   assinatura. Alcançáveis por `authenticated`, qualquer dono de salão
+   assinatura. Alcançáveis por `authenticated`, qualquer dono de restaurante
    assinaria o plano maior de graça chamando a segunda com o mp_id certo. */
 revoke all on function public.abrir_cobranca(uuid, text, text, uuid) from public, anon, authenticated;
 revoke all on function public.anotar_cobranca(uuid, text, text, text, text, text, text) from public, anon, authenticated;
@@ -6288,7 +6288,7 @@ returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -6331,7 +6331,7 @@ declare v public.cobrancas;
 begin
   select * into v from public.cobrancas where id = p_cobranca for update;
   if not found or not public.e_gestor(v.salao_id) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   if v.status <> 'pendente' or v.metodo = 'cartao' then
     return false;
@@ -6377,7 +6377,7 @@ language sql security definer set search_path = public as $$
 $$;
 
 /* A faxina do dia: cobrança que passou da validade vira 'vencida'.
-   Sem isto o índice parcial de "uma pendente por salão" travaria o dono para
+   Sem isto o índice parcial de "uma pendente por restaurante" travaria o dono para
    sempre num Pix que ele nunca pagou. */
 create or replace function public.vencer_cobrancas()
 returns int
@@ -6429,7 +6429,7 @@ revoke all on function public.vencer_cobrancas() from public, anon, authenticate
 -- então não existe como uma conhecer uma regra que a outra desconhece.
 --
 -- ── O ENCAIXE DEIXA DE SER UM BURACO E VIRA UMA COLUNA ─────────────────────
--- Encaixar fora da jornada é legítimo: é o que salva o dia num salão. O que
+-- Encaixar fora da jornada é legítimo: é o que salva o dia num restaurante. O que
 -- não pode é o encaixe deliberado e o erro de digitação entrarem no banco
 -- exatamente iguais, sem ninguém saber qual foi qual.
 --
@@ -6457,7 +6457,7 @@ alter table public.agendamentos
     on delete set null;
 
 comment on column public.agendamentos.encaixe is
-  'Marcado fora da jornada, com confirmação explícita de quem tem acesso ao salão.';
+  'Marcado fora da jornada, com confirmação explícita de quem tem acesso ao restaurante.';
 
 -- ---------------------------------------------------------------------------
 -- 2) OS AUXILIARES COMPARTILHADOS
@@ -6478,8 +6478,8 @@ comment on column public.agendamentos.encaixe is
    existe na lista, em vez de aparecer e ser recusado depois.
 
    ⚠ E EM INSTANTE porque a hora da jornada é hora de parede ("09:00 de
-   segunda"). Convertida no fuso do salão, a agenda continua certa na semana
-   em que o horário de verão muda: o salão abre às 9 dos dois lados da
+   segunda"). Convertida no fuso do restaurante, a agenda continua certa na semana
+   em que o horário de verão muda: o restaurante abre às 9 dos dois lados da
    virada, não "9 menos uma hora". */
 create or replace function public.jornada_costurada(
   p_profissional uuid, p_data date)
@@ -6529,7 +6529,7 @@ $$;
    A primeira versão desta função recusava tudo quando não havia jornada — e
    quem pegou foi um teste que já existia, na primeira execução.
 
-   Recusar parece o lado seguro e é o errado. Um salão que acabou de se
+   Recusar parece o lado seguro e é o errado. Um restaurante que acabou de se
    cadastrar tem profissional e não tem jornada: a tela de jornada é outro
    passo. Com a regra estrita, ele não conseguiria marcar NADA no primeiro
    dia — e leria isso como "o sistema não me deixa trabalhar", que é o
@@ -6570,7 +6570,7 @@ language sql stable security definer set search_path = public as $$
     from public.bloqueios b
     join public.profissionais p on p.id = p_profissional
    where b.salao_id = p.salao_id
-     -- profissional_id nulo = bloqueio do salão inteiro (feriado, reforma)
+     -- profissional_id nulo = bloqueio do restaurante inteiro (feriado, reforma)
      and (b.profissional_id = p_profissional or b.profissional_id is null)
      and tstzrange(b.inicio, b.fim, '[)') && tstzrange(p_inicio, p_fim, '[)')
    limit 1;
@@ -6603,7 +6603,7 @@ $$;
 --
 -- Devolve o MOTIVO, em português, ou null quando cabe. O motivo é o produto
 -- desta função: "não deu" manda a pessoa adivinhar, e adivinhar no balcão com
--- a cliente esperando é o que faz o salão desistir do sistema.
+-- a cliente esperando é o que faz o restaurante desistir do sistema.
 --
 -- A ordem das conferências não é aleatória — é da mais barata para a mais
 -- cara, e da mais provável para a menos provável.
@@ -6637,22 +6637,22 @@ begin
      Maria Silva das 10:00 às 11:00", "bloqueado: consulta médica". É a frase
      certa para a recepção, e era entregue a QUALQUER conta logada: o id da
      profissional é público (a vitrine o devolve), e perguntando horário por
-     horário dava para ler a agenda e a clientela de qualquer salão. Achado na
+     horário dava para ler a agenda e a clientela de qualquer restaurante. Achado na
      auditoria de segurança.
 
-     Pela internet (anon/authenticated), só a equipe DESTE salão pergunta. O
+     Pela internet (anon/authenticated), só a equipe DESTE restaurante pergunta. O
      SQL Editor, o worker e o service_role não passam por aqui (`role` não é
      anon nem authenticated) — e os testes do motor continuam valendo. */
   if coalesce(current_setting('role', true), 'none') in ('anon', 'authenticated')
      and not public.e_equipe(v_prof.salao_id) then
-    raise exception 'Só a equipe do salão consulta a agenda.'
+    raise exception 'Só a equipe do restaurante consulta a agenda.'
       using errcode = 'insufficient_privilege';
   end if;
   if not v_prof.ativo then
     return format('%s está desativado(a) na equipe.', v_prof.nome);
   end if;
   if v_prof.status_salao <> 'ativo' then
-    return 'Este salão está suspenso.';
+    return 'Este restaurante está suspenso.';
   end if;
 
   v_fuso := coalesce(v_prof.fuso, 'America/Sao_Paulo');
@@ -6784,7 +6784,7 @@ begin
   end if;
 
   -- O motivo do bloqueio fica de fora: "médico", "terapia" e "advogado" são
-  -- assunto de quem trabalha no salão, não de quem está marcando.
+  -- assunto de quem trabalha no restaurante, não de quem está marcando.
   if public.ha_bloqueio(new.profissional_id, new.inicio, new.fim)
      is not null then
     raise exception 'Esse horário está bloqueado na agenda.'
@@ -6823,9 +6823,9 @@ language plpgsql stable security definer set search_path = public as $$
 declare
   v_duracao int;
   v_passo   constant interval := '15 minutes';
-  /* ── A ANTECEDÊNCIA MÍNIMA, ESCOLHIDA PELO SALÃO ────────────────────────
+  /* ── A ANTECEDÊNCIA MÍNIMA, ESCOLHIDA PELO RESTAURANTE ────────────────────────
      Ninguém quer receber "disponível: daqui a 4 minutos". Era meia hora fixa
-     para todo mundo; virou ajuste porque os salões não se parecem: uma
+     para todo mundo; virou ajuste porque os restaurantes não se parecem: uma
      barbearia de corte rápido atende quem aparece em 15 minutos, e uma
      clínica precisa de horas para separar ficha e sala.
 
@@ -6844,7 +6844,7 @@ declare
      `cfg` e o motor seguia com os 30 minutos de sempre. Nada avisa: as duas
      funções compilam, as duas existem, e a de número maior é a que vale.
 
-     Ausente vale 30: é o que valia antes, então nenhum salão muda de
+     Ausente vale 30: é o que valia antes, então nenhum restaurante muda de
      comportamento por causa desta linha e não há migração.
 
      ── O CAST PRECISA SER À PROVA DE TEXTO ────────────────────────────────
@@ -6875,7 +6875,7 @@ begin
          then (v_cfg->>'antecedenciaMin')::int else 30 end, 0), 10080));
 
   -- As regras de POLÍTICA da agenda online (aceita online, cota do plano,
-  -- dias liberados, serviço deste salão) continuam onde estavam. Elas são
+  -- dias liberados, serviço deste restaurante) continuam onde estavam. Elas são
   -- diferentes das regras FÍSICAS de disponibilidade, e misturar as duas faria
   -- a recepção herdar limites que são do link público.
   if public.porque_nao_agenda(p_profissional, p_data, p_servicos) is not null then
@@ -6906,7 +6906,7 @@ end $$;
 -- 6) Quem pode chamar
 --
 -- Os auxiliares são `security definer` e leem jornada e bloqueio, que são
--- assunto interno do salão. Ficam fechados: quem os alcança são as duas
+-- assunto interno do restaurante. Ficam fechados: quem os alcança são as duas
 -- funções de cima.
 --
 -- `avaliar_horario` e `porque_nao_cabe` vão para `authenticated` — é o painel
@@ -6999,7 +6999,7 @@ $$;
    com "could not create unique index", e num arquivo colado de uma vez isso
    é pior do que parece. Tudo que vem ANTES desta linha já rodou e ficou; o
    que vem DEPOIS — a vista nova, as travas do desconto, o gatilho que
-   impede pagar mais do que se deve — não roda. O salão fica com meia
+   impede pagar mais do que se deve — não roda. O restaurante fica com meia
    instalação e uma mensagem em inglês sobre índice.
 
    E não é hipótese: enquanto o painel criava item e pagamento sem `id`, o
@@ -7044,7 +7044,7 @@ create unique index if not exists ux_comanda_agendamento
 -- 2) O ACRÉSCIMO
 --
 -- Existia desconto e não existia o contrário. Taxa de urgência, domingo,
--- atendimento em casa: o salão cobra a mais e não tinha onde lançar — ia como
+-- atendimento em casa: o restaurante cobra a mais e não tinha onde lançar — ia como
 -- item inventado, e aí entrava na comissão de alguém sem ser serviço.
 -- ---------------------------------------------------------------------------
 alter table public.comandas
@@ -7068,7 +7068,7 @@ comment on column public.comandas.acrescimo is
 --
 -- `security_invoker = true` continua OBRIGATÓRIO. Sem isso a vista roda com
 -- os poderes de quem a criou e passa por cima do RLS das tabelas de baixo —
--- qualquer pessoa logada leria o faturamento de todos os salões.
+-- qualquer pessoa logada leria o faturamento de todos os restaurantes.
 -- ---------------------------------------------------------------------------
 drop view if exists public.comandas_totais;
 
@@ -7250,7 +7250,7 @@ create trigger tg_pagamento_cabe
 -- mês mudar de valor sozinho, dias depois de o dono ter conferido.
 --
 -- O caminho para corrigir existe e é explícito: reabrir. A tela já faz isso,
--- e já restringe reabrir comanda de outro dia a quem administra o salão.
+-- e já restringe reabrir comanda de outro dia a quem administra o restaurante.
 -- ---------------------------------------------------------------------------
 create or replace function public.tg_comanda_travada()
 returns trigger language plpgsql security definer set search_path = public as $$
@@ -7421,10 +7421,10 @@ grant execute on function public.reais(numeric) to anon, authenticated;
 -- `servicos.comissao_pct`, que é nulo para herdar. Então produto nunca herda
 -- do profissional: a comissão do produto é do produto. Não é descuido, é o
 -- que já estava valendo — mudar para nulo transformaria "0%" em "herda" em
--- todo salão que já usa, e ninguém pediu isso.
+-- todo restaurante que já usa, e ninguém pediu isso.
 --
 -- ── BRUTO OU LÍQUIDO, COM DATA DE CORTE ────────────────────────────────────
--- `comissao_sobre` é do SALÃO, mas fica CONGELADO NA COMANDA quando ela
+-- `comissao_sobre` é do RESTAURANTE, mas fica CONGELADO NA COMANDA quando ela
 -- abre. Sem isso, virar a chave hoje mudaria a comissão de toda comanda
 -- ainda aberta — e a de qualquer mês que fosse reaberto.
 --
@@ -7434,7 +7434,7 @@ grant execute on function public.reais(numeric) to anon, authenticated;
 -- alguém mexeu no ajuste".
 --
 -- O acréscimo NÃO entra na comissão, no bruto nem no líquido: taxa de
--- domingo é do salão, não é serviço de ninguém.
+-- domingo é do restaurante, não é serviço de ninguém.
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
@@ -7485,7 +7485,7 @@ comment on column public.comanda_itens.comissao_pct is
 comment on column public.comanda_itens.comissao_fixa is
   'Por unidade: 2 itens a R$ 5 fixos = R$ 10. Congelada junto com a pct.';
 
--- A regra do salão, e desde quando.
+-- A regra do restaurante, e desde quando.
 alter table public.saloes
   add column if not exists comissao_sobre text not null default 'bruto'
     check (comissao_sobre in ('bruto','liquido'));
@@ -7567,9 +7567,9 @@ comment on function public.comissao_de(text, uuid, uuid, uuid) is
    Sem este revoke ela ficava aberta ao `anon`, e o caminho era curto: a
    vitrine pública entrega o id do serviço e o do profissional, e com os dois
    a `comissao_de` devolvia o percentual. Medido — `{"pct":"60.00"}` de um
-   salão alheio, sem login.
+   restaurante alheio, sem login.
 
-   Não é dado pessoal: é o acordo interno do salão com quem trabalha nele.
+   Não é dado pessoal: é o acordo interno do restaurante com quem trabalha nele.
    Serve para um concorrente montar proposta para o profissional, ou para o
    profissional descobrir quanto o colega ganha. */
 revoke all on function public.comissao_de(text, uuid, uuid, uuid)
@@ -7822,7 +7822,7 @@ create table if not exists public.caixas (
 create index if not exists ix_caixa_salao
   on public.caixas(salao_id, aberto_em desc);
 
-/* ⚠ UM CAIXA ABERTO POR SALÃO, e o índice é quem garante.
+/* ⚠ UM CAIXA ABERTO POR RESTAURANTE, e o índice é quem garante.
 
    Conferir com `select ... where fechado_em is null` antes de inserir não
    garante nada: duas recepções abrindo ao mesmo tempo passam as duas pela
@@ -7847,7 +7847,7 @@ create policy caixa_gerir on public.caixas for all to authenticated
   using ( public.ve_agenda_toda(salao_id) )
   with check ( public.ve_agenda_toda(salao_id) );
 
--- Quem atende NÃO enxerga o caixa: é dinheiro do salão inteiro, e a Fase 2
+-- Quem atende NÃO enxerga o caixa: é dinheiro do restaurante inteiro, e a Fase 2
 -- pede que profissional não veja informação financeira global.
 revoke all on public.caixas from anon;
 grant select, insert, update on public.caixas to authenticated;
@@ -8021,7 +8021,7 @@ begin
     raise exception 'Pagamento não encontrado.' using errcode = 'no_data_found';
   end if;
 
-  -- 1) o salão do estorno é o da comanda, e não o que a tela disser
+  -- 1) o restaurante do estorno é o da comanda, e não o que a tela disser
   new.salao_id := v_salao;
 
   -- 1b) a gaveta de onde o dinheiro sai é a ABERTA agora; sem caixa aberto,
@@ -8187,7 +8187,7 @@ begin
     raise exception 'Caixa não encontrado.' using errcode = 'no_data_found';
   end if;
   if not public.ve_agenda_toda(k.salao_id) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
 
   -- Só dinheiro entra na conta da gaveta, e já descontado o que foi
@@ -8277,7 +8277,7 @@ begin
     raise exception 'Caixa não encontrado.' using errcode = 'no_data_found';
   end if;
   if not public.ve_agenda_toda(k.salao_id) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   if k.fechado_em is not null then
     raise exception 'Este caixa já foi fechado.' using errcode = 'check_violation';
@@ -8320,15 +8320,15 @@ grant execute on function public.fechar_caixa(uuid, numeric, text) to authentica
 -- UMA tela, e seis chances de mostrar um pedaço de hoje e outro de ontem se
 -- a virada do dia acontecer no meio. Vai tudo num jsonb.
 --
--- ── O DIA É O DO SALÃO ────────────────────────────────────────────────────
--- Pelo `fuso` do salão, como no relatório. Um dono olhando o painel de outro
+-- ── O DIA É O DO RESTAURANTE ────────────────────────────────────────────────────
+-- Pelo `fuso` do restaurante, como no relatório. Um dono olhando o painel de outro
 -- fuso veria o dia começar na hora errada, e a agenda "de hoje" traria os
 -- atendimentos de ontem à noite.
 --
 -- ── QUEM VÊ ───────────────────────────────────────────────────────────────
 -- `e_gestor`. Faturamento do dia e o que falta receber são da casa, não da
 -- recepção nem de quem atende — a Fase 2 pede isso em uma linha, e é a mesma
--- trava que impede ler o dia do salão do vizinho trocando o uuid.
+-- trava que impede ler o dia do restaurante do vizinho trocando o uuid.
 -- ===========================================================================
 
 create or replace function public.painel_hoje(
@@ -8345,18 +8345,18 @@ declare
   v_caixa uuid;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
   select fuso into v_fuso from public.saloes where id = p_salao;
   if not found then
-    raise exception 'Salão não encontrado.' using errcode = 'no_data_found';
+    raise exception 'Restaurante não encontrado.' using errcode = 'no_data_found';
   end if;
   v_fuso := coalesce(v_fuso, 'America/Sao_Paulo');
 
   -- `p_dia` existe para o teste poder fixar o dia, e para o dono conseguir
-  -- olhar ontem sem abrir o relatório. Sem ele, hoje NO FUSO DO SALÃO.
+  -- olhar ontem sem abrir o relatório. Sem ele, hoje NO FUSO DO RESTAURANTE.
   v_hoje := coalesce(p_dia, (now() at time zone v_fuso)::date);
 
   v_ini   := (v_hoje::timestamp) at time zone v_fuso;
@@ -8478,7 +8478,7 @@ begin
 end $$;
 
 comment on function public.painel_hoje(uuid, date) is
-  'O dia do salão num jsonb só: agenda, dinheiro, gaveta e quem ainda vem.';
+  'O dia do restaurante num jsonb só: agenda, dinheiro, gaveta e quem ainda vem.';
 
 revoke all on function public.painel_hoje(uuid, date) from public, anon;
 grant execute on function public.painel_hoje(uuid, date) to authenticated;
@@ -8507,14 +8507,14 @@ grant execute on function public.painel_hoje(uuid, date) to authenticated;
 -- a pessoa digitou. Telefone novo, ficha nova, freio zerado.
 --
 -- ── O NÚMERO FIXO QUE EU IA ESCREVER, E POR QUE ELE NÃO SERVE ─────────────
--- A primeira versão deste arquivo era um teto de 20 marcações por salão por
+-- A primeira versão deste arquivo era um teto de 20 marcações por restaurante por
 -- dia. O teste reprovou na cara: as 12 marcações acima JÁ ERAM o dia inteiro.
 -- Numa agenda de 08:00 às 20:00 com serviço de uma hora cabem doze pessoas —
 -- um teto de vinte nunca chega a valer, e um teto de dez estraga o dia de um
--- salão movimentado.
+-- restaurante movimentado.
 --
 -- Não existe número fixo certo, porque "o dia" tem tamanho diferente em cada
--- salão. O que funciona é limite que ANDA COM A AGENDA. São dois, e cada um
+-- restaurante. O que funciona é limite que ANDA COM A AGENDA. São dois, e cada um
 -- cobre o que o outro não cobre:
 --
 --   a reserva do balcão   o link nunca ocupa a agenda inteira de alguém
@@ -8524,7 +8524,7 @@ grant execute on function public.painel_hoje(uuid, date) to authenticated;
 -- Sem provar que o telefone é de quem digitou, dá para encarecer o estrago e
 -- não dá para impedi-lo. Quem impede é o código por WhatsApp, que depende da
 -- verificação na Meta. Até lá, o que estes dois limites compram é tempo: o
--- salão nunca amanhece com a agenda inteira tomada, e encher o mês passa a
+-- restaurante nunca amanhece com a agenda inteira tomada, e encher o mês passa a
 -- exigir horas de insistência em vez de um minuto.
 --
 -- ── POR QUE NO `porque_nao_agenda()` E NÃO NO `agendar()` ─────────────────
@@ -8570,7 +8570,7 @@ $$;
 -- ---------------------------------------------------------------------------
 -- 2) O FREIO DE RAJADA
 --
--- Quantas pessoas DESCONHECIDAS o link aceita, no salão inteiro, em dez
+-- Quantas pessoas DESCONHECIDAS o link aceita, no restaurante inteiro, em dez
 -- minutos.
 --
 -- ⚠ O "desconhecidas" não é enfeite, e custou uma reprova para aparecer.
@@ -8579,7 +8579,7 @@ $$;
 -- cinco. Um teste de auditoria — que exercita a geometria da agenda marcando
 -- vários horários seguidos — reprovou inteiro com "congestionada". E aquilo
 -- não era um defeito do teste: era o retrato de uma coisa que acontece de
--- verdade no salão. O dono publica um story, oito pessoas marcam em dez
+-- verdade no restaurante. O dono publica um story, oito pessoas marcam em dez
 -- minutos, e o freio manda todas embora — justamente no melhor momento do
 -- mês. Um limite que estraga o dia bom não é proteção, é prejuízo.
 --
@@ -8600,7 +8600,7 @@ $$;
 -- É por isso que o padrão é dez, e não cinco: o custo de errar para o lado
 -- apertado é fechar a porta num dia bom.
 --
--- Dez é muito para um salão de uma a três pessoas — dez desconhecidas
+-- Dez é muito para um restaurante de uma a três pessoas — dez desconhecidas
 -- marcando no mesmo intervalo de dez minutos é um dia excepcional — e é pouco
 -- para quem está rodando um script.
 --
@@ -8652,7 +8652,7 @@ returns int language sql stable security definer set search_path = public as $$
     from public.jornada_costurada(p_profissional, p_data) j
 $$;
 
-/* Só quem o salão nunca viu: ficha aberta nas últimas 24 horas. Cliente que
+/* Só quem o restaurante nunca viu: ficha aberta nas últimas 24 horas. Cliente que
    já foi atendida ali tem ficha velha e não entra nesta conta — pode marcar,
    desmarcar e remarcar à vontade, que o freio não a enxerga. */
 create or replace function public.rajada_online(p_salao uuid)
@@ -8717,7 +8717,7 @@ begin
   end if;
 
   if not public.recurso_bool(v_salao, 'agenda_online') then
-    return 'Este salão não está aceitando marcação pela internet.';
+    return 'Este restaurante não está aceitando marcação pela internet.';
   end if;
 
   if exists (
@@ -8755,21 +8755,21 @@ begin
     v_pedido := public.duracao_dos_servicos(p_profissional, p_servicos);
     if (v_online + v_pedido) * 100 > v_jornada * public.teto_online_pct(v_salao) then
       return 'Este dia já está quase todo marcado. '
-          || 'Chame o salão no WhatsApp que a gente encaixa você.';
+          || 'Chame o restaurante no WhatsApp que a gente encaixa você.';
     end if;
   end if;
 
   /* ── O FREIO DE RAJADA ─────────────────────────────────────────────────
      Nenhuma das duas frases fala em limite, cota ou teto, e é decisão: quem
      lê isto na esmagadora maioria das vezes é uma cliente de verdade num
-     salão movimentado, e ela precisa de um caminho, não da explicação de um
+     restaurante movimentado, e ela precisa de um caminho, não da explicação de um
      mecanismo. O caminho é o WhatsApp, onde tem gente.
 
      E para quem está do outro lado tentando encher a agenda, a frase também
      não entrega nada: não diz qual é o número nem quanto falta. */
   if public.rajada_online(v_salao) >= public.teto_online_rajada(v_salao) then
     return 'A marcação pela internet está congestionada agora. '
-        || 'Tente daqui a pouco, ou chame o salão no WhatsApp.';
+        || 'Tente daqui a pouco, ou chame o restaurante no WhatsApp.';
   end if;
 
   return null;
@@ -8778,7 +8778,7 @@ end $$;
 comment on function public.teto_online_pct(uuid) is
   'Quanto da jornada de um profissional o link pode ocupar num dia. cfg.tetoOnlinePct, padrão 70.';
 comment on function public.teto_online_rajada(uuid) is
-  'Quantas pessoas NOVAS o link aceita no salão em 10 minutos. cfg.tetoOnlineRajada, padrão 10.';
+  'Quantas pessoas NOVAS o link aceita no restaurante em 10 minutos. cfg.tetoOnlineRajada, padrão 10.';
 
 -- ###########################################################################
 -- ## 20_corrida.sql
@@ -8815,7 +8815,7 @@ comment on function public.teto_online_rajada(uuid) is
 -- em que as duas coisas competem.
 --
 -- ── O CONSERTO, E POR QUE ESTE E NÃO OUTRO ────────────────────────────────
--- `pg_advisory_xact_lock`, chaveado pelo salão, tomado no COMEÇO dos dois
+-- `pg_advisory_xact_lock`, chaveado pelo restaurante, tomado no COMEÇO dos dois
 -- caminhos — antes de qualquer consulta. Quem chega em segundo espera o
 -- primeiro comitar, e aí enxerga o que ele gravou. A trava morre sozinha no
 -- fim da transação; não há o que esquecer de soltar.
@@ -8823,8 +8823,8 @@ comment on function public.teto_online_rajada(uuid) is
 -- Foram consideradas duas alternativas:
 --
 --   · `select … from saloes … for update` — funciona, e prende a linha do
---     salão. Aí toda marcação passa a brigar com quem estiver salvando os
---     dados do salão em "Meu salão", por um motivo que não tem nada a ver.
+--     restaurante. Aí toda marcação passa a brigar com quem estiver salvando os
+--     dados do restaurante em "Meu restaurante", por um motivo que não tem nada a ver.
 --     Trava consultiva não toca em linha nenhuma.
 --
 --   · SERIALIZABLE — correto e caro: exigiria a aplicação inteira saber
@@ -8835,10 +8835,10 @@ comment on function public.teto_online_rajada(uuid) is
 -- cobrir os dois casos e a regra deixar de ter duas metades.
 --
 -- ── O CUSTO ───────────────────────────────────────────────────────────────
--- Uma trava por salão, mantida por alguns milissegundos, e só enquanto se
--- escreve na agenda daquele salão. Dois salões diferentes nunca se esperam.
--- Dentro de um salão, duas marcações simultâneas passam a ser sequenciais —
--- que é exatamente o que se quer, e num volume de salão nem se mede.
+-- Uma trava por restaurante, mantida por alguns milissegundos, e só enquanto se
+-- escreve na agenda daquele restaurante. Dois restaurantes diferentes nunca se esperam.
+-- Dentro de um restaurante, duas marcações simultâneas passam a ser sequenciais —
+-- que é exatamente o que se quer, e num volume de restaurante nem se mede.
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
@@ -8846,7 +8846,7 @@ comment on function public.teto_online_rajada(uuid) is
 --
 -- `hashtext` do uuid: `pg_advisory_xact_lock` quer um bigint. Duas chaves
 -- diferentes podem colidir no mesmo número — e colisão aqui não causa erro
--- nenhum, só faz dois salões esperarem um ao outro por alguns milissegundos.
+-- nenhum, só faz dois restaurantes esperarem um ao outro por alguns milissegundos.
 -- Trocar correção por raridade seria o contrário do que este arquivo faz.
 -- ---------------------------------------------------------------------------
 create or replace function public.travar_agenda(p_salao uuid)
@@ -8900,7 +8900,7 @@ end $$;
 -- 2) BLOQUEANDO: a mesma trava, do outro lado
 --
 -- Tem que ser a MESMA chave, senão as duas transações pegam travas diferentes
--- e continuam sem se ver. Por isso a chave é o salão, e não o profissional:
+-- e continuam sem se ver. Por isso a chave é o restaurante, e não o profissional:
 -- bloqueio com `profissional_id` nulo vale para a casa inteira, e precisa
 -- brigar com a marcação de qualquer pessoa dela.
 -- ---------------------------------------------------------------------------
@@ -8974,7 +8974,7 @@ begin
   end if;
 
   -- O motivo do bloqueio fica de fora: "médico", "terapia" e "advogado" são
-  -- assunto de quem trabalha no salão, não de quem está marcando.
+  -- assunto de quem trabalha no restaurante, não de quem está marcando.
   if public.ha_bloqueio(new.profissional_id, new.inicio, new.fim)
      is not null then
     raise exception 'Esse horário está bloqueado na agenda.'
@@ -8990,7 +8990,7 @@ begin
 end $$;
 
 comment on function public.travar_agenda(uuid) is
-  'Trava consultiva por salão, até o fim da transação. Bloqueio e atendimento não se cruzam.';
+  'Trava consultiva por restaurante, até o fim da transação. Bloqueio e atendimento não se cruzam.';
 
 -- ###########################################################################
 -- ## 21_notificacoes.sql
@@ -9017,7 +9017,7 @@ comment on function public.travar_agenda(uuid) is
 -- Enquanto a conta na Meta não estiver aprovada, as linhas nascem
 -- `pendente` e ficam. O painel mostra "pendente", que é a verdade. Marcar
 -- como enviada uma mensagem que não saiu é pior do que não ter mensagem
--- nenhuma: o salão para de ligar para a cliente confiando num aviso que
+-- nenhuma: o restaurante para de ligar para a cliente confiando num aviso que
 -- ninguém recebeu.
 --
 -- ── POR QUE UMA FILA, E NÃO UM ENVIO DIRETO ───────────────────────────────
@@ -9045,7 +9045,7 @@ comment on function public.travar_agenda(uuid) is
 alter table public.profissionais
   add column if not exists telefone text;
 
--- Duas chaves de vontade, por pessoa. O `cfg` do salão liga o recurso para a
+-- Duas chaves de vontade, por pessoa. O `cfg` do restaurante liga o recurso para a
 -- casa; estas duas deixam cada um decidir por si dentro do que a casa ligou.
 alter table public.profissionais
   add column if not exists notif_novo boolean not null default true;
@@ -9057,14 +9057,14 @@ alter table public.profissionais
   add column if not exists notif_lembrete boolean not null default true;
 
 -- ---------------------------------------------------------------------------
--- 2) AS CONFIGURAÇÕES DO SALÃO
+-- 2) AS CONFIGURAÇÕES DO RESTAURANTE
 --
 -- Moram no `cfg` (jsonb), como `diasLiberados` e `tetoOnlinePct`. Tabela nova
 -- para sete chaves seria tabela para manter, migrar e conferir sem ganhar
 -- nada — e o `cfg` já é o lugar onde a tela sabe gravar.
 --
 -- Cada uma tem padrão, e o padrão é o comportamento de hoje quando existe um:
--- salão que nunca abriu a tela de notificações não muda de comportamento por
+-- restaurante que nunca abriu a tela de notificações não muda de comportamento por
 -- causa de uma publicação.
 -- ---------------------------------------------------------------------------
 create or replace function public.notif_liga(p_salao uuid, p_chave text,
@@ -9222,8 +9222,8 @@ grant select on public.notificacoes to authenticated;
 -- {{profissional}}, {{empresa}}) são substituídas aqui, uma vez, e o
 -- resultado fica gravado.
 --
--- Tudo no FUSO DO SALÃO. Uma cliente lendo "14:00" precisa que sejam 14:00 no
--- salão, não no servidor.
+-- Tudo no FUSO DO RESTAURANTE. Uma cliente lendo "14:00" precisa que sejam 14:00 no
+-- restaurante, não no servidor.
 -- ---------------------------------------------------------------------------
 /* ── AS PEÇAS, NUM LUGAR SÓ ─────────────────────────────────────────────────
    Nome, profissional, serviço, data e hora saem daqui — e daqui saem DUAS
@@ -9320,7 +9320,7 @@ begin
       when v_pacote then 'R$ 0,00 — sessão do pacote'
       else 'R$ ' || translate(to_char(v_total, 'FM999,999,990.00'), ',.', '.,') end,
     'pagamento', case
-      when v_pacote and v_pacote_a_pagar then 'Pacote a pagar no salão'
+      when v_pacote and v_pacote_a_pagar then 'Pacote a pagar no restaurante'
       when v_pacote and v_pc_pago and v_pc_valor > 0 then 'Pacote já pago' || coalesce(' (' || case v_pc_forma
              when 'pix' then 'Pix' when 'dinheiro' then 'dinheiro'
              when 'debito' then 'cartão de débito' when 'credito' then 'cartão de crédito'
@@ -9331,7 +9331,7 @@ begin
       when to_jsonb(a)->>'forma_pagamento' = 'debito'   then 'Cartão de débito'
       when to_jsonb(a)->>'forma_pagamento' = 'credito'  then 'Cartão de crédito'
       when v_total <= 0 then 'Sem custo'
-      else 'A combinar no salão' end);
+      else 'A combinar no restaurante' end);
 end $$;
 
 /* ── A FORMA DE PAGAMENTO NA MENSAGEM: LIGADA PELA PLATAFORMA ───────────────
@@ -9366,7 +9366,7 @@ create or replace function public.linha_pagamento(p_pecas jsonb)
 returns text language sql stable security definer set search_path = public as $$
   select case when public.mensagens_com_pagamento()
               then E'\n💰 Valor: ' || coalesce(p_pecas->>'valor', '—')
-                || E'\n💳 Pagamento: ' || coalesce(p_pecas->>'pagamento', 'A combinar no salão')
+                || E'\n💳 Pagamento: ' || coalesce(p_pecas->>'pagamento', 'A combinar no restaurante')
               else '' end
 $$;
 
@@ -9437,7 +9437,7 @@ end $$;
 -- aprovado, e só.
 --
 -- Nossas quatro mensagens são todas fora da janela: a cliente marcou pelo link
--- do site e nunca escreveu para o WhatsApp do salão. Mandar texto livre volta
+-- do site e nunca escreveu para o WhatsApp do restaurante. Mandar texto livre volta
 -- com o erro 131047 — não é configuração errada, é o desenho da plataforma.
 --
 -- Então o `corpo` continua sendo o texto bonito, com quebra de linha e emoji,
@@ -9498,8 +9498,8 @@ returns text language sql immutable set search_path = public as $$
 $$;
 
 /* O nome do modelo cadastrado na Meta, por tipo. Fixo de propósito: o número
-   do WhatsApp é da plataforma, um só para todos os salões, e portanto os
-   modelos também são. Salão nenhum cadastra modelo próprio. */
+   do WhatsApp é da plataforma, um só para todos os restaurantes, e portanto os
+   modelos também são. Restaurante nenhum cadastra modelo próprio. */
 /* ⚠ STABLE, e não mais IMMUTABLE: o nome depende do ajuste da plataforma.
    Com os modelos de pagamento ligados, os quatro que falam de UM agendamento
    viram o `*_valor` cadastrado ao lado (MODELOS.md), com a forma de
@@ -9524,7 +9524,7 @@ returns text language sql stable set search_path = public as $$
        chamada no texto. Nome novo porque nome de modelo apagado na Meta fica
        preso por semanas. */
     when 'resumo'      then 'pedihub_agenda_hoje'
-    -- O lembrete para o salão (7c): quem atende e/ou o dono, antes do horário.
+    -- O lembrete para o restaurante (7c): quem atende e/ou o dono, antes do horário.
     when 'lembrete_equipe' then 'pedihub_lembrete_equipe'
   end
   || case when p_tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
@@ -9557,12 +9557,12 @@ begin
 
   if p_tipo in ('confirmacao','lembrete') then
     -- {{1}} primeiro nome  {{2}} data  {{3}} hora  {{4}} serviço  {{5}} profissional
-    -- {{6}} salão
+    -- {{6}} restaurante
     --
-    -- ⚠ O SALÃO VAI POR ÚLTIMO, E NÃO PODE FALTAR. O número que manda é do
-    -- PediHub, um só para todos os salões: a cliente vê "Pedihub" no topo
+    -- ⚠ O RESTAURANTE VAI POR ÚLTIMO, E NÃO PODE FALTAR. O número que manda é do
+    -- PediHub, um só para todos os restaurantes: a cliente vê "Pedihub" no topo
     -- da conversa. Sem o nome da casa no texto, ela recebe "seu horário está
-    -- confirmado" sem saber onde — e quem frequenta dois salões que usam o
+    -- confirmado" sem saber onde — e quem frequenta dois restaurantes que usam o
     -- sistema não tem como distinguir um do outro. Por último para não mexer
     -- na posição das cinco que já existiam.
     -- (+ {{7}} valor e {{8}} forma de pagamento, só no `*_valor` — `variaveis_pagamento()`)
@@ -9574,10 +9574,10 @@ begin
 
   elsif p_tipo = 'novo' then
     -- {{1}} primeiro nome de quem atende  {{2}} cliente (nome INTEIRO)
-    -- {{3}} serviço  {{4}} data  {{5}} hora  {{6}} salão
+    -- {{3}} serviço  {{4}} data  {{5}} hora  {{6}} restaurante
     --
     -- O nome inteiro da cliente, e não só o primeiro: é ele que a
-    -- profissional procura na agenda. E o salão, porque quem trabalha em duas
+    -- profissional procura na agenda. E o restaurante, porque quem trabalha em duas
     -- casas que usam o sistema recebe os dois avisos do mesmo número.
     -- (+ {{7}} valor e {{8}} forma de pagamento, só no `*_valor` — `variaveis_pagamento()`)
     return jsonb_build_array(
@@ -9642,10 +9642,10 @@ update public.notificacoes n
 -- é UM, naturalmente: é uma linha na fila. O item 18 do pedido sai de graça
 -- da modelagem, sem contador especial.
 --
--- `p_profissional` nulo quer dizer "o salão inteiro", que é o resumo do dono
+-- `p_profissional` nulo quer dizer "o restaurante inteiro", que é o resumo do dono
 -- com equipe. Preenchido, é o resumo de uma pessoa só.
 --
--- O período (dia inteiro / manhã / tarde) recorta por hora NO FUSO DO SALÃO.
+-- O período (dia inteiro / manhã / tarde) recorta por hora NO FUSO DO RESTAURANTE.
 -- ---------------------------------------------------------------------------
 create or replace function public.texto_resumo(
   p_salao uuid, p_profissional uuid, p_dia date, p_periodo text default 'dia')
@@ -9668,8 +9668,8 @@ begin
     from public.saloes s where s.id = p_salao;
   if v_fuso is null then return null; end if;
 
-  -- A janela do período, em horas do salão. Os limites são configuráveis:
-  -- salão que abre às 7h não tem "manhã das 8h".
+  -- A janela do período, em horas do restaurante. Os limites são configuráveis:
+  -- restaurante que abre às 7h não tem "manhã das 8h".
   if p_periodo = 'manha' then
     v_h1 := public.notif_num(p_salao, 'notifManhaIni', 0);
     v_h2 := public.notif_num(p_salao, 'notifManhaFim', 12);
@@ -9685,7 +9685,7 @@ begin
 
   /* ⚠ O DONO QUE TRABALHA SOZINHO (item 6 do pedido).
 
-     Um salão de uma pessoa não precisa de cabeçalho de equipe: "👤 Alessandro"
+     Um restaurante de uma pessoa não precisa de cabeçalho de equipe: "👤 Alessandro"
      sozinho em cima da própria lista é ruído que só existe porque o código não
      olhou. A pergunta é quantos profissionais ATIVOS a casa tem, e ela é
      respondida aqui, não num ajuste que alguém teria de lembrar de marcar. */
@@ -9775,13 +9775,13 @@ begin
                 case when v_total = 1 then '' else 's' end);
 end $$;
 
-/* As variáveis do resumo que viaja para a Meta: quem recebe, o salão, quantos
+/* As variáveis do resumo que viaja para a Meta: quem recebe, o restaurante, quantos
    atendimentos e o primeiro horário. A lista inteira NÃO vai.
 
    ── POR QUE NÃO A LISTA ───────────────────────────────────────────────────
    Variável de modelo não aceita quebra de linha. A lista achatada saía como
-   uma linha só — "☀️ Bom dia! · Agenda de hoje — Salão · 👤 Ana · 09:00 —
-   Maria — Corte · …" —, repetindo o "Bom dia" e o salão que o próprio modelo
+   uma linha só — "☀️ Bom dia! · Agenda de hoje — Restaurante · 👤 Ana · 09:00 —
+   Maria — Corte · …" —, repetindo o "Bom dia" e o restaurante que o próprio modelo
    já dizia, e virava um bloco ilegível em dia cheio. O dono escolheu o curto:
    quantos e o primeiro, e um botão "Ver agenda" no modelo que abre o painel,
    onde a lista é bonita. O `corpo` continua com a lista inteira, para o
@@ -9791,7 +9791,7 @@ end $$;
    mesmos status, mesmas pessoas. A suíte confere que o número daqui é o
    "Total" do corpo, linha por linha.
 
-   {{1}} primeiro nome de quem recebe  {{2}} salão  {{3}} quantos
+   {{1}} primeiro nome de quem recebe  {{2}} restaurante  {{3}} quantos
    {{4}} o primeiro: "09:00 com Maria (Corte)" */
 create or replace function public.variaveis_resumo(
   p_salao uuid, p_profissional uuid, p_dia date, p_periodo text, p_quem text)
@@ -9897,7 +9897,7 @@ begin
 
      Antes bastava o status ser `pendente` ou `confirmado` — e como nada neste
      sistema criava um pendente, a distinção nunca apareceu. Com o 29 ela passa
-     a existir: o salão que confirma à mão recebe o agendamento `pendente`, e
+     a existir: o restaurante que confirma à mão recebe o agendamento `pendente`, e
      mandar "Seu horário está confirmado" ali seria prometer, em nome do dono,
      uma coisa que ele ainda não decidiu.
 
@@ -9921,7 +9921,7 @@ begin
 
   /* ── Lembrete, na hora configurada ───────────────────────────────────
      Também espera a confirmação, e pelo mesmo motivo: lembrar a cliente de um
-     horário que o salão ainda não aceitou é confirmá-lo por tabela. Quem
+     horário que o restaurante ainda não aceitou é confirmá-lo por tabela. Quem
      recebe "seu horário é amanhã às 15h" não lê aquilo como "talvez".
 
      Se o dono recusar, o `tg_notificacao_agenda_mudou` logo abaixo cancela o
@@ -9966,7 +9966,7 @@ begin
     end if;
   end if;
 
-  -- ── Lembrete para o salão (7c) ──────────────────────────────────────
+  -- ── Lembrete para o restaurante (7c) ──────────────────────────────────────
   -- Uma função só decide quem recebe e quando, para este gatilho, para o de
   -- remarcação e para a varredura do agendador falarem a mesma coisa.
   perform public.refazer_lembrete_equipe(new.id);
@@ -10029,7 +10029,7 @@ begin
     end if;
   end if;
 
-  /* O lembrete para o salão (7c) acompanha a hora E a pessoa: trocar a
+  /* O lembrete para o restaurante (7c) acompanha a hora E a pessoa: trocar a
      profissional de um horário já marcado tem de levar o lembrete para a
      nova, e não deixar a antiga ser avisada de um atendimento que não é
      mais dela. */
@@ -10080,7 +10080,7 @@ begin
    where n.agendamento_id = v_ag
      and n.status = 'pendente'
      and n.tipo in ('confirmacao','lembrete','novo');
-  -- O do salão leva o nome de QUEM RECEBE, que mora na própria linha.
+  -- O do restaurante leva o nome de QUEM RECEBE, que mora na própria linha.
   update public.notificacoes n
      set corpo = coalesce(public.texto_lembrete_equipe(v_ag, n.profissional_id), n.corpo),
          variaveis = coalesce(
@@ -10160,16 +10160,16 @@ grant execute on function public.mensagens_com_pagamento() to authenticated;
 revoke all on function public.variaveis_pagamento(jsonb) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- 7c) O LEMBRETE PARA O SALÃO
+-- 7c) O LEMBRETE PARA O RESTAURANTE
 --
--- "Precisamos colocar também para o dono do salão que tem um horário marcado
+-- "Precisamos colocar também para o dono do restaurante que tem um horário marcado
 -- pra tal pessoa — lembrete. Que seja configurável."
 --
 -- O lembrete da seção 6 é da CLIENTE. Este é o do outro lado do balcão:
 -- antes do atendimento, quem vai atender (ou o dono, ou os dois) recebe com
 -- quem, o quê e a que horas.
 --
--- ── O QUE O DONO ESCOLHE (cfg do salão) ────────────────────────────────────
+-- ── O QUE O DONO ESCOLHE (cfg do restaurante) ────────────────────────────────────
 --   notifLembreteEquipe      false   ⚠ DESLIGADO de fábrica: é mensagem nova,
 --                                    custa e gasta a cota; ligar sozinho numa
 --                                    publicação seria mandar o que ninguém pediu
@@ -10189,7 +10189,7 @@ revoke all on function public.variaveis_pagamento(jsonb) from public, anon, auth
 
 /* As variáveis, NA ORDEM do modelo `pedihub_lembrete_equipe`:
    {{1}} primeiro nome de QUEM RECEBE  {{2}} cliente (nome inteiro)
-   {{3}} serviço  {{4}} quem atende  {{5}} data  {{6}} hora  {{7}} salão
+   {{3}} serviço  {{4}} quem atende  {{5}} data  {{6}} hora  {{7}} restaurante
 
    ⚠ O {{4}} existe porque quem recebe pode não ser quem atende: o dono
    recebendo o lembrete do horário da Bia precisa ler "Profissional: Bia". */
@@ -10269,7 +10269,7 @@ begin
        Aqui estava `v_min > 0 and v_quando > now()`: na hora de sair, nenhum
        destinatário era montado, e o cancelamento logo abaixo tirava da fila
        o lembrete que ia sair. E a varredura (gerar_lembretes_equipe) roda
-       ANTES de cada envio, para todo pendente — então o lembrete do salão
+       ANTES de cada envio, para todo pendente — então o lembrete do restaurante
        era cancelado exatamente na hora dele, sempre. "Não chegou o lembrete
        do horário das 9h, só o resumo": o de 08:00 estava lá, cancelado.
 
@@ -10411,7 +10411,7 @@ begin
 end $$;
 
 /* ── O LEMBRETE DA CLIENTE ACOMPANHA O AJUSTE ────────────────────────────
-   "O lembrete chega uma hora antes" — com o salão em outro tempo. O lembrete
+   "O lembrete chega uma hora antes" — com o restaurante em outro tempo. O lembrete
    da cliente era calculado UMA vez, quando o horário era marcado (ou
    remarcado): trocar "1 hora antes" por "24 horas antes" em Notificações não
    mexia em nenhum horário já marcado, e eles continuavam saindo 1 hora antes.
@@ -10441,7 +10441,7 @@ begin
 
   if v_min <= 0 then
     update public.notificacoes
-       set status = 'cancelado', motivo = 'o lembrete foi desligado no salão'
+       set status = 'cancelado', motivo = 'o lembrete foi desligado no restaurante'
      where agendamento_id = a.id and tipo = 'lembrete' and status = 'pendente';
     return;
   end if;
@@ -10514,7 +10514,7 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- 8) O RESUMO ENTRA NA FILA
 --
--- Chamada pelo agendador, de minuto em minuto. Para cada salão cujo horário
+-- Chamada pelo agendador, de minuto em minuto. Para cada restaurante cujo horário
 -- de resumo já chegou HOJE no fuso dele, cria a linha — uma por destinatário.
 --
 -- `p_agora` existe para o teste poder fixar o instante. Sem ele, esta função
@@ -10537,7 +10537,7 @@ declare
   v_quem    text;
   n int := 0;
 begin
-  -- O lembrete para o salão (7c), de carona no agendador que já passa aqui
+  -- O lembrete para o restaurante (7c), de carona no agendador que já passa aqui
   -- de minuto em minuto: liga e desliga valem sem esperar novo agendamento.
   perform public.gerar_lembretes_equipe();
   -- E o da cliente: trocar "1 hora antes" por "24 horas antes" vale também
@@ -10555,7 +10555,7 @@ begin
     v_hoje := (p_agora at time zone v_fuso)::date;
     v_hora := public.notif_num(s.id, 'notifResumoHora', 8);
 
-    -- Ainda não deu a hora no salão.
+    -- Ainda não deu a hora no restaurante.
     if extract(hour from (p_agora at time zone v_fuso))::int < v_hora then
       continue;
     end if;
@@ -10633,12 +10633,12 @@ grant execute on function public.gerar_resumos(timestamptz) to service_role;
 
    Ficaram abertas ao `anon` por uma fase inteira. O caminho era:
 
-     página pública → vitrine(slug) devolve o id do salão
+     página pública → vitrine(slug) devolve o id do restaurante
                     → texto_resumo(id, null, data)
                     → a agenda do dia inteira, com nome de cliente
 
    Sem login, com a chave publicável que está no config.js por desenho. Dava
-   para varrer a agenda de qualquer salão do sistema, dia por dia.
+   para varrer a agenda de qualquer restaurante do sistema, dia por dia.
 
    Nenhuma tela chama estas funções — só gatilhos e o `gerar_resumos`, que
    rodam como dono e continuam passando. O `tests/portas.test.sql` passou a
@@ -10669,4 +10669,4 @@ revoke all on function public.gerar_lembretes_cliente()
 comment on table public.notificacoes is
   'Fila das mensagens que nascem da agenda: confirmação, lembrete, resumo e aviso ao profissional.';
 comment on function public.gerar_resumos(timestamptz) is
-  'Põe o resumo do dia na fila para os salões cuja hora já chegou. Idempotente por dia.';
+  'Põe o resumo do dia na fila para os restaurantes cuja hora já chegou. Idempotente por dia.';

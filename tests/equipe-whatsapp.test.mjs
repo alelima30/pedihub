@@ -52,7 +52,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`ew-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Lia Prado', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Zap ' + m,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Zap ' + m,
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 // Plano com equipe: o teste grátis aceita um profissional só.
@@ -73,7 +73,7 @@ await dona.inserir('profissionais', { salaoId: SALAO, nome:'Caio Lima', ativo:tr
   comissaoPct:40, cor:'#16A34A' });
 await dona.inserir('profissionais', { salaoId: SALAO, nome:'Duda Reis', ativo:false,
   comissaoPct:40, cor:'#DC2626' });
-ok('salão com a dona e três profissionais (um com WhatsApp, um sem, um inativo sem)');
+ok('restaurante com a dona e três profissionais (um com WhatsApp, um sem, um inativo sem)');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
@@ -120,7 +120,7 @@ igual('com as mensagens da equipe desligadas, o aviso some', await aviso(), '');
 await marcar('nLembEquipe', true);
 await p.selectOption('#nLembEquipePara', 'dono');
 await p.evaluate(() => pintarNotificacoes(true));
-igual('o lembrete só para o dono do salão não pede o número da equipe', await aviso(), '');
+igual('o lembrete só para o dono do restaurante não pede o número da equipe', await aviso(), '');
 await p.selectOption('#nLembEquipePara', 'atende');
 await p.evaluate(() => pintarNotificacoes(true));
 verdade('para quem vai atender, pede', /Falta o WhatsApp/.test(await aviso()));

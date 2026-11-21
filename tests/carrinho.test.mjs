@@ -22,7 +22,7 @@
 
    O botão "Enviar pedido no WhatsApp" ficava LIGADO, e a cliente mandava:
 
-       "Olá! Vim pela página do Salão X e quero estes produtos:
+       "Olá! Vim pela página do Restaurante X e quero estes produtos:
         (nada)
         Total estimado: R$ 0,00"
 
@@ -64,7 +64,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`carr-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Dona do Balcão', telefone:'+5551' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Carrinho ' + marca,
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Carrinho ' + marca,
   p_tipo:'salao', p_telefone:'(51) 99887-6655', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 
@@ -80,7 +80,7 @@ com.produtos = [
     vendaOnline:true, foto:null },
 ];
 await d.subir(base, com);
-ok('salão com dois produtos na loja');
+ok('restaurante com dois produtos na loja');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const ctx = await nav.newContext({ viewport:{ width:412, height:915 } });

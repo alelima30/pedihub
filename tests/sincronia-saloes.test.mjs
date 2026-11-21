@@ -1,13 +1,13 @@
 /* ===========================================================================
-   PediHub — quem tem dois salões não apaga um mexendo no outro
+   PediHub — quem tem dois restaurantes não apaga um mexendo no outro
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=.../node_modules/playwright node tests/sincronia-saloes.test.mjs
 
    As tabelas sem `salao_id` (a jornada, o item da comanda, o pagamento, o
-   serviço do agendamento…) desciam sem filtro: para a dona de dois salões,
+   serviço do agendamento…) desciam sem filtro: para a dona de dois restaurantes,
    vinham as linhas dos DOIS. A tela reconstrói essas filhas a partir das
-   mães — que são de um salão só — e o `subir()` lia as do outro salão como
+   mães — que são de um restaurante só — e o `subir()` lia as do outro restaurante como
    "sumiram" e mandava apagar. Medido: abriu o painel na Casa A, e as cinco
    faixas de jornada da profissional da Casa B foram apagadas, sem erro.
 
@@ -46,7 +46,7 @@ console.log('\nToda tabela sem salao_id desce pela mãe');
   const faltam = semSalao.filter(t => !D.FILHAS[t]);
   diz(faltam.length === 0, 'cada tabela sincronizada sem salao_id tem a mãe dela no FILHAS', faltam.join(', '));
   const maesRuins = Object.entries(D.FILHAS).filter(([, [, mae]]) => !(D.COLUNAS[mae] && D.COLUNAS[mae].salaoId));
-  diz(maesRuins.length === 0, 'e toda mãe é filtrada por salão', maesRuins.map(x => x[0]).join(', '));
+  diz(maesRuins.length === 0, 'e toda mãe é filtrada por restaurante', maesRuins.map(x => x[0]).join(', '));
   const colunas = Object.entries(D.FILHAS).filter(([t, [col]]) => !(D.COLUNAS[t] && D.COLUNAS[t][col]));
   diz(colunas.length === 0, 'e a coluna que aponta para a mãe existe no mapa', colunas.map(x => x[0]).join(', '));
 }
@@ -113,7 +113,7 @@ await p.waitForFunction(() => typeof bd !== 'undefined' && bd && bd.saloes && sa
 await p.waitForTimeout(800);
 
 // Qual das duas abre primeiro depende da ordem em que o banco devolve os
-// salões — não é escolha da tela. O teste vai para a Casa B pelo seletor
+// restaurantes — não é escolha da tela. O teste vai para a Casa B pelo seletor
 // (como a dona faria), confere que ela chega COM os dados dela, e volta à A.
 const onde = await p.evaluate(() => ({ nome: (acharSalao(salaoAtual) || {}).nome, saloes: bd.saloes.length }));
 diz(onde.saloes === 2, 'o painel abriu com as duas casas no seletor', JSON.stringify(onde));
@@ -176,7 +176,7 @@ diz(daCasaA === 1, 'e o horário que ela marcou na Casa A foi para o banco', 'ac
 diz(!dialogos.length, 'sem aviso de gravação recusada', dialogos.join(' | '));
 diz(erros.length === 0, 'sem erro de JavaScript', erros.join(' | '));
 
-/* Abrir o painel sem internet. Antes: "Nenhum salão nesta conta — crie o seu
+/* Abrir o painel sem internet. Antes: "Nenhum restaurante nesta conta — crie o seu
    em dois minutos", para a dona de duas casas. */
 {
   const c2 = await nav.newContext({ viewport: { width: 390, height: 844 } });
@@ -192,8 +192,8 @@ diz(erros.length === 0, 'sem erro de JavaScript', erros.join(' | '));
   await q.goto(BANCADA + '/app.html');
   await q.waitForTimeout(2500);
   const txt = (await q.textContent('.corpo').catch(() => '')) || '';
-  diz(/falar com o servidor/i.test(txt) && !/Nenhum salão/i.test(txt),
-      'abrir sem internet diz que não falou com o servidor — não "Nenhum salão nesta conta"',
+  diz(/falar com o servidor/i.test(txt) && !/Nenhum restaurante/i.test(txt),
+      'abrir sem internet diz que não falou com o servidor — não "Nenhum restaurante nesta conta"',
       txt.replace(/\s+/g, ' ').slice(0, 140));
   diz(await q.isVisible('button:has-text("Tentar de novo")'), 'com o botão "Tentar de novo"');
   const guardada = await q.evaluate(() => { try{ return !!JSON.parse(localStorage.getItem('pedihub.sessao')).token; }catch(e){ return false; } });

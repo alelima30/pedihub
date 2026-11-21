@@ -1,15 +1,15 @@
 -- ===========================================================================
--- 58_fuso.sql — o fuso horário do salão: escolher, e trocar sem mexer em
+-- 58_fuso.sql — o fuso horário do restaurante: escolher, e trocar sem mexer em
 --               nenhum horário marcado
 --
 -- ── O QUE FALTAVA ─────────────────────────────────────────────────────────
 -- `saloes.fuso` existe desde o primeiro dia e TUDO o respeita: o link da
 -- cliente, a agenda, os lembretes, os relatórios, o "hoje" do caixa. Só que
--- não havia onde escolher. Todo salão nascia em 'America/Sao_Paulo' e ficava
+-- não havia onde escolher. Todo restaurante nascia em 'America/Sao_Paulo' e ficava
 -- lá — inclusive os de Manaus, Cuiabá, Campo Grande, Porto Velho, Boa Vista
 -- e Rio Branco, que vivem uma ou duas horas atrás de Brasília.
 --
--- Para esse salão a agenda PARECE certa: ele escreve 14:00, a tela mostra
+-- Para esse restaurante a agenda PARECE certa: ele escreve 14:00, a tela mostra
 -- 14:00, a cliente marca 14:00. O que erra é o relógio por baixo. O sistema
 -- acha que agora é uma hora mais tarde do que é ali, então:
 --   · o lembrete de "2 horas antes" sai 3 horas antes;
@@ -22,7 +22,7 @@
 --   2. ao trocar, MOVE os instantes guardados para que cada horário continue
 --      no MESMO horário de parede: quem marcou às 14:00 continua às 14:00;
 --   3. guarda o histórico da troca;
---   4. trava a agenda do salão por 90 segundos depois da troca, para aparelho
+--   4. trava a agenda do restaurante por 90 segundos depois da troca, para aparelho
 --      com a tela aberta no relógio antigo não marcar com uma hora de erro;
 --   5. dá ao painel a função `mudar_fuso()`.
 --
@@ -31,7 +31,7 @@
 -- Manaus" são instantes diferentes, com uma hora entre eles. Trocar só o
 -- texto do fuso faria toda a agenda — passada e futura — aparecer uma hora
 -- mais cedo: a cliente das 14:00 viraria cliente das 13:00, e chegaria com o
--- salão já tendo desistido dela. É o pior defeito possível numa agenda.
+-- restaurante já tendo desistido dela. É o pior defeito possível numa agenda.
 --
 -- Então a regra é uma só, e vale para todo caminho (o painel, o cadastro, o
 -- suporte no SQL Editor, uma chamada direta na API): o fuso mudou, os
@@ -58,7 +58,7 @@
 --
 -- `alter table ... disable trigger user` vale só dentro desta transação e
 -- segura a tabela enquanto ela dura — ninguém grava agendamento no meio, em
--- salão nenhum, por uma fração de segundo. Se qualquer coisa falhar, tudo
+-- restaurante nenhum, por uma fração de segundo. Se qualquer coisa falhar, tudo
 -- volta: os horários, o fuso e os gatilhos. A trava `agenda_sem_choque` NÃO
 -- é gatilho e continua valendo o tempo todo.
 --
@@ -138,7 +138,7 @@ begin
     return jsonb_build_object('agendamentos', 0, 'bloqueios', 0, 'lembretes', 0, 'campanhas', 0);
   end if;
 
-  /* Ninguém marca neste salão enquanto os horários andam: é a mesma trava
+  /* Ninguém marca neste restaurante enquanto os horários andam: é a mesma trava
      que o `agendar()` pega antes de olhar a agenda. */
   perform public.travar_agenda(p_salao);
 
@@ -221,7 +221,7 @@ end $$;
 -- ANTES: valida o nome e carimba a hora da troca. `fuso_mudou_em` não é
 -- campo de ninguém: o que vier escrito nele é ignorado.
 --
--- ⚠ Salão criado há menos de 10 minutos não é carimbado: é o cadastro
+-- ⚠ Restaurante criado há menos de 10 minutos não é carimbado: é o cadastro
 -- ajustando o próprio fuso (criar.html), com um aparelho só e nenhuma tela
 -- antiga aberta. Sem isso, o dono de Manaus passaria o primeiro minuto e
 -- meio do sistema sem conseguir marcar o primeiro horário.
@@ -242,7 +242,7 @@ begin
   end if;
 
   if new.fuso is null then
-    raise exception 'O salão precisa de um fuso horário.' using errcode = 'check_violation';
+    raise exception 'O restaurante precisa de um fuso horário.' using errcode = 'check_violation';
   end if;
 
   if new.fuso is distinct from old.fuso then
@@ -289,7 +289,7 @@ create trigger tg_salao_fuso_mover
 -- pensa no relógio antigo — e o horário que ele gravasse nasceria com uma
 -- hora de erro, sem aviso nenhum.
 --
--- Por 90 segundos depois da troca, ninguém grava horário neste salão. É o
+-- Por 90 segundos depois da troca, ninguém grava horário neste restaurante. É o
 -- tempo de toda tela aberta notar a mudança e se atualizar sozinha (o painel
 -- confere a cada 40 segundos e ao voltar para a aba). Pega também a gravação
 -- que estava no ar esperando a troca terminar.
@@ -307,7 +307,7 @@ begin
               where s.id = new.salao_id
                 and s.fuso_mudou_em is not null
                 and s.fuso_mudou_em > now() - interval '90 seconds') then
-    raise exception 'O relógio do salão acabou de ser ajustado. Espere um minuto, atualize a página e tente de novo.'
+    raise exception 'O relógio do restaurante acabou de ser ajustado. Espere um minuto, atualize a página e tente de novo.'
       using errcode = 'object_not_in_prerequisite_state';
   end if;
   return new;
@@ -338,7 +338,7 @@ declare
 begin
   if auth.uid() is null or p_salao is null
      or not (public.e_gestor(p_salao) or public.is_super()) then
-    raise exception 'Só quem administra o salão troca o fuso horário.'
+    raise exception 'Só quem administra o restaurante troca o fuso horário.'
       using errcode = 'insufficient_privilege';
   end if;
   if v_para is null or not public.fuso_valido(v_para) then
@@ -348,7 +348,7 @@ begin
 
   select s.fuso into v_de from public.saloes s where s.id = p_salao for update;
   if not found then
-    raise exception 'Não achei este salão.' using errcode = 'no_data_found';
+    raise exception 'Não achei este restaurante.' using errcode = 'no_data_found';
   end if;
   if v_de = v_para then
     return jsonb_build_object('ok', true, 'mudou', false, 'fuso', v_para);

@@ -10,12 +10,12 @@
 -- manual, meses depois:
 --
 --   texto_resumo(salao, null, dia)   devolvia a AGENDA DO DIA INTEIRA de
---                                    qualquer salão, com nome de cliente,
---                                    sem login. O id do salão sai da própria
+--                                    qualquer restaurante, com nome de cliente,
+--                                    sem login. O id do restaurante sai da própria
 --                                    vitrine pública.
 --   proximo_numero(salao, nome)      deixava qualquer um ESCREVER: três
 --                                    chamadas anônimas levaram o contador de
---                                    comanda de um salão de 1 para 3.
+--                                    comanda de um restaurante de 1 para 3.
 --
 -- A causa das duas foi a mesma: eu revoquei umas funções e esqueci outras.
 -- Memória não é mecanismo.
@@ -39,17 +39,17 @@
 create temporary table porta_aberta (nome text primary key, porque text);
 insert into porta_aberta values
   -- A página pública de agendamento. É o produto: a cliente marca sem conta.
-  ('vitrine',                 'a página da cliente lê o salão por aqui'),
+  ('vitrine',                 'a página da cliente lê o restaurante por aqui'),
   ('horarios_livres',         'os horários que a cliente vê'),
   ('horarios_livres_periodo', 'idem, a semana inteira'),
   ('porque_nao_agenda',       'explica à cliente por que o horário não serve'),
   ('agendar',                 'a cliente marcando — o produto inteiro'),
   ('entrar_na_fila',          'a cliente entrando na fila de espera'),
-  -- Devolve um sim ou não sobre a POLÍTICA de um salão cujo link é público de
+  -- Devolve um sim ou não sobre a POLÍTICA de um restaurante cujo link é público de
   -- propósito, e o id que ela recebe é o mesmo que está na URL. É com esta
   -- resposta que a página decide entre "Pronto, está confirmado" e "Você
   -- receberá uma mensagem de confirmação" — dizer a frase errada ali é
-  -- prometer, em nome do salão, uma coisa que o dono não decidiu.
+  -- prometer, em nome do restaurante, uma coisa que o dono não decidiu.
   ('confirma_automatico',     'a página da cliente precisa saber o que prometer'),
   -- O cupom (34_cupons.sql). A cliente digita o código sem conta, como marca
   -- sem conta. Nenhuma das três devolve o id do cupom nem aceita telefone: a
@@ -59,8 +59,8 @@ insert into porta_aberta values
   ('usar_cupom_no_pedido',    'o pedido da loja com cupom: registra o uso, que conta no limite'),
   ('salao_tem_cupom',         'sim ou não por lugar, para não mostrar o campo à toa'),
   -- O contador de visitas do link (60_dashboard). Só ESCREVE uma linha
-  -- anônima (md5 de salão + dia + código aleatório do aparelho), não lê nada
-  -- e não devolve nada; teto de 5000 por salão por dia.
+  -- anônima (md5 de restaurante + dia + código aleatório do aparelho), não lê nada
+  -- e não devolve nada; teto de 5000 por restaurante por dia.
   ('registrar_visita',        'conta a visita da página da cliente, sem dado pessoal'),
   -- A ficha do serviço (62_ficha_servico). Devolve só o texto que o dono
   -- escreveu PARA a cliente ler, e só dos serviços que o link já mostra.
@@ -108,7 +108,7 @@ insert into porta_aberta values
    MORAVAM NESTA LISTA, com a justificativa "usada em policy e nos limites".
    Deixou de ser verdade e ninguém voltou para conferir: nenhuma policy as
    cita, e os limites chegam nelas por gatilho `security definer`. Enquanto
-   isso, qualquer visitante perguntava ao banco que plano um salão paga —
+   isso, qualquer visitante perguntava ao banco que plano um restaurante paga —
    o id sai da vitrine. Fechadas no 57_plano_fechado.sql, e conferidas uma a
    uma mais abaixo. Justificativa também envelhece: a pergunta de quem relê
    esta lista é "isto AINDA é verdade?". */
@@ -181,8 +181,8 @@ begin
 end $$;
 
 /* ── A CONSULTA DO PLANO E DO USO (57_plano_fechado.sql) ───────────────────
-   Que plano um salão paga, o que ele tem liberado e quanto já usou no mês:
-   informação comercial dele, e de mais ninguém. O id do salão é público (a
+   Que plano um restaurante paga, o que ele tem liberado e quanto já usou no mês:
+   informação comercial dele, e de mais ninguém. O id do restaurante é público (a
    vitrine entrega), então a pergunta não pode ter resposta para quem é de
    fora — nem sem login, nem com uma conta qualquer, que se cria de graça.
 
@@ -216,7 +216,7 @@ end $$;
 /* E o que protege o "de dentro": as nove só são alcançadas por caminho
    `security definer`. Uma função comum (que roda como quem chamou) que passe
    a citar uma delas e esteja ao alcance da API devolveria "permission denied"
-   ao dono do salão no meio do uso — o erro do `comanda_numera`, de novo. As
+   ao dono do restaurante no meio do uso — o erro do `comanda_numera`, de novo. As
    três de agora (`exigir_recurso`, `teto_mensagens`, `usa_comanda`) estão
    fechadas elas mesmas; qualquer outra que apareça reprova aqui. */
 do $$
@@ -278,7 +278,7 @@ end $$;
    Foi exatamente o que aconteceu: `comanda_numera` era o único gatilho sem
    definer do projeto. Eu revoguei a `proximo_numero` de `authenticated`
    afirmando que "gatilho roda como dono", e abrir comanda passou a dar
-   `permission denied` — em produção, na mão do dono do salão.
+   `permission denied` — em produção, na mão do dono do restaurante.
 
    A afirmação estava certa para 40 gatilhos e errada para um. Este bloco
    troca "eu me lembro" por "o banco responde". */

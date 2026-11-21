@@ -6,7 +6,7 @@
    Emoji parecia atalho e cobra caro: cada sistema desenha o seu (a tesoura do
    Android não é a do iPhone), não aceita cor nem espessura, não alinha com a
    tipografia e envelhece junto com a moda do teclado. Num produto que o dono
-   do salão vai mostrar para o cliente, isso lê como improviso.
+   do restaurante vai mostrar para o cliente, isso lê como improviso.
 
    Aqui é uma família só — traço de 1,75, cantos e pontas arredondados, grade
    de 24 — que herda a cor do texto e acompanha o tamanho da fonte.

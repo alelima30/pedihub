@@ -9,7 +9,7 @@
 #  `aplicarFita()` e o CSS — dão vinte e cinco jeitos de quebrar em silêncio.
 #  Estas são as que dá para cometer amanhã sem má intenção.
 #
-#  ⚠ AS MAIS IMPORTANTES SÃO AS DO LADO "NADA PODE MUDAR": salão que nunca
+#  ⚠ AS MAIS IMPORTANTES SÃO AS DO LADO "NADA PODE MUDAR": restaurante que nunca
 #  abriu esta tela tem que continuar com a fita de fábrica, e a cor tem que
 #  continuar saindo da personalização. Defeito que LIGA alguma coisa o dono
 #  reclama no mesmo dia; defeito que muda a página de quem não pediu nada
@@ -103,7 +103,7 @@ troca agendar.html \
 # prioridade substitui o valor e a prioridade junto. O vazamento é apagado
 # três linhas depois de nascer.
 #
-# A verificação "a cor do botão continua a do salão" fica no teste, porque a
+# A verificação "a cor do botão continua a do restaurante" fica no teste, porque a
 # regra é real. O que não existe é como quebrá-la de dentro daquela função.
 #
 # No lugar dela, a mutação que MORDE: o CSS ignorando a escolha.

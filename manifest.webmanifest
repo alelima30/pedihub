@@ -1,7 +1,7 @@
 {
-  "name": "PediHub — Agenda para salão e barbearia",
+  "name": "PediHub — Agenda para restaurante e barbearia",
   "short_name": "PediHub",
-  "description": "Agenda, clientes, comissão e relatórios para salão de beleza, barbearia e estética.",
+  "description": "Agenda, clientes, comissão e relatórios para restaurante de beleza, barbearia e estética.",
   "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",

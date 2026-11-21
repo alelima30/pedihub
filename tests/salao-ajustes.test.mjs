@@ -69,7 +69,7 @@ const serv = await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte',
   duracaoMin:30, intervaloMin:0, preco:100, ativo:true, aceitaOnline:true });
 const cli = await dona.inserir('clientes', { salaoId: SALAO, nome:'Ana Paula',
   telefone:'11988887777' });
-ok('salão de teste criado, jornada das 08:00 às 12:00');
+ok('restaurante de teste criado, jornada das 08:00 às 12:00');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const ctx = await nav.newContext({ viewport:{ width:1360, height:900 } });
@@ -281,7 +281,7 @@ verdade('o texto dele chega ao banco', /beleza/.test(gravado.confirmacao || ''),
 
    Ele nasce VAZIO, com o nosso texto só como dica cinza. Gravar o vazio
    encheria o `cfg` de strings em branco; gravar o NOSSO TEXTO seria pior
-   ainda — congelaria a redação de hoje dentro do salão, e melhorar o padrão
+   ainda — congelaria a redação de hoje dentro do restaurante, e melhorar o padrão
    depois não chegaria em ninguém que já tivesse salvado a tela uma vez, que
    é todo mundo.
 

@@ -10,7 +10,7 @@
    funcionária abre no celular dela.
 
      dona abre Equipe → gera o link → funcionária abre o link →
-     cria a conta dela → cai dentro do painel do salão
+     cria a conta dela → cai dentro do painel do restaurante
 
    O teste do banco (tests/equipe.test.sql) já guarda as recusas — link de uso
    único, vencido, revogado, quem não administra. Aqui o que se prova é que a
@@ -51,7 +51,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`conv-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Convite ' + marca,
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Convite ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 
@@ -123,9 +123,9 @@ const caminho = link.replace(/^https?:\/\/[^/]+/, BASE);
 await rita.goto(caminho);
 await rita.waitForTimeout(2500);
 
-verdade('ela vê o nome do salão',
+verdade('ela vê o nome do restaurante',
   await rita.evaluate(() =>
-    /Salão Convite/.test(document.getElementById('convTitulo').textContent)),
+    /Restaurante Convite/.test(document.getElementById('convTitulo').textContent)),
   await rita.evaluate(() => document.getElementById('convTitulo').textContent));
 verdade('e para que foi convidada',
   await rita.evaluate(() => /Recepção/.test(document.body.textContent)));
@@ -153,7 +153,7 @@ await rita.waitForTimeout(5000);
 verdade('ela foi levada para o painel',
   /app\.html/.test(rita.url()), rita.url());
 
-// E o que importa mais: o painel é o painel DAQUELE salão.
+// E o que importa mais: o painel é o painel DAQUELE restaurante.
 const oQueRitaVe = await rita.evaluate(async () => {
   await new Promise(r => setTimeout(r, 2500));
   return {
@@ -161,7 +161,7 @@ const oQueRitaVe = await rita.evaluate(async () => {
     papel: (document.getElementById('latQuemPapel') || {}).textContent,
   };
 });
-verdade('no salão certo', /Salão Convite/.test(oQueRitaVe.salao || ''),
+verdade('no restaurante certo', /Restaurante Convite/.test(oQueRitaVe.salao || ''),
   JSON.stringify(oQueRitaVe));
 igual('e com o papel de recepção', (oQueRitaVe.papel || '').trim(), 'Recepção');
 

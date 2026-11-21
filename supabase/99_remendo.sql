@@ -180,7 +180,7 @@ alter table public.agendamentos
   add column if not exists encaixe_por uuid references public.perfis(id)
     on delete set null;
 comment on column public.agendamentos.encaixe is
-  'Marcado fora da jornada, com confirmação explícita de quem tem acesso ao salão.';
+  'Marcado fora da jornada, com confirmação explícita de quem tem acesso ao restaurante.';
 create or replace function public.jornada_costurada(
   p_profissional uuid, p_data date)
 returns table (inicio timestamptz, fim timestamptz)
@@ -280,14 +280,14 @@ begin
   end if;
   if coalesce(current_setting('role', true), 'none') in ('anon', 'authenticated')
      and not public.e_equipe(v_prof.salao_id) then
-    raise exception 'Só a equipe do salão consulta a agenda.'
+    raise exception 'Só a equipe do restaurante consulta a agenda.'
       using errcode = 'insufficient_privilege';
   end if;
   if not v_prof.ativo then
     return format('%s está desativado(a) na equipe.', v_prof.nome);
   end if;
   if v_prof.status_salao <> 'ativo' then
-    return 'Este salão está suspenso.';
+    return 'Este restaurante está suspenso.';
   end if;
   v_fuso := coalesce(v_prof.fuso, 'America/Sao_Paulo');
   v_outro := public.ha_choque(p_profissional, p_inicio, p_fim, p_ignorar);
@@ -696,7 +696,7 @@ begin
    limit 1;
   if v_nome is null then return null; end if;
   return format(
-    'Seu pacote %s vale %s. Para marcar fora desses dias, chame o salão no '
+    'Seu pacote %s vale %s. Para marcar fora desses dias, chame o restaurante no '
     || 'WhatsApp — dá para atender pagando.',
     v_nome, public.dias_por_extenso(v_dias));
 end $$;
@@ -739,7 +739,7 @@ begin
   perform public.exigir_recurso(v_salao, 'pacotes', 'Vender pacote');
   if not exists (select 1 from public.clientes c
                   where c.id = p_cliente and c.salao_id = v_salao) then
-    raise exception 'Esta cliente não é deste salão.'
+    raise exception 'Esta cliente não é deste restaurante.'
       using errcode = 'check_violation';
   end if;
   insert into public.pacote_clientes (pacote_id, cliente_id, sessoes, vence_em)
@@ -825,7 +825,7 @@ comment on function public.pacote_que_cobre(uuid, uuid[], timestamptz) is
 comment on function public.pacote_fora_do_dia(uuid, uuid[], timestamptz) is
   'Frase de recusa quando o pacote tem so_nos_dias e o dia está fora da lista. NULL quando não há nada a barrar. Só o link usa: a recepção marca por fora.';
 comment on table public.pacotes is
-  'Pacotes que o salão vende. `dias` no padrão do Postgres: 0=domingo. `so_nos_dias` faz o link recusar fora dos dias; o painel marca assim mesmo.';
+  'Pacotes que o restaurante vende. `dias` no padrão do Postgres: 0=domingo. `so_nos_dias` faz o link recusar fora dos dias; o painel marca assim mesmo.';
 
 create or replace function public.confirma_automatico(p_salao uuid)
 returns boolean language sql stable security definer set search_path = public as $$
@@ -836,7 +836,7 @@ returns boolean language sql stable security definer set search_path = public as
     true)
 $$;
 comment on function public.confirma_automatico(uuid) is
-  'O link confirma sozinho? cfg.confirmaAuto, padrão SIM. Desligado, o agendamento nasce pendente e espera o salão.';
+  'O link confirma sozinho? cfg.confirmaAuto, padrão SIM. Desligado, o agendamento nasce pendente e espera o restaurante.';
 drop trigger if exists tg_notif_agend_confirmado on public.agendamentos;
 create trigger tg_notif_agend_confirmado
   after update of status on public.agendamentos
@@ -1298,7 +1298,7 @@ begin
       using errcode = 'check_violation';
   end if;
   if a.inicio <= now() + interval '2 hours' then
-    raise exception 'Faltam menos de 2 horas. Fale com o salão para desmarcar.'
+    raise exception 'Faltam menos de 2 horas. Fale com o restaurante para desmarcar.'
       using errcode = 'check_violation';
   end if;
   update public.agendamentos
@@ -1774,7 +1774,7 @@ begin
       using errcode = 'check_violation';
   end if;
   if a.inicio <= now() + interval '2 hours' then
-    raise exception 'Faltam menos de 2 horas. Fale com o salão para desmarcar.'
+    raise exception 'Faltam menos de 2 horas. Fale com o restaurante para desmarcar.'
       using errcode = 'check_violation';
   end if;
   update public.agendamentos
@@ -1821,7 +1821,7 @@ begin
   end if;
   if not exists (select 1 from public.saloes
                   where id = p_salao and status = 'ativo') then
-    raise exception 'Este salão não está aceitando pedidos agora.'
+    raise exception 'Este restaurante não está aceitando pedidos agora.'
       using errcode = 'check_violation';
   end if;
   if exists (
@@ -2357,7 +2357,7 @@ begin
   if v_nome is null then return null; end if;
   return format(
     '%s: só %s. Escolha um desses dias, tire este serviço do pedido, '
-    || 'ou chame o salão no WhatsApp.',
+    || 'ou chame o restaurante no WhatsApp.',
     v_nome, public.dias_por_extenso(v_dias));
 end $$;
 
@@ -2402,7 +2402,7 @@ begin
     return 'Este profissional não está atendendo pela agenda online.';
   end if;
   if not public.recurso_bool(v_salao, 'agenda_online') then
-    return 'Este salão não está aceitando marcação pela internet.';
+    return 'Este restaurante não está aceitando marcação pela internet.';
   end if;
   if exists (
     select 1 from unnest(p_servicos) as pedido(id)
@@ -2434,12 +2434,12 @@ begin
     v_pedido := public.duracao_dos_servicos(p_profissional, p_servicos);
     if (v_online + v_pedido) * 100 > v_jornada * public.teto_online_pct(v_salao) then
       return 'Este dia já está quase todo marcado. '
-          || 'Chame o salão no WhatsApp que a gente encaixa você.';
+          || 'Chame o restaurante no WhatsApp que a gente encaixa você.';
     end if;
   end if;
   if public.rajada_online(v_salao) >= public.teto_online_rajada(v_salao) then
     return 'A marcação pela internet está congestionada agora. '
-        || 'Tente daqui a pouco, ou chame o salão no WhatsApp.';
+        || 'Tente daqui a pouco, ou chame o restaurante no WhatsApp.';
   end if;
   return null;
 end $$;
@@ -2472,7 +2472,7 @@ create or replace function public.linha_pagamento(p_pecas jsonb)
 returns text language sql stable security definer set search_path = public as $$
   select case when public.mensagens_com_pagamento()
               then E'\n💰 Valor: ' || coalesce(p_pecas->>'valor', '—')
-                || E'\n💳 Pagamento: ' || coalesce(p_pecas->>'pagamento', 'A combinar no salão')
+                || E'\n💳 Pagamento: ' || coalesce(p_pecas->>'pagamento', 'A combinar no restaurante')
               else '' end
 $$;
 
@@ -2528,7 +2528,7 @@ begin
       when v_pacote then 'R$ 0,00 — sessão do pacote'
       else 'R$ ' || translate(to_char(v_total, 'FM999,999,990.00'), ',.', '.,') end,
     'pagamento', case
-      when v_pacote and v_pacote_a_pagar then 'Pacote a pagar no salão'
+      when v_pacote and v_pacote_a_pagar then 'Pacote a pagar no restaurante'
       when v_pacote and v_pc_pago and v_pc_valor > 0 then 'Pacote já pago' || coalesce(' (' || case v_pc_forma
              when 'pix' then 'Pix' when 'dinheiro' then 'dinheiro'
              when 'debito' then 'cartão de débito' when 'credito' then 'cartão de crédito'
@@ -2539,7 +2539,7 @@ begin
       when to_jsonb(a)->>'forma_pagamento' = 'debito'   then 'Cartão de débito'
       when to_jsonb(a)->>'forma_pagamento' = 'credito'  then 'Cartão de crédito'
       when v_total <= 0 then 'Sem custo'
-      else 'A combinar no salão' end);
+      else 'A combinar no restaurante' end);
 end $$;
 
 create or replace function public.texto_agendamento(

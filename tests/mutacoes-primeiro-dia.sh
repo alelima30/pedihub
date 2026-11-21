@@ -61,7 +61,7 @@ echo "1. passo 1: o endereço não é gravado"
 troca app.html \
   "  sl.endereco = Object.assign({}, Endereco.normalizar(sl.endereco), {" \
   "  void Object.assign({}, Endereco.normalizar(sl.endereco), {" \
-  && rodar "o link continua sem dizer onde é o salão"
+  && rodar "o link continua sem dizer onde é o restaurante"
 
 echo "2. passo 1: o Instagram não é gravado"
 troca app.html \

@@ -10,14 +10,14 @@
    horário. Um tipo de bloqueio para aquele cliente."
 
    ── O QUE ESTE ARQUIVO MEDE ────────────────────────────────────────────────
-     1. no banco, com o salão confirmando sozinho: a cliente comum sai
+     1. no banco, com o restaurante confirmando sozinho: a cliente comum sai
         confirmada; a marcada sai PENDENTE — também se trocar o primeiro nome
         (vale pelo WhatsApp);
      2. a pergunta "esta cliente está marcada?" não é aberta a ninguém;
      3. no painel: a marca na ficha grava no banco, e a lista mostra
         "confirma antes";
      4. no link: a marcada vê "Agendamento enviado" e "Aguardando
-        confirmação do salão" — nunca "confirmado"; a comum vê confirmado;
+        confirmação do restaurante" — nunca "confirmado"; a comum vê confirmado;
      5. nenhum erro de JavaScript.
    =========================================================================== */
 import fs from 'node:fs';
@@ -58,7 +58,7 @@ const masc = d => `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
 const dona = aba();
 await dona.criarConta({ email:`cc-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -67,7 +67,7 @@ for(let i = 0; i <= 6; i++)
 const sv = await dona.inserir('servicos', { salaoId: SALAO, nome:'Escova', duracaoMin:30, intervaloMin:0,
   preco:50, ativo:true, aceitaOnline:true, categoria:'Cabelo' });
 const SEMANA = [0,1,2,3,4,5,6].reduce((o, d) => (o[d] = [['00:00','00:00']], o), {});
-// O salão CONFIRMA SOZINHO: é o caso do pedido.
+// O restaurante CONFIRMA SOZINHO: é o caso do pedido.
 await dona.atualizar('saloes', SALAO, { cfg:{ diasLiberados:30, cor:'#B8356B', funcionamento: SEMANA, confirmaAuto:true } });
 
 const chata = await dona.inserir('clientes', { salaoId: SALAO, nome:'Carla Chata', telefone: TEL_CHATA, exigeConfirmacao: true });
@@ -89,9 +89,9 @@ async function marcar(nome, tel, diaMais){
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('1. No banco, com o salão confirmando sozinho');
+secao('1. No banco, com o restaurante confirmando sozinho');
 igual('a cliente comum sai confirmada', await marcar('Bruna Boa', TEL_BOA, 1), 'confirmado');
-igual('a cliente marcada sai pendente, esperando o salão', await marcar('Carla Chata', TEL_CHATA, 2), 'pendente');
+igual('a cliente marcada sai pendente, esperando o restaurante', await marcar('Carla Chata', TEL_CHATA, 2), 'pendente');
 /* O número com +55 na frente não bate, ao pé da letra, com o da ficha — e
    nasce OUTRA ficha, sem a marca. A regra vale pelo WhatsApp (sem o 55),
    e não só pela ficha encontrada. */
@@ -172,8 +172,8 @@ async function marcarNoLink(nome, tel){
 }
 {
   const a = await marcarNoLink('Carla Chata', TEL_CHATA);
-  igual('a marcada: "Agendamento enviado!" e "Aguardando confirmação do salão" — nunca confirmado',
-    [a.tela, a.titulo, /Aguardando confirmação do salão/.test(a.chip)], ['pronto', 'Agendamento enviado!', true]);
+  igual('a marcada: "Agendamento enviado!" e "Aguardando confirmação do restaurante" — nunca confirmado',
+    [a.tela, a.titulo, /Aguardando confirmação do restaurante/.test(a.chip)], ['pronto', 'Agendamento enviado!', true]);
   const b = await marcarNoLink('Nova Pessoa', TEL_NOVA);
   igual('a comum: "Agendamento confirmado!"', [b.tela, b.titulo, /Confirmado/.test(b.chip)], ['pronto', 'Agendamento confirmado!', true]);
 }

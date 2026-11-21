@@ -24,7 +24,7 @@
    A OUTRA chave — "Secret key" (`sb_secret_...`), ou `service_role` no
    projeto antigo — NUNCA entra em arquivo que vai para o navegador. Ela passa
    por cima de todo o RLS: com ela no código-fonte da página, qualquer pessoa
-   lê a agenda e a clientela de todos os salões.
+   lê a agenda e a clientela de todos os restaurantes.
    =========================================================================== */
 
 window.PEDIHUB = {
@@ -44,7 +44,7 @@ window.PEDIHUB = {
    achei conta com esse e-mail" — verdade que apontava para o lugar errado.
 
    Agora o sistema fala com o banco de verdade. Isso quer dizer que quem
-   abrir o endereço público cria conta e salão AQUI DENTRO. Para um produto
+   abrir o endereço público cria conta e restaurante AQUI DENTRO. Para um produto
    que ainda não lançou, é o que se quer: dá para usar de verdade, e o RLS
    segura cada um no seu canto — 14 verificações por dentro do banco e 16 por
    fora provam isso.
@@ -58,7 +58,7 @@ window.PEDIHUB = {
 
    Serve para duas coisas de uma vez:
 
-   · mostrar o sistema para alguém sem criar salão de verdade no banco — é o
+   · mostrar o sistema para alguém sem criar restaurante de verdade no banco — é o
      "ver como funciona" que todo SaaS tem, e agora ele existe sem depender
      de manter um segundo site publicado;
    · deixar os testes de tela exercitarem o modo demonstração mesmo com o

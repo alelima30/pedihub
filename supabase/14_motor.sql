@@ -31,7 +31,7 @@
 -- então não existe como uma conhecer uma regra que a outra desconhece.
 --
 -- ── O ENCAIXE DEIXA DE SER UM BURACO E VIRA UMA COLUNA ─────────────────────
--- Encaixar fora da jornada é legítimo: é o que salva o dia num salão. O que
+-- Encaixar fora da jornada é legítimo: é o que salva o dia num restaurante. O que
 -- não pode é o encaixe deliberado e o erro de digitação entrarem no banco
 -- exatamente iguais, sem ninguém saber qual foi qual.
 --
@@ -59,7 +59,7 @@ alter table public.agendamentos
     on delete set null;
 
 comment on column public.agendamentos.encaixe is
-  'Marcado fora da jornada, com confirmação explícita de quem tem acesso ao salão.';
+  'Marcado fora da jornada, com confirmação explícita de quem tem acesso ao restaurante.';
 
 -- ---------------------------------------------------------------------------
 -- 2) OS AUXILIARES COMPARTILHADOS
@@ -80,8 +80,8 @@ comment on column public.agendamentos.encaixe is
    existe na lista, em vez de aparecer e ser recusado depois.
 
    ⚠ E EM INSTANTE porque a hora da jornada é hora de parede ("09:00 de
-   segunda"). Convertida no fuso do salão, a agenda continua certa na semana
-   em que o horário de verão muda: o salão abre às 9 dos dois lados da
+   segunda"). Convertida no fuso do restaurante, a agenda continua certa na semana
+   em que o horário de verão muda: o restaurante abre às 9 dos dois lados da
    virada, não "9 menos uma hora". */
 create or replace function public.jornada_costurada(
   p_profissional uuid, p_data date)
@@ -131,7 +131,7 @@ $$;
    A primeira versão desta função recusava tudo quando não havia jornada — e
    quem pegou foi um teste que já existia, na primeira execução.
 
-   Recusar parece o lado seguro e é o errado. Um salão que acabou de se
+   Recusar parece o lado seguro e é o errado. Um restaurante que acabou de se
    cadastrar tem profissional e não tem jornada: a tela de jornada é outro
    passo. Com a regra estrita, ele não conseguiria marcar NADA no primeiro
    dia — e leria isso como "o sistema não me deixa trabalhar", que é o
@@ -172,7 +172,7 @@ language sql stable security definer set search_path = public as $$
     from public.bloqueios b
     join public.profissionais p on p.id = p_profissional
    where b.salao_id = p.salao_id
-     -- profissional_id nulo = bloqueio do salão inteiro (feriado, reforma)
+     -- profissional_id nulo = bloqueio do restaurante inteiro (feriado, reforma)
      and (b.profissional_id = p_profissional or b.profissional_id is null)
      and tstzrange(b.inicio, b.fim, '[)') && tstzrange(p_inicio, p_fim, '[)')
    limit 1;
@@ -205,7 +205,7 @@ $$;
 --
 -- Devolve o MOTIVO, em português, ou null quando cabe. O motivo é o produto
 -- desta função: "não deu" manda a pessoa adivinhar, e adivinhar no balcão com
--- a cliente esperando é o que faz o salão desistir do sistema.
+-- a cliente esperando é o que faz o restaurante desistir do sistema.
 --
 -- A ordem das conferências não é aleatória — é da mais barata para a mais
 -- cara, e da mais provável para a menos provável.
@@ -239,22 +239,22 @@ begin
      Maria Silva das 10:00 às 11:00", "bloqueado: consulta médica". É a frase
      certa para a recepção, e era entregue a QUALQUER conta logada: o id da
      profissional é público (a vitrine o devolve), e perguntando horário por
-     horário dava para ler a agenda e a clientela de qualquer salão. Achado na
+     horário dava para ler a agenda e a clientela de qualquer restaurante. Achado na
      auditoria de segurança.
 
-     Pela internet (anon/authenticated), só a equipe DESTE salão pergunta. O
+     Pela internet (anon/authenticated), só a equipe DESTE restaurante pergunta. O
      SQL Editor, o worker e o service_role não passam por aqui (`role` não é
      anon nem authenticated) — e os testes do motor continuam valendo. */
   if coalesce(current_setting('role', true), 'none') in ('anon', 'authenticated')
      and not public.e_equipe(v_prof.salao_id) then
-    raise exception 'Só a equipe do salão consulta a agenda.'
+    raise exception 'Só a equipe do restaurante consulta a agenda.'
       using errcode = 'insufficient_privilege';
   end if;
   if not v_prof.ativo then
     return format('%s está desativado(a) na equipe.', v_prof.nome);
   end if;
   if v_prof.status_salao <> 'ativo' then
-    return 'Este salão está suspenso.';
+    return 'Este restaurante está suspenso.';
   end if;
 
   v_fuso := coalesce(v_prof.fuso, 'America/Sao_Paulo');
@@ -386,7 +386,7 @@ begin
   end if;
 
   -- O motivo do bloqueio fica de fora: "médico", "terapia" e "advogado" são
-  -- assunto de quem trabalha no salão, não de quem está marcando.
+  -- assunto de quem trabalha no restaurante, não de quem está marcando.
   if public.ha_bloqueio(new.profissional_id, new.inicio, new.fim)
      is not null then
     raise exception 'Esse horário está bloqueado na agenda.'
@@ -425,9 +425,9 @@ language plpgsql stable security definer set search_path = public as $$
 declare
   v_duracao int;
   v_passo   constant interval := '15 minutes';
-  /* ── A ANTECEDÊNCIA MÍNIMA, ESCOLHIDA PELO SALÃO ────────────────────────
+  /* ── A ANTECEDÊNCIA MÍNIMA, ESCOLHIDA PELO RESTAURANTE ────────────────────────
      Ninguém quer receber "disponível: daqui a 4 minutos". Era meia hora fixa
-     para todo mundo; virou ajuste porque os salões não se parecem: uma
+     para todo mundo; virou ajuste porque os restaurantes não se parecem: uma
      barbearia de corte rápido atende quem aparece em 15 minutos, e uma
      clínica precisa de horas para separar ficha e sala.
 
@@ -446,7 +446,7 @@ declare
      `cfg` e o motor seguia com os 30 minutos de sempre. Nada avisa: as duas
      funções compilam, as duas existem, e a de número maior é a que vale.
 
-     Ausente vale 30: é o que valia antes, então nenhum salão muda de
+     Ausente vale 30: é o que valia antes, então nenhum restaurante muda de
      comportamento por causa desta linha e não há migração.
 
      ── O CAST PRECISA SER À PROVA DE TEXTO ────────────────────────────────
@@ -477,7 +477,7 @@ begin
          then (v_cfg->>'antecedenciaMin')::int else 30 end, 0), 10080));
 
   -- As regras de POLÍTICA da agenda online (aceita online, cota do plano,
-  -- dias liberados, serviço deste salão) continuam onde estavam. Elas são
+  -- dias liberados, serviço deste restaurante) continuam onde estavam. Elas são
   -- diferentes das regras FÍSICAS de disponibilidade, e misturar as duas faria
   -- a recepção herdar limites que são do link público.
   if public.porque_nao_agenda(p_profissional, p_data, p_servicos) is not null then
@@ -508,7 +508,7 @@ end $$;
 -- 6) Quem pode chamar
 --
 -- Os auxiliares são `security definer` e leem jornada e bloqueio, que são
--- assunto interno do salão. Ficam fechados: quem os alcança são as duas
+-- assunto interno do restaurante. Ficam fechados: quem os alcança são as duas
 -- funções de cima.
 --
 -- `avaliar_horario` e `porque_nao_cabe` vão para `authenticated` — é o painel

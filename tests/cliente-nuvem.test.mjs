@@ -8,15 +8,15 @@
    O cadastro terminava entregando ao dono um link para mandar às clientes.
    Aberto, ele dizia:
 
-       Salão não encontrado. O endereço ?salao=… não corresponde a
-       nenhum salão ativo.
+       Restaurante não encontrado. O endereço ?salao=… não corresponde a
+       nenhum restaurante ativo.
 
-   O salão estava no banco. A tela é que nunca perguntava — falava só com o
+   O restaurante estava no banco. A tela é que nunca perguntava — falava só com o
    `localStorage`. Quer dizer: o produto inteiro terminava num link que
-   informava à cliente do salão que o salão não existe.
+   informava à cliente do restaurante que o restaurante não existe.
 
    Este arquivo faz o caminho todo, do jeito que ele acontece de verdade:
-   a dona cria a conta e o salão, cadastra um serviço e a jornada da semana;
+   a dona cria a conta e o restaurante, cadastra um serviço e a jornada da semana;
    depois uma ABA ANÔNIMA — sem sessão, sem localStorage, sem nada — abre o
    link, escolhe, marca, e o horário tem que existir no banco, com o preço
    que o BANCO calculou.
@@ -58,7 +58,7 @@ function novaAba(){
   return janela.Dados;
 }
 
-secao('A dona monta o salão');
+secao('A dona monta o restaurante');
 
 const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = novaAba();
@@ -70,7 +70,7 @@ const criado = await dona.chamar('criar_salao', {
   p_telefone: '(51) 99887-6655', p_documento: null, p_origem: null });
 const salaoId = criado[0].salao_id;
 const SLUG    = criado[0].slug;
-verdade('o salão nasce com o apelido do link', !!SLUG);
+verdade('o restaurante nasce com o apelido do link', !!SLUG);
 
 const PRECO = 90, DURACAO = 60;
 const corte = await dona.inserir('servicos', {
@@ -103,7 +103,7 @@ await p.waitForTimeout(1500);
 
 verdade('a página está falando com o banco, não com o navegador',
   await p.evaluate(() => NA_NUVEM));
-igual('o link abre o salão certo',
+igual('o link abre o restaurante certo',
   (await p.textContent('#tituloSalao')).trim(), 'Studio Cliente ' + marca);
 
 await p.click('#btPrincipal'); await p.waitForTimeout(300);
@@ -139,7 +139,7 @@ igual('trocar de dia não pergunta ao servidor de novo — a janela já veio tod
 
 const horas = await p.evaluate(() =>
   [...document.querySelectorAll('#listaHoras .hora')].map(b => b.textContent));
-igual('o primeiro horário é a abertura do salão', horas[0], '09:00');
+igual('o primeiro horário é a abertura do restaurante', horas[0], '09:00');
 verdade('e o passo é de 15 em 15 minutos', horas[1] === '09:15');
 // Jornada 09:00–18:00 com serviço de 60 min: a última que ainda TERMINA
 // dentro do expediente é 17:00. 33 vagas.
@@ -188,7 +188,7 @@ igual('e sem nenhuma resposta de erro do servidor', ruins.join(' | '), '');
 igual('o botão do fim leva aos horários da pessoa',
   (await p.textContent('#btPrincipal')).trim(), 'Ver meus horários');
 
-secao('O horário existe no banco, e é do salão');
+secao('O horário existe no banco, e é do restaurante');
 
 const agendados = await dona.lista('agendamentos', { salaoId });
 igual('a dona vê exatamente um horário marcado', agendados.length, 1);
@@ -199,7 +199,7 @@ igual('e com a origem certa — veio da agenda online', ag.origem, 'online');
 /* ── A REGRA QUE NÃO SE NEGOCIA, CONFERIDA DO LADO DE FORA ─────────────────
    A tela mandou os IDS DOS SERVIÇOS e mais nada. Duração e preço saíram do
    banco. Se um dia alguém "otimizar" mandando `preco` do navegador, este
-   número passa a valer o que o console mandar — e a comanda do salão fecha
+   número passa a valer o que o console mandar — e a comanda do restaurante fecha
    com o valor que a cliente escolheu. */
 igual('o valor foi calculado pelo banco, não enviado pela tela',
   Number(ag.valorPrevisto), PRECO);
@@ -231,7 +231,7 @@ igual('e o CPF, sem pontuação', (fichas[0]||{}).cpf, '52998224725');
 secao('E o horário sai da lista para a próxima pessoa');
 
 // O agendamento guarda um INSTANTE, não uma data solta — a coluna é
-// timestamptz. O dia sai dele lido no fuso do salão, que é o único em que
+// timestamptz. O dia sai dele lido no fuso do restaurante, que é o único em que
 // "09:00" quer dizer nove da manhã.
 const diaDoAg = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo',
   year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date(ag.inicio));
@@ -276,8 +276,8 @@ verdade('com quem atende', meu.includes('Marta Prado'));
 verdade('e o botão de cancelar', meu.includes('Cancelar'));
 
 /* ── O SEGREDO É A ÚNICA CHAVE ────────────────────────────────────────────
-   Uma aba nova, do mesmo salão, sem o segredo: não pode ver nada. Se
-   bastasse abrir o link do salão para ver marcações, o "meus horários" seria
+   Uma aba nova, do mesmo restaurante, sem o segredo: não pode ver nada. Se
+   bastasse abrir o link do restaurante para ver marcações, o "meus horários" seria
    uma lista pública das clientes da casa. */
 const bisbilhoteira = await nav.newContext({ viewport: { width: 430, height: 800 } });
 const b = await bisbilhoteira.newPage();
@@ -286,7 +286,7 @@ await b.waitForTimeout(1500);
 await b.evaluate(() => irPara('meus'));
 await b.waitForTimeout(1500);
 const dela = await b.textContent('#listaMeus');
-verdade('outro aparelho, mesmo salão, não vê marcação nenhuma',
+verdade('outro aparelho, mesmo restaurante, não vê marcação nenhuma',
   !dela.includes('Juliana') && !dela.includes('Corte feminino'));
 verdade('e a tela explica por quê, em vez de parecer quebrada',
   dela.includes('Nenhum horário neste aparelho'));
@@ -330,7 +330,7 @@ const fila = await p.evaluate(async (args) => {
 verdade('entrar na fila devolve um segredo', !!(fila && fila.token));
 
 const naFila = await dona.lista('lista_espera', { salaoId });
-igual('e a linha existe no banco, do salão certo', naFila.length, 1);
+igual('e a linha existe no banco, do restaurante certo', naFila.length, 1);
 igual('com a duração que o BANCO calculou, não a que a tela mandou',
   Number((naFila[0] || {}).duracaoMin), DURACAO);
 
@@ -347,7 +347,7 @@ secao('A vitrine: o que a casa faz, sem tabela de preços');
    obstáculo.
 
    As duas fotos deste caso têm proporções DIFERENTES de propósito — uma em
-   pé, uma deitada. É o que chega do celular do salão, e é o que fazia o
+   pé, uma deitada. É o que chega do celular do restaurante, e é o que fazia o
    `object-fit:cover` cortar justamente o cabelo que a foto queria mostrar.
    ──────────────────────────────────────────────────────────────────────── */
 
@@ -455,9 +455,9 @@ verdade('a tela diz que a agenda online não foi ligada, e não culpa a conexão
 verdade('e diz ao dono exatamente o que rodar',
   semTexto.includes('00_tudo.sql'));
 
-secao('O salão recém-criado, antes de cadastrar qualquer serviço');
+secao('O restaurante recém-criado, antes de cadastrar qualquer serviço');
 
-/* É o estado em que TODO salão passa a primeira hora: o cadastro entrega o
+/* É o estado em que TODO restaurante passa a primeira hora: o cadastro entrega o
    link no fim, e a pessoa manda para as clientes antes de lançar os serviços.
    Aqui saía a mensagem da busca vazia — "Tente outra palavra, ou limpe a
    busca" — para quem não tinha digitado busca nenhuma. */
@@ -473,7 +473,7 @@ await z.goto(BASE + '/agendar.html?salao=' + criadoZero[0].slug);
 await z.waitForTimeout(1500);
 await z.click('#btPrincipal'); await z.waitForTimeout(400);
 const vazio = await z.textContent('#listaServicos');
-verdade('diz que o salão ainda não publicou os serviços',
+verdade('diz que o restaurante ainda não publicou os serviços',
   vazio.includes('ainda não publicou'));
 verdade('e não manda a cliente arrumar uma busca que ela não fez',
   !vazio.includes('limpe a busca'));
@@ -483,8 +483,8 @@ secao('Um apelido que não existe');
 const q = await ctx.newPage();
 await q.goto(BASE + '/agendar.html?salao=salao-que-nao-existe-' + marca);
 await q.waitForTimeout(1500);
-verdade('diz que não encontrou, em vez de listar os outros salões',
-  (await q.textContent('#listaSaloes')).includes('não corresponde a nenhum salão ativo'));
+verdade('diz que não encontrou, em vez de listar os outros restaurantes',
+  (await q.textContent('#listaSaloes')).includes('não corresponde a nenhum restaurante ativo'));
 
 await nav.close();
 console.log('');

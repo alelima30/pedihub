@@ -11,7 +11,7 @@
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Convite — PediHub</title>
-<meta name="description" content="Você foi convidada para trabalhar num salão no PediHub." />
+<meta name="description" content="Você foi convidada para trabalhar num restaurante no PediHub." />
 <!-- Convite não é conteúdo para buscador: é um link privado que circula no
      WhatsApp. Indexado, ele vira porta aberta. -->
 <meta name="robots" content="noindex, nofollow" />
@@ -87,8 +87,8 @@
    ele é o formulário que abre primeiro.
 
    ── E O QUE ELA NÃO FAZ ────────────────────────────────────────────────────
-   Não cria salão. `criar.html` cria; aqui a pessoa entra num salão que já
-   existe. Confundir os dois daria à recepcionista um salão vazio no lugar do
+   Não cria restaurante. `criar.html` cria; aqui a pessoa entra num restaurante que já
+   existe. Confundir os dois daria à recepcionista um restaurante vazio no lugar do
    emprego dela.
    =========================================================================== */
 
@@ -100,9 +100,9 @@ const esc = t => String(t == null ? '' : t)
   .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 const PAPEL = {
-  admin:        'Administra o salão',
-  recepcao:     'Recepção',
-  profissional: 'Atende clientes',
+  admin:        'Administra o restaurante',
+  recepcao:     'Caixa e balcão',
+  profissional: 'Atendente',
 };
 
 function erro(msg){
@@ -122,7 +122,7 @@ async function comecar(){
   if(!TOKEN){
     $('convTitulo').textContent = 'Convite não encontrado';
     $('convSub').textContent = 'O endereço veio sem o código.';
-    return erro('Peça ao salão para mandar o link de novo.');
+    return erro('Peça ao restaurante para mandar o link de novo.');
   }
 
   let c;
@@ -141,8 +141,8 @@ async function comecar(){
     $('convLogo').textContent = '·';
     $('convTitulo').textContent = 'Este convite não vale mais';
     $('convSub').textContent = 'Ele pode ter vencido, já ter sido usado, '
-                             + 'ou o salão pode tê-lo cancelado.';
-    return erro('Peça um convite novo a quem administra o salão.');
+                             + 'ou o restaurante pode tê-lo cancelado.';
+    return erro('Peça um convite novo a quem administra o restaurante.');
   }
 
   $('convLogo').innerHTML = c.logo
@@ -231,7 +231,7 @@ async function criarEAceitar(){
   }catch(e){
     ocupado('btCriar', false);
     /* Conta que já existe é o engano mais comum aqui: a pessoa esqueceu que
-       já tinha usado o PediHub como cliente de algum salão. Em vez de
+       já tinha usado o PediHub como cliente de algum restaurante. Em vez de
        repetir o erro do servidor, a tela oferece o caminho certo. */
     if(/already|registered|existe/i.test(e.message || '')){
       erro('Você já tem conta com este e-mail. Use "Entrar" logo abaixo.');

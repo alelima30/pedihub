@@ -15,7 +15,7 @@
 
    ── O QUE ESTE ARQUIVO PROTEGE ─────────────────────────────────────────────
      1. Sem aba Caixa, sem "Abrir comanda", sem a escolha no passo a passo e
-        no Meu negócio — e o salão gravado como "Só a agenda" no BANCO, que é o
+        no Meu negócio — e o restaurante gravado como "Só a agenda" no BANCO, que é o
         que faz o atendimento concluído virar faturamento.
      2. O teste grátis (2 profissionais, 61_teste_30_dias): o passo a passo
         oferece "quem mais atende"; na 3ª pessoa, o "+ Profissional" avisa
@@ -95,7 +95,7 @@ secao('1) O passo a passo: sem "quem mais atende", e sem a escolha da comanda');
 {
   const { p, fechar } = await painel();
   const passoDe = () => p.evaluate(() => (document.body.innerText.match(/Passo (\d+) de 11/) || [])[1]);
-  verdade('o passo a passo abre sozinho para o salão novo', (await passoDe()) === '1');
+  verdade('o passo a passo abre sozinho para o restaurante novo', (await passoDe()) === '1');
   for(let i = 0; i < 4; i++){
     await p.getByRole('button', { name: 'Próximo →' }).filter({ visible: true }).first().click();
     await p.waitForTimeout(900);
@@ -125,7 +125,7 @@ secao('1) O passo a passo: sem "quem mais atende", e sem a escolha da comanda');
    2 — O PAINEL SÓ COM AGENDA
    ══════════════════════════════════════════════════════════════════════════ */
 secao('2) Só com agenda: sem Caixa, sem comanda — e o banco sabe');
-// Um salão gravado "com comanda" (como os de antes): o painel passa a "Só a agenda".
+// Um restaurante gravado "com comanda" (como os de antes): o painel passa a "Só a agenda".
 await banco.query(`update public.saloes set cfg = coalesce(cfg,'{}') || '{"usaComanda":true}' where id=$1`, [SALAO]);
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
 // O dia inteiro, todos os dias: o atendimento de teste cabe a qualquer hora.
@@ -154,7 +154,7 @@ await dona.inserir('agendamento_servicos', { agendamentoId: ag.id, servicoId: co
     /Teste grátis/.test(faixa) && /faltam? \d+ dias?|termina hoje/.test(faixa) && /até/.test(faixa), faixa);
   await p.waitForTimeout(1500);
   const g = await um(`select cfg->>'usaComanda' as v, public.usa_comanda($1) as u from public.saloes where id=$1`, [SALAO]);
-  igual('o salão que estava "com comanda" é gravado "Só a agenda" ao abrir o painel', g.v, 'false');
+  igual('o restaurante que estava "com comanda" é gravado "Só a agenda" ao abrir o painel', g.v, 'false');
   igual('e o banco trabalha sem comanda (usa_comanda)', g.u, false);
   await p.evaluate(([dia, id]) => { diaAtual = dia; irPara('agenda'); abrirDetalhe(id); }, [hojeLa, ag.id]);
   await p.waitForTimeout(900);
@@ -234,7 +234,7 @@ secao('4) ?comanda=1 religa só naquela aba');
 {
   const { p, fechar } = await painel('?comanda=1');
   const abas = await p.evaluate(() => [...document.querySelectorAll('#abas .aba')].map(b => b.dataset.chave));
-  // O salão está "Só a agenda" no cfg: a aba não volta sozinha — mas a escolha volta a aparecer.
+  // O restaurante está "Só a agenda" no cfg: a aba não volta sozinha — mas a escolha volta a aparecer.
   await p.evaluate(() => irPara('salao')); await p.waitForTimeout(900);
   const bloco = await p.evaluate(() => { const b = document.getElementById('blocoComanda'); return b ? b.offsetParent !== null : null; });
   igual('com ?comanda=1, a escolha "Como você trabalha" volta', bloco, true);
@@ -266,7 +266,7 @@ async function link(){
     ob, { nome:true, tel:true, nasc:true, email:true, cpf:false, legenda:true });
   await fechar();
 }
-// "Encerrado": hoje, o horário do salão e a jornada acabam à 00:01 — já passou.
+// "Encerrado": hoje, o horário do restaurante e a jornada acabam à 00:01 — já passou.
 {
   const dow = new Date(hojeLa + 'T12:00:00Z').getUTCDay();
   await banco.query(`update public.saloes set cfg = coalesce(cfg,'{}') || jsonb_build_object('funcionamento',

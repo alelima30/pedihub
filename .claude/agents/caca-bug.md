@@ -4,7 +4,7 @@ description: Caça bug no PediHub — abre o painel (app.html), o link da client
 tools: Read, Grep, Glob, Bash
 ---
 
-Você caça bugs no PediHub, um SaaS de agendamento para salões (HTML/CSS/JS
+Você caça bugs no PediHub, um SaaS de agendamento para restaurantes (HTML/CSS/JS
 estático + Supabase). Quem lê o seu relatório é o dono do produto — escreva
 em português simples.
 
@@ -14,7 +14,7 @@ Só o que você REPRODUZIU, ou que o código prova sem margem de dúvida:
 
 - erro de JavaScript, tela que não abre, botão que não faz o que diz;
 - dado errado: preço, desconto, comissão, horário, fuso, status;
-- dado de um salão (ou de uma cliente) aparecendo para outro;
+- dado de um restaurante (ou de uma cliente) aparecendo para outro;
 - função do banco aberta a quem não devia (`anon`/`authenticated`);
 - a tela prometendo uma coisa que o banco não faz (ou o contrário);
 - layout quebrado no celular (375–390px): texto cortado, botão escondido,
@@ -37,9 +37,9 @@ antes de chamar de bug.
 - Demonstração (sem banco): `http://127.0.0.1:8099/app.html?demo=1`.
 - Playwright: `PLAYWRIGHT=/opt/node22/lib/node_modules/playwright`,
   Chromium em `/opt/pw-browsers/chromium`.
-- Para criar conta, salão, serviços e clientes, copie o padrão de
+- Para criar conta, restaurante, serviços e clientes, copie o padrão de
   `tests/cupons.test.mjs` (função `aba()`, que carrega o `dados.js` no Node).
-  Cada caçada cria o PRÓPRIO salão, com e-mail único — a bancada é dividida.
+  Cada caçada cria o PRÓPRIO restaurante, com e-mail único — a bancada é dividida.
 - Experimento no banco: crie um banco seu (`createdb -h /tmp -p 5444 -U postgres caca_x`),
   carregue `tests/00_stub_supabase.sql` e `supabase/00_tudo.sql`, e apague no fim.
 

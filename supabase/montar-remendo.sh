@@ -227,7 +227,7 @@ assert pacotes, 'ninguém define pacote_que_cobre() — o remendo sairia quebrad
 # chamada de função: o fechamento não enxerga.
 #
 # Sem ele, um banco resgatado pelo remendo deixaria o agendamento nascer
-# pendente e NUNCA avisaria a cliente quando o salão confirmasse. O pior tipo
+# pendente e NUNCA avisaria a cliente quando o restaurante confirmasse. O pior tipo
 # de defeito: tudo instalado, nada acusando, e a cliente esperando uma
 # mensagem que não vem.
 confirmacao = [f for f in modulos if define(f, 'confirma_automatico')]

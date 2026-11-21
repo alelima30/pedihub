@@ -1,11 +1,11 @@
 /* ===========================================================================
-   Sem internet não é "sem salão", nem "saia da conta"
+   Sem internet não é "sem restaurante", nem "saia da conta"
 
-   Achado no caça-bug: com o celular sem sinal (ou o wi-fi do salão caindo),
+   Achado no caça-bug: com o celular sem sinal (ou o wi-fi do restaurante caindo),
    toda leitura do `baixar()` falhava no `fetch` — e o erro era engolido como
    se fosse falta de permissão, devolvendo lista vazia. O painel abria dizendo
-   "Nenhum salão nesta conta — crie o seu em dois minutos" para quem tem
-   salão, agenda e caixa lá dentro.
+   "Nenhum restaurante nesta conta — crie o seu em dois minutos" para quem tem
+   restaurante, agenda e caixa lá dentro.
 
    E pior, depois de uma hora parado: a renovação da sessão também falhava no
    `fetch`, e o `dados.js` lia isso como "refresh recusado" — apagava a sessão.

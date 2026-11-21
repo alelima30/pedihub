@@ -18,7 +18,7 @@
 --                Trocar as chaves mataria TODAS as inscrições — por isso
 --                `push_config_gravar` se recusa a sobrescrever.
 -- push_aparelhos cada celular/computador que pediu para ser avisado, amarrado
---                à PESSOA (perfil) e ao salão. A pessoa vê e remove só os
+--                à PESSOA (perfil) e ao restaurante. A pessoa vê e remove só os
 --                dela. O endereço (endpoint) é um segredo do navegador:
 --                quem o tem consegue mandar aviso — então ninguém além do
 --                worker o lê de volta.
@@ -108,7 +108,7 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare n int;
 begin
   if auth.uid() is null or not public.e_equipe(p_salao) then
-    raise exception 'Só a equipe do salão liga os avisos.' using errcode = 'insufficient_privilege';
+    raise exception 'Só a equipe do restaurante liga os avisos.' using errcode = 'insufficient_privilege';
   end if;
   -- Teto por pessoa: aparelho trocado re-registra com outro endpoint, e sem
   -- teto a lista só cresce. Vinte dá para família inteira de aparelhos.
@@ -169,9 +169,9 @@ returns jsonb language sql stable security definer set search_path = public as $
    where a.salao_id = p_salao and a.perfil_id = auth.uid()
 $$;
 
--- Este aparelho (pelo endpoint, que só ele sabe) está ligado NESTE salão,
+-- Este aparelho (pelo endpoint, que só ele sabe) está ligado NESTE restaurante,
 -- para QUEM pergunta? A inscrição do navegador é uma só para todos os
--- salões; ligar num não liga no outro.
+-- restaurantes; ligar num não liga no outro.
 create or replace function public.push_ligado(p_salao uuid, p_endpoint text)
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.push_aparelhos a
@@ -299,7 +299,7 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare n int;
 begin
   if auth.uid() is null or not public.e_equipe(p_salao) then
-    raise exception 'Só a equipe do salão testa os avisos.' using errcode = 'insufficient_privilege';
+    raise exception 'Só a equipe do restaurante testa os avisos.' using errcode = 'insufficient_privilege';
   end if;
   n := public.push_avisar(p_salao, array[auth.uid()], 'Aviso de teste',
          'Se você está lendo isto, os avisos do PediHub chegam neste aparelho.',

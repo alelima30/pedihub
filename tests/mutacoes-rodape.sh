@@ -85,7 +85,7 @@ troca app.html \
   "" \
   && rodar "toque que não vai a lugar nenhum"
 
-echo "8. a prévia volta a escrever as palavras do salão para todo negócio"
+echo "8. a prévia volta a escrever as palavras do restaurante para todo negócio"
 troca app.html \
   "         <div class=\"fone-rot\" data-cfg=\"tituloEquipe\">\${escapar(vocPrevia(sl, 'atende'))}</div>" \
   "         <div class=\"fone-rot\" data-cfg=\"tituloEquipe\">Quem corta</div>" \

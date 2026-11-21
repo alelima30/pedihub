@@ -1,7 +1,7 @@
 -- ===========================================================================
 -- 64_so_restaurante.sql — no PediHub, toda casa é restaurante
 --
--- O PediHub nasceu do AgendaPro, que atende salão, barbearia, estética... e,
+-- O PediHub nasceu do AgendaPro, que atende restaurante, barbearia, estética... e,
 -- como um tipo entre outros, o restaurante (37_pedidos). Aqui é o contrário:
 -- o sistema é SÓ de pedidos — restaurante, lanchonete, pizzaria, delivery.
 --

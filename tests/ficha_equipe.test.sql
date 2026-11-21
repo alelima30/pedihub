@@ -7,21 +7,21 @@
 --   1. o lembrete grava limpo (marcas sem repetir, texto sem espaço sobrando);
 --   2. a equipe inteira lê e escreve: dono e profissional;
 --   3. a CLIENTE NÃO LÊ — nem logada, que lê a própria ficha; nem anônima;
---   4. o salão vizinho não lê, e ninguém aponta lembrete para ficha de
---      outro salão;
+--   4. o restaurante vizinho não lê, e ninguém aponta lembrete para ficha de
+--      outro restaurante;
 --   5. o como fazer do serviço é da equipe: a vitrine (o link) não leva;
 --   6. apagar a cliente leva o lembrete junto; o modo suporte trava.
 -- ===========================================================================
 \set ON_ERROR_STOP on
 
 insert into auth.users (id) values
-  ('a4100000-0000-0000-0000-00000000000a'),  -- Ana   — dona do salão A
+  ('a4100000-0000-0000-0000-00000000000a'),  -- Ana   — dona do restaurante A
   ('b4100000-0000-0000-0000-00000000000b'),  -- Bia   — profissional no A
   ('c4100000-0000-0000-0000-00000000000c'),  -- Maria — cliente do A e do B
-  ('e4100000-0000-0000-0000-00000000000e');  -- Zé    — dono do salão B
+  ('e4100000-0000-0000-0000-00000000000e');  -- Zé    — dono do restaurante B
 
 insert into public.saloes (id, slug, nome, status) values
-  ('54100000-0000-0000-0000-00000000000a', 'ficha-a', 'Salão A', 'ativo'),
+  ('54100000-0000-0000-0000-00000000000a', 'ficha-a', 'Restaurante A', 'ativo'),
   ('54100000-0000-0000-0000-00000000000b', 'ficha-b', 'Barbearia B', 'ativo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('54100000-0000-0000-0000-00000000000a', 'time', 'ativa'),
@@ -94,11 +94,11 @@ begin;
     perform t_texto('lê o como fazer do serviço',
       (select procedimento from public.servicos where id = '54200000-0000-0000-0000-00000000000a'),
       'Tinta 9.1 + 0.11, ox 20 vol, 35 min. Lavar com shampoo sem sulfato.');
-    perform t_texto('não aponta lembrete para a ficha da Maria no salão B',
+    perform t_texto('não aponta lembrete para a ficha da Maria no restaurante B',
       erro_de($q$insert into public.clientes_lembretes (salao_id, cliente_id, marcas)
                  values ('54100000-0000-0000-0000-00000000000a',
                          'c4110000-0000-0000-0000-00000000000b', array['x'])$q$),
-      'Esta cliente não é deste salão.');
+      'Esta cliente não é deste restaurante.');
   end $$;
 commit;
 
@@ -133,14 +133,14 @@ begin;
 commit;
 
 \echo ''
-\echo '4. O salão vizinho'
+\echo '4. O restaurante vizinho'
 begin;
   set local role authenticated;
   set local request.jwt.claim.sub = 'e4100000-0000-0000-0000-00000000000e';
   do $$ begin
-    perform t_igual('o dono do salão B não vê o lembrete do A',
+    perform t_igual('o dono do restaurante B não vê o lembrete do A',
       (select count(*) from public.clientes_lembretes), 0);
-    perform t_verdade('não grava no salão A',
+    perform t_verdade('não grava no restaurante A',
       recusado($q$insert into public.clientes_lembretes (salao_id, cliente_id, marcas)
                  values ('54100000-0000-0000-0000-00000000000a',
                          'c4110000-0000-0000-0000-00000000000a', array['x'])$q$));
@@ -148,7 +148,7 @@ begin;
       erro_de($q$insert into public.clientes_lembretes (salao_id, cliente_id, marcas)
                  values ('54100000-0000-0000-0000-00000000000b',
                          'c4110000-0000-0000-0000-00000000000a', array['x'])$q$),
-      'Esta cliente não é deste salão.');
+      'Esta cliente não é deste restaurante.');
   end $$;
 commit;
 
@@ -194,11 +194,11 @@ begin;
     perform t_texto('o nome chega sem espaço sobrando, e produto em branco vira vazio',
       (select nome || '|' || coalesce(produtos, '(nada)') from public.procedimentos
         where nome like 'Morena%'), 'Morena iluminada|(nada)');
-    perform t_texto('não pendura procedimento em serviço de outro salão',
+    perform t_texto('não pendura procedimento em serviço de outro restaurante',
       erro_de($q$insert into public.procedimentos (salao_id, servico_id, nome)
                  values ('54100000-0000-0000-0000-00000000000a',
                          '54200000-0000-0000-0000-00000000000b', 'x')$q$),
-      'Este serviço não é deste salão.');
+      'Este serviço não é deste restaurante.');
     perform t_verdade('nome em branco é recusado',
       recusado($q$insert into public.procedimentos (salao_id, nome)
                  values ('54100000-0000-0000-0000-00000000000a', '   ')$q$));
@@ -233,7 +233,7 @@ begin;
   set local role authenticated;
   set local request.jwt.claim.sub = 'e4100000-0000-0000-0000-00000000000e';
   do $$ begin
-    perform t_igual('o dono do salão vizinho também não',
+    perform t_igual('o dono do restaurante vizinho também não',
       (select count(*) from public.procedimentos), 0);
   end $$;
 commit;

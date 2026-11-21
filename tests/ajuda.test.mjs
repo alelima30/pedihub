@@ -10,7 +10,7 @@
 
    ── O QUE ESTE ARQUIVO PROTEGE ─────────────────────────────────────────────
      1. O botão está no topo, à vista no celular, e com tamanho de dedo.
-     2. Abre o número certo, já dizendo o salão e a tela em que a pessoa está
+     2. Abre o número certo, já dizendo o restaurante e a tela em que a pessoa está
         — e a tela é a de AGORA, não a de quando o painel abriu.
      3. Também está no menu, e não cobre nada da agenda.
    =========================================================================== */
@@ -85,10 +85,10 @@ verdade('o botão "Ajuda" existe e aparece', bt && bt.visivel && /Ajuda/.test(bt
 verdade('mora no topo da tela (não flutua por cima da agenda)', bt && bt.noTopo && bt.topo < 80, JSON.stringify(bt));
 verdade('com tamanho de dedo (44px)', bt && bt.alto >= 44, JSON.stringify(bt));
 
-secao('2) Abre o WhatsApp do suporte, dizendo o salão e a tela');
+secao('2) Abre o WhatsApp do suporte, dizendo o restaurante e a tela');
 let u = await abrir('#btAjuda');
 verdade('abre o número do suporte', u.startsWith('https://wa.me/' + NUMERO), u);
-verdade('a conversa já diz o salão', texto(u).includes(NOME), texto(u));
+verdade('a conversa já diz o restaurante', texto(u).includes(NOME), texto(u));
 verdade('e a tela em que a pessoa está', /Tela: Agenda/.test(texto(u)), texto(u));
 await p.evaluate(() => irPara('clientes')); await p.waitForTimeout(900);
 u = await abrir('#btAjuda');
@@ -102,7 +102,7 @@ const lat = await p.evaluate(() => {
 });
 verdade('"Precisa de ajuda? Fale no WhatsApp" no menu', lat && lat.visivel && /ajuda/i.test(lat.txt), JSON.stringify(lat));
 u = await abrir('#latAjuda');
-verdade('e abre o mesmo número, com o salão', u.startsWith('https://wa.me/' + NUMERO) && texto(u).includes(NOME), u);
+verdade('e abre o mesmo número, com o restaurante', u.startsWith('https://wa.me/' + NUMERO) && texto(u).includes(NOME), u);
 
 verdade('sem erro de JavaScript', erros.length === 0, erros.slice(0, 3).join(' | '));
 await nav.close();

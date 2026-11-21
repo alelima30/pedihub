@@ -63,7 +63,7 @@ const medir = () => p.evaluate(() => ({
    A suíte pegou, mas só porque o clique seguinte falhou por timeout — trinta
    segundos para dizer "algo está por cima". Esta pergunta responde na hora, e
    diz o nome de quem está ali. */
-console.log('\nO app do salão, em 375px');
+console.log('\nO app do restaurante, em 375px');
 // A comanda e o caixa estão desligados na plataforma; aqui a aba Caixa é medida.
 await p.goto(BASE + 'app.html?demo=1&comanda=1');
 await p.waitForTimeout(900);

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- PediHub — 24: produtos que o salão vende
+-- PediHub — 24: produtos que o restaurante vende
 --
 -- ── O QUE ESTE ARQUIVO DESTRAVA ───────────────────────────────────────────
 -- A tabela `public.produtos` existe desde o 01_schema, a comanda já vende
@@ -44,16 +44,16 @@
    `<salao_id>/produto-<produto_id>.jpg`.
 
    Não precisa de policy nova: a do 04_imagens confere apenas a PRIMEIRA pasta
-   do caminho (o uuid do salão), então qualquer nome de arquivo dentro dela já
+   do caminho (o uuid do restaurante), então qualquer nome de arquivo dentro dela já
    está coberto. */
 alter table public.produtos add column if not exists foto text;
 
 /* "Shampoo" não vende; "shampoo sem sal, 300ml, para cabelo com química"
-   vende. Anulável: salão pequeno começa sem escrever nada. */
+   vende. Anulável: restaurante pequeno começa sem escrever nada. */
 alter table public.produtos add column if not exists descricao text;
 
 /* A categoria: "Tratamento de cabelo", "Perfumaria". Texto livre, como a dos
-   serviços — o painel sugere as que o salão já usa, para a mesma não sair
+   serviços — o painel sugere as que o restaurante já usa, para a mesma não sair
    escrita de dois jeitos. Na loja do link vira a fileira de filtros embaixo
    da busca. Anulável: produto sem categoria aparece em "Todos".
 
@@ -64,9 +64,9 @@ alter table public.produtos add column if not exists categoria text;
 alter table public.produtos
   add column if not exists venda_online boolean not null default false;
 
-/* A busca da tela e do RLS é sempre por salão. Sem índice, cada leitura varre
+/* A busca da tela e do RLS é sempre por restaurante. Sem índice, cada leitura varre
    a tabela inteira da plataforma — o que num banco compartilhado por muitos
-   salões deixa de ser detalhe assim que o primeiro catálogo cresce. */
+   restaurantes deixa de ser detalhe assim que o primeiro catálogo cresce. */
 create index if not exists ix_produto_salao
   on public.produtos(salao_id) where ativo;
 
@@ -106,14 +106,14 @@ begin
   if teto is null then return new; end if;
   select count(*) into usados from public.produtos where salao_id = new.salao_id;
   if usados >= teto then
-    raise exception 'O seu plano cobre % produtos, e o salão já tem %. Mude de plano para cadastrar mais.',
+    raise exception 'O seu plano cobre % produtos, e o restaurante já tem %. Mude de plano para cadastrar mais.',
       teto, usados using errcode = 'check_violation';
   end if;
   return new;
 end $$;
 
 /* Só no INSERT, como os outros tetos deste projeto. Cobrar no UPDATE deixaria
-   um salão que baixou de plano sem conseguir sequer CORRIGIR o preço do que
+   um restaurante que baixou de plano sem conseguir sequer CORRIGIR o preço do que
    já cadastrou — o teto passaria a punir quem está tentando se ajustar. */
 drop trigger if exists tg_limite_produtos on public.produtos;
 create trigger tg_limite_produtos before insert on public.produtos
@@ -134,7 +134,7 @@ declare
   v_preco numeric;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
 
   select a.plano, pl.nome, pl.preco_mes into v_plano, v_nome, v_preco
@@ -160,7 +160,7 @@ begin
     'mensagens', jsonb_build_object(
       'usado', public.mensagens_no_mes(p_salao),
       'teto',  public.teto_mensagens(p_salao),
-      -- até onde vão as do salão; o resto é a reserva da cliente (22, 2b)
+      -- até onde vão as do restaurante; o resto é a reserva da cliente (22, 2b)
       'tetoSalao', public.teto_mensagens_salao(p_salao),
       -- o dia em que a franquia renova: o mês conta da assinatura (22). No
       -- teste grátis não renova nada (vira o Grátis, sem mensagem), e
@@ -177,7 +177,7 @@ grant execute on function public.uso_do_plano(uuid) to authenticated;
 
 /* O gatilho roda como dono, e é o que o `portas.test.sql` cobra de TODO
    gatilho deste projeto: sem `security definer` ele rodaria como quem fez o
-   INSERT, e exigiria que a própria dona do salão tivesse permissão de executar
+   INSERT, e exigiria que a própria dona do restaurante tivesse permissão de executar
    `recurso_num()`. Já aconteceu aqui, com o `comanda_numera`, e quebrou abrir
    comanda em produção. */
 revoke all on function public.checar_limite_produtos() from public, anon, authenticated;

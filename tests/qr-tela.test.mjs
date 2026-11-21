@@ -63,7 +63,7 @@ e('o botão de baixar para imprimir está lá',
   /Baixar para imprimir/i.test(cartao.texto), cartao.texto.slice(0, 200));
 
 /* ⚠ O QR TEM QUE SER DO LINK QUE ESTÁ NA CAIXA AO LADO, e não de um endereço
-   parecido. Um QR que leva ao salão errado é o defeito mais caro possível
+   parecido. Um QR que leva ao restaurante errado é o defeito mais caro possível
    aqui: ele é impresso, colado na parede, e manda cliente para outro lugar
    durante meses. Refeito pelo próprio gerador e comparado módulo a módulo. */
 const confere = await p.evaluate(() => {
@@ -78,7 +78,7 @@ e('e o desenho é exatamente o do link que está na caixa — '
   + confere.modulos + ' módulos', confere.iguais,
   'o QR na parede levaria a um endereço diferente do que o dono copiou');
 
-/* Trocando de salão, o QR troca junto: um desenho que ficasse do salão
+/* Trocando de restaurante, o QR troca junto: um desenho que ficasse do restaurante
    anterior mandaria a cliente de um para a agenda do outro. */
 const trocou = await p.evaluate(() => {
   const antes = document.getElementById('qrDoLink').innerHTML;
@@ -87,9 +87,9 @@ const trocou = await p.evaluate(() => {
   salaoAtual = outro.id; pintar(); irPara('publico');
   return { pulou: false, mudou: document.getElementById('qrDoLink').innerHTML !== antes };
 });
-if(trocou.pulou) console.log('      (só há um salão na demonstração — pulado)');
-else e('trocando de salão, o QR é refeito', trocou.mudou,
-       'o QR ficou o do salão anterior');
+if(trocou.pulou) console.log('      (só há um restaurante na demonstração — pulado)');
+else e('trocando de restaurante, o QR é refeito', trocou.mudou,
+       'o QR ficou o do restaurante anterior');
 
 /* ── No celular ─────────────────────────────────────────────────────────── */
 const cel = await ctx.newPage();

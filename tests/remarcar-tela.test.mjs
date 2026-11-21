@@ -66,7 +66,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random() * 1000);
 const dona = aba();
 await dona.criarConta({ email:`rm-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Remarca ' + m,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Remarca ' + m,
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -79,7 +79,7 @@ await dona.atualizar('saloes', SALAO, { cfg:{ diasLiberados:30, cor:'#B8356B', f
 const MARIA = (await linha(`insert into public.clientes (salao_id, nome, telefone) values ($1, 'Maria Souza', $2)
   returning id`, [SALAO, '119' + String(10000000 + Math.floor(Math.random() * 89999999))])).id;
 
-// Daqui a dois dias, no fuso do salão.
+// Daqui a dois dias, no fuso do restaurante.
 const D = (await linha(`select to_char((now() at time zone 'America/Sao_Paulo')::date + 2, 'YYYY-MM-DD') d`)).d;
 const D1 = (await linha(`select to_char($1::date + 1, 'YYYY-MM-DD') d`, [D])).d;
 const DOW = (await linha(`select extract(dow from $1::date)::int d`, [D])).d;
@@ -214,7 +214,7 @@ await p.click('#modalPe .btn:has-text("Cancelar horário")');
 await p.waitForFunction(() => !document.getElementById('fundo').classList.contains('on'), null, { timeout: 10000 }).catch(() => {});
 await p.waitForTimeout(2000);
 const c5 = await linha(`select status, cancelado_motivo from public.agendamentos where id = $1`, [A]);
-igual('com o sim: cancelado no banco, com o motivo', [c5.status, c5.cancelado_motivo], ['cancelado', 'cancelado pelo salão']);
+igual('com o sim: cancelado no banco, com o motivo', [c5.status, c5.cancelado_motivo], ['cancelado', 'cancelado pelo restaurante']);
 await p.evaluate(id => abrirDetalhe(id), SESSAO);
 dialogos.length = 0;
 await p.click('#modalPe .btn:has-text("Cancelar horário")');
@@ -364,7 +364,7 @@ secao('9. Quem atendeu: a troca depois da hora');
 {
   // Ontem às 10h a Maria estava com a Ju; quem atendeu foi a Bia.
   const ONTEM = (await linha(`select to_char((now() at time zone 'America/Sao_Paulo')::date - 1, 'YYYY-MM-DD') d`)).d;
-  // Duas profissionais: o teste grátis aceita uma só — o salão passa para o plano de equipe.
+  // Duas profissionais: o teste grátis aceita uma só — o restaurante passa para o plano de equipe.
   await banco.query(`update public.assinaturas set plano = 'time', status = 'ativa', trial_ate = null,
     vence_em = current_date + 20 where salao_id = $1`, [SALAO]);
   const bia = await dona.inserir('profissionais', { salaoId: SALAO, nome:'Bia Lima', ativo:true, comissaoPct:50 });

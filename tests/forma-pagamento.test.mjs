@@ -7,12 +7,12 @@
    O banco tem o tests/forma_pagamento.test.sql. Aqui, a tela:
 
    ── O LINK ────────────────────────────────────────────────────────────────
-     1. com as formas marcadas pelo salão (Pix e crédito), a confirmação
+     1. com as formas marcadas pelo restaurante (Pix e crédito), a confirmação
         pergunta "Como você vai pagar?" só com elas, e com a observação dele;
      2. sem escolher, não marca — e diz o que falta;
      3. escolhida, o resumo mostra, a tela de pronto também, o banco grava, e
         "Meus horários" mostra;
-     4. salão que não marcou formas: as quatro, e escolher é opcional;
+     4. restaurante que não marcou formas: as quatro, e escolher é opcional;
      5. tudo no pacote (R$ 0): não pergunta.
    ── O PAINEL ──────────────────────────────────────────────────────────────
      6. o cartão do dia mostra "Pix"; o detalhe mostra e deixa trocar; a
@@ -53,19 +53,19 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const n7 = String(Date.now() % 10000000).padStart(7, '0');
 const tel = k => '51' + k + n7;
 const masc = d => `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-/* O dia é o do SALÃO (São Paulo), e não o do relógio UTC: das 21h à
+/* O dia é o do RESTAURANTE (São Paulo), e não o do relógio UTC: das 21h à
    meia-noite o UTC já está no dia seguinte, e "ontem" pelo UTC é "hoje" no
-   salão — o cupom vencido "ontem" ainda valia, e o teste reprovava à noite. */
+   restaurante — o cupom vencido "ontem" ainda valia, e o teste reprovava à noite. */
 const hojeNoSalao = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
 const diaMais = d => { const [a, m, dd] = hojeNoSalao().split('-').map(Number);
   return new Date(Date.UTC(a, m - 1, dd + d)).toISOString().slice(0, 10); };
 
-// ── Dois salões: um que marcou Pix e crédito, outro que não marcou nada ────
+// ── Dois restaurantes: um que marcou Pix e crédito, outro que não marcou nada ────
 async function montarSalao(nome, cfgExtra){
   const dona = aba();
   await dona.criarConta({ email:`fp-${nome}-${m}@teste.com`, senha:'minhasenhaboa',
     nome:'Ju Barbosa', telefone:'+5511' + (900000000 + Math.floor(Math.random() * 89999999)) });
-  const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão ' + nome, p_tipo:'salao',
+  const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante ' + nome, p_tipo:'salao',
     p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
   const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
   const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -115,7 +115,7 @@ const caixa = p => p.evaluate(() => {
 });
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('1 a 3. O salão que aceita Pix e crédito');
+secao('1 a 3. O restaurante que aceita Pix e crédito');
 const TEL_ANA = tel('71');
 let AG_ANA = null;
 {
@@ -132,8 +132,8 @@ let AG_ANA = null;
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   await p.waitForTimeout(700);
   await ateConfirmar(p, 'Ana Lima', TEL_ANA, 3);
-  igual('a confirmação pergunta "Como você vai pagar?" só com as formas do salão, e a observação dele',
-    await caixa(p), { titulo: 'Como você vai pagar?', sub: 'O pagamento é feito no salão, no dia.',
+  igual('a confirmação pergunta "Como você vai pagar?" só com as formas do restaurante, e a observação dele',
+    await caixa(p), { titulo: 'Como você vai pagar?', sub: 'O pagamento é feito no restaurante, no dia.',
       formas: ['Pix', 'Cartão de crédito'], obs: 'Parcelamos em até 3x' });
 
   const antes = (await A.dona.lista('agendamentos', { salaoId: A.SALAO })).length;
@@ -147,13 +147,13 @@ let AG_ANA = null;
     !(await p.evaluate(() => !!document.querySelector('#cfPagamento .folha-pix'))));
   await p.click('#cfPagamento .cf-pag-op[data-forma="pix"]'); await p.waitForTimeout(300);
   /* "A cliente escolhe Pix e não tem onde ver a chave": escolheu, a chave do
-     salão aparece ali mesmo, com o botão de copiar. */
+     restaurante aparece ali mesmo, com o botão de copiar. */
   const chave = await p.evaluate(() => {
     const c = document.querySelector('#cfPagamento .folha-pix');
     return c ? { texto: c.innerText.replace(/\s+/g, ' ').trim(),
                  copiar: !!c.querySelector('button.folha-copiar') } : null;
   });
-  verdade('escolheu Pix: a chave do salão aparece, com o botão Copiar',
+  verdade('escolheu Pix: a chave do restaurante aparece, com o botão Copiar',
     chave && /Chave Pix/.test(chave.texto) && /pix@studiopix\.com\.br/.test(chave.texto) && chave.copiar,
     JSON.stringify(chave));
   const escolhida = await p.evaluate(() => ({
@@ -161,13 +161,13 @@ let AG_ANA = null;
     aviso: document.getElementById('avisoConfirmar').innerText.trim(),
     linha: [...document.querySelectorAll('#resumoFinal .cf-linha')].map(l => l.innerText.replace(/\s+/g, ' '))
       .find(t => /Pagamento/.test(t)) || '' }));
-  igual('tocou em Pix: marcado, o aviso some, e o resumo ganha "Pagamento (no salão) Pix"',
-    escolhida, { on: ['pix'], aviso: '', linha: 'Pagamento (no salão) Pix' });
+  igual('tocou em Pix: marcado, o aviso some, e o resumo ganha "Pagamento (no restaurante) Pix"',
+    escolhida, { on: ['pix'], aviso: '', linha: 'Pagamento (no restaurante) Pix' });
 
   await p.click('#btPrincipal'); await p.waitForTimeout(3500);
   const pronto = await p.evaluate(() => ({ tela, mini: (document.getElementById('resumoPronto') || {}).innerText || '' }));
-  verdade('marcou, e a tela de pronto repete: "Pagamento no salão: Pix"',
-    pronto.tela === 'pronto' && /Pagamento no salão: Pix/.test(pronto.mini), JSON.stringify(pronto));
+  verdade('marcou, e a tela de pronto repete: "Pagamento no restaurante: Pix"',
+    pronto.tela === 'pronto' && /Pagamento no restaurante: Pix/.test(pronto.mini), JSON.stringify(pronto));
   const ag = (await A.dona.lista('agendamentos', { salaoId: A.SALAO })).find(a => a.status !== 'cancelado');
   AG_ANA = ag && ag.id;
   igual('no banco: forma_pagamento = pix', ag && ag.formaPagamento, 'pix');
@@ -179,25 +179,25 @@ let AG_ANA = null;
     document.getElementById('p-meus').innerText)));
   await ctx.close();
 
-  // Por fora da tela: forma que o salão não aceita não é gravada.
+  // Por fora da tela: forma que o restaurante não aceita não é gravada.
   const anon = aba();
   const h = await anon.chamar('horarios_livres', { p_profissional: A.prof.id, p_data: diaMais(12), p_servicos: [A.corte.id] });
   const vaga = (Array.isArray(h) ? h : []).map(x => typeof x === 'string' ? x : Object.values(x)[0])[0];
   const fora = um(await anon.chamar('agendar', { p_profissional: A.prof.id, p_inicio: vaga, p_servicos: [A.corte.id],
     p_nome: 'Duda Melo', p_telefone: tel('74'), p_forma_pagamento: 'dinheiro' }));
   const gravado = (await A.dona.lista('agendamentos', { salaoId: A.SALAO })).find(a => a.id === fora.id);
-  igual('pela API, "dinheiro" num salão que só aceita Pix e crédito: marca, mas sem forma',
+  igual('pela API, "dinheiro" num restaurante que só aceita Pix e crédito: marca, mas sem forma',
     gravado && (gravado.formaPagamento || null), null);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('4. O salão que não marcou formas');
+secao('4. O restaurante que não marcou formas');
 {
   const { ctx, p } = await abrirLink(B.SLUG);
   await ateConfirmar(p, 'Bia Souza', tel('72'), 3);
   const c = await caixa(p);
   igual('aparecem as quatro, e escolher é opcional', c && [c.formas, c.sub],
-    [['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'], '(opcional) O pagamento é feito no salão, no dia.']);
+    [['Pix', 'Dinheiro', 'Cartão de débito', 'Cartão de crédito'], '(opcional) O pagamento é feito no restaurante, no dia.']);
   await p.click('#btPrincipal'); await p.waitForTimeout(3500);
   const ag = (await B.dona.lista('agendamentos', { salaoId: B.SALAO }))[0];
   igual('sem escolher, marca normalmente, sem forma', [await p.evaluate(() => tela), ag && (ag.formaPagamento || null)], ['pronto', null]);

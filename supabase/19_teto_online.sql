@@ -18,14 +18,14 @@
 -- a pessoa digitou. Telefone novo, ficha nova, freio zerado.
 --
 -- ── O NÚMERO FIXO QUE EU IA ESCREVER, E POR QUE ELE NÃO SERVE ─────────────
--- A primeira versão deste arquivo era um teto de 20 marcações por salão por
+-- A primeira versão deste arquivo era um teto de 20 marcações por restaurante por
 -- dia. O teste reprovou na cara: as 12 marcações acima JÁ ERAM o dia inteiro.
 -- Numa agenda de 08:00 às 20:00 com serviço de uma hora cabem doze pessoas —
 -- um teto de vinte nunca chega a valer, e um teto de dez estraga o dia de um
--- salão movimentado.
+-- restaurante movimentado.
 --
 -- Não existe número fixo certo, porque "o dia" tem tamanho diferente em cada
--- salão. O que funciona é limite que ANDA COM A AGENDA. São dois, e cada um
+-- restaurante. O que funciona é limite que ANDA COM A AGENDA. São dois, e cada um
 -- cobre o que o outro não cobre:
 --
 --   a reserva do balcão   o link nunca ocupa a agenda inteira de alguém
@@ -35,7 +35,7 @@
 -- Sem provar que o telefone é de quem digitou, dá para encarecer o estrago e
 -- não dá para impedi-lo. Quem impede é o código por WhatsApp, que depende da
 -- verificação na Meta. Até lá, o que estes dois limites compram é tempo: o
--- salão nunca amanhece com a agenda inteira tomada, e encher o mês passa a
+-- restaurante nunca amanhece com a agenda inteira tomada, e encher o mês passa a
 -- exigir horas de insistência em vez de um minuto.
 --
 -- ── POR QUE NO `porque_nao_agenda()` E NÃO NO `agendar()` ─────────────────
@@ -81,7 +81,7 @@ $$;
 -- ---------------------------------------------------------------------------
 -- 2) O FREIO DE RAJADA
 --
--- Quantas pessoas DESCONHECIDAS o link aceita, no salão inteiro, em dez
+-- Quantas pessoas DESCONHECIDAS o link aceita, no restaurante inteiro, em dez
 -- minutos.
 --
 -- ⚠ O "desconhecidas" não é enfeite, e custou uma reprova para aparecer.
@@ -90,7 +90,7 @@ $$;
 -- cinco. Um teste de auditoria — que exercita a geometria da agenda marcando
 -- vários horários seguidos — reprovou inteiro com "congestionada". E aquilo
 -- não era um defeito do teste: era o retrato de uma coisa que acontece de
--- verdade no salão. O dono publica um story, oito pessoas marcam em dez
+-- verdade no restaurante. O dono publica um story, oito pessoas marcam em dez
 -- minutos, e o freio manda todas embora — justamente no melhor momento do
 -- mês. Um limite que estraga o dia bom não é proteção, é prejuízo.
 --
@@ -111,7 +111,7 @@ $$;
 -- É por isso que o padrão é dez, e não cinco: o custo de errar para o lado
 -- apertado é fechar a porta num dia bom.
 --
--- Dez é muito para um salão de uma a três pessoas — dez desconhecidas
+-- Dez é muito para um restaurante de uma a três pessoas — dez desconhecidas
 -- marcando no mesmo intervalo de dez minutos é um dia excepcional — e é pouco
 -- para quem está rodando um script.
 --
@@ -163,7 +163,7 @@ returns int language sql stable security definer set search_path = public as $$
     from public.jornada_costurada(p_profissional, p_data) j
 $$;
 
-/* Só quem o salão nunca viu: ficha aberta nas últimas 24 horas. Cliente que
+/* Só quem o restaurante nunca viu: ficha aberta nas últimas 24 horas. Cliente que
    já foi atendida ali tem ficha velha e não entra nesta conta — pode marcar,
    desmarcar e remarcar à vontade, que o freio não a enxerga. */
 create or replace function public.rajada_online(p_salao uuid)
@@ -228,7 +228,7 @@ begin
   end if;
 
   if not public.recurso_bool(v_salao, 'agenda_online') then
-    return 'Este salão não está aceitando marcação pela internet.';
+    return 'Este restaurante não está aceitando marcação pela internet.';
   end if;
 
   if exists (
@@ -266,21 +266,21 @@ begin
     v_pedido := public.duracao_dos_servicos(p_profissional, p_servicos);
     if (v_online + v_pedido) * 100 > v_jornada * public.teto_online_pct(v_salao) then
       return 'Este dia já está quase todo marcado. '
-          || 'Chame o salão no WhatsApp que a gente encaixa você.';
+          || 'Chame o restaurante no WhatsApp que a gente encaixa você.';
     end if;
   end if;
 
   /* ── O FREIO DE RAJADA ─────────────────────────────────────────────────
      Nenhuma das duas frases fala em limite, cota ou teto, e é decisão: quem
      lê isto na esmagadora maioria das vezes é uma cliente de verdade num
-     salão movimentado, e ela precisa de um caminho, não da explicação de um
+     restaurante movimentado, e ela precisa de um caminho, não da explicação de um
      mecanismo. O caminho é o WhatsApp, onde tem gente.
 
      E para quem está do outro lado tentando encher a agenda, a frase também
      não entrega nada: não diz qual é o número nem quanto falta. */
   if public.rajada_online(v_salao) >= public.teto_online_rajada(v_salao) then
     return 'A marcação pela internet está congestionada agora. '
-        || 'Tente daqui a pouco, ou chame o salão no WhatsApp.';
+        || 'Tente daqui a pouco, ou chame o restaurante no WhatsApp.';
   end if;
 
   return null;
@@ -289,4 +289,4 @@ end $$;
 comment on function public.teto_online_pct(uuid) is
   'Quanto da jornada de um profissional o link pode ocupar num dia. cfg.tetoOnlinePct, padrão 70.';
 comment on function public.teto_online_rajada(uuid) is
-  'Quantas pessoas NOVAS o link aceita no salão em 10 minutos. cfg.tetoOnlineRajada, padrão 10.';
+  'Quantas pessoas NOVAS o link aceita no restaurante em 10 minutos. cfg.tetoOnlineRajada, padrão 10.';

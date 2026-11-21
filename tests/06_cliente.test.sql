@@ -9,7 +9,7 @@
 
 -- ── Cenário ────────────────────────────────────────────────────────────────
 insert into public.saloes (id, slug, nome, tipo, status, fuso, cfg)
-values ('11111111-0000-0000-0000-000000000001', 'salao-do-teste', 'Salão do Teste',
+values ('11111111-0000-0000-0000-000000000001', 'salao-do-teste', 'Restaurante do Teste',
         'salao', 'ativo', 'America/Sao_Paulo', '{"diasLiberados": 30}')
 on conflict (id) do nothing;
 
@@ -111,7 +111,7 @@ select t_texto('cancelar duas vezes é recusado, dizendo o que houve',
   'Este horário já foi cancelado.');
 
 -- ── A ANTECEDÊNCIA ─────────────────────────────────────────────────────────
--- Cadeira cancelada em cima da hora não é revendida, e o prejuízo é do salão.
+-- Cadeira cancelada em cima da hora não é revendida, e o prejuízo é do restaurante.
 -- Quem precisa cancelar depois disso fala com a casa — é uma conversa, não
 -- um botão.
 -- ⚠ `encaixe` aqui não é enfeite. Este lançamento usa `now()`, então a hora
@@ -130,9 +130,9 @@ select '44444444-0000-0000-0000-000000000001',
        'confirmado', 'online',
        '55555555-0000-4000-8000-000000000001', true;
 
-select t_texto('faltando menos de 2 horas, o botão não resolve — manda falar com o salão',
+select t_texto('faltando menos de 2 horas, o botão não resolve — manda falar com o restaurante',
   erro_de($$select public.cancelar_agendamento('55555555-0000-4000-8000-000000000001'::uuid)$$),
-  'Faltam menos de 2 horas. Fale com o salão para desmarcar.');
+  'Faltam menos de 2 horas. Fale com o restaurante para desmarcar.');
 
 select t_falso('e a tela nem oferece: podeMexer vem falso',
   (select (public.meus_agendamentos(
@@ -165,7 +165,7 @@ select t_igual('a duração foi calculada pelo banco',
   (select duracao_min from public.lista_espera
     where gerenciar_token = ((select r ->> 'token' from na_fila))::uuid), 60);
 
-select t_texto('serviço de outro salão é recusado',
+select t_texto('serviço de outro restaurante é recusado',
   erro_de(format($$select public.entrar_na_fila(%L::uuid, array[%L::uuid], 'X', '51988776655',
                                         current_date, current_date + 1)$$,
     '11111111-0000-0000-0000-000000000001',
@@ -196,7 +196,7 @@ select t_texto('sair duas vezes é recusado',
 --
 -- `anon` executa as funções e continua SEM alcançar as tabelas. É o ponto do
 -- `security definer`: a cliente mexe no que é dela sem enxergar a agenda do
--- salão nem a lista de clientes dele.
+-- restaurante nem a lista de clientes dele.
 -- ---------------------------------------------------------------------------
 select t_verdade('anon pode ver o que é dele',
   has_function_privilege('anon', 'public.meus_agendamentos(uuid[])', 'execute'));
@@ -223,14 +223,14 @@ select t_ok('cliente: tudo conferido');
 --     Não consegui marcar.
 --     duplicate key value violates unique constraint "ux_cli_perfil"
 --
--- A busca da ficha era só pelo telefone. Quem já tinha ficha no salão e
+-- A busca da ficha era só pelo telefone. Quem já tinha ficha no restaurante e
 -- marcava digitando um número diferente do que estava lá — trocou de chip,
 -- digitou o do marido, corrigiu o DDD — não era encontrado, caía no insert, e
 -- o insert batia na trava que existe para a mesma pessoa não ter duas fichas
--- no mesmo salão.
+-- no mesmo restaurante.
 --
 -- Erro de banco em inglês na cara de quem só queria marcar horário, sem saída
--- nenhuma: tentar de novo dava o mesmo. O salão perde a marcação e nem fica
+-- nenhuma: tentar de novo dava o mesmo. O restaurante perde a marcação e nem fica
 -- sabendo que perdeu.
 --
 -- A regra estava escrita TRÊS vezes (agendar() aqui, agendar() do 05 e
@@ -240,7 +240,7 @@ insert into auth.users (id, email) values
   ('cc000000-0000-0000-0000-0000000000cc', 'ju@teste.com')
 on conflict (id) do nothing;
 -- O telefone do PERFIL é E.164 (com o +55), por check no schema. O da FICHA
--- do salão é só dígitos, normalizado por `so_digitos()`. São dois campos
+-- do restaurante é só dígitos, normalizado por `so_digitos()`. São dois campos
 -- diferentes, com regras diferentes, e é de propósito.
 insert into public.perfis (id, nome, telefone) values
   ('cc000000-0000-0000-0000-0000000000cc', 'Ju Barbosa', '+5551988776655')
@@ -330,7 +330,7 @@ select t_texto('e o número da outra pessoa continua sendo dela',
       and telefone = '51955443322'), 'Outra Pessoa');
 
 -- A função que faz tudo isso é interna. Solta, deixaria qualquer visitante
--- criar e alterar ficha em QUALQUER salão — inclusive tomar um telefone.
+-- criar e alterar ficha em QUALQUER restaurante — inclusive tomar um telefone.
 select t_falso('ficha_do_cliente() não é chamável de fora',
   has_function_privilege('anon', 'public.ficha_do_cliente(uuid, text, text)', 'execute'));
 select t_falso('nem por quem tem conta',

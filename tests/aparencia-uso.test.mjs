@@ -61,7 +61,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`au-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte feminino', duracaoMin:30, intervaloMin:0,
@@ -71,7 +71,7 @@ await dona.atualizar('saloes', SALAO, {
   endereco:{ logradouro:'Rua Avanhandava', numero:'10', bairro:'Cidade Nova', cidade:'Itu', uf:'SP' },
   capa: arte('#2E1065', '#7C3AED') });
 const porCfg = cfg => dona.atualizar('saloes', SALAO, { cfg: Object.assign({ diasLiberados:30,
-  funcionamento: SEMANA, pagamentos:{ formas:['pix'] }, sobre:'Salão de beleza' }, cfg) });
+  funcionamento: SEMANA, pagamentos:{ formas:['pix'] }, sobre:'Restaurante de beleza' }, cfg) });
 const cfgDe = async () => (await dona.lista('saloes', { id: SALAO }))[0].cfg || {};
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
@@ -108,7 +108,7 @@ const barra = p => p.evaluate(() => { const b = document.getElementById('apBarra
    1 — A BARRA DE MUDANÇAS NÃO SALVAS
    ══════════════════════════════════════════════════════════════════════════ */
 secao('1. A barra do pé da tela: Salvar sempre à mão');
-/* Três salões de verdade, e em nenhum a barra pode acusar mudança ao abrir:
+/* Três restaurantes de verdade, e em nenhum a barra pode acusar mudança ao abrir:
    um recém-criado (cfg quase vazio), um com tudo escolhido e um com o
    "personalizado" gravado de antes. */
 const CFGS = {

@@ -12,7 +12,7 @@
    São três coisas diferentes, e cada uma quebra de um jeito:
 
      1. O DONO ESCOLHE O QUE VAI NA FRENTE. A escolha atravessa quatro
-        lugares — a estrela no painel, o `cfg` do salão, a `vitrine()` e a
+        lugares — a estrela no painel, o `cfg` do restaurante, a `vitrine()` e a
         capa. Cada travessia é um ponto onde ela some sem erro nenhum: o dono
         marca, a tela obedece, e a cliente nunca fica sabendo.
 
@@ -24,11 +24,11 @@
 
    ── ⚠ E A PARTE QUE MAIS IMPORTA ───────────────────────────────────────────
    LISTA VAZIA NÃO QUER DIZER "NENHUM". Quer dizer "o dono ainda não
-   escolheu" — que é o estado de TODO salão que já existe no dia em que isto
+   escolheu" — que é o estado de TODO restaurante que já existe no dia em que isto
    entra no ar. Se vazio virasse "esconda tudo", a atualização apagaria a
    vitrine de todo mundo de uma vez, sem ninguém ter pedido.
 
-   Essa é a falha que não dá sinal em desenvolvimento, porque aqui todo salão
+   Essa é a falha que não dá sinal em desenvolvimento, porque aqui todo restaurante
    de teste nasce com escolha. Metade deste arquivo é sobre ela.
    =========================================================================== */
 import fs from 'node:fs';
@@ -91,18 +91,18 @@ for(let i = 0; i < NOMES.length; i++){
     preco: 50 + i * 10, duracaoMin: 30, intervaloMin: 0,
     ativo: true, aceitaOnline: true, foto: i < 3 ? FOTO : null }));
 }
-ok(`salão de teste criado, com ${SVS.length} serviços (3 com foto)`);
+ok(`restaurante de teste criado, com ${SVS.length} serviços (3 com foto)`);
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 
 /* ══════════════════════════════════════════════════════════════════════════
-   1 — A CAPA DO SALÃO QUE NUNCA ESCOLHEU NADA
+   1 — A CAPA DO RESTAURANTE QUE NUNCA ESCOLHEU NADA
 
-   ⚠ Esta seção vem PRIMEIRO de propósito. É o estado de todo salão que já
+   ⚠ Esta seção vem PRIMEIRO de propósito. É o estado de todo restaurante que já
    existe, e é o único momento em que ele pode ser medido: daqui para baixo o
    teste marca destaques e não há como voltar a "nunca escolheu".
    ══════════════════════════════════════════════════════════════════════════ */
-secao('O salão que nunca escolheu nada — que é todo salão de hoje');
+secao('O restaurante que nunca escolheu nada — que é todo restaurante de hoje');
 
 const v0 = await dona.chamar('vitrine', { p_slug: SLUG });
 const daVitrine0 = Array.isArray(v0) ? v0[0] : v0;
@@ -149,7 +149,7 @@ console.log('      ' + JSON.stringify(auto));
    como "nenhum" em vez de "não escolhi". */
 verdade('sem escolha nenhuma, a capa NÃO fica vazia', auto.nomes.length > 0,
   'a capa saiu sem serviço nenhum — é a atualização apagando a vitrine de '
-  + 'todo salão que já existe, de uma vez');
+  + 'todo restaurante que já existe, de uma vez');
 igual('ela se vira sozinha e mostra seis — o teto', auto.nomes.length, 6);
 igual('com quem tem foto na frente, porque foto é o que faz vitrine',
   auto.nomes.slice(0, 3).slice().sort(), ['Barba','Corte','Escova']);
@@ -181,7 +181,7 @@ await painel.addInitScript(([b, s]) => {
 }, [BASE, dona.sessao()]);
 await painel.goto(BASE + '/app.html');
 await painel.waitForTimeout(4000);
-// O passo a passo do primeiro dia abre sozinho num salão novo e cobre a tela.
+// O passo a passo do primeiro dia abre sozinho num restaurante novo e cobre a tela.
 await painel.evaluate(() => { if(typeof pdFechar === 'function') pdFechar(true); });
 await painel.waitForTimeout(1500);
 await painel.click('#abas .aba[data-chave="servicos"]');

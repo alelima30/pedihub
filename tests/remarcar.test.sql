@@ -1,5 +1,5 @@
 -- ===========================================================================
--- PediHub — o salão remarca um horário (49_remarcar.sql)
+-- PediHub — o restaurante remarca um horário (49_remarcar.sql)
 --
 -- "Na onde entro para remarcar caso precise?"
 --
@@ -33,7 +33,7 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do update set nome = excluded.nome;
 
 insert into public.saloes (id, slug, nome, status, fuso) values
-  ('54900000-0000-0000-0000-00000000000a', 'remarcar', 'Salão Remarca', 'ativo', 'America/Sao_Paulo');
+  ('54900000-0000-0000-0000-00000000000a', 'remarcar', 'Restaurante Remarca', 'ativo', 'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('54900000-0000-0000-0000-00000000000a', 'time', 'ativa');
 insert into public.vinculos (perfil_id, salao_id, papel) values

@@ -1,15 +1,15 @@
 /* ===========================================================================
-   PediHub — o lembrete para o salão (21_notificacoes.sql, seção 7c)
+   PediHub — o lembrete para o restaurante (21_notificacoes.sql, seção 7c)
 
      bash tests/bancada/subir.sh
      node tests/lembrete-salao.test.mjs
 
    ── O PEDIDO ───────────────────────────────────────────────────────────────
-   "Precisamos colocar também para o dono do salão que tem um horário marcado
+   "Precisamos colocar também para o dono do restaurante que tem um horário marcado
    pra tal pessoa — lembrete. Que seja configurável."
 
    ── O QUE ESTE ARQUIVO PROTEGE ─────────────────────────────────────────────
-     1. DESLIGADO DE FÁBRICA. Mensagem nova custa e gasta a cota: salão que
+     1. DESLIGADO DE FÁBRICA. Mensagem nova custa e gasta a cota: restaurante que
         não ligou não recebe nada.
      2. QUEM RECEBE é o que o dono escolheu — quem atende, o dono, os dois —
         e o dono que atende o próprio horário recebe UM, não dois.
@@ -59,12 +59,12 @@ const tel = () => '+5511' + (100000000 + Math.floor(Math.random()*89999999));
 const TEL_DONA = '11988000001';
 const TEL_PROF = '11988001001';
 
-/* O salão: a dona (equipe[0], com vínculo de dono) e uma profissional. */
+/* O restaurante: a dona (equipe[0], com vínculo de dono) e uma profissional. */
 async function montar(nome){
   const d = novaAba();
   await d.criarConta({ email:`ls-${nome}-${marca}@teste.com`, senha:'minhasenhaboa',
     nome:'Dona ' + nome, telefone: tel() });
-  const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão ' + nome + ' ' + marca,
+  const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante ' + nome + ' ' + marca,
     p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
   const salao = cr[0].salao_id;
   await banco.query(
@@ -103,7 +103,7 @@ async function marcar(e, prof, inicio, nomeCliente, status = 'confirmado'){
   return a;
 }
 
-// Os lembretes do salão de UM agendamento.
+// Os lembretes do restaurante de UM agendamento.
 const doAg = async (ag, so = null) => (await banco.query(
   `select status, destino, quando, corpo, motivo, modelo, variaveis, profissional_id
      from public.notificacoes
@@ -145,7 +145,7 @@ const DESL = await montar('Desl');
 secao('Desligado de fábrica');
 
 const a0 = await marcar(DESL, DESL.equipe[1], daqui(0), 'Ana Lima');
-igual('salão que não ligou não ganha lembrete para o salão', (await doAg(a0)).length, 0);
+igual('restaurante que não ligou não ganha lembrete para o restaurante', (await doAg(a0)).length, 0);
 verdade('mas o lembrete da CLIENTE continua nascendo, como sempre',
   (await banco.query(`select 1 from public.notificacoes where agendamento_id=$1 and tipo='lembrete'`,
     [a0.id])).rows.length === 1);
@@ -167,14 +167,14 @@ igual('um lembrete', r.length, 1);
 igual('para a Bia, que vai atender', r[0] && r[0].destino, TEL_PROF);
 igual('1 hora antes — o tempo DELE, e não as 2h da cliente',
   r[0] && minutosAntes(ini1, r[0].quando), 60);
-igual('pelo modelo de utilidade do lembrete do salão', r[0] && r[0].modelo,
+igual('pelo modelo de utilidade do lembrete do restaurante', r[0] && r[0].modelo,
   'pedihub_lembrete_equipe');
 const v1 = (r[0] && r[0].variaveis) || [];
 igual('com sete variáveis', v1.length, 7);
 igual('a 1ª é o primeiro nome de quem RECEBE', v1[0], 'Bia');
 igual('a 2ª é a cliente, nome inteiro', v1[1], 'Carla Dias');
 igual('a 4ª é quem atende', v1[3], 'Bia Rocha');
-igual('a 7ª é o salão', v1[6], 'Salão Lemb ' + marca);
+igual('a 7ª é o restaurante', v1[6], 'Restaurante Lemb ' + marca);
 verdade('o serviço já entra certo (e não "atendimento")', v1[2] === 'Corte', JSON.stringify(v1));
 verdade('e o histórico diz o mesmo',
   /Lembrete de um horário agendado/.test(r[0].corpo) && /Cliente: Carla Dias/.test(r[0].corpo)
@@ -296,7 +296,7 @@ verdade('dizendo por quê', (await doAg(a0)).every(x => x.status !== 'pendente'
    O defeito: chegada a hora, quem recebe não era mais montado ("a hora já
    passou"), e a varredura — que o agendador roda ANTES de cada envio —
    cancelava o lembrete que ia sair, com "o horário, quem atende ou o ajuste
-   do lembrete mudou". Sempre, em todo salão.
+   do lembrete mudou". Sempre, em todo restaurante.
 
    A hora chega sem esperar uma hora: o horário vai para daqui a 30 minutos
    por baixo (sem os gatilhos, como se o relógio tivesse andado), e o
@@ -401,4 +401,4 @@ if(falhou){
   console.log(`✗ ${falhou} de ${passou + falhou} verificações falharam.`);
   process.exit(1);
 }
-console.log(`✓ ${passou} verificações do lembrete para o salão.`);
+console.log(`✓ ${passou} verificações do lembrete para o restaurante.`);

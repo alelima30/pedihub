@@ -16,7 +16,7 @@
 # errados e iguais passam.
 #
 # E o momento em que isso passou a doer é agora: o banco começou a recusar
-# horário fora da jornada. Um salão com o painel velho em cache pede a mesma
+# horário fora da jornada. Um restaurante com o painel velho em cache pede a mesma
 # marcação, não vê a confirmação de encaixe, e leva a recusa seca do banco. A
 # primeira pergunta do suporte é qual painel ele está rodando — e "v8" seria a
 # resposta tanto para quem atualizou quanto para quem não.

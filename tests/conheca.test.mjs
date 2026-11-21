@@ -125,7 +125,7 @@ console.log('\nOs carrosséis e as perguntas, sem o código da ferramenta');
   const h0 = await heroi();
   await p.click('#heroiPontos button:nth-child(3)'); await p.waitForTimeout(200);
   const h1 = await heroi();
-  diz(h0.rotulo === 'Salão de beleza' && h1.rotulo === 'Estética' && h1.cliente === 'Camila' && /rotateY\(-360deg\)/.test(h1.giro),
+  diz(h0.rotulo === 'Restaurante de beleza' && h1.rotulo === 'Estética' && h1.cliente === 'Camila' && /rotateY\(-360deg\)/.test(h1.giro),
       'tocar no 3º pontinho do celular vira para "Estética", com a mensagem da Camila', JSON.stringify([h0.rotulo, h1]));
   diz(/nicho-estetica\.webp$/.test(h1.frente) || /nicho-estetica\.webp$/.test(h1.verso), 'e a tela da estética está no lado que aparece');
   const anel = () => p.evaluate(() => ({ titulo: document.querySelector('#anelTitulo .sc-interp').textContent, giro: document.getElementById('anel').style.transform }));

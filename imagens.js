@@ -3,11 +3,11 @@
    ---------------------------------------------------------------------------
    Um lugar só para receber foto de celular e devolver algo utilizável.
 
-   O problema é concreto: a dona do salão tira a foto da fachada com o celular
+   O problema é concreto: a dona do restaurante tira a foto da fachada com o celular
    e o arquivo tem 4 MB, 4000×3000. Isso não pode chegar cru em lugar nenhum —
    no modo demonstração estoura o `localStorage` (que são ~5 MB no TOTAL, para
    agenda, clientes e tudo mais), e na nuvem vira conta de armazenamento e
-   página que demora sete segundos para abrir no 4G do salão.
+   página que demora sete segundos para abrir no 4G do restaurante.
 
    Então toda imagem passa por aqui antes: redimensiona no próprio navegador,
    com <canvas>, e sai em JPEG. Nenhuma biblioteca — o navegador já sabe fazer
@@ -123,7 +123,7 @@ async function decodificar(arquivo){
 
 /* Reduz até caber no lado maior pedido, e depois insiste na qualidade até
    caber no teto de bytes. Duas etapas porque são dois limites diferentes: uma
-   foto de tela lisa fica minúscula em 1200px, uma foto de salão cheio não. */
+   foto de tela lisa fica minúscula em 1200px, uma foto de restaurante cheio não. */
 async function reduzir(arquivo, tipo){
   const m = MEDIDAS[tipo];
   if(!m) throw new Error('Tipo de imagem desconhecido: ' + tipo);
@@ -141,7 +141,7 @@ async function reduzir(arquivo, tipo){
   tela.width = l; tela.height = a;
   const ctx = tela.getContext('2d');
   // Fundo branco: PNG com transparência vira preto ao virar JPEG, e logo de
-  // salão quase sempre vem em PNG transparente.
+  // restaurante quase sempre vem em PNG transparente.
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, l, a);
   ctx.imageSmoothingQuality = 'high';

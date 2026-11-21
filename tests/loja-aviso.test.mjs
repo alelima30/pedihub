@@ -7,7 +7,7 @@
    A reclamação, com estas palavras: "não estou enxergando os produtos".
 
    A página da cliente esconde a loja inteira em três casos — loja desligada,
-   salão sem WhatsApp, nenhum produto marcado para o link — e o painel não
+   restaurante sem WhatsApp, nenhum produto marcado para o link — e o painel não
    dizia nenhum. Pior: a coluna "Na loja" da lista de produtos dizia "à
    venda" enquanto a página não mostrava nada. A tela do dono afirmava o
    contrário do que a cliente via.
@@ -66,7 +66,7 @@ const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
 
 /* Um contexto novo a cada pergunta: o painel guarda cópia local das tabelas, e
-   reaproveitar a aba mediria o salão de ANTES da mudança feita pela bancada. */
+   reaproveitar a aba mediria o restaurante de ANTES da mudança feita pela bancada. */
 async function painel(tela){
   const ctx = await nav.newContext({ viewport:{ width:412, height:915 },
                                      isMobile:true, hasTouch:true });
@@ -156,7 +156,7 @@ await dona.atualizar('produtos', prod.id, { vendaOnline: false });
 igual('a página esconde', await lojaNaPagina(), 0);
 const nenhum = await avisoEmProdutos();
 verdade('e Produtos diz o que marcar',
-  /Vender na página do salão/.test(nenhum), nenhum);
+  /Vender na página do restaurante/.test(nenhum), nenhum);
 await dona.atualizar('produtos', prod.id, { vendaOnline: true });
 
 /* ══════════════════════════════════════════════════════════════════════════

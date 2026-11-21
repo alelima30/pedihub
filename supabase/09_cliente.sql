@@ -20,7 +20,7 @@
 -- ele tem três propriedades que importam aqui:
 --
 --   · não dá para adivinhar: uuid v4 tem 122 bits de acaso;
---   · não dá para enumerar: saber o telefone, o nome ou o id do salão não
+--   · não dá para enumerar: saber o telefone, o nome ou o id do restaurante não
 --     ajuda em nada;
 --   · funciona no WhatsApp: o mesmo link vai na mensagem de confirmação, e
 --     aí a pessoa gerencia do celular dela mesmo depois de limpar o
@@ -37,7 +37,7 @@
 -- Coluna nova nas duas tabelas em que a cliente mexe. `default` cobre as
 -- linhas que já existem e as que entrarem por outro caminho — inclusive as
 -- que a recepção criar pelo painel, que assim também podem ser gerenciadas
--- pela cliente se o salão mandar o link.
+-- pela cliente se o restaurante mandar o link.
 -- ---------------------------------------------------------------------------
 alter table public.agendamentos
   add column if not exists gerenciar_token uuid not null default gen_random_uuid();
@@ -68,10 +68,10 @@ create unique index if not exists ix_espera_token on public.lista_espera (gerenc
 --     cadastro todo. Quem garante o formato é a normalização nos dois pontos
 --     de escrita: aqui no `agendar()` e no painel;
 --
---   · um índice único por salão recusaria a marcação quando duas fichas
+--   · um índice único por restaurante recusaria a marcação quando duas fichas
 --     acabassem com o mesmo CPF — e a recusa cairia sobre a CLIENTE, no
 --     meio de marcar, por causa de uma duplicidade de cadastro que é do
---     salão resolver. Ficha repetida é problema de cadastro, não motivo para
+--     restaurante resolver. Ficha repetida é problema de cadastro, não motivo para
 --     alguém não conseguir marcar um corte.
 -- ---------------------------------------------------------------------------
 alter table public.clientes add column if not exists cpf text;
@@ -80,12 +80,12 @@ alter table public.clientes add column if not exists cpf text;
 -- 1d) Como a cliente vai pagar
 --
 -- Ela escolhe no link, na hora de confirmar — Pix, dinheiro, débito ou
--- crédito —, e o salão vê na agenda antes de ela chegar. É a INTENÇÃO, e
+-- crédito —, e o restaurante vê na agenda antes de ela chegar. É a INTENÇÃO, e
 -- não o pagamento: quem registra o dinheiro continua sendo a comanda
 -- (`pagamentos`), que já nasce com esta forma escolhida no painel.
 --
 -- Os mesmos quatro nomes de `Funcionamento.PAGAMENTOS` (funcionamento.js),
--- que é a lista que o salão marca em "Formas de pagamento". O `check` vale
+-- que é a lista que o restaurante marca em "Formas de pagamento". O `check` vale
 -- para o painel também; o `agendar()` normaliza antes, e forma estranha vira
 -- nula em vez de derrubar a marcação.
 -- ---------------------------------------------------------------------------
@@ -129,9 +129,9 @@ create trigger tg_notif_pagamento
 -- 1e) O sinal por Pix, para garantir o horário
 --
 -- "Como fazer para colocar sinal?" — o caminho do Pix com a confirmação do
--- salão: quem marca pelo link paga uma parte para a chave Pix do próprio
--- salão, manda o comprovante pelo WhatsApp, e o dono confirma. O dinheiro vai
--- direto para o salão; o PediHub não toca nele.
+-- restaurante: quem marca pelo link paga uma parte para a chave Pix do próprio
+-- restaurante, manda o comprovante pelo WhatsApp, e o dono confirma. O dinheiro vai
+-- direto para o restaurante; o PediHub não toca nele.
 --
 -- Mora em `cfg.pagamentos.sinal`, junto da chave Pix (funcionamento.js):
 --     { tipo: 'pct' | 'fixo', valor: 10, prazoMin: 60, titular, regra }
@@ -269,21 +269,21 @@ revoke all on function public.liberar_sinais_vencidos()     from public, anon, a
 -- ---------------------------------------------------------------------------
 -- 1c) A cliente que precisa de confirmação
 --
--- O salão que confirma sozinho às vezes tem UMA cliente que ele quer olhar
+-- O restaurante que confirma sozinho às vezes tem UMA cliente que ele quer olhar
 -- antes: a que falta, a que desmarca em cima da hora, a que ele prefere não
 -- atender. Na ficha dela o dono marca `exige_confirmacao`, e o horário que
--- ela marca pelo link nasce PENDENTE — esperando o "sim" do salão — mesmo
+-- ela marca pelo link nasce PENDENTE — esperando o "sim" do restaurante — mesmo
 -- com a confirmação automática ligada para todo o resto.
 --
 -- ⚠ QUEM DECIDE É O agendar(), AQUI NO BANCO. A tela do link não sabe da
 -- marca e não tem como saber: a função é security definer e não é liberada
 -- para ninguém (nem anon, nem authenticated) — senão qualquer um descobriria,
--- digitando um telefone, se aquele número está marcado no salão.
+-- digitando um telefone, se aquele número está marcado no restaurante.
 --
 -- ⚠ E VALE PELO TELEFONE TAMBÉM, não só pela ficha encontrada. A ficha é
 -- reencontrada por telefone E primeiro nome; quem trocasse o nome ("Bia" em
 -- vez de "Beatriz") cairia numa ficha nova, sem a marca, e escaparia. Por
--- isso qualquer ficha do salão com o mesmo WhatsApp e a marca basta.
+-- isso qualquer ficha do restaurante com o mesmo WhatsApp e a marca basta.
 -- ---------------------------------------------------------------------------
 alter table public.clientes
   add column if not exists exige_confirmacao boolean not null default false;
@@ -445,7 +445,7 @@ begin
 
      O link pede e-mail e aniversário antes de confirmar. Eles chegam aqui e
      pousam na ficha — que é o único lugar onde servem para alguma coisa: o
-     salão abre a ficha e vê, e o aniversário do mês sai de `nascimento`.
+     restaurante abre a ficha e vê, e o aniversário do mês sai de `nascimento`.
 
      ⚠ `is null` NAS DUAS PONTAS, E ESSA É A REGRA INTEIRA.
 
@@ -453,14 +453,14 @@ begin
 
        · a recepção pode ter arrumado um e-mail digitado errado, e o
          preenchimento automático do navegador da cliente mandaria o errado
-         de volta na marcação seguinte — a correção do salão duraria até o
+         de volta na marcação seguinte — a correção do restaurante duraria até o
          próximo corte;
 
        · campo em branco no formulário não pode zerar o que já estava lá.
          `coalesce` sozinho não bastaria: `nullif(btrim(...), '')` é o que
          transforma "  " em null antes de a conta começar.
 
-     Quem manda na ficha é o salão. A cliente só preenche o que falta.
+     Quem manda na ficha é o restaurante. A cliente só preenche o que falta.
      ══════════════════════════════════════════════════════════════════════ */
   /* ⚠ O CPF É NORMALIZADO AQUI, E CPF TORTO É IGNORADO EM SILÊNCIO.
 
@@ -485,10 +485,10 @@ begin
 
      A ficha é reencontrada pelo telefone, e sem SMS não há prova de que o
      número seja de quem digitou. Se alguém marca com o número da mãe, o
-     horário cai na ficha da mãe — e o salão liga para a mãe perguntando de
+     horário cai na ficha da mãe — e o restaurante liga para a mãe perguntando de
      um horário que ela não marcou.
 
-     Não dá para impedir sem verificar o número de verdade. Dá para o salão
+     Não dá para impedir sem verificar o número de verdade. Dá para o restaurante
      saber: o nome informado fica registrado em `atendido_nome`, que o painel
      mostra como "Quem vem". Melhor um nome a mais na tela do que um telefone
      errado em silêncio. */
@@ -513,7 +513,7 @@ begin
      `ficha_do_cliente()` diz, no 05_agenda.sql, que sem SMS não existe prova
      de que o número seja de quem digitou. Sem esta condição, qualquer pessoa
      que soubesse o telefone da Maria marcaria de graça no lugar dela — e o
-     salão só descobriria na hora de fechar a conta, com a cliente na cadeira.
+     restaurante só descobriria na hora de fechar a conta, com a cliente na cadeira.
 
      Com login, `auth.uid()` é prova: senha é algo que só ela sabe.
 
@@ -552,7 +552,7 @@ begin
        `porque_nao_agenda()`. Aquela função responde sobre o DIA e o
        PROFISSIONAL — ela não sabe quem está do outro lado, e o 19_teto_online
        já explica por quê. Um bloqueio de pacote colocado lá fecharia a
-       quinta-feira para o salão inteiro por causa do pacote de uma pessoa. */
+       quinta-feira para o restaurante inteiro por causa do pacote de uma pessoa. */
     if v_pacote is null then
       v_motivo := public.pacote_fora_do_dia(v_cliente, p_servicos, p_inicio);
       if v_motivo is not null then
@@ -580,12 +580,12 @@ begin
   end if;
 
   /* O SINAL (1e): sobre o que ela vai pagar de fato, já com pacote e cupom.
-     Com sinal, o horário entra pendente, mesmo no salão que confirma sozinho:
+     Com sinal, o horário entra pendente, mesmo no restaurante que confirma sozinho:
      quem confirma é o dono, quando o comprovante chega. */
   v_sinal := public.sinal_do_salao(v_salao, v_valor, p_servicos, p_profissional, p_inicio);
 
   /* ⚠ SÓ O QUE ELA MESMA MARCOU PELO LINK (`origem = 'online'`). O freio é
-     contra spam no formulário aberto; o que o SALÃO marcou para ela não é
+     contra spam no formulário aberto; o que o RESTAURANTE marcou para ela não é
      spam. Contando tudo, a cliente do pacote com agenda fixa (43: as quatro
      terças já marcadas pela recepção) nunca mais marcava nada pelo link —
      "Você já tem 3 horários marcados aqui", visto pelo dono no teste. */
@@ -601,13 +601,13 @@ begin
       using errcode = 'check_violation';
   end if;
 
-  /* ⚠ O STATUS SAI DA CONFIGURAÇÃO DO SALÃO, e não escrito à mão.
+  /* ⚠ O STATUS SAI DA CONFIGURAÇÃO DO RESTAURANTE, e não escrito à mão.
 
      Aqui estava `'confirmado'` fixo, e o `'pendente'` era uma porta que o
      schema tinha desde o começo e ninguém abria: `ha_choque`, a cota e o
      `porque_nao_agenda` já contavam pendente, mas nada criava um.
 
-     O salão que confirma à mão recebe pendente — e a cadeira fica reservada
+     O restaurante que confirma à mão recebe pendente — e a cadeira fica reservada
      enquanto ele decide, porque `ha_choque()` conta pendente. Se não contasse,
      duas pessoas marcariam o mesmo horário durante a espera, e uma delas
      ouviria "não" depois de já ter combinado o dia.
@@ -616,9 +616,9 @@ begin
      `confirma_automatico()` no 29 tem o padrão do lado de quem já usa.
 
      E a cliente marcada na ficha (1c, lá em cima) recebe pendente mesmo no
-     salão que confirma sozinho. */
+     restaurante que confirma sozinho. */
   begin
-    /* A forma de pagamento: só uma das quatro, e só uma que o salão aceita
+    /* A forma de pagamento: só uma das quatro, e só uma que o restaurante aceita
        (quando ele marcou quais aceita). Fora disso fica nula — a marcação
        não cai por causa da preferência de pagamento. Atendimento que sai por
        R$ 0 (pacote) não tem o que pagar. */
@@ -728,7 +728,7 @@ language sql stable security definer set search_path = public as $$
       -- Como ela disse que ia pagar (1d), para "Meus horários" e a remarcação.
       'forma_pagamento', a.forma_pagamento,
       /* O sinal (1e): quanto, até quando, e para onde mandar. A chave, quem
-         recebe e a regra são as que o salão mostra no link de todo jeito;
+         recebe e a regra são as que o restaurante mostra no link de todo jeito;
          o valor é o que ESTE banco calculou para ESTE horário. */
       'sinal', case when coalesce(a.sinal_exigido, 0) > 0 then jsonb_build_object(
           'valor',    a.sinal_exigido,
@@ -781,7 +781,7 @@ $$;
 -- 4) Cancelar
 --
 -- As DUAS horas de antecedência não são burocracia: cadeira cancelada em cima
--- da hora não é revendida, e o prejuízo é do salão. Quem precisa cancelar
+-- da hora não é revendida, e o prejuízo é do restaurante. Quem precisa cancelar
 -- depois disso fala com a casa — e aí é uma conversa, não um botão.
 -- ---------------------------------------------------------------------------
 create or replace function public.cancelar_agendamento(p_token uuid)
@@ -808,7 +808,7 @@ begin
   end if;
 
   if a.inicio <= now() + interval '2 hours' then
-    raise exception 'Faltam menos de 2 horas. Fale com o salão para desmarcar.'
+    raise exception 'Faltam menos de 2 horas. Fale com o restaurante para desmarcar.'
       using errcode = 'check_violation';
   end if;
 
@@ -870,12 +870,12 @@ begin
 
   if not exists (select 1 from public.saloes
                   where id = p_salao and status = 'ativo') then
-    raise exception 'Este salão não está aceitando pedidos agora.'
+    raise exception 'Este restaurante não está aceitando pedidos agora.'
       using errcode = 'check_violation';
   end if;
 
-  -- Serviço tem que ser DESTE salão e estar aberto ao online, pela mesma
-  -- razão de `agendar()`: sem conferir, dá para entrar na fila de um salão
+  -- Serviço tem que ser DESTE restaurante e estar aberto ao online, pela mesma
+  -- razão de `agendar()`: sem conferir, dá para entrar na fila de um restaurante
   -- pedindo o serviço de outro, colando o id na chamada.
   if exists (
     select 1 from unnest(p_servicos) as pedido(id)
@@ -1018,7 +1018,7 @@ grant execute on function public.agendar(uuid, timestamptz, uuid[], text, text, 
 -- A cliente passa a poder criar conta (e-mail e senha) e entrar pelo próprio
 -- link. Duas coisas precisam do banco para isso valer:
 --
---   · ligar a ficha que o salão já tinha à conta dela — sem isto o pacote
+--   · ligar a ficha que o restaurante já tinha à conta dela — sem isto o pacote
 --     vendido no balcão não aparece nem dá desconto, porque os dois exigem
 --     `clientes.perfil_id = auth.uid()`;
 --   · "Meus horários" em qualquer aparelho — hoje a lista sai dos segredos
@@ -1030,12 +1030,12 @@ grant execute on function public.agendar(uuid, timestamptz, uuid[], text, text, 
    se entrar ligasse por uma regra e marcar por outra, a cliente veria o
    pacote num caminho e não no outro.
 
-     1. já existe ficha DESTE salão ligada à conta → é ela;
+     1. já existe ficha DESTE restaurante ligada à conta → é ela;
      2. senão, a ficha com o telefone do perfil, ainda sem conta, e com o
         mesmo primeiro nome (`mesmo_primeiro_nome`) → liga.
 
    ⚠ NÃO CRIA FICHA. Entrar não é marcar: quem só entrou para olhar não vira
-   cliente do salão na lista do dono. A ficha nasce na primeira marcação,
+   cliente do restaurante na lista do dono. A ficha nasce na primeira marcação,
    como sempre.
 
    ⚠ E O LIMITE CONTINUA ESCRITO, porque continua valendo: e-mail e senha

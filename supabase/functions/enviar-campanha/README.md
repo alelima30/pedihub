@@ -28,7 +28,7 @@ O template precisa ter **um parâmetro no corpo**, que é o nome da cliente.
 Exemplo do que cadastrar na Meta:
 
 ```
-Olá {{1}}! Estamos com novidade no salão esta semana.
+Olá {{1}}! Estamos com novidade no restaurante esta semana.
 Responda esta mensagem para agendar.
 ```
 
@@ -124,7 +124,7 @@ select * from cron.job_run_details order by start_time desc limit 10;
 ## 6. O que este worker NÃO faz, de propósito
 
 - **Não decide quem recebe.** Isso é do banco (`publico_da_campanha`), que
-  respeita o opt-out e o isolamento por salão.
+  respeita o opt-out e o isolamento por restaurante.
 - **Não repete mensagem.** Quem garante é a trava `ux_camp_dest` mais o
   `for update skip locked` do `fila_proxima()`. O worker pode ser reiniciado
   no meio sem risco.

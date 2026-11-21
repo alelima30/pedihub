@@ -216,9 +216,9 @@ vitrine(nome) as (
 
 -- O catálogo tem que estar FECHADO para quem não fez login. Já foi o
 -- contrário: as três vistas abertas deixavam qualquer um listar todos os
--- salões da plataforma com nome, endereço e WhatsApp. Quem abre a página de
+-- restaurantes da plataforma com nome, endereço e WhatsApp. Quem abre a página de
 -- agendamento agora é a função vitrine(), que só responde a quem já sabe o
--- apelido do salão.
+-- apelido do restaurante.
 catalogo_aberto as (
   select v.nome from vitrine v
    where exists (select 1 from information_schema.role_table_grants g
@@ -251,7 +251,7 @@ trava_tel as (
 -- Não é acidente: a migração deixa de propósito as fichas que colidem, porque
 -- juntar duas fichas é mover agendamento e comanda de uma para a outra, e
 -- isso some com dinheiro ou com atendimento sem ninguém ficar sabendo qual.
--- O que aparece aqui é a lista de quem precisa da decisão do salão.
+-- O que aparece aqui é a lista de quem precisa da decisão do restaurante.
 tel_torto as (
   select c.nome || ' (' || c.telefone || ')' as quem
     from public.clientes c
@@ -333,7 +333,7 @@ select * from (
          case
            when (select count(*) from catalogo_aberto) > 0 then
              (select string_agg(nome, ', ') from catalogo_aberto)
-             || ' aberta para anon — dá para listar todos os salões'
+             || ' aberta para anon — dá para listar todos os restaurantes'
            when (select count(*) from vitrine_sem_funcao) > 0 then
              'a função vitrine() não existe ou anon não pode executá-la'
            else 'ok' end
@@ -354,7 +354,7 @@ select * from (
          case when (select n from pol_img) = 4 then '✓' else '✗' end,
          'As 4 policies do balde estão no lugar',
          case when (select n from pol_img) = 4 then 'ok'
-              else 'só ' || (select n from pol_img) || ' de 4 — um salão pode '
+              else 'só ' || (select n from pol_img) || ' de 4 — um restaurante pode '
                    || 'trocar a imagem do outro' end
 
   union all select 16,
@@ -387,7 +387,7 @@ select * from (
          'Nenhuma ficha antiga ficou com o telefone fora do formato',
          coalesce((select string_agg(quem, ', ') from tel_torto)
                   || ' — a migração não mexeu nelas porque limpar criaria dois '
-                  || 'telefones iguais no mesmo salão: é a mesma pessoa em duas '
+                  || 'telefones iguais no mesmo restaurante: é a mesma pessoa em duas '
                   || 'fichas. Junte à mão, no painel, decidindo qual fica',
                   'ok')
 

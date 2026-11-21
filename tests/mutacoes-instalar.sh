@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ===========================================================================
-#  Quebrar de propósito o instalar o salão no celular.
+#  Quebrar de propósito o instalar o restaurante no celular.
 #
 #    bash tests/bancada/subir.sh        (noutro terminal)
 #    bash tests/mutacoes-instalar.sh

@@ -48,7 +48,7 @@ function aba(){
   return j.Dados;
 }
 
-/* ── O salão: a Rita segue o horário da casa, o Lucas tem o dele ─────────── */
+/* ── O restaurante: a Rita segue o horário da casa, o Lucas tem o dele ─────────── */
 const m = Date.now().toString(36) + Math.floor(Math.random() * 1000);
 const dona = aba();
 await dona.criarConta({ email:`he-${m}@teste.com`, senha:'minhasenhaboa',

@@ -1,9 +1,9 @@
 -- ===========================================================================
 -- PediHub — o sino do painel (54)
 --
--- O Salão da Ana: a Ana (dona), a Rita (recepção), a Ju e a Bia (atendem).
+-- O Restaurante da Ana: a Ana (dona), a Rita (recepção), a Ju e a Bia (atendem).
 --
---   1. quem chama: só a equipe do salão (a cliente e o anon, não);
+--   1. quem chama: só a equipe do restaurante (a cliente e o anon, não);
 --   2. sem nada pendente, o sino vem vazio (e a assinatura em dia não avisa);
 --   3. os horários a confirmar: o balcão vê todos, quem atende só os dela; o
 --      sinal tem item próprio; o pacote a receber não conta;
@@ -33,8 +33,8 @@ insert into public.perfis (id, nome, telefone, super_admin) values
   ('f5400000-0000-0000-0000-00000000000f', 'Zé',          '+5511954000009', true)
 on conflict (id) do update set nome = excluded.nome, telefone = excluded.telefone, super_admin = excluded.super_admin;
 insert into public.saloes (id, slug, nome, tipo, status, fuso) values
-  ('55400000-0000-0000-0000-00000000000a', 'sino-ana', 'Salão da Ana', 'salao', 'ativo', 'America/Sao_Paulo');
--- O dia do salão (o servidor está em UTC: à noite, current_date já é amanhã).
+  ('55400000-0000-0000-0000-00000000000a', 'sino-ana', 'Restaurante da Ana', 'salao', 'ativo', 'America/Sao_Paulo');
+-- O dia do restaurante (o servidor está em UTC: à noite, current_date já é amanhã).
 select public.hoje_no_salao('55400000-0000-0000-0000-00000000000a') as hoje \gset
 insert into public.assinaturas (salao_id, plano, status, vence_em) values
   ('55400000-0000-0000-0000-00000000000a', 'time', 'ativa', :'hoje'::date + 20);
@@ -82,9 +82,9 @@ $$;
 \echo '1. Quem chama'
 select t_verdade('o anon nem chama',
   not has_function_privilege('anon', 'public.sino_do_painel(uuid)', 'execute'));
-select t_texto('a cliente do salão não vê o sino dele',
+select t_texto('a cliente do restaurante não vê o sino dele',
   erro_de($$select t_como('c5400000-0000-0000-0000-00000000000c', 'select public.sino_do_painel(''55400000-0000-0000-0000-00000000000a'')')$$),
-  'Só a equipe do salão vê os avisos.');
+  'Só a equipe do restaurante vê os avisos.');
 select t_verdade('as tabelas dos avisos não abrem direto para ninguém',
   not has_table_privilege('authenticated', 'public.avisos_plataforma', 'select')
   and not has_table_privilege('authenticated', 'public.avisos_lidos', 'insert'));
@@ -211,7 +211,7 @@ select t_texto('confirmou dois, vendeu o pedido, recebeu a parcela, a franquia v
 \echo '7. Os avisos do PediHub'
 select t_texto('só a plataforma publica',
   erro_de($$select t_como('a5400000-0000-0000-0000-00000000000a', 'select public.publicar_aviso_plataforma(''Oi'', ''Texto do aviso'')')$$),
-  'Só a plataforma publica avisos para os salões.');
+  'Só a plataforma publica avisos para os restaurantes.');
 select t_texto('   título curto demais é recusado',
   erro_de($$select t_como('f5400000-0000-0000-0000-00000000000f', 'select public.publicar_aviso_plataforma(''Oi'', ''Texto do aviso'')')$$),
   'O título precisa ter de 3 a 120 letras.');
@@ -242,23 +242,23 @@ select t_verdade('   e o admin mostra os dois fora do ar',
   (select bool_and(not (a->>'noAr')::boolean) from jsonb_array_elements(t_como(:plat::uuid, 'select public.avisos_plataforma_admin()')) a));
 
 \echo ''
-\echo '8. O aviso para um salão só'
+\echo '8. O aviso para um restaurante só'
 -- "Como envio somente para um usuário?" — a prorrogação da cortesia de um dono.
 insert into public.saloes (id, slug, nome, tipo, status, fuso) values
-  ('55400000-0000-0000-0000-00000000000b', 'sino-outro', 'Outro Salão', 'salao', 'ativo', 'America/Sao_Paulo');
+  ('55400000-0000-0000-0000-00000000000b', 'sino-outro', 'Outro Restaurante', 'salao', 'ativo', 'America/Sao_Paulo');
 select t_como(:plat::uuid, $$select public.publicar_aviso_plataforma('Sua cortesia foi prorrogada',
   'Mais 15 dias de plano Essencial.', 'gestao', null, '55400000-0000-0000-0000-00000000000a')$$) as av3 \gset
-select t_como(:plat::uuid, $$select public.publicar_aviso_plataforma('Recado do outro salão',
-  'Só para o Outro Salão.', 'equipe', null, '55400000-0000-0000-0000-00000000000b')$$) as av4 \gset
-select t_texto('a Ana vê o aviso dela (e não o do outro salão)',
+select t_como(:plat::uuid, $$select public.publicar_aviso_plataforma('Recado do outro restaurante',
+  'Só para o Outro Restaurante.', 'equipe', null, '55400000-0000-0000-0000-00000000000b')$$) as av4 \gset
+select t_texto('a Ana vê o aviso dela (e não o do outro restaurante)',
   (select string_agg(a->>'titulo', ' / ') from jsonb_array_elements(
     t_como(:ana::uuid, 'select public.sino_do_painel(''55400000-0000-0000-0000-00000000000a'')')->'avisos') a),
   'Sua cortesia foi prorrogada');
-select t_texto('   a Ju (equipe) não vê nenhum dos dois: um é da gestão, o outro é de outro salão',
+select t_texto('   a Ju (equipe) não vê nenhum dos dois: um é da gestão, o outro é de outro restaurante',
   t_sino(:ju::uuid), 'a_confirmar:1 | avisos 0');
-select t_texto('   o admin mostra para qual salão foi',
+select t_texto('   o admin mostra para qual restaurante foi',
   (select a->>'salao' from jsonb_array_elements(t_como(:plat::uuid, 'select public.avisos_plataforma_admin()')) a
-    where a->>'id' = :'av3'::jsonb->>'id'), 'Salão da Ana');
-select t_texto('salão que não existe é recusado',
+    where a->>'id' = :'av3'::jsonb->>'id'), 'Restaurante da Ana');
+select t_texto('restaurante que não existe é recusado',
   erro_de($$select t_como('f5400000-0000-0000-0000-00000000000f', 'select public.publicar_aviso_plataforma(''Aviso teste'', ''Texto do aviso'', ''gestao'', null, ''00000000-0000-0000-0000-000000000000'')')$$),
-  'Não achei esse salão.');
+  'Não achei esse restaurante.');

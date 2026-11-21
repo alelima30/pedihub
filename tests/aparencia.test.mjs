@@ -1,12 +1,12 @@
 /* ===========================================================================
-   PediHub — a aparência que o salão escolhe, e o que a cliente vê
+   PediHub — a aparência que o restaurante escolhe, e o que a cliente vê
 
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/aparencia.test.mjs
 
    POR QUE ESTE ARQUIVO EXISTE
    Uma barbearia de dourado e grafite e uma esmalteria de rosa e branco não
-   podem ser a mesma página com o nome trocado. O salão escolhe cor, fundo e
+   podem ser a mesma página com o nome trocado. O restaurante escolhe cor, fundo e
    se a capa mostra preço; a `vitrine()` entrega as três; a página aplica.
 
    São quatro elos, e todos falham calados quando quebram: a chave que não
@@ -80,7 +80,7 @@ for(let i = 0; i <= 6; i++){
 }
 await d.inserir('servicos', { salaoId, nome:'Corte navalhado', preco:40,
   duracaoMin:30, intervaloMin:0, ativo:true, aceitaOnline:true });
-ok('salão de teste criado');
+ok('restaurante de teste criado');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const ctx = await nav.newContext({ viewport:{ width:412, height:915 } });
@@ -97,7 +97,7 @@ async function abrir(){
 /* ══════════════════════════════════════════════════════════════════════════
    A CHAVE PRECISA ATRAVESSAR OS QUATRO ELOS
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Do cfg do salão até a tela da cliente');
+secao('Do cfg do restaurante até a tela da cliente');
 
 await d.atualizar('saloes', salaoId, { cfg:{ diasLiberados:30,
   cor:'#C8A33C', tema:'escuro', precoNaCapa:true } });
@@ -116,7 +116,7 @@ verdade('e NÃO devolve o cfg inteiro — só as chaves nomeadas',
 const p = await abrir();
 igual('a página entra em fundo escuro',
   await p.getAttribute('html', 'data-tema'), 'escuro');
-igual('e a cor de ação é a do salão',
+igual('e a cor de ação é a do restaurante',
   await p.evaluate(() => getComputedStyle(document.documentElement)
     .getPropertyValue('--acao').trim()), '#C8A33C');
 
@@ -145,7 +145,7 @@ verdade('as sete cores da paleta dão botão legível', todasOk,
   'esta não dá: ' + pior);
 
 /* ══════════════════════════════════════════════════════════════════════════
-   O PREÇO NA CAPA É ESCOLHA DO SALÃO
+   O PREÇO NA CAPA É ESCOLHA DO RESTAURANTE
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Preço na capa, ligado e desligado');
 
@@ -205,7 +205,7 @@ await q.close();
    na foto. Uma parede clara e o texto branco some; uma escura e o preto
    some. Fica abaixo, no fundo da página, onde o contraste é sempre o mesmo.
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Com foto do salão, e sem');
+secao('Com foto do restaurante, e sem');
 
 const FOTO = 'data:image/svg+xml;base64,' + Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450">'
@@ -251,7 +251,7 @@ await g.close();
    animações não vê o movimento de jeito nenhum.
 
    O fundo é o caso perigoso: foto atrás de texto é ilegível em metade das
-   vezes, e a foto é do salão — não dá para prever se vem parede branca ou
+   vezes, e a foto é do restaurante — não dá para prever se vem parede branca ou
    madeira escura. Por isso o véu, e por isso o teste mede o véu.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('O botão em metal, e o brilho');
@@ -372,7 +372,7 @@ await sf.close();
 
    Três coisas que vieram de um print da tela de escolher serviço: a logo não
    aparecia (saía o monograma, sempre), o "Para mim" selecionado era preto em
-   vez da cor do salão, e o endereço vinha numa tira só.
+   vez da cor do restaurante, e o endereço vinha numa tira só.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('A logo, a letra do nome e o endereço');
 
@@ -425,7 +425,7 @@ const selecionado = await mc.evaluate(() => {
   const b = document.querySelector('#listaServicos .sv-cartao.sel');
   return b ? getComputedStyle(b).borderTopColor : null;
 });
-igual('o serviço escolhido usa a cor do salão, não o preto do sistema',
+igual('o serviço escolhido usa a cor do restaurante, não o preto do sistema',
   selecionado, 'rgb(200, 163, 60)');
 
 // E a marca do PediHub NÃO acompanha: ela é de outra empresa.
@@ -452,8 +452,8 @@ await mc.close();
    ══════════════════════════════════════════════════════════════════════════ */
 secao('A prévia em Meu negócio');
 {
-  /* O salão desta bancada perdeu a capa lá atrás, na seção "sem foto". A
-     prévia só vale se o salão tiver o que ela promete mostrar — então aqui
+  /* O restaurante desta bancada perdeu a capa lá atrás, na seção "sem foto". A
+     prévia só vale se o restaurante tiver o que ela promete mostrar — então aqui
      ele volta a ter capa E fundo, que é o pedido: ver a página inteira. */
   await d.atualizar('saloes', salaoId, { capa: FOTO, logo: LOGO,
     cfg:{ cor:'#C8A33C', tema:'escuro', fundo: PAREDE, precoNaCapa:true } });
@@ -518,9 +518,9 @@ secao('A prévia em Meu negócio');
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   SALÃO QUE NUNCA ESCOLHEU NADA
+   RESTAURANTE QUE NUNCA ESCOLHEU NADA
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Salão antigo, que nunca abriu a tela de aparência');
+secao('Restaurante antigo, que nunca abriu a tela de aparência');
 
 await d.atualizar('saloes', salaoId, { cfg:{ diasLiberados:30 } });
 const r = await abrir();

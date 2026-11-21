@@ -10,7 +10,7 @@
 
      1. a aba aparece com o módulo; a venda: cliente, itens, entrada, parcelas
         e a conta antes; o CPF que faltava vai para a ficha;
-     2. o combinado pelo WhatsApp do salão;
+     2. o combinado pelo WhatsApp do restaurante;
      3. a aba: a receber, a parcela, "Recebi" com parte do valor, "Cobrar";
      4. a ficha da cliente diz quanto ela deve;
      5. o relatório mostra o crediário;
@@ -143,7 +143,7 @@ igual('no banco: a venda de R$ 300 fechada, e o CPF que faltava foi para a ficha
   venda, { total:'300.00', status:'fechada', cpf:'52998224725' });
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('2. O combinado pelo WhatsApp do salão');
+secao('2. O combinado pelo WhatsApp do restaurante');
 await p.click('#fundo button:has-text("Mandar o combinado no WhatsApp")');
 const zap = decodeURIComponent(((await p.evaluate(() => window.__abriu)) || []).slice(-1)[0] || '');
 verdade('leva o valor, as parcelas e o Pix', zap.includes('wa.me/') && /R\$\s?200,00 em 2x/.test(zap)

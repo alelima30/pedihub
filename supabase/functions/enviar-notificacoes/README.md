@@ -2,7 +2,7 @@
 
 Confirmação, lembrete e resumo do dia já são **preparados** pelo banco assim
 que você cola o `98_modulos.sql`. Eles ficam na fila, com o horário certo, em
-estado `pendente` — e é isso que a aba **Meu salão → Notificações** mostra.
+estado `pendente` — e é isso que a aba **Meu restaurante → Notificações** mostra.
 
 Para que passem a **sair**, faltam três coisas. Nenhuma delas é código, e a
 primeira não depende de você.
@@ -37,7 +37,7 @@ CRON_SEGREDO          uma frase qualquer, sua, para o cron provar quem é
 > do painel.** O painel é HTML servido pelo GitHub Pages: tudo o que chega
 > nele é público por construção. O `SUPABASE_SERVICE_ROLE_KEY` já é injetado
 > pela plataforma e passa por cima de todo o RLS — se ele vazar, acabou o
-> isolamento entre salões.
+> isolamento entre restaurantes.
 
 Publicar:
 
@@ -95,7 +95,7 @@ select cron.unschedule('pedihub-notificacoes');
 
 ## O que acontece a cada volta
 
-1. `gerar_resumos()` põe o resumo do dia na fila dos salões cuja hora chegou.
+1. `gerar_resumos()` põe o resumo do dia na fila dos restaurantes cuja hora chegou.
    Idempotente por dia: rodar sessenta vezes numa hora cria uma linha só.
 2. Pega uma mensagem por vez com `notificacao_proxima()`, que marca
    `enviando` na mesma transação em que lê — dois workers ao mesmo tempo nunca
@@ -119,7 +119,7 @@ da Meta, que é a função ao lado — `../status-whatsapp/`, com README própri
 Vale publicar as duas juntas, e o terceiro estado é o motivo. `falhou` é a Meta
 avisando que aceitou a mensagem — devolveu `wam_id`, e por isso esta função já
 escreveu `enviado` e já gastou cota — e depois não conseguiu entregar. Sem o
-webhook, essa linha diz "enviado" para sempre e o salão acha que avisou.
+webhook, essa linha diz "enviado" para sempre e o restaurante acha que avisou.
 
 Enquanto o webhook não estiver cadastrado, esses três estados **não aparecem no
 painel**. Não são estimados.

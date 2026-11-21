@@ -11,7 +11,7 @@
 --   4. a fila: mensagem atrasada é problema; parada pela franquia, não;
 --   5. as falhas: token vencido é problema, cliente sem WhatsApp é atenção;
 --   6. o negócio: franquia acabando e assinatura vencendo, sem derrubar o nível;
---   7. a porta pública não leva nome de salão; as portas são as certas.
+--   7. a porta pública não leva nome de restaurante; as portas são as certas.
 -- ===========================================================================
 \set ON_ERROR_STOP on
 
@@ -112,7 +112,7 @@ insert into public.notificacoes (salao_id, tipo, destino, quando, corpo, chave, 
 insert into public.notificacoes (salao_id, tipo, destino, quando, corpo, chave, status)
 values ('5a100000-0000-0000-0000-000000000002', 'confirmacao', '11999', now() - interval '20 minutes',
         'x', 'saude:parada', 'pendente');
-select t_texto('parada pela franquia do salão não é atraso do sistema', item('fila')->>'nivel', 'ok');
+select t_texto('parada pela franquia do restaurante não é atraso do sistema', item('fila')->>'nivel', 'ok');
 select t_verdade('mas aparece no negócio',
   negocio('franquia_parada')->>'detalhe' like '1 mensagem(ns) esperando%');
 delete from public.notificacoes where chave = 'saude:parada';
@@ -136,7 +136,7 @@ select t_texto('resolvido, volta a ok', item('falhas')->>'nivel', 'ok');
 
 \echo ''
 \echo '6. O negócio'
-select t_verdade('a franquia acabando lista o salão',
+select t_verdade('a franquia acabando lista o restaurante',
   negocio('franquia')->>'detalhe' like '%Barbearia Fim: 500 de 500%');
 select t_verdade('a assinatura vencendo também',
   negocio('vencimentos')->>'detalhe' like '%Barbearia Fim vence em%');
@@ -144,7 +144,7 @@ select t_texto('e o negócio não derruba o nível do sistema', public.saude_ver
 
 \echo ''
 \echo '7. As portas'
-select t_falso('a porta pública não leva nome de salão',
+select t_falso('a porta pública não leva nome de restaurante',
   public.saude_publica()::text like '%Barbearia%' or public.saude_publica()::text like '%Studio%');
 select t_verdade('só nível, horário e chaves',
   (select array_agg(k order by k) from jsonb_object_keys(public.saude_publica()) k)
@@ -166,7 +166,7 @@ insert into public.perfis (id, nome, email, super_admin) values
   ('5a900000-0000-0000-0000-000000000002', 'Plataforma', 'plataforma@saude.com', true)
   on conflict (id) do update set super_admin = excluded.super_admin;
 select set_config('request.jwt.claim.sub', '5a900000-0000-0000-0000-000000000001', false);
-select t_verdade('a dona de salão comum é recusada no admin',
+select t_verdade('a dona de restaurante comum é recusada no admin',
   recusado('select public.saude_plataforma()'));
 select set_config('request.jwt.claim.sub', '5a900000-0000-0000-0000-000000000002', false);
 select t_verdade('a conta da plataforma vê tudo, com o negócio',

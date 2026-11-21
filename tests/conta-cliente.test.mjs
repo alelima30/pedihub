@@ -24,7 +24,7 @@
      7. sair volta tudo ao normal;
      8. primeiro nome diferente não liga (o critério do banco, escrito);
      9. o painel diz quem do pacote tem conta;
-    10. o "esqueci a senha" e a confirmação voltam para o link do salão;
+    10. o "esqueci a senha" e a confirmação voltam para o link do restaurante;
     11. a 360px a tela cabe; nenhum erro de JavaScript.
    =========================================================================== */
 import fs from 'node:fs';
@@ -67,7 +67,7 @@ const masc = d => `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
 const dona = aba();
 await dona.criarConta({ email:`cc-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -78,7 +78,7 @@ const escova = await dona.inserir('servicos', { salaoId: SALAO, nome:'Escova', d
 const SEMANA = [0,1,2,3,4,5,6].reduce((o, d) => (o[d] = [['00:00','00:00']], o), {});
 await dona.atualizar('saloes', SALAO, { cfg:{ diasLiberados:30, cor:'#B8356B', funcionamento: SEMANA } });
 
-// O pacote vendido no balcão, para duas fichas que o salão cadastrou.
+// O pacote vendido no balcão, para duas fichas que o restaurante cadastrou.
 const pacote = await dona.inserir('pacotes', { salaoId: SALAO, nome:'Escova em dia', preco:150,
   sessoes:4, validadeDias:90, dias:[0,1,2,3,4,5,6], ativo:true });
 await dona.inserir('pacote_servicos', { pacoteId: pacote.id, servicoId: escova.id });
@@ -153,7 +153,7 @@ const A = await aparelho();
   if(await p.evaluate(() => tela === 'prof')) await p.click('#btPrincipal');
   await p.waitForTimeout(2500);
   /* ⚠ AMANHÃ, e não o primeiro horário de hoje: perto da hora, o "Cancelar"
-     dá lugar a "fale com o salão" (regra das 2 horas), e o item 5 passava de
+     dá lugar a "fale com o restaurante" (regra das 2 horas), e o item 5 passava de
      madrugada e falhava de manhã. */
   await p.locator('#listaDias .dia:not(.sem)').nth(1).click();
   await p.waitForFunction(() => document.querySelectorAll('#listaHoras .hora').length > 0, null, { timeout: 10000 });
@@ -256,7 +256,7 @@ secao('2b. E-mail que já tem conta');
   await p.click('#btPrincipal'); await p.waitForTimeout(1200);
   verdade('diz que o e-mail já tem conta, e oferece entrar', /Este e-mail já tem conta/.test(await aviso(p))
     && await p.isVisible('#avisoConta button:has-text("Entrar com ele")'), await aviso(p));
-  verdade('o e-mail de confirmação da conta nova volta para o link do salão',
+  verdade('o e-mail de confirmação da conta nova volta para o link do restaurante',
     cadastros.length === 1 && cadastros[0].includes('redirect_to=') && cadastros[0].includes('agendar.html?salao=' + SLUG), cadastros.join(' | '));
   await ctx.close();
 }
@@ -334,7 +334,7 @@ secao('10. Esqueci a senha e a confirmação voltam para o link');
   await p.evaluate(() => abrirConta('entrar')); await p.waitForTimeout(200);
   await p.fill('#cEmail', `maria-${m}@t.com`);
   await p.click('#linhaEsqueci button'); await p.waitForTimeout(800);
-  verdade('o pedido de senha nova volta, depois, para este salão', pedidos.some(u =>
+  verdade('o pedido de senha nova volta, depois, para este restaurante', pedidos.some(u =>
     u.includes('nova-senha.html?volta=' + encodeURIComponent('agendar.html?salao=' + SLUG))), pedidos.join(' | '));
   verdade('e a tela não diz se o e-mail existe', /Se houver conta com/.test(await aviso(p)));
   await p.evaluate(() => reenviarConfirmacaoCliente()); await p.waitForTimeout(600);
@@ -373,7 +373,7 @@ secao('12. O banco, sem a tela');
   igual('o WhatsApp da Maria numa segunda conta: nasce sem telefone e não liga nada',
     [r1 && r1.telefone, r1 && r1.ficha, await perfilDa(fichaMaria.id)], [null, null, donaDaFicha]);
 
-  /* Número reciclado: a Maria trocou de WhatsApp, e a ficha dela no salão
+  /* Número reciclado: a Maria trocou de WhatsApp, e a ficha dela no restaurante
      ficou com o número velho — já ligada à conta dela. A operadora repassou
      esse número, e quem o recebeu (outra Maria, ou alguém que sabe o nome)
      cria conta com ele. Telefone e nome batem; o que segura a ficha, e o

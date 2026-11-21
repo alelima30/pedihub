@@ -8,18 +8,18 @@
    guardar por um tempo ou apagar, "apaga tudo na hora".
 
    O perigo de um botão desses não é ele não apagar: é apagar DEMAIS. Um
-   salão de outra dona, a ficha que o salão fez da cliente, o histórico de
+   restaurante de outra dona, a ficha que o restaurante fez da cliente, o histórico de
    quem já saiu da equipe. Por isso metade deste arquivo confere o que FICA.
 
      1. o banco recusa sem login, sem a palavra EXCLUIR, e com cartão ligado;
-     2. a dona única apaga o salão inteiro — com atendimento concluído,
+     2. a dona única apaga o restaurante inteiro — com atendimento concluído,
         comanda fechada e pagamento, que têm gatilho que recusa mexer;
-     3. o salão que tem outra dona fica, e o que a pessoa fez nele perde só o
+     3. o restaurante que tem outra dona fica, e o que a pessoa fez nele perde só o
         nome; equipe e cliente perdem só o login;
-     4. a tela de Sua conta mostra o nome do salão, só acende o botão com a
+     4. a tela de Sua conta mostra o nome do restaurante, só acende o botão com a
         palavra, apaga as fotos e volta para o Entrar dizendo que excluiu;
      5. no link, a cliente exclui a dela — e a dona que entra pelo link é
-        mandada para o painel em vez de apagar o salão sem ver qual.
+        mandada para o painel em vez de apagar o restaurante sem ver qual.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -83,16 +83,16 @@ const FOTO = new Blob([Buffer.from('R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAAB
 
 /* ══════════════════════════════════════════════════════════════════════════
    O CENÁRIO
-     Ana  — dona ÚNICA do Salão Ana (com atendimento concluído, comanda
+     Ana  — dona ÚNICA do Restaurante Ana (com atendimento concluído, comanda
             fechada, pagamento, produto e foto) e dona JUNTO com a Bruna do
-            Salão Bruna;
-     Carla — da equipe do Salão Bruna, com ficha de profissional;
-     Dani  — cliente do Salão Bruna, com login ligado à ficha.
+            Restaurante Bruna;
+     Carla — da equipe do Restaurante Bruna, com ficha de profissional;
+     Dani  — cliente do Restaurante Bruna, com login ligado à ficha.
    ══════════════════════════════════════════════════════════════════════════ */
 const ana = await pessoa('Ana'), bruna = await pessoa('Bruna'),
       carla = await pessoa('Carla'), dani = await pessoa('Dani');
-const A = await salaoDe(ana, 'Salão Ana');
-const B = await salaoDe(bruna, 'Salão Bruna');
+const A = await salaoDe(ana, 'Restaurante Ana');
+const B = await salaoDe(bruna, 'Restaurante Bruna');
 
 await ana.atualizar('saloes', A.id, { cfg:{ usaComanda:false, diasLiberados:30 } });
 const profA = (await ana.lista('profissionais', { salaoId: A.id }))[0];
@@ -117,10 +117,10 @@ const urlLogo = await ana.enviarImagem(A.id, 'logo.gif', FOTO);
 await ana.atualizar('saloes', A.id, { logo: urlLogo });
 await ana.enviarImagem(A.id, 'esquecida.gif', FOTO);      // trocada e esquecida: só a listagem acha
 const fechadas = await um(`select count(*)::int n from public.comandas where salao_id = $1 and status = 'fechada'`, [A.id]);
-verdade('o Salão Ana tem atendimento concluído com comanda FECHADA (a do gatilho que recusa mexer)',
+verdade('o Restaurante Ana tem atendimento concluído com comanda FECHADA (a do gatilho que recusa mexer)',
   fechadas.n >= 1, JSON.stringify(fechadas));
 
-// Salão Bruna: a Ana é dona junto; a Carla é da equipe; a Dani é cliente com login.
+// Restaurante Bruna: a Ana é dona junto; a Carla é da equipe; a Dani é cliente com login.
 await q(`insert into public.vinculos (perfil_id, salao_id, papel, status) values ($1, $2, 'dono', 'ativo')`, [ana.id, B.id]);
 await q(`insert into public.vinculos (perfil_id, salao_id, papel, status) values ($1, $2, 'profissional', 'ativo')`, [carla.id, B.id]);
 await q(`insert into public.vinculos (perfil_id, salao_id, papel, status) values ($1, $2, 'cliente', 'ativo')`, [dani.id, B.id]);
@@ -145,7 +145,7 @@ verdade('sem login, a função nem responde', !!(await recusa(() =>
   anonimo.chamar('excluir_minha_conta', { p_confirmacao:'EXCLUIR' }))));
 
 const previa = await ana.chamar('o_que_excluir_apaga');
-igual('a Ana vê o que vai acontecer: o Salão Ana sai inteiro, o da Bruna fica',
+igual('a Ana vê o que vai acontecer: o Restaurante Ana sai inteiro, o da Bruna fica',
   (previa || []).map(x => [x.nome, x.apaga]).sort(), [[A.nome, true], [B.nome, false]].sort());
 const daDani = await dani.chamar('o_que_excluir_apaga');
 igual('o vínculo de CLIENTE não conta como estabelecimento da Dani', daDani, []);
@@ -161,13 +161,13 @@ await q(`update public.assinaturas set mp_preapproval = null where salao_id = $1
 igual('e nada foi apagado nas recusas', Number((await um(`select count(*) n from public.saloes where id = $1`, [A.id])).n), 1);
 
 /* ══════════════════════════════════════════════════════════════════════════
-   2 — A DONA ÚNICA APAGA O SALÃO INTEIRO
+   2 — A DONA ÚNICA APAGA O RESTAURANTE INTEIRO
    ══════════════════════════════════════════════════════════════════════════ */
 secao('2. Ana exclui a conta');
 let r;
 const erro = await recusa(async () => { r = await ana.chamar('excluir_minha_conta', { p_confirmacao:' excluir ' }); });
-igual('aceita "excluir" minúsculo e com espaço, e apaga um salão', erro || (r && r.saloes_apagados), 1);
-igual('o Salão Ana não existe mais', Number((await um(`select count(*) n from public.saloes where id = $1`, [A.id])).n), 0);
+igual('aceita "excluir" minúsculo e com espaço, e apaga um restaurante', erro || (r && r.saloes_apagados), 1);
+igual('o Restaurante Ana não existe mais', Number((await um(`select count(*) n from public.saloes where id = $1`, [A.id])).n), 0);
 const tabelas = await q(`select table_name from information_schema.columns
   where table_schema = 'public' and column_name = 'salao_id'
     and table_name in (select table_name from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE')`);
@@ -176,7 +176,7 @@ for(const { table_name } of tabelas){
   const n = Number((await um(`select count(*) n from public.${table_name} where salao_id = $1`, [A.id])).n);
   if(n) sobras.push(table_name + ':' + n);
 }
-igual(`nenhuma linha do Salão Ana sobrou em nenhuma das ${tabelas.length} tabelas`, sobras, []);
+igual(`nenhuma linha do Restaurante Ana sobrou em nenhuma das ${tabelas.length} tabelas`, sobras, []);
 igual('o login da Ana sumiu (auth.users e perfis)',
   [Number((await um(`select count(*) n from auth.users where id = $1`, [ana.id])).n),
    Number((await um(`select count(*) n from public.perfis where id = $1`, [ana.id])).n)], [0, 0]);
@@ -187,22 +187,22 @@ verdade('e entrar com o e-mail e a senha dela não funciona mais',
    3 — O QUE FICA
    ══════════════════════════════════════════════════════════════════════════ */
 secao('3. O que não era só dela continua');
-igual('o Salão Bruna continua', Number((await um(`select count(*) n from public.saloes where id = $1`, [B.id])).n), 1);
+igual('o Restaurante Bruna continua', Number((await um(`select count(*) n from public.saloes where id = $1`, [B.id])).n), 1);
 igual('com a Bruna dona, e sem a Ana', (await q(`select perfil_id from public.vinculos where salao_id = $1 and papel = 'dono'`, [B.id]))
   .map(x => x.perfil_id), [bruna.id]);
 const agBdepois = await um(`select id, criado_por from public.agendamentos where id = $1`, [agB.id]);
 igual('o horário que a Ana marcou lá continua, só sem o nome de quem marcou', [!!agBdepois, agBdepois && agBdepois.criado_por], [true, null]);
 
 const rc = await carla.chamar('excluir_minha_conta', { p_confirmacao:'EXCLUIR' });
-igual('Carla, da equipe, exclui a dela sem apagar salão nenhum', rc && rc.saloes_apagados, 0);
+igual('Carla, da equipe, exclui a dela sem apagar restaurante nenhum', rc && rc.saloes_apagados, 0);
 const fichaC = await um(`select id, perfil_id from public.profissionais where id = $1`, [profCarla.id]);
-igual('a ficha de profissional dela fica no salão (é histórico), desligada da conta', [!!fichaC, fichaC && fichaC.perfil_id], [true, null]);
-igual('e o Salão Bruna segue inteiro', Number((await um(`select count(*) n from public.saloes where id = $1`, [B.id])).n), 1);
+igual('a ficha de profissional dela fica no restaurante (é histórico), desligada da conta', [!!fichaC, fichaC && fichaC.perfil_id], [true, null]);
+igual('e o Restaurante Bruna segue inteiro', Number((await um(`select count(*) n from public.saloes where id = $1`, [B.id])).n), 1);
 
 const rd = await dani.chamar('excluir_minha_conta', { p_confirmacao:'EXCLUIR' });
 igual('Dani, cliente, exclui a dela', rd && rd.saloes_apagados, 0);
 const fichaD = await um(`select id, perfil_id from public.clientes where id = $1`, [fichaDani.id]);
-igual('a ficha que o salão fez dela fica, desligada da conta', [!!fichaD, fichaD && fichaD.perfil_id], [true, null]);
+igual('a ficha que o restaurante fez dela fica, desligada da conta', [!!fichaD, fichaD && fichaD.perfil_id], [true, null]);
 
 /* ══════════════════════════════════════════════════════════════════════════
    4 — A TELA DE SUA CONTA
@@ -235,7 +235,7 @@ await eva.enviarImagem(E.id, 'galeria-1.gif', FOTO);
   await p.click('#btExcluirConta');
   await p.waitForSelector('#palavraExcluir', { timeout: 10000 });
   const janela = await p.evaluate(() => document.getElementById('modalCorpo').textContent.replace(/\s+/g, ' '));
-  verdade('a janela diz o nome do salão que será apagado', janela.includes('Studio Eva'), janela);
+  verdade('a janela diz o nome do restaurante que será apagado', janela.includes('Studio Eva'), janela);
   verdade('e diz que não tem volta', /não tem volta/.test(janela), janela);
   const botao = () => p.evaluate(() => { const b = [...document.querySelectorAll('#modalPe button')]
     .find(x => /Excluir para sempre/.test(x.textContent)); return b ? b.disabled : null; });
@@ -297,8 +297,8 @@ async function noLink(d){
     p.dialogos.some(t => /Sua conta foi excluída/.test(t)), JSON.stringify(p.dialogos));
   igual('o login da Fabi não existe mais', Number((await um(`select count(*) n from auth.users where id = $1`, [fabi.id])).n), 0);
   const ff = await um(`select perfil_id from public.clientes where id = $1`, [fichaF.id]);
-  igual('a ficha dela no salão continua, desligada da conta', ff && ff.perfil_id, null);
-  igual('e o salão continua', Number((await um(`select count(*) n from public.saloes where id = $1`, [B.id])).n), 1);
+  igual('a ficha dela no restaurante continua, desligada da conta', ff && ff.perfil_id, null);
+  igual('e o restaurante continua', Number((await um(`select count(*) n from public.saloes where id = $1`, [B.id])).n), 1);
   await p.context().close();
 }
 {
@@ -308,7 +308,7 @@ async function noLink(d){
   await p.waitForTimeout(1200);
   verdade('a DONA que entra pelo link é mandada para o painel, sem apagar nada',
     p.dialogos.some(t => /administrar um estabelecimento.*painel/s.test(t)), JSON.stringify(p.dialogos));
-  igual('o salão dela continua', Number((await um(`select count(*) n from public.saloes where id = $1`, [B.id])).n), 1);
+  igual('o restaurante dela continua', Number((await um(`select count(*) n from public.saloes where id = $1`, [B.id])).n), 1);
   igual('e o login também', Number((await um(`select count(*) n from auth.users where id = $1`, [bruna.id])).n), 1);
   await p.context().close();
 }

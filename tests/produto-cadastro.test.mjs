@@ -64,7 +64,7 @@ const shampoo = await dona.inserir('produtos', { salaoId: SALAO, nome:'Shampoo',
   preco:45, custo:20, estoque:10, comissaoPct:10, ativo:true, vendaOnline:true });
 const mascara = await dona.inserir('produtos', { salaoId: SALAO, nome:'Mascara',
   preco:60, custo:30, estoque:5, comissaoPct:10, ativo:true, vendaOnline:true });
-ok('salão criado, com dois produtos na loja');
+ok('restaurante criado, com dois produtos na loja');
 
 const daLoja = async () => {
   const v = await dona.chamar('vitrine', { p_slug: SLUG });
@@ -109,7 +109,7 @@ igual('a máscara, que ninguém tocou, continua com o preço', Number(ms.preco),
      só o escondido no carrinho  → "1 produto · R$ 0,00"    (lê como grátis)
      os dois no carrinho         → "2 produtos · R$ 45,00"  (a conta é 245)
 
-   O segundo é o pior: parece um número legítimo, e a cliente chega ao salão
+   O segundo é o pior: parece um número legítimo, e a cliente chega ao restaurante
    esperando pagar um quinto do que vai pagar.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('O total do carrinho, com preço escondido no meio');
@@ -144,7 +144,7 @@ verdade('e a mensagem do WhatsApp também',
 const misturado = await carrinho([shampoo.id, mascara.id]);
 console.log('      ' + JSON.stringify(misturado.fita.replace(/\s+/g, ' ')));
 /* ⚠ O TOTAL PARCIAL PRECISA SE DECLARAR PARCIAL. R$ 60,00 sozinho, com um
-   item sem preço no carrinho, é um número que o salão nunca disse. */
+   item sem preço no carrinho, é um número que o restaurante nunca disse. */
 verdade('carrinho misto: o total aparece, mas dizendo que falta preço',
   /a combinar/.test(misturado.fita) && /60,00/.test(misturado.fita),
   misturado.fita);
@@ -292,7 +292,7 @@ igual('com o motivo da devolução', h3[0].motivo, 'devolucao');
 
 /* ⚠ E O RÓTULO DE "VENDA" NÃO PODE GRUDAR NA CONEXÃO. O aviso que o
    26_estoque manda ao gatilho é local à transação. Sem isso, o próximo ajuste
-   à mão — de qualquer salão, na mesma conexão — sairia rotulado como venda
+   à mão — de qualquer restaurante, na mesma conexão — sairia rotulado como venda
    daquela comanda. */
 await dona.atualizar('produtos', mascara.id, { estoque: 20 });
 const h4 = await hist(mascara.id);
@@ -300,7 +300,7 @@ igual('o ajuste seguinte volta a ser "ajuste", e não "venda"',
   h4[0].motivo, 'ajuste');
 igual('e sem comanda pendurada', h4[0].comanda_id ?? null, null);
 
-/* ⚠ E QUEM NÃO É GESTÃO NÃO LÊ. O histórico mostra quanto o salão comprou e
+/* ⚠ E QUEM NÃO É GESTÃO NÃO LÊ. O histórico mostra quanto o restaurante comprou e
    vendeu de cada coisa. */
 const fora = novaAba();
 await fora.criarConta({ email:`pcx-${marca}@teste.com`, senha:'outrasenhaboa',

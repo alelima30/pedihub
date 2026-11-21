@@ -8,8 +8,8 @@
    duas, achadas ao percorrer o assistente:
 
      1. O WhatsApp de quem atende. O passo "Sua equipe" pedia só o nome, e o
-        dono entrava sem telefone: num salão recém-criado, o aviso de horário
-        novo e o lembrete do salão não saíam para ninguém.
+        dono entrava sem telefone: num restaurante recém-criado, o aviso de horário
+        novo e o lembrete do restaurante não saíam para ninguém.
      2. A chave Pix. A cliente escolhia "Pix" no link e não tinha onde ver a
         chave para pagar.
 

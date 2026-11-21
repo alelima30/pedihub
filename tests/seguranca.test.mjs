@@ -78,8 +78,8 @@ const CARGA = nome => `<img src=x onerror="window.INVADIDO='${nome}'">`;
 const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`seg-${marca}@teste.com`, senha:'minhasenhaboa',
-  nome:'Dona do Salão', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const criado = await d.chamar('criar_salao', { p_nome_salao:'Salão ' + marca,
+  nome:'Dona do Restaurante', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
+const criado = await d.chamar('criar_salao', { p_nome_salao:'Restaurante ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const salaoId = criado[0].salao_id, SLUG = criado[0].slug;
 const prof = (await d.lista('profissionais', { salaoId }))[0];
@@ -100,10 +100,10 @@ const nav = await chromium.launch({ executablePath: CHROMIUM });
    ══════════════════════════════════════════════════════════════════════════ */
 secao('A cliente marca horário com um nome hostil');
 
-/* Amanhã NO SALÃO, não amanhã no relógio deste processo.
+/* Amanhã NO RESTAURANTE, não amanhã no relógio deste processo.
 
    O `mudarDia(1)` lá embaixo anda um dia a partir do `hoje()` do painel, que
-   é o dia do salão. Com a bancada em UTC e o salão em America/Sao_Paulo, das
+   é o dia do restaurante. Com a bancada em UTC e o restaurante em America/Sao_Paulo, das
    00:00 às 03:00 UTC os dois calendários discordam: o horário era marcado
    num dia e o painel abria noutro, e as três verificações de baixo
    reprovavam dizendo que a agenda estava vazia — culpando o escape de texto,
@@ -215,15 +215,15 @@ verdade('e a página ainda explica o que houve',
 await pag.close();
 
 /* ══════════════════════════════════════════════════════════════════════════
-   3. O SALÃO TAMBÉM NÃO ESCREVE NO NAVEGADOR DA CLIENTE
+   3. O RESTAURANTE TAMBÉM NÃO ESCREVE NO NAVEGADOR DA CLIENTE
 
    Menos grave que os dois de cima — aqui quem ataca é o dono, e as vítimas
-   são as clientes dele. Mas é o mesmo furo, e um salão só precisa de um
-   cadastro para existir. Vale também para o dia a dia: um salão chamado
+   são as clientes dele. Mas é o mesmo furo, e um restaurante só precisa de um
+   cadastro para existir. Vale também para o dia a dia: um restaurante chamado
    `Tesoura & Cia "O Corte"` quebrava o atributo `title` sem nenhuma má
    intenção — o mesmo conserto arruma os dois.
    ══════════════════════════════════════════════════════════════════════════ */
-secao('O nome do salão, na tela da cliente');
+secao('O nome do restaurante, na tela da cliente');
 
 await d.atualizar('saloes', salaoId, { nome: CARGA('salao') + 'Studio' });
 await d.atualizar('servicos', servico.id, { nome: CARGA('servico') + 'Corte' });
@@ -318,7 +318,7 @@ verdade('nenhuma interpolação de nome, observação ou endereço saiu crua',
    JS ler. "Joana D'Arc" quebrava o botão; um nome montado no link de
    agendamento, onde qualquer pessoa escreve o próprio nome, rodava código no
    painel do dono. E na página da plataforma, o "Suspender" levava o nome do
-   salão por JSON.stringify — aspas duplas dentro de um atributo de aspas
+   restaurante por JSON.stringify — aspas duplas dentro de um atributo de aspas
    duplas: o botão terminava no meio e não fazia nada.
 
    A regra: dentro de evento, só id, código e slug (formato travado no banco).

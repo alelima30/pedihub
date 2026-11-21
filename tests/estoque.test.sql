@@ -16,7 +16,7 @@
 
 \set ON_ERROR_STOP on
 
--- ── Cenário: um salão com um produto contado ──────────────────────────────
+-- ── Cenário: um restaurante com um produto contado ──────────────────────────────
 insert into auth.users (id) values
   ('c1000000-0000-0000-0000-00000000000a') on conflict do nothing;
 insert into public.perfis (id, nome, email) values
@@ -24,7 +24,7 @@ insert into public.perfis (id, nome, email) values
   on conflict (id) do update
     set nome = excluded.nome, email = excluded.email;
 insert into public.saloes (id, slug, nome) values
-  ('c1000000-1111-0000-0000-00000000000b', 'salao-estoque', 'Salão do Estoque');
+  ('c1000000-1111-0000-0000-00000000000b', 'salao-estoque', 'Restaurante do Estoque');
 insert into public.vinculos (perfil_id, salao_id, papel, status) values
   ('c1000000-0000-0000-0000-00000000000a',
    'c1000000-1111-0000-0000-00000000000b', 'dono', 'ativo');
@@ -148,7 +148,7 @@ select t_verdade('cancelou depois de fechada, o estoque volta',
 
    Recusar aqui seria o sistema travando uma venda que já aconteceu — a pessoa
    no balcão, o dinheiro na mesa — por causa de um número que ninguém atualiza
-   desde março. O salão não desfaz a venda; ele para de usar o sistema.
+   desde março. O restaurante não desfaz a venda; ele para de usar o sistema.
 
    Negativo é informação: "você vendeu mais do que tinha registrado". */
 select comanda_de(0, 3) as c2 \gset

@@ -8,7 +8,7 @@
 -- ── O QUE JÁ EXISTIA, E POR QUE NÃO SERVIA ────────────────────────────────
 -- A restrição de dia só existia DENTRO do pacote (`pacotes.so_nos_dias`, no
 -- 27). Aquela é outra pergunta: ela diz em que dias a SESSÃO DO PACOTE pode
--- ser usada, vale só para quem tem o pacote, e o salão continua vendendo o
+-- ser usada, vale só para quem tem o pacote, e o restaurante continua vendendo o
 -- mesmo serviço a preço cheio nos outros dias. Esta aqui é sobre o serviço em
 -- si, para todo mundo.
 --
@@ -70,12 +70,12 @@ comment on column public.servicos.dias is
 -- Devolve a frase pronta, ou NULL quando não há nada a barrar. Texto e não
 -- booleano pelo mesmo motivo do `pacote_fora_do_dia()`: recusa sem motivo
 -- escrito é igual a horário que some. A cliente abre a segunda-feira, não vê
--- nada, e conclui que o salão fechou.
+-- nada, e conclui que o restaurante fechou.
 --
 -- ⚠ BASTA UM SERVIÇO DO PEDIDO ESTAR FORA. Ela escolheu corte + escova para o
 -- mesmo horário; se a escova não é feita na segunda, o par não cabe na
 -- segunda. Barrar só quando TODOS estão fora deixaria passar a marcação de um
--- combinado que o salão não consegue cumprir — e o problema só apareceria com
+-- combinado que o restaurante não consegue cumprir — e o problema só apareceria com
 -- a cliente sentada na cadeira.
 --
 -- A frase nomeia o serviço porque ela pode ter escolhido três: sem o nome, a
@@ -94,8 +94,8 @@ begin
   end if;
 
   /* ⚠ O DIA SAI DA DATA, E NÃO DE `now()`. Quem chama já converteu o instante
-     para a data DO SALÃO — é o `porque_nao_agenda()` e o `agendar()`, os dois
-     pelo fuso do salão. Recalcular aqui com o fuso do servidor poria a
+     para a data DO RESTAURANTE — é o `porque_nao_agenda()` e o `agendar()`, os dois
+     pelo fuso do restaurante. Recalcular aqui com o fuso do servidor poria a
      quinta-feira de alguém na quarta, e seria um daqueles defeitos que só
      aparecem depois das 21h. */
   v_dia := extract(dow from p_data)::smallint;
@@ -123,7 +123,7 @@ begin
      Dois-pontos resolvem sem adivinhar nada. */
   return format(
     '%s: só %s. Escolha um desses dias, tire este serviço do pedido, '
-    || 'ou chame o salão no WhatsApp.',
+    || 'ou chame o restaurante no WhatsApp.',
     v_nome, public.dias_por_extenso(v_dias));
 end $$;
 
@@ -145,7 +145,7 @@ comment on function public.servico_fora_do_dia(uuid[], date) is
    enxerga metade da casa não é um guarda.
 
    Aberta ao anon, `servico_fora_do_dia` é uma consulta sobre serviços de
-   QUALQUER salão, com o id no parâmetro: um id adivinhado devolve o nome do
+   QUALQUER restaurante, com o id no parâmetro: um id adivinhado devolve o nome do
    serviço na frase de recusa. Pouco, mas é mais do que zero, e de graça. */
 revoke all on function public.servico_fora_do_dia(uuid[], date) from public;
 
@@ -154,7 +154,7 @@ revoke all on function public.servico_fora_do_dia(uuid[], date) from public;
 --
 -- A lista de espera não pede um dia: pede uma JANELA ("de 27 a 30, qualquer
 -- turno"). A pergunta certa ali é outra — existe ALGUM dia dessa janela em
--- que o salão faz tudo o que ela pediu?
+-- que o restaurante faz tudo o que ela pediu?
 --
 -- ── ⚠ POR QUE ISTO PRECISOU EXISTIR ───────────────────────────────────────
 -- Sem ela, o mesmo link RECUSAVA marcar escova na segunda, com a frase certa,
@@ -163,11 +163,11 @@ revoke all on function public.servico_fora_do_dia(uuid[], date) from public;
 --
 -- É a pior forma de falhar que este projeto conhece: nada dá erro, a cliente
 -- recebe um "pronto, a gente te avisa", e espera um telefonema que não pode
--- acontecer. Do lado do salão também não aparece nada — a fila tem um pedido
+-- acontecer. Do lado do restaurante também não aparece nada — a fila tem um pedido
 -- impossível no meio dos possíveis.
 --
 -- ⚠ E BASTA UM DIA PARA ACEITAR. Se a janela pega uma quinta, a fila é
--- legítima: o salão vai oferecer a quinta. Recusar uma janela por ela conter
+-- legítima: o restaurante vai oferecer a quinta. Recusar uma janela por ela conter
 -- dias ruins seria recusar quase todas — quase toda janela de uma semana tem
 -- pelo menos um dia de fora.
 -- ---------------------------------------------------------------------------
@@ -259,7 +259,7 @@ begin
   end if;
 
   if not public.recurso_bool(v_salao, 'agenda_online') then
-    return 'Este salão não está aceitando marcação pela internet.';
+    return 'Este restaurante não está aceitando marcação pela internet.';
   end if;
 
   if exists (
@@ -305,21 +305,21 @@ begin
     v_pedido := public.duracao_dos_servicos(p_profissional, p_servicos);
     if (v_online + v_pedido) * 100 > v_jornada * public.teto_online_pct(v_salao) then
       return 'Este dia já está quase todo marcado. '
-          || 'Chame o salão no WhatsApp que a gente encaixa você.';
+          || 'Chame o restaurante no WhatsApp que a gente encaixa você.';
     end if;
   end if;
 
   /* ── O FREIO DE RAJADA ─────────────────────────────────────────────────
      Nenhuma das duas frases fala em limite, cota ou teto, e é decisão: quem
      lê isto na esmagadora maioria das vezes é uma cliente de verdade num
-     salão movimentado, e ela precisa de um caminho, não da explicação de um
+     restaurante movimentado, e ela precisa de um caminho, não da explicação de um
      mecanismo. O caminho é o WhatsApp, onde tem gente.
 
      E para quem está do outro lado tentando encher a agenda, a frase também
      não entrega nada: não diz qual é o número nem quanto falta. */
   if public.rajada_online(v_salao) >= public.teto_online_rajada(v_salao) then
     return 'A marcação pela internet está congestionada agora. '
-        || 'Tente daqui a pouco, ou chame o salão no WhatsApp.';
+        || 'Tente daqui a pouco, ou chame o restaurante no WhatsApp.';
   end if;
 
   return null;

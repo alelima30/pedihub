@@ -1,5 +1,5 @@
 /* ===========================================================================
-   PediHub — o salão confirma, ou o link confirma sozinho
+   PediHub — o restaurante confirma, ou o link confirma sozinho
 
      bash tests/bancada/subir.sh
      node tests/confirmacao.test.mjs
@@ -16,7 +16,7 @@
    aceitava os dois status.
 
    A seção 2 é a que mede isso, e é a razão deste arquivo existir. Sem ela, o
-   resto passaria com o sistema prometendo em nome do salão.
+   resto passaria com o sistema prometendo em nome do restaurante.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -47,7 +47,7 @@ function novaAba(){
 const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const tel = n => '+5551' + String(900000000 + n + (Date.now() % 89000000)).slice(0, 9);
 
-// ── O salão ────────────────────────────────────────────────────────────────
+// ── O restaurante ────────────────────────────────────────────────────────────────
 const d = novaAba();
 await d.criarConta({ email:`cf-dona-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Dona Confirma', telefone: tel(1) });
@@ -76,7 +76,7 @@ for(let i = 0; i <= 6; i++)
                                 inicio:'08:00', fim:'20:00' });
 const corte = await d.inserir('servicos', { salaoId:SALAO, nome:'Corte',
   preco:50, duracaoMin:60, intervaloMin:0, ativo:true, aceitaOnline:true });
-ok('salão com um serviço e jornada todos os dias');
+ok('restaurante com um serviço e jornada todos os dias');
 
 const FUSO = 'America/Sao_Paulo';
 const hojeNoSalao = new Intl.DateTimeFormat('en-CA', { timeZone: FUSO,
@@ -106,13 +106,13 @@ const notificacoesDe = async agId =>
 /* ══════════════════════════════════════════════════════════════════════════
    1 — ⚠ O PADRÃO É AUTOMÁTICO, E NADA MUDA PARA QUEM JÁ USA O LINK
 
-   Se a ausência da chave valesse "o dono confirma", todo salão que já usa a
+   Se a ausência da chave valesse "o dono confirma", todo restaurante que já usa a
    agenda online acordaria amanhã com pendências que ninguém pediu — e
    clientes esperando uma resposta que o dono não sabe que deve dar.
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Salão novo, sem a chave no cfg');
+secao('Restaurante novo, sem a chave no cfg');
 
-igual('o salão nasce confirmando sozinho',
+igual('o restaurante nasce confirmando sozinho',
   await d.chamar('confirma_automatico', { p_salao: SALAO }), true);
 
 const r1 = await marcar();
@@ -130,7 +130,7 @@ verdade('e a confirmação é enfileirada na hora — '
 
    A seção que este arquivo existe para provar.
    ══════════════════════════════════════════════════════════════════════════ */
-secao('O salão passa a confirmar à mão');
+secao('O restaurante passa a confirmar à mão');
 
 await d.atualizar('saloes', SALAO,
   { cfg:{ diasLiberados:60, tetoOnlinePct:100, tetoOnlineRajada:100,
@@ -146,13 +146,13 @@ const n2 = await notificacoesDe(a2.id);
 console.log('      notificações: ' + JSON.stringify(n2.map(x => x.tipo)));
 verdade('NENHUMA confirmação sai antes de o dono olhar',
   !n2.some(x => x.tipo === 'confirmacao'),
-  'o sistema prometeu em nome do salão um horário que ele não aceitou');
+  'o sistema prometeu em nome do restaurante um horário que ele não aceitou');
 /* O lembrete também espera: "seu horário é amanhã às 15h" lê-se como
    confirmação, e ninguém lê aquilo como "talvez". */
 verdade('e nenhum lembrete é marcado ainda',
   !n2.some(x => x.tipo === 'lembrete'),
   'lembrar de um horário não aceito é confirmá-lo por tabela');
-/* Mas o salão PRECISA saber que tem coisa esperando. */
+/* Mas o restaurante PRECISA saber que tem coisa esperando. */
 verdade('o aviso para quem atende sai na hora — é como o dono descobre',
   n2.some(x => x.tipo === 'novo'),
   'sem este aviso o dono não sabe que existe algo para confirmar');
@@ -216,7 +216,7 @@ const r5 = await marcar();
 const a5 = await doAgendamento(r5[0].id);
 igual('nasce pendente', a5.status, 'pendente');
 await d.atualizar('agendamentos', a5.id,
-  { status:'cancelado', canceladoMotivo:'não confirmado pelo salão' });
+  { status:'cancelado', canceladoMotivo:'não confirmado pelo restaurante' });
 const n5 = await notificacoesDe(a5.id);
 const vivas = n5.filter(x => x.status === 'pendente');
 igual('nada fica na fila para ser enviado depois — '
@@ -226,7 +226,7 @@ igual('nada fica na fila para ser enviado depois — '
    6 — LIXO NO CFG CAI NO LADO SEGURO
 
    `'abacaxi'::boolean` LEVANTA no Postgres, e um cast desprotegido aqui
-   derrubaria TODA marcação do salão.
+   derrubaria TODA marcação do restaurante.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Valor inválido no cfg');
 

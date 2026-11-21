@@ -6,7 +6,7 @@
    O contrário (cache primeiro) é mais rápido, mas foi a causa de um problema
    clássico no AdminPro: a pessoa atualiza a página, o service worker devolve
    a versão velha do cache e ela jura que o sistema não recebeu a correção.
-   Numa agenda isso é pior ainda — mostrar horário desatualizado faz o salão
+   Numa agenda isso é pior ainda — mostrar horário desatualizado faz o restaurante
    marcar em cima.
 
    Então: tenta a rede; se der certo, guarda a cópia e entrega a versão nova.

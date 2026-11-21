@@ -65,7 +65,7 @@ const dona = novaAba();
 await dona.criarConta({ email:`nt-tela-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju das Notificações',
   telefone:'+5511' + (100000000 + Math.floor(Math.random()*89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Notif ' + marca,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Notif ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 await banco.query(
@@ -117,10 +117,10 @@ verdade('a aba existe em Meu negócio',
 
 /* ⚠ O AVISO DIZ O QUE A FILA DIZ. Era fixo — "o WhatsApp ainda não está
    conectado" — e continuou dizendo depois que a conta foi aprovada e as
-   mensagens começaram a sair. Salão sem nenhuma mensagem enviada ainda lê
+   mensagens começaram a sair. Restaurante sem nenhuma mensagem enviada ainda lê
    isso, e o que "pendente" quer dizer; nada de afirmar que está desligado. */
 const aviso = await p.textContent('#avisoWhats');
-verdade('salão sem mensagem enviada: o aviso diz que nenhuma saiu ainda',
+verdade('restaurante sem mensagem enviada: o aviso diz que nenhuma saiu ainda',
   /Nenhuma mensagem desta agenda saiu/i.test(aviso || ''), aviso);
 verdade('dizendo o que pendente quer dizer: ainda não saiu',
   /pendente/i.test(aviso || '') && /não enviada/i.test(aviso || ''), aviso);
@@ -159,10 +159,10 @@ igual('o banco concorda que estão ligadas', (await banco.query(
   [SALAO])).rows[0].l, true);
 
 /* "Preciso que apareça lá que é pro cliente": o lembrete da cliente diz de
-   quem é, e o do salão é outro, à parte. */
+   quem é, e o do restaurante é outro, à parte. */
 verdade('o lembrete diz que é para o cliente', await p.evaluate(() =>
   /Lembrete para o cliente/.test(document.getElementById('nLembrete').closest('label').innerText)));
-igual('o lembrete para o salão existe e vem DESLIGADO',
+igual('o lembrete para o restaurante existe e vem DESLIGADO',
   await p.isChecked('#nLembEquipe'), false);
 igual('desligado, as opções dele nem aparecem', await p.evaluate(() =>
   getComputedStyle(document.getElementById('caixaLembEquipe')).display), 'none');
@@ -220,7 +220,7 @@ const lembSalao = (await banco.query(
           public.notif_num($1,'notifLembreteEquipeMin',60) as m,
           (select cfg->>'notifLembreteEquipePara' from public.saloes where id=$1) as para`,
   [SALAO])).rows[0];
-igual('o lembrete para o salão chega ligado ao banco, 2h antes, para os dois',
+igual('o lembrete para o restaurante chega ligado ao banco, 2h antes, para os dois',
   JSON.stringify([lembSalao.l, Number(lembSalao.m), lembSalao.para]),
   JSON.stringify([true, 120, 'ambos']));
 
@@ -261,7 +261,7 @@ igual('o aviso da última sessão do pacote volta desligado (e a chave do pagame
 igual('o remarcado volta desligado', await p.isChecked('#nRemarcado'), false);
 igual('na hora escolhida', await p.inputValue('#nResumoHora'), '7');
 igual('e no período escolhido', await p.inputValue('#nResumoPeriodo'), 'manha');
-igual('o lembrete para o salão volta ligado, 2h, para os dois',
+igual('o lembrete para o restaurante volta ligado, 2h, para os dois',
   JSON.stringify([await p.isChecked('#nLembEquipe'), await p.inputValue('#nLembEquipeMin'),
    await p.inputValue('#nLembEquipePara')]), JSON.stringify([true, '120', 'ambos']));
 
@@ -292,7 +292,7 @@ verdade('e o tipo diz de quem é o lembrete',
 verdade('o lembrete de amanhã diz que espera a hora marcada, não só "pendente"',
   /espera a hora marcada/.test(hist || ''), (hist || '').slice(0, 300));
 
-/* Saiu uma mensagem deste salão: o aviso de cima passa a dizer que está
+/* Saiu uma mensagem deste restaurante: o aviso de cima passa a dizer que está
    ligado. (A linha é marcada à mão aqui; quem marca de verdade é o worker.) */
 await banco.query(
   `update public.notificacoes set status='enviado', enviado_em=now()
@@ -361,7 +361,7 @@ verdade('e o número de clientes bate com o do banco',
 /* ══════════════════════════════════════════════════════════════════════════
    7b. O MESMO CONTADOR ONDE SE LIGAM AS MENSAGENS
 
-   É em Mensagens da agenda que o dono decide ligar o lembrete para o salão
+   É em Mensagens da agenda que o dono decide ligar o lembrete para o restaurante
    ou o resumo — e é ali que ele precisa ver quanto já gastou, e o que para
    primeiro quando a franquia está no fim (22_cotas, 2b).
    ══════════════════════════════════════════════════════════════════════════ */
@@ -397,8 +397,8 @@ verdade('folgado, sem aviso de limite', !/pararam|acabaram|próximo do limite/.t
 
 await gastarTela(3239, 0);                       // 1 + 3239 = 3240, a marca dos 90%
 c = await consumo();
-verdade('aos 90%, diz que as do salão pararam',
-  /As mensagens para o salão pararam/.test(c), c.slice(0, 300));
+verdade('aos 90%, diz que as do restaurante pararam',
+  /As mensagens para o restaurante pararam/.test(c), c.slice(0, 300));
 verdade('e quantas sobram para o cliente', /360 que faltam/.test(c), c.slice(0, 300));
 verdade('e que voltam no dia da renovação, não "quando virar o mês"',
   new RegExp('voltam em ' + RENOVA).test(c) && !/virar o mês/.test(c), c.slice(0, 400));

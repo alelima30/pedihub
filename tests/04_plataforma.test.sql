@@ -1,7 +1,7 @@
 -- ===========================================================================
 -- PediHub — o painel de quem é dono da plataforma
 --
--- Uma conta super_admin lê a clientela e o faturamento de TODOS os salões. É
+-- Uma conta super_admin lê a clientela e o faturamento de TODOS os restaurantes. É
 -- a credencial mais perigosa do sistema, então o que se prova aqui é menos
 -- "funciona" e mais "não abre para quem não é".
 -- ===========================================================================
@@ -10,7 +10,7 @@
 \o /dev/null
 
 insert into auth.users (id) values
-  ('aa000000-0000-0000-0000-00000000000a'),   -- Ana, dona de salão
+  ('aa000000-0000-0000-0000-00000000000a'),   -- Ana, dona de restaurante
   ('ee000000-0000-0000-0000-00000000000e'),   -- Você, dono da plataforma
   ('cc000000-0000-0000-0000-00000000000c');   -- Cliente qualquer
 
@@ -27,7 +27,7 @@ on conflict (id) do update set nome = excluded.nome,
   telefone = excluded.telefone, super_admin = excluded.super_admin;
 
 insert into public.saloes (id, slug, nome, fuso) values
-  ('50000000-0000-0000-0000-00000000000a', 'salao-a', 'Salão A', 'America/Sao_Paulo'),
+  ('50000000-0000-0000-0000-00000000000a', 'salao-a', 'Restaurante A', 'America/Sao_Paulo'),
   ('50000000-0000-0000-0000-00000000000b', 'salao-b', 'Barbearia B', 'America/Sao_Paulo');
 
 insert into public.assinaturas (salao_id, plano, status, trial_ate) values
@@ -51,8 +51,8 @@ begin;
 
   do $$ begin
     if recusado($q$select public.painel_plataforma()$q$)
-    then perform t_ok('a dona de salão não abre o painel da plataforma');
-    else perform t_falha('A DONA DE SALÃO ABRIU O PAINEL — ela vê o faturamento de todo mundo');
+    then perform t_ok('a dona de restaurante não abre o painel da plataforma');
+    else perform t_falha('A DONA DE RESTAURANTE ABRIU O PAINEL — ela vê o faturamento de todo mundo');
     end if;
   end $$;
 
@@ -67,8 +67,8 @@ begin;
   do $$ begin
     if recusado($q$select public.definir_status_salao(
          '50000000-0000-0000-0000-00000000000b', 'suspenso')$q$)
-    then perform t_ok('nem suspende o salão do concorrente');
-    else perform t_falha('SUSPENDEU O SALÃO DO VIZINHO');
+    then perform t_ok('nem suspende o restaurante do concorrente');
+    else perform t_falha('SUSPENDEU O RESTAURANTE DO VIZINHO');
     end if;
   end $$;
 rollback;
@@ -119,11 +119,11 @@ begin;
     v := public.painel_plataforma();
     perform t_verdade('o painel abre para a plataforma', v is not null);
 
-    perform t_igual('conta os 2 salões ativos',
+    perform t_igual('conta os 2 restaurantes ativos',
                     (v->'resumo'->>'saloes')::bigint, 2);
 
     -- O que separa receita de esperança: um está pagando, o outro está
-    -- testando. Somar os dois é como um salão somar orçamento com caixa.
+    -- testando. Somar os dois é como um restaurante somar orçamento com caixa.
     perform t_igual('1 pagante', (v->'resumo'->>'pagantes')::bigint, 1);
     perform t_igual('1 em teste', (v->'resumo'->>'em_teste')::bigint, 1);
     /* ⚠ O preço vem da TABELA, não escrito aqui.
@@ -143,7 +143,7 @@ begin;
     perform t_texto('e é a Barbearia B',
                     v->'vencendo'->0->>'nome', 'Barbearia B');
 
-    perform t_igual('a lista traz os 2 salões',
+    perform t_igual('a lista traz os 2 restaurantes',
                     jsonb_array_length(v->'saloes')::bigint, 2);
     perform t_verdade('com os planos da plataforma junto',
                       jsonb_array_length(v->'planos') >= 6);
@@ -154,7 +154,7 @@ begin;
   declare v jsonb;
   begin
     v := public.definir_plano('50000000-0000-0000-0000-00000000000b', 'time');
-    perform t_texto('a plataforma muda o plano de um salão',
+    perform t_texto('a plataforma muda o plano de um restaurante',
                     v->>'plano', 'time');
     perform t_texto('e o plano EFETIVO acompanha na hora',
                     v->>'planoEfetivo', 'time');
@@ -180,7 +180,7 @@ begin;
   declare v jsonb;
   begin
     v := public.definir_status_salao('50000000-0000-0000-0000-00000000000b', 'suspenso');
-    perform t_texto('a plataforma suspende um salão', v->>'para', 'suspenso');
+    perform t_texto('a plataforma suspende um restaurante', v->>'para', 'suspenso');
     perform t_verdade('e ele some da vitrine na hora',
                       public.vitrine('salao-b') is null);
   end $$;

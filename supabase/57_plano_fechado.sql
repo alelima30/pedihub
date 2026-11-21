@@ -3,7 +3,7 @@
 --
 -- ── O QUE ESTAVA ABERTO ───────────────────────────────────────────────────
 -- `plano_efetivo(salao)` respondia a QUALQUER UM, sem login, qual plano um
--- salão paga. O id do salão não é segredo: sai da própria vitrine pública.
+-- restaurante paga. O id do restaurante não é segredo: sai da própria vitrine pública.
 -- Então bastava abrir o link de um concorrente e perguntar ao banco:
 --
 --     plano_efetivo(id)            → 'gratuito', 'basico', 'salao'...
@@ -11,11 +11,11 @@
 --     recurso_num(id, 'mensagens_mes'), limite_profissionais(id)
 --
 -- E, com uma conta qualquer (criar conta é grátis): `mensagens_no_mes(id)`,
--- quantas mensagens o salão mandou este mês; `pode_enviar(id)`, se ele já
+-- quantas mensagens o restaurante mandou este mês; `pode_enviar(id)`, se ele já
 -- bateu na franquia; `teto_mensagens(id)` e `usa_comanda(id)`.
 --
 -- Nada disso vazava cliente, agenda ou dinheiro — é "que plano o vizinho
--- assina e quanto ele usa". Mas é informação comercial do salão, e ninguém
+-- assina e quanto ele usa". Mas é informação comercial do restaurante, e ninguém
 -- de fora tem por que saber.
 --
 -- ── POR QUE ESTAVAM ABERTAS ───────────────────────────────────────────────

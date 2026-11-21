@@ -105,7 +105,7 @@ language sql stable security definer set search_path = public as $$
       -- regra — e não ter como discordar dela.
       'diasLiberados', public.dias_liberados(s.id),
 
-      /* ── A APARÊNCIA QUE O SALÃO ESCOLHEU ──────────────────────────────
+      /* ── A APARÊNCIA QUE O RESTAURANTE ESCOLHEU ──────────────────────────────
          Só as três chaves visuais, nomeadas uma a uma — nunca o `cfg`
          inteiro. `cfg` é jsonb e vai crescer; devolvê-lo por atacado
          significa publicar para qualquer visitante toda configuração que
@@ -113,7 +113,7 @@ language sql stable security definer set search_path = public as $$
          aparece aqui se for escrita aqui, de propósito.
 
          Nulo quer dizer "não escolheu", e a tela usa o padrão dela — assim
-         salão antigo, criado antes disto existir, continua bonito sem
+         restaurante antigo, criado antes disto existir, continua bonito sem
          precisar de migração. */
       'cor',  c.cfg->>'cor',
       'tema', c.cfg->>'tema',
@@ -121,7 +121,7 @@ language sql stable security definer set search_path = public as $$
          `'abacaxi'::boolean` e `'abacaxi'::int` LEVANTAM no Postgres — não
          devolvem nulo. Dentro da `vitrine()` isso não é "o ajuste não pega":
          é a função inteira caindo, e ela é a ÚNICA porta da página da
-         cliente. A casa sai do ar por um caractere, com o link que o salão
+         cliente. A casa sai do ar por um caractere, com o link que o restaurante
          mandou no WhatsApp.
 
          Medido, uma chave por vez, num banco de verdade: as quatro derrubavam
@@ -142,10 +142,10 @@ language sql stable security definer set search_path = public as $$
                        in ('true', 't', '1', 'yes', 'sim'),
       -- A imagem de fundo da página, que o dono anexa em Identidade visual.
       -- Mora no `cfg` e não numa coluna própria de propósito: `cfg` é jsonb
-      -- e já existe, então nenhum salão precisa de migração de tabela.
+      -- e já existe, então nenhum restaurante precisa de migração de tabela.
       'fundo', c.cfg->>'fundo',
       -- O brilho do botão principal. Ausente quer dizer LIGADO: é o padrão, e
-      -- assim salão criado antes disto existir já nasce com ele.
+      -- assim restaurante criado antes disto existir já nasce com ele.
       'brilho', lower(btrim(coalesce(c.cfg->>'brilho', 'true')))
                   not in ('false', 'f', '0', 'no', 'nao', 'não'),
       -- A letra do nome na capa. Nulo = a tela decide pelo tipo do negócio.
@@ -164,7 +164,7 @@ language sql stable security definer set search_path = public as $$
                   then (c.cfg->>'veu')::int end,
       /* Quanto os cartões fecham sobre a foto de fundo: 'auto', 'vidro' ou
          'fechado'. Nulo = 'auto', que é o que a tela faz sozinha — então
-         salão criado antes disto não precisa de migração nenhuma.
+         restaurante criado antes disto não precisa de migração nenhuma.
 
          ⚠ Precisa ESTAR AQUI para existir. O `cfg` inteiro nunca é
          devolvido, cada chave é nomeada uma a uma, e ajuste que não aparece
@@ -173,7 +173,7 @@ language sql stable security definer set search_path = public as $$
       'cartoes', c.cfg->>'cartoes',
 
       /* A FORMA do cartão de serviço: `reta` (o de sempre) ou
-         `elegante`. Ausente vale `reta`, então salão criado antes
+         `elegante`. Ausente vale `reta`, então restaurante criado antes
          disto existir não muda de aparência e não há migração.
 
          ⚠ É outro eixo, e não um valor de `cartoes`. Aquele decide o
@@ -184,7 +184,7 @@ language sql stable security definer set search_path = public as $$
 
       /* ── ⚠ OS DOIS MÓDULOS DA CASA ────────────────────────────────────
          `usaServicos` e `loja` dizem com o que o estabelecimento trabalha:
-         agenda, loja, ou as duas. Os dois nascem LIGADOS — é o que todo salão
+         agenda, loja, ou as duas. Os dois nascem LIGADOS — é o que todo restaurante
          já é hoje, e nenhum deles muda de comportamento por causa destas
          linhas.
 
@@ -223,14 +223,14 @@ language sql stable security definer set search_path = public as $$
                        not in ('false', 'f', '0', 'no', 'nao', 'não'),
 
       /* ── OS SERVIÇOS QUE APARECEM NA CAPA ─────────────────────────────
-         Lista de ids que o dono marcou como destaque. Um salão com vinte
+         Lista de ids que o dono marcou como destaque. Um restaurante com vinte
          serviços não cabe numa primeira dobra de celular: sem escolha, a
          capa vira um catálogo que ninguém rola até o fim, e o serviço que
          paga a conta fica embaixo do que ninguém pede.
 
          ⚠ VAZIO NÃO QUER DIZER "NENHUM", quer dizer "não escolhi" — e aí a
          capa decide sozinha (os primeiros, com foto na frente). Tratar vazio
-         como "esconda tudo" deixaria sem vitrine todo salão que já existe, no
+         como "esconda tudo" deixaria sem vitrine todo restaurante que já existe, no
          dia da atualização, sem ninguém ter pedido.
 
          Fica no `cfg`, e não numa coluna de `servicos`, porque é uma decisão
@@ -242,7 +242,7 @@ language sql stable security definer set search_path = public as $$
 
       /* ── DE QUANTO EM QUANTO TEMPO O LINK OFERECE HORÁRIO ─────────────
          15, 30 ou 60 minutos. Ausente vale 15, que é o que a agenda sempre
-         fez — salão que já usa o sistema não pode acordar com a lista de
+         fez — restaurante que já usa o sistema não pode acordar com a lista de
          horários diferente sem ter pedido.
 
          ⚠ ISTO É APARÊNCIA, NÃO DISPONIBILIDADE. A `horarios_livres()`
@@ -261,22 +261,22 @@ language sql stable security definer set search_path = public as $$
       'passoHorarios', case
         when c.cfg->>'passoHorarios' in ('15','30','60')
           then (c.cfg->>'passoHorarios')::int else 15 end,
-      /* O salão pede senha para marcar ("Exigir senha", Meu negócio)?
-         Ausente = não: todo salão que já existe segue como sempre. Booleano
+      /* O restaurante pede senha para marcar ("Exigir senha", Meu negócio)?
+         Ausente = não: todo restaurante que já existe segue como sempre. Booleano
          pela peneira de texto, como o `fitaBrilho` abaixo. */
       'exigeSenha', lower(btrim(coalesce(c.cfg->>'exigeSenha', 'false')))
                       in ('true', 't', '1', 'sim', 'yes'),
 
       /* ── A CAMADA DE PERSONALIZAÇÃO POR ESTABELECIMENTO ────────────────
-         Cinco chaves, e as cinco AUSENTES no salão que nunca mexeu — que é
-         o estado de todo salão que já existe. Ausente aqui não é "vazio": é
+         Cinco chaves, e as cinco AUSENTES no restaurante que nunca mexeu — que é
+         o estado de todo restaurante que já existe. Ausente aqui não é "vazio": é
          "faça como sempre fez", e a página da cliente trata assim.
 
          ⚠ `cores` É UM OBJETO COM BURACOS, DE PROPÓSITO. Cada cor que o dono
          NÃO escolheu fica de fora, e a tela a calcula a partir da principal,
          como faz desde sempre — medindo contraste para decidir a letra. Se
          gravássemos as nove sempre, a conta de hoje congelaria dentro do
-         salão, e melhorar o cálculo depois não chegaria em ninguém.
+         restaurante, e melhorar o cálculo depois não chegaria em ninguém.
 
          `modo` ausente vale `atual`: o visual de hoje, sem nada novo ligado.
          É o que garante que ninguém acorde com a página diferente. */
@@ -284,12 +284,12 @@ language sql stable security definer set search_path = public as $$
       'modo',      coalesce(c.cfg->>'modo', 'atual'),
       'logoForma', coalesce(c.cfg->>'logoForma', 'circular'),
       -- A espessura do anel em volta da logo. `media` é o que a página fazia
-      -- antes desta escolha existir, então salão que nunca mexeu não muda.
+      -- antes desta escolha existir, então restaurante que nunca mexeu não muda.
       'logoBorda', coalesce(c.cfg->>'logoBorda', 'media'),
       -- A forma da caixa do carrossel. `panoramico` é o 16/8 de antes.
       'slideForma', coalesce(c.cfg->>'slideForma', 'panoramico'),
       /* ── A FITA DO CARRINHO, EM METAL ─────────────────────────────────
-         Cinco chaves, e as cinco AUSENTES no salão que nunca mexeu. Ausente
+         Cinco chaves, e as cinco AUSENTES no restaurante que nunca mexeu. Ausente
          não quer dizer "desligado": quer dizer "o metal de fábrica", que é o
          mesmo do botão de agendar.
 
@@ -313,7 +313,7 @@ language sql stable security definer set search_path = public as $$
        Num SEGUNDO jsonb_build_object, somado ao primeiro com `||`. Função no
        Postgres aceita no máximo 100 argumentos, e o objeto de cima já passa
        de 70 — mais uma rodada de chaves ali e a vitrine() inteira deixaria
-       de compilar, levando junto a página de todos os salões.
+       de compilar, levando junto a página de todos os restaurantes.
 
        Nenhum cast: o que não for objeto vira nulo, e a página peneira de novo
        (funcionamento.js). `::jsonb` ou `::int` em texto do dono já derrubou a
@@ -327,7 +327,7 @@ language sql stable security definer set search_path = public as $$
       'instagram', nullif(left(regexp_replace(coalesce(c.cfg->>'instagram', ''),
                                               '[^A-Za-z0-9._]', '', 'g'), 30), ''),
       /* Onde a foto de capa encontra o fundo. Só `reta` sai daqui; ausente
-         (nulo) é o arco de sempre, então salão que nunca escolheu não muda. */
+         (nulo) é o arco de sempre, então restaurante que nunca escolheu não muda. */
       'capaForma', case when c.cfg->>'capaForma' = 'reta' then 'reta' end,
       /* O estilo dos atalhos (Pagamentos, Horários, Informações). Só objeto
          passa, sem cast nenhum: os números são peneirados na página. Nulo é
@@ -343,7 +343,7 @@ language sql stable security definer set search_path = public as $$
          nulo é o discreto de sempre. */
       'botaoProdutos', case when c.cfg->>'botaoProdutos' = 'metal' then 'metal' end,
       /* ── COM UMA PESSOA SÓ NO SERVIÇO, PULAR O "COM QUEM?" ──────────────
-         O dono escolhe em Meu salão. Nasce DESLIGADO: a tela aparece, com
+         O dono escolhe em Meu restaurante. Nasce DESLIGADO: a tela aparece, com
          a única pessoa já marcada — é o que o link faz hoje. A peneira é de
          texto, como a do `precoNaCapa`: `'abacaxi'::boolean` LEVANTARIA e
          derrubaria a `vitrine()` inteira; aqui lixo só mostra a tela. */
@@ -384,7 +384,7 @@ language sql stable security definer set search_path = public as $$
        correção é do texto e não do código.
 
        Dar baixa não é o mesmo que saber quanto tem. O 26 só SUBTRAI: ninguém
-       preenche a contagem inicial por ele. Salão que cadastra produto sem
+       preenche a contagem inicial por ele. Restaurante que cadastra produto sem
        digitar quantidade continua com zero em tudo, e esconder por estoque
        continuaria escondendo a loja inteira de quem mais precisa dela.
 
@@ -416,7 +416,7 @@ language sql stable security definer set search_path = public as $$
        Quem RECUSA é o banco (`porque_nao_agenda`, no 31). Sem esta chave a
        página da cliente saberia que a segunda-feira não tem horário e não
        saberia POR QUÊ — e a faixa de dias marcaria o dia como "cheio", que é
-       mentira: o salão está vazio, o serviço é que não é feito ali.
+       mentira: o restaurante está vazio, o serviço é que não é feito ali.
 
        "Cheio" manda a pessoa esperar uma vaga que nunca vai abrir. Com os
        dias na mão, a tela diz o que é e ela troca de dia num toque.
@@ -445,7 +445,7 @@ language sql stable security definer set search_path = public as $$
                   projeto, porque é a única que a CLIENTE paga.
 
                   `precoPorProf` são só os pares que DIFEREM do catálogo: um
-                  salão onde todo mundo cobra igual não carrega nada a mais.
+                  restaurante onde todo mundo cobra igual não carrega nada a mais.
 
                   `regras` já vêm NA ORDEM EM QUE GANHAM. A página pega a
                   primeira que casar e pronto — sem repetir em JavaScript a
@@ -503,7 +503,7 @@ language sql stable security definer set search_path = public as $$
        where v.salao_id = s.id and v.ativo and v.aceita_online
          /* ⚠ O MÓDULO PENEIRA A LISTA AQUI, e não só na tela. Deixar a lista
             sair e pedir para a página não desenhar seria publicar o catálogo
-            de um salão que decidiu não trabalhar com serviços — visível a
+            de um restaurante que decidiu não trabalhar com serviços — visível a
             quem abrisse o inspetor. É a mesma trava que a loja já tinha, e
             pela mesma razão. */
          and lower(btrim(coalesce(c.cfg->>'usaServicos', 'true')))
@@ -513,7 +513,7 @@ language sql stable security definer set search_path = public as $$
       select jsonb_agg(jsonb_build_object(
                'id', p.id, 'nome', coalesce(p.apelido, p.nome),
                'foto', p.foto,
-               -- Lista vazia = faz tudo. É como um salão pequeno começa, e a
+               -- Lista vazia = faz tudo. É como um restaurante pequeno começa, e a
                -- tela já trata assim.
                'servicos', (select coalesce(jsonb_agg(sp.servico_id), '[]'::jsonb)
                               from public.servicos_profissionais sp
@@ -529,7 +529,7 @@ language sql stable security definer set search_path = public as $$
   from public.saloes s
   /* ⚠ O `cfg` QUE O LINK ENXERGA É O DO PLANO (22_cotas). No Grátis o link
      é o simples: as chaves de aparência saem (cada uma cai no padrão, como
-     num salão recém-criado) e a loja desliga. Feito aqui, no banco, e não
+     num restaurante recém-criado) e a loja desliga. Feito aqui, no banco, e não
      na página da cliente: a página obedece o que vem, e o dono não manda no
      navegador de quem visita. Personalizar continua guardado — volta tudo
      no dia em que ele assinar. */

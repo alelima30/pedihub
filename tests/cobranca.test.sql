@@ -7,7 +7,7 @@
 --
 --   1. Dá para escolher quanto pagar?
 --   2. O aviso de pagamento repetido paga o mês mais de uma vez?
---   3. O salão A assina no nome do salão B — ou pior, no próprio, de graça?
+--   3. O restaurante A assina no nome do restaurante B — ou pior, no próprio, de graça?
 --   4. Quem está logado alcança as funções que movem a assinatura?
 --
 -- ⚠ E uma observação sobre como este arquivo é escrito. `abrir_cobranca()` e
@@ -29,9 +29,9 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do nothing;
 
 insert into public.saloes (id, slug, nome, tipo, fuso) values
-  ('c0000000-1111-0000-0000-00000000000a', 'salao-a', 'Salão A', 'salao',
+  ('c0000000-1111-0000-0000-00000000000a', 'salao-a', 'Restaurante A', 'salao',
    'America/Sao_Paulo'),
-  ('c0000000-1111-0000-0000-00000000000b', 'salao-b', 'Salão B', 'salao',
+  ('c0000000-1111-0000-0000-00000000000b', 'salao-b', 'Restaurante B', 'salao',
    'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status, trial_ate) values
   ('c0000000-1111-0000-0000-00000000000a', 'trial', 'trial', current_date + 3),
@@ -174,7 +174,7 @@ select t_texto('aviso de pagamento desconhecido é ignorado sem erro',
 \echo ''
 \echo 'QUEM PAGA ANTES NÃO PERDE OS DIAS QUE COMPROU'
 
--- O salão A já está ativo até daqui a um mês. Pagando de novo agora, o mês
+-- O restaurante A já está ativo até daqui a um mês. Pagando de novo agora, o mês
 -- novo tem que SOMAR ao que sobrou, não recomeçar de hoje.
 select (public.abrir_cobranca('c0000000-1111-0000-0000-00000000000a',
         'individual', 'pix', 'c0000000-0000-0000-0000-00000000000a')).id as cob4 \gset
@@ -263,7 +263,7 @@ set role authenticated;
 select t_texto('rodando como authenticated', current_user, 'authenticated');
 
 /* ⚠ A LINHA QUE MAIS IMPORTA DO ARQUIVO.
-   Com `registrar_pagamento` alcançável, qualquer dono de salão assina o plano
+   Com `registrar_pagamento` alcançável, qualquer dono de restaurante assina o plano
    de R$ 297 de graça — basta chamar a função com o mp_id da própria cobrança
    e o valor dela. Não é hipótese: é uma linha no console do navegador. */
 select t_verdade('quem fez login NÃO registra pagamento',
@@ -312,7 +312,7 @@ select t_verdade('com o Pix copia-e-cola, que é dela mesma',
   (public.minha_cobranca('c0000000-1111-0000-0000-00000000000a')
     -> 'historico') is not null);
 
-select t_verdade('mas NÃO lê a do salão do vizinho',
+select t_verdade('mas NÃO lê a do restaurante do vizinho',
   recusado($$select public.minha_cobranca(
     'c0000000-1111-0000-0000-00000000000b')$$));
 select t_igual('nem enxerga as cobranças dele pela tabela',

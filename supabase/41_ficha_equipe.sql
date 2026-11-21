@@ -20,7 +20,7 @@
 --
 -- Uma linha por cliente: as marcas tocadas na tela ("Prefere não conversar",
 -- "Atenção no pagamento"...) e um texto livre. Quem lê e escreve é a equipe
--- do salão — a profissional que vai atender é quem mais precisa saber.
+-- do restaurante — a profissional que vai atender é quem mais precisa saber.
 --
 -- ── 3) OS PROCEDIMENTOS: UM TÓPICO PRÓPRIO ──────────────────────────────────
 -- "Tem coloração que uma é diferente da outra": o mesmo serviço Coloração é
@@ -56,10 +56,10 @@ create table if not exists public.clientes_lembretes (
 create unique index if not exists ux_lembrete_cliente on public.clientes_lembretes(cliente_id);
 create index if not exists ix_lembrete_salao on public.clientes_lembretes(salao_id);
 
-/* A cliente tem de ser do salão da linha: sem isto, quem é equipe de um
-   salão gravaria lembrete apontando para a ficha de outro. A policy abaixo
+/* A cliente tem de ser do restaurante da linha: sem isto, quem é equipe de um
+   restaurante gravaria lembrete apontando para a ficha de outro. A policy abaixo
    já garante que quem grava é da equipe de `salao_id`; aqui se garante que a
-   ficha é desse mesmo salão. (Como todo gatilho do projeto, roda como dono —
+   ficha é desse mesmo restaurante. (Como todo gatilho do projeto, roda como dono —
    o tests/portas.test.sql cobra.) E as marcas chegam limpas: sem repetida,
    sem vazia, cada uma com até 40 letras, na ordem tocada. */
 create or replace function public.tg_lembrete_cliente()
@@ -67,7 +67,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if not exists (select 1 from public.clientes c
                   where c.id = new.cliente_id and c.salao_id = new.salao_id) then
-    raise exception 'Esta cliente não é deste salão.' using errcode = 'check_violation';
+    raise exception 'Esta cliente não é deste restaurante.' using errcode = 'check_violation';
   end if;
   new.marcas := coalesce(array(
     select m from (select left(btrim(x), 40) as m, min(o) as o
@@ -88,7 +88,7 @@ create trigger tg_lembrete_cliente
 -- ---------------------------------------------------------------------------
 -- 3) QUEM LÊ, QUEM ESCREVE
 --
--- A equipe do salão, inteira: dono, recepção e profissional. A cliente não
+-- A equipe do restaurante, inteira: dono, recepção e profissional. A cliente não
 -- tem policy aqui — nem logada, nem pelo link. O anônimo não tem nem grant.
 -- ---------------------------------------------------------------------------
 alter table public.clientes_lembretes enable row level security;
@@ -103,7 +103,7 @@ revoke all on public.clientes_lembretes from anon;
 revoke all on function public.tg_lembrete_cliente() from public, anon, authenticated;
 
 -- A trava do modo suporte (38_suporte.sql) vale aqui como nas outras tabelas
--- do salão: a plataforma olhando o painel não escreve sem "Liberar edição".
+-- do restaurante: a plataforma olhando o painel não escreve sem "Liberar edição".
 do $$ begin
   if to_regprocedure('public.tg_suporte()') is not null then
     drop trigger if exists zz_suporte on public.clientes_lembretes;
@@ -130,7 +130,7 @@ create table if not exists public.procedimentos (
 );
 create index if not exists ix_procedimentos_salao on public.procedimentos(salao_id);
 
-/* O serviço ligado tem de ser do mesmo salão: sem isto, a gestão de um salão
+/* O serviço ligado tem de ser do mesmo restaurante: sem isto, a gestão de um restaurante
    penduraria o procedimento num serviço de outro. Roda como dono, como todo
    gatilho do projeto; a policy abaixo já garante que quem grava é gestão de
    `salao_id`. */
@@ -139,7 +139,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.servico_id is not null and not exists (
        select 1 from public.servicos s where s.id = new.servico_id and s.salao_id = new.salao_id) then
-    raise exception 'Este serviço não é deste salão.' using errcode = 'check_violation';
+    raise exception 'Este serviço não é deste restaurante.' using errcode = 'check_violation';
   end if;
   new.nome := btrim(new.nome);
   new.produtos := nullif(btrim(coalesce(new.produtos, '')), '');

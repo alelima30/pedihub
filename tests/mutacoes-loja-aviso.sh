@@ -53,7 +53,7 @@ echo "1. o aviso para de olhar o WhatsApp"
 troca app.html \
   "  if(s.tipo !== 'restaurante' && !zapDaCasa(s, o.zap))" \
   "  if(false)" \
-  && rodar "salão sem número, painel calado"
+  && rodar "restaurante sem número, painel calado"
 
 echo "2. o espelho usa a régua do numeroWhatsapp() — aceita 13 dígitos sem o 55"
 troca app.html \
@@ -90,7 +90,7 @@ troca app.html \
   'placeholder="(11) 99999-8888"' \
   && rodar "digitar não muda nada na tela"
 
-echo "7. o aviso para de conferir o 'Vender na página do salão'"
+echo "7. o aviso para de conferir o 'Vender na página do restaurante'"
 troca app.html \
   "    && p.ativo !== false && p.vendaOnline);" \
   "    && p.ativo !== false);" \

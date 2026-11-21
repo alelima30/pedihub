@@ -50,8 +50,8 @@ async function recusa(fn){
   try{ await fn(); return null; }catch(e){ return e.message; }
 }
 
-// ── O dono cria a conta e o salão ─────────────────────────────────────────
-secao('O dono se cadastra e cria o salão');
+// ── O dono cria a conta e o restaurante ─────────────────────────────────────────
+secao('O dono se cadastra e cria o restaurante');
 const dono = novaAba();
 
 const sufixo = Date.now().toString(36);
@@ -70,7 +70,7 @@ const criado = await dono.chamar('criar_salao', {
   p_documento: '529.982.247-25', p_origem: 'Instagram' });
 const salaoId = criado && criado[0] && criado[0].salao_id;
 const slug = criado && criado[0] && criado[0].slug;
-dizer(!!salaoId, 'a função criar_salao devolveu o salão', JSON.stringify(criado));
+dizer(!!salaoId, 'a função criar_salao devolveu o restaurante', JSON.stringify(criado));
 dizer(!!slug && slug.startsWith('barbearia-os-meninos-da-vila'),
   `o apelido saiu sem acento: ${slug}`);
 
@@ -91,7 +91,7 @@ secao('O limite do plano barra mesmo vindo da tela');
   dizer(!!erro && /plano|profissional/i.test(erro),
     'o terceiro é recusado, com mensagem legível');
   if(erro) console.log('      banco disse: ' + erro.slice(0,90));
-  // O resto do arquivo é de um salão com o dono só na agenda.
+  // O resto do arquivo é de um restaurante com o dono só na agenda.
   if(segundo && segundo.id) await dono.apagar('profissionais', segundo.id);
 }
 
@@ -128,7 +128,7 @@ secao('A vitrine abre para quem não fez login');
 const visitante = novaAba();
 const vitrine = await visitante.salaoPorSlug(slug);
 dizer(!!vitrine && vitrine.nome.startsWith('Barbearia'),
-  'o salão é encontrado pelo apelido do link');
+  'o restaurante é encontrado pelo apelido do link');
 
 {
   const erro = await recusa(() => visitante.lista('clientes', {}));
@@ -153,7 +153,7 @@ await cliente.pedirCodigo(telCliente);
 await cliente.conferirCodigo(telCliente, '123456');
 dizer(!!cliente.sessao().usuarioId, 'código certo abre a sessão');
 
-// Vira cliente deste salão e marca.
+// Vira cliente deste restaurante e marca.
 await cliente.inserir('vinculos',
   { perfilId: cliente.sessao().usuarioId, salaoId, papel: 'cliente', status: 'ativo' });
 // A cliente NÃO cria a própria ficha: com o INSERT aberto, uma conta criava
@@ -167,7 +167,7 @@ await cliente.inserir('vinculos',
 const ficha = await dono.inserir('clientes',
   { salaoId, perfilId: cliente.sessao().usuarioId, nome: 'João Cliente',
     telefone: telCliente });
-dizer(!!ficha, 'a ficha do cliente é criada no salão', JSON.stringify(ficha));
+dizer(!!ficha, 'a ficha do cliente é criada no restaurante', JSON.stringify(ficha));
 
 // Agendar precisa de equipe; o cliente não escreve na agenda direto — é o
 // desenho do RLS. Quem marca aqui é o dono, como a recepção faria.
@@ -197,7 +197,7 @@ secao('A trava de horário funciona vinda da tela');
      QUE houve e nada mais: "Esse horário já está ocupado."
 
      A frase útil — com o nome e as horas — vem de `porque_nao_cabe()`, que só
-     responde a `authenticated`. É o painel de quem trabalha no salão
+     responde a `authenticated`. É o painel de quem trabalha no restaurante
      perguntando antes de gravar, e aí o nome da outra cliente é dado
      interno, não vazamento.
 
@@ -225,7 +225,7 @@ secao('O RLS vale também quando quem chama é a tela');
   await outroDono.criarConta({ email: `outro-${sufixo}@teste.com`, senha: 'outro12345',
     nome: 'Zé Vizinho', telefone: '+5511' + (930000000 + (Date.now() % 69999999)) });
   const nada = await outroDono.lista('agendamentos', {});
-  dizer(nada.length === 0, 'o dono de outro salão não alcança nada daqui');
+  dizer(nada.length === 0, 'o dono de outro restaurante não alcança nada daqui');
 }
 
 // ── Comanda e comissão ────────────────────────────────────────────────────
@@ -340,7 +340,7 @@ console.log('\nOs cabeçalhos da chave');
 
    Uma hora depois do login, então: 401 em toda requisição, o `baixar()`
    engolindo o 401 como "é o RLS funcionando", e o painel abrindo com tudo
-   vazio — "Nenhum salão nesta conta" para quem tem salão, agenda e caixa
+   vazio — "Nenhum restaurante nesta conta" para quem tem restaurante, agenda e caixa
    lá dentro.
 
    Aqui não pegava porque na bancada o token não vencia nunca. Agora ele
@@ -370,7 +370,7 @@ secao('A sessão vence, e o sistema se vira sozinho');
   const salos = await p.lista('saloes');
   dizer(salos.length === 1,
     'com o token vencido, a leitura AINDA funciona — renovou sozinha',
-    'vieram ' + salos.length + ' salões');
+    'vieram ' + salos.length + ' restaurantes');
   dizer(p.sessao() && p.sessao().token !== antes.token,
     'e o token guardado é outro, não o que venceu');
 

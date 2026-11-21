@@ -1,22 +1,22 @@
 -- ===========================================================================
 -- PediHub — o modo suporte (38_suporte.sql)
 --
--- A conta da plataforma abre o painel de um salão cliente. O que se confere:
---   1. sem sessão de suporte, ela não grava nada no salão de outra pessoa;
+-- A conta da plataforma abre o painel de um restaurante cliente. O que se confere:
+--   1. sem sessão de suporte, ela não grava nada no restaurante de outra pessoa;
 --   2. com a sessão aberta mas a edição fechada, também não;
 --   3. com "Liberar edição", grava — e o que mudou fica registrado;
 --   4. a liberação vale duas horas, e "Sair" fecha a porta;
 --   5. a jornada (que não tem salao_id) passa pela mesma trava;
---   6. o dono, a equipe e a plataforma no salão DELA gravam como sempre;
+--   6. o dono, a equipe e a plataforma no restaurante DELA gravam como sempre;
 --   7. suspender e estender teste continuam funcionando sem sessão;
---   8. só a plataforma abre sessão; o dono do salão vê os acessos da casa
+--   8. só a plataforma abre sessão; o dono do restaurante vê os acessos da casa
 --      dele, e o dono de outra casa não.
 -- ===========================================================================
 \set ON_ERROR_STOP on
 
 insert into auth.users (id) values
   ('5e000000-0000-0000-0000-0000000000ad'),   -- Ale — a plataforma
-  ('5e000000-0000-0000-0000-0000000000d0'),   -- Ju  — dona do salão
+  ('5e000000-0000-0000-0000-0000000000d0'),   -- Ju  — dona do restaurante
   ('5e000000-0000-0000-0000-0000000000e0');   -- Zé  — dono de outra casa
 insert into public.perfis (id, nome, telefone, super_admin) values
   ('5e000000-0000-0000-0000-0000000000ad', 'Ale (plataforma)', '+5511900009001', true),
@@ -25,9 +25,9 @@ insert into public.perfis (id, nome, telefone, super_admin) values
 on conflict (id) do update set super_admin = excluded.super_admin, nome = excluded.nome, telefone = excluded.telefone;
 
 insert into public.saloes (id, slug, nome, tipo, status) values
-  ('5e100000-0000-0000-0000-000000000001', 'salao-suporte', 'Salão Suporte', 'salao', 'ativo'),
+  ('5e100000-0000-0000-0000-000000000001', 'salao-suporte', 'Restaurante Suporte', 'salao', 'ativo'),
   ('5e100000-0000-0000-0000-000000000002', 'casa-do-ze', 'Casa do Zé', 'barbearia', 'ativo'),
-  ('5e100000-0000-0000-0000-000000000003', 'salao-da-plataforma', 'Salão da Plataforma', 'salao', 'ativo');
+  ('5e100000-0000-0000-0000-000000000003', 'salao-da-plataforma', 'Restaurante da Plataforma', 'salao', 'ativo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('5e100000-0000-0000-0000-000000000001', 'time', 'ativa'),
   ('5e100000-0000-0000-0000-000000000002', 'time', 'ativa'),
@@ -49,7 +49,7 @@ create or replace function preco_corte() returns numeric language sql stable as 
 $f$;
 
 \echo ''
-\echo 'A plataforma no salão de outra pessoa'
+\echo 'A plataforma no restaurante de outra pessoa'
 select set_config('request.jwt.claim.sub', '5e000000-0000-0000-0000-0000000000ad', false);
 select t_verdade('1. sem sessão de suporte, ela não muda o preço de um serviço do cliente',
   recusado($$update public.servicos set preco = 1 where id = '5e200000-0000-0000-0000-000000000001'$$));
@@ -96,7 +96,7 @@ select t_igual('   e nada disso vai para o registro do suporte',
 
 select set_config('request.jwt.claim.sub', '5e000000-0000-0000-0000-0000000000ad', false);
 update public.servicos set preco = 55 where id = '5e200000-0000-0000-0000-000000000003';
-select t_verdade('   a plataforma, no salão em que ELA é dona, grava como qualquer dono',
+select t_verdade('   a plataforma, no restaurante em que ELA é dona, grava como qualquer dono',
   (select preco = 55 from public.servicos where id = '5e200000-0000-0000-0000-000000000003'));
 
 select public.definir_status_salao('5e100000-0000-0000-0000-000000000001', 'suspenso');
@@ -104,7 +104,7 @@ select t_verdade('7. suspender continua funcionando sem sessão de suporte',
   (select status = 'suspenso' from public.saloes where id = '5e100000-0000-0000-0000-000000000001'));
 select public.definir_status_salao('5e100000-0000-0000-0000-000000000001', 'ativo');
 select public.estender_teste('5e100000-0000-0000-0000-000000000001', current_date + 10);
-select t_verdade('   e estender o teste também: o salão volta a ser teste até a data',
+select t_verdade('   e estender o teste também: o restaurante volta a ser teste até a data',
   public.plano_efetivo('5e100000-0000-0000-0000-000000000001') = 'trial'
   and (select trial_ate = current_date + 10 from public.assinaturas where salao_id = '5e100000-0000-0000-0000-000000000001'));
 select t_verdade('   (teste com data no passado é recusado)',
@@ -118,7 +118,7 @@ select t_verdade('   e vê o contato de quem é dono (para o "Falar com o dono")
 select set_config('request.jwt.claim.sub', '5e000000-0000-0000-0000-0000000000e0', false);
 select t_verdade('   o dono de outra casa não vê o contato da Ju',
   recusado($$select public.contato_do_dono('5e100000-0000-0000-0000-000000000001')$$));
-select t_verdade('8. o dono de outra casa não abre sessão de suporte no salão da Ju',
+select t_verdade('8. o dono de outra casa não abre sessão de suporte no restaurante da Ju',
   recusado($$select public.iniciar_suporte('5e100000-0000-0000-0000-000000000001')$$));
 select t_verdade('   nem estende teste',
   recusado($$select public.estender_teste('5e100000-0000-0000-0000-000000000002', current_date + 30)$$));

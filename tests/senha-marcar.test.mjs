@@ -8,7 +8,7 @@
    sobre horários marcados".
 
    ── O QUE ESTE ARQUIVO MEDE ────────────────────────────────────────────────
-     1. desligado (o padrão de todo salão): a senha é opcional, e no fim da
+     1. desligado (o padrão de todo restaurante): a senha é opcional, e no fim da
         marcação vem o convite "Criar minha senha", com os dados preenchidos;
         criada, a ficha liga na conta e o convite some;
      2. o dono liga em Meu negócio → "Obrigatória", e o banco guarda;
@@ -63,7 +63,7 @@ const masc = d => `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
 const dona = aba();
 await dona.criarConta({ email:`sl-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Senha ' + m,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Senha ' + m,
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -74,7 +74,7 @@ const escova = await dona.inserir('servicos', { salaoId: SALAO, nome:'Escova', d
 const SEMANA = [0,1,2,3,4,5,6].reduce((o, d) => (o[d] = [['00:00','00:00']], o), {});
 await dona.atualizar('saloes', SALAO, { cfg:{ diasLiberados:30, cor:'#B8356B', funcionamento: SEMANA } });
 
-// Quem já marcou pelo link SEM conta, antes de o salão exigir senha.
+// Quem já marcou pelo link SEM conta, antes de o restaurante exigir senha.
 const ROSA = (await linha(`insert into public.clientes (salao_id, nome, telefone, email, nascimento)
   values ($1, 'Rosa Antiga', $2, 'rosa@t.com', '1970-01-02') returning id`, [SALAO, tel('99')])).id;
 const AG_ROSA = (await linha(`insert into public.agendamentos (salao_id, cliente_id, profissional_id, inicio, fim, status, origem)
@@ -124,7 +124,7 @@ const rotuloSenha = p => p.evaluate(() => document.querySelector('label[for="dSe
 secao('1. Desligado (o padrão): senha opcional, e o convite no fim');
 {
   const v = await (aba()).chamar('vitrine', { p_slug: SLUG });
-  igual('a vitrine diz que o salão não exige senha', (v.salao || v[0]?.salao || {}).exigeSenha, false);
+  igual('a vitrine diz que o restaurante não exige senha', (v.salao || v[0]?.salao || {}).exigeSenha, false);
   const { p, ctx } = await aparelho();
   await ateOsDados(p);
   igual('o campo diz "(opcional)"', await rotuloSenha(p), 'Crie uma senha (opcional)');
@@ -188,7 +188,7 @@ secao('3. Ligado: sem senha não marca; com senha, marca já logada');
   await preencher(p, 'Carla Exigida', tel('82'), `carla-${m}@t.com`);
   await p.click('#btPrincipal'); await p.waitForTimeout(600);
   igual('sem senha, fica nos dados', await p.evaluate(() => tela), 'dados');
-  verdade('e diz que o salão pede conta para marcar', /este salão pede conta para marcar/.test(await avisoDados(p)), await avisoDados(p));
+  verdade('e diz que o restaurante pede conta para marcar', /este restaurante pede conta para marcar/.test(await avisoDados(p)), await avisoDados(p));
   await p.fill('#dSenha', '123');
   await p.click('#btPrincipal'); await p.waitForTimeout(400);
   verdade('senha curta: não manda "deixar em branco"', !/deixe em branco/.test(await avisoDados(p))

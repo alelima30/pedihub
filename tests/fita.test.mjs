@@ -20,7 +20,7 @@
    para pegar.
 
    ⚠ E MEDE O QUE NÃO PODE MUDAR, que é onde o erro chega calado:
-     · sem escolha nenhuma, a fita é o metal de fábrica — nenhum salão de hoje
+     · sem escolha nenhuma, a fita é o metal de fábrica — nenhum restaurante de hoje
        acorda com a página diferente;
      · a cor sai da personalização, e nunca de uma cor escrita no CSS;
      · o interruptor GERAL de brilho continua ganhando do interruptor da fita.
@@ -73,7 +73,7 @@ const prod = await dona.inserir('produtos', { salaoId: SALAO,
   nome:'Shampoo', preco:45, custo:20, ativo:true, vendaOnline:true });
 
 /* ⚠ A COR NÃO É A PADRÃO DO APP. Com o azul de fábrica, "respeitou a cor do
-   salão" passaria por acidente — inclusive num código que a ignorasse. */
+   restaurante" passaria por acidente — inclusive num código que a ignorasse. */
 const COR = '#B45309';
 await dona.atualizar('saloes', SALAO, {
   whatsapp:'(11) 98111-3251',
@@ -91,7 +91,7 @@ async function comFita(){
                                      isMobile:true, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
-  /* ⚠ A CHAVE LEVA O ID DO SALÃO, e não o slug — ver `chaveDoCarrinho()` no
+  /* ⚠ A CHAVE LEVA O ID DO RESTAURANTE, e não o slug — ver `chaveDoCarrinho()` no
      agendar.html. Escrevi o slug primeiro: o carrinho nascia vazio, a fita
      nunca aparecia, e o teste morria no `waitForFunction` sem dizer por quê. */
   await p.addInitScript(([id, salaoId]) => {
@@ -218,7 +218,7 @@ igual('e ela é a cor que a barra realmente pinta', m.fundo, 'rgb(31, 111, 74)')
 
    A verificação fica porque a regra é real e vale um centavo; o que não
    existe é jeito de quebrá-la de dentro da função. */
-igual('e a cor do botão continua a do salão', m.acao, COR.toUpperCase());
+igual('e a cor do botão continua a do restaurante', m.acao, COR.toUpperCase());
 await p.context().close();
 
 /* ══════════════════════════════════════════════════════════════════════════

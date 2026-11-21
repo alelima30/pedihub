@@ -13,7 +13,7 @@
 
    O detalhe — o que está errado e o que fazer — fica no admin.html, cartão
    "Saúde do sistema". Aqui só sai o nível e as CHAVES ("despertador",
-   "falhas"), porque o endereço é público: nenhum nome de salão, telefone ou
+   "falhas"), porque o endereço é público: nenhum nome de restaurante, telefone ou
    texto de mensagem passa por este arquivo.
 
    ── POR QUE O ALERTA NÃO É PELO WHATSAPP ──────────────────────────────────

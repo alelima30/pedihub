@@ -23,7 +23,7 @@ insert into public.perfis (id, nome, telefone) values
   ('d4400000-0000-0000-0000-00000000000d', 'Ju',  '+5511944000004')
 on conflict (id) do update set nome = excluded.nome;
 insert into public.saloes (id, slug, nome, status, fuso) values
-  ('54400000-0000-0000-0000-00000000000a', 'pacote-comissao', 'Salão Comissão', 'ativo', 'America/Sao_Paulo');
+  ('54400000-0000-0000-0000-00000000000a', 'pacote-comissao', 'Restaurante Comissão', 'ativo', 'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('54400000-0000-0000-0000-00000000000a', 'time', 'ativa');
 insert into public.vinculos (perfil_id, salao_id, papel) values

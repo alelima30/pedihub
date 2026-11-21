@@ -281,7 +281,7 @@ e('sem erro de JavaScript no link',
    ⚠ E COM O MÓDULO DE SERVIÇOS DESLIGADO, O PACOTE NÃO PODE LEVAR AO VAZIO
 
    Pacote é serviço pago adiantado. Com o módulo desligado, "Usar meu pacote"
-   abria a lista de serviços vazia, com a frase "este salão ainda não publicou
+   abria a lista de serviços vazia, com a frase "este restaurante ainda não publicou
    os serviços" — que é MENTIRA: ele publicou, e depois desligou o módulo.
 
    A tela continua, porque quantas sessões sobram é informação DELA. O que sai
@@ -308,7 +308,7 @@ console.log('\n── O PACOTE COM A AGENDA DESLIGADA ────────�
     return a && /pacote/i.test(a.textContent);
   }, null, { timeout: 12000 }).catch(() => {});
 
-  e('o atalho continua na capa: o saldo dela não some porque o salão pausou',
+  e('o atalho continua na capa: o saldo dela não some porque o restaurante pausou',
     /pacote/i.test(await c2.evaluate(() =>
       (document.getElementById('capaAtalhos') || {}).textContent || '')));
 
@@ -393,7 +393,7 @@ e('e nada disso deu erro de JavaScript', erros.length === 0,
    link, escolhe a manutenção e clica num dia de fora.
 
    O que NÃO pode acontecer é a tela ficar vazia. Dia sem horário nenhum tem
-   a mesma cara de salão lotado, e ela fecharia a página achando que não tem
+   a mesma cara de restaurante lotado, e ela fecharia a página achando que não tem
    vaga — quando o que existe é uma regra que ninguém explicou.
    ══════════════════════════════════════════════════════════════════════════ */
 console.log('\n── O DIA QUE O PACOTE NÃO DEIXA ─────────────────────────────');

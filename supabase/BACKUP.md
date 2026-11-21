@@ -5,7 +5,7 @@ que a cópia tem os dados da agenda, **tranca com a sua senha** e guarda por
 **30 dias**. Quem faz é o `.github/workflows/backup.yml`, rodando o
 `supabase/backup.sh`. O `tests/backup.test.sh` prova a ida e a volta.
 
-O que entra: tudo do sistema (`public`: salões, agenda, clientes, serviços,
+O que entra: tudo do sistema (`public`: restaurantes, agenda, clientes, serviços,
 assinaturas…), as contas de login (`auth`) e o registro das fotos
 (`storage`). Os **arquivos** das fotos ficam no armazenamento do Supabase e
 não entram nesta cópia.
@@ -57,7 +57,7 @@ gpg --output banco.dump --decrypt pedihub-AAAA-MM-DD.dump.gpg
 pg_restore --list banco.dump | less
 ```
 
-**Recuperar algo apagado** (um salão, uns horários) — o caso mais comum:
+**Recuperar algo apagado** (um restaurante, uns horários) — o caso mais comum:
 restaure a cópia num banco **à parte** (um projeto novo e vazio do Supabase,
 ou um Postgres local), e de lá copie só as linhas que faltam para o banco de
 verdade. Nunca restaure por cima do banco que está no ar.

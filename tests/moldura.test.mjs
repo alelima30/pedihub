@@ -12,7 +12,7 @@
      2. o modelo de sempre continua EXATAMENTE como estava.
 
    A segunda metade não dá sinal quando quebra. Um `.sv-cartao{ }` mexido sem
-   escopo, um elemento novo que escapou do `if`, e o salão que nunca pediu
+   escopo, um elemento novo que escapou do `if`, e o restaurante que nunca pediu
    nada acorda com a página diferente. Ninguém reclama de imediato — a página
    continua funcionando — e quando a reclamação chega, já não se sabe qual
    mudança foi.
@@ -79,7 +79,7 @@ for(let i = 0; i <= 6; i++){
    · COM foto e COM descrição — é o cartão cheio, o que a moldura desenha por
      inteiro: onda, descrição, relógio e seta.
    · COM foto e SEM descrição — porque descrição é campo opcional, e a maior
-     parte dos salões não preenche. Se a moldura só ficasse boa com ela, seria
+     parte dos restaurantes não preenche. Se a moldura só ficasse boa com ela, seria
      uma moldura que quase ninguém veria funcionar. */
 const FOTO = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
 await d.inserir('servicos', { salaoId, nome:'Corte feminino', preco:90,
@@ -87,7 +87,7 @@ await d.inserir('servicos', { salaoId, nome:'Corte feminino', preco:90,
   duracaoMin:60, intervaloMin:0, ativo:true, aceitaOnline:true, foto:FOTO });
 await d.inserir('servicos', { salaoId, nome:'Escova', preco:50,
   duracaoMin:40, intervaloMin:0, ativo:true, aceitaOnline:true, foto:FOTO });
-ok('salão de teste criado, com dois serviços');
+ok('restaurante de teste criado, com dois serviços');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const ctx = await nav.newContext({ viewport:{ width:412, height:915 } });
@@ -104,9 +104,9 @@ const cfg = (extra) => d.atualizar('saloes', salaoId,
   { cfg: Object.assign({ diasLiberados:30, cor:COR, precoNaCapa:true }, extra) });
 
 /* ══════════════════════════════════════════════════════════════════════════
-   1 — O SALÃO QUE NUNCA ESCOLHEU NADA
+   1 — O RESTAURANTE QUE NUNCA ESCOLHEU NADA
 
-   É o caso de TODOS os salões que já existem. Se a ausência da chave não
+   É o caso de TODOS os restaurantes que já existem. Se a ausência da chave não
    valesse `reta`, esta funcionalidade seria uma mudança de aparência aplicada
    à revelia em cima de gente que está usando o sistema hoje.
    ══════════════════════════════════════════════════════════════════════════ */
@@ -192,7 +192,7 @@ igual('a seta aparece nos dois', e1.seta, 2);
 igual('o relógio também', e1.relogio, 2);
 /* UM, e não dois: o segundo serviço não tem descrição cadastrada. Se saíssem
    dois, seria um <span> vazio abrindo buraco no cartão de quem não preencheu
-   o campo — que é a maioria dos salões. */
+   o campo — que é a maioria dos restaurantes. */
 igual('mas a descrição sai só no serviço que tem uma', e1.desc, 1);
 igual('o cartão ganha o raio grande (--r-lg)', e1.raio, '16px');
 igual('a foto vira quadrada', e1.proporcao, '1 / 1');
@@ -229,7 +229,7 @@ verdade('e a seta tem tamanho de botão — ' + e1.larguraSeta + 'px',
 
    E esse caminho existe: para quem está logada, o `entrarNoSalao()` espera
    o `aposEntrar()` e redesenha com a capa aberta. Foi assim que o atalho
-   "Meus horários" do Salão Megatop apareceu como uma bolinha sem ícone — a
+   "Meus horários" do Restaurante Megatop apareceu como uma bolinha sem ícone — a
    chamada pintava só os serviços, e o `#capaAtalhos` ficava cru. Por isso o
    redesenho aqui é feito com uma sessão, para o atalho estar na tela. */
 await b.evaluate(() => { sessao = { nome: 'Cliente Teste', telefone: '11999990000' }; irPara('capa'); });
@@ -249,7 +249,7 @@ igual('o atalho "Meus horários" não fica com o ícone cru (bolinha vazia)', at
 await b.evaluate(() => { sessao = null; irPara('capa'); });
 await b.waitForTimeout(150);
 
-/* ── A COR É A DO SALÃO ───────────────────────────────────────────────────
+/* ── A COR É A DO RESTAURANTE ───────────────────────────────────────────────────
    A imagem de referência era roxa. Roxo escrito à mão no CSS deixaria a
    barbearia de dourado e grafite com um botão roxo no cartão — e o dono não
    teria onde mexer. */
@@ -358,12 +358,12 @@ await f.close();
    produzia uma escada — faixa inteira, duas colunas, faixa inteira — e a
    primeira tela da cliente parecia quebrada. Então:
 
-     · salão com foto em ALGUNS: quem não tem ganha uma capa com a inicial do
+     · restaurante com foto em ALGUNS: quem não tem ganha uma capa com a inicial do
        serviço, que é um `.sv-cartao-foto` de verdade. Aí o texto ENCOSTA
        nela, e os 2px são o certo — tirá-los abriria um vão branco no meio do
        cartão;
 
-     · salão SEM FOTO NENHUMA: era a regra antiga inteira — nenhum
+     · restaurante SEM FOTO NENHUMA: era a regra antiga inteira — nenhum
        `.sv-cartao-foto`, e o nome longe do topo. Deixou de ser na Curvada:
        sem capa, a curva não tinha onde aparecer, e o dono achava que o botão
        não funcionava. Agora todo serviço ganha a capa com a inicial (5b).
@@ -393,7 +393,7 @@ const g = await abrir();
 const misturado = await medirSemFoto(g);
 verdade('o cartão sem foto existe', misturado !== null,
   'o serviço sem foto não virou cartão — mudou a regra do `sem-foto`');
-igual('num salão que TEM fotos, ele ganha a capa com a inicial',
+igual('num restaurante que TEM fotos, ele ganha a capa com a inicial',
   misturado && misturado.iniciais, 1);
 verdade('e o nome encosta nela, sem vão branco — '
         + (misturado && misturado.topo) + 'px',
@@ -404,19 +404,19 @@ igual('e ele ganha a seta como os outros', misturado && misturado.seta, 1);
 igual('sem erro de JavaScript', g.erros.length ? g.erros.join(' | ') : 0, 0);
 await g.close();
 
-// ── 5b · o salão que ainda não subiu foto nenhuma ─────────────────────────
+// ── 5b · o restaurante que ainda não subiu foto nenhuma ─────────────────────────
 /* ⚠ A REGRA MUDOU AQUI, A PEDIDO. Antes a Curvada sem foto nenhuma virava a
    lista de linhas da Clássica — e a curva, que mora na foto, sumia. O dono
    clicava em "Curvada", a prévia mostrava a curva, e o link ficava igual:
    "cliquei curvada e não foi". Agora, na Curvada, todo serviço ganha a capa
-   com a inicial, com a onda, mesmo sem foto nenhuma no salão. A Clássica sem
+   com a inicial, com a onda, mesmo sem foto nenhuma no restaurante. A Clássica sem
    foto continua a lista de sempre (aparencia-link.test.mjs, seção 2). */
 for(const s of await d.lista('servicos', { salaoId })){
   if(s.foto) await d.atualizar('servicos', s.id, { foto: null });
 }
 const h = await abrir();
 const nenhuma = await medirSemFoto(h);
-verdade('sem foto nenhuma no salão, o cartão continua existindo',
+verdade('sem foto nenhuma no restaurante, o cartão continua existindo',
   nenhuma !== null);
 igual('e ganha a capa com a inicial, onde a curva aparece', nenhuma && nenhuma.iniciais, 1);
 verdade('o nome encosta na capa, sem vão branco — ' + (nenhuma && nenhuma.topo) + 'px',
@@ -426,7 +426,7 @@ igual('e a seta continua lá', nenhuma && nenhuma.seta, 1);
 igual('sem erro de JavaScript', h.erros.length ? h.erros.join(' | ') : 0, 0);
 await h.close();
 
-// As fotos voltam: as seções de baixo medem a prévia do painel, e um salão
+// As fotos voltam: as seções de baixo medem a prévia do painel, e um restaurante
 // sem foto nenhuma mudaria a forma do cartão lá também.
 for(const s of await d.lista('servicos', { salaoId })){
   if(s.id !== semFotoAqui.id) await d.atualizar('servicos', s.id, { foto: FOTO });
@@ -473,7 +473,7 @@ igual('a régua da moldura existe, com as duas opções',
   JSON.stringify(regua), JSON.stringify(['Clássica', 'Curvada']));
 /* Dois rótulos iguais na mesma aba fariam o dono escolher um e ver o outro
    mudar de lugar. O `LETRAS` já tem um "Elegante" — a letra serifada, em uso
-   nos salões — e por isso o rótulo aqui é outro, embora o valor guardado
+   nos restaurantes — e por isso o rótulo aqui é outro, embora o valor guardado
    continue sendo `elegante`. */
 const rotulos = await painel.evaluate(() =>
   [...document.querySelectorAll('#reguaMoldura button, #reguaLetra button')]
@@ -510,7 +510,7 @@ verdade('com a curva desenhada nela também',
 
 /* ── E A CURVA DA PRÉVIA É A MESMA DA PÁGINA ──────────────────────────────
    São duas cópias do mesmo SVG, em dois lugares da folha de estilo, porque a
-   prévia vive no painel e não pode usar as variáveis do salão. Duas cópias
+   prévia vive no painel e não pode usar as variáveis do restaurante. Duas cópias
    divergem — é o que cópias fazem. Quando divergirem, a prévia passa a
    prometer uma curva e a página a entregar outra, e ninguém descobre: as duas
    continuam bonitas, cada uma sozinha. */

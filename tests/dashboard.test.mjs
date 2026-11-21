@@ -17,15 +17,15 @@
         mês e para de confiar no sistema inteiro. Por isso aqui o valor não é
         só "algum número" — é conferido contra o que foi vendido.
 
-     2. A ESCOLHA VAZIA. Salão que nunca mexeu na configuração tem a lista
+     2. A ESCOLHA VAZIA. Restaurante que nunca mexeu na configuração tem a lista
         vazia. Lido como "não quero nenhum", o dashboard nasceria em branco
         para todo mundo no dia da atualização. É a mesma armadilha dos
         destaques da capa.
 
-     3. A DIVISÃO POR ZERO. Salão sem faturamento nenhum: todo valor é 0, o
+     3. A DIVISÃO POR ZERO. Restaurante sem faturamento nenhum: todo valor é 0, o
         máximo é 0, e a proporção vira NaN. O caminho do SVG sai com "NaN" no
         meio e o gráfico não desenha — sem erro no console, sem nada na tela.
-        É o estado de TODO salão no primeiro dia.
+        É o estado de TODO restaurante no primeiro dia.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -70,7 +70,7 @@ const serv = await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte',
   duracaoMin:30, intervaloMin:0, preco:100, ativo:true, aceitaOnline:true });
 const cli = await dona.inserir('clientes', { salaoId: SALAO, nome:'Clara',
   telefone:'11' + (900000000 + Math.floor(Math.random()*99999999)) });
-ok('salão de teste criado, ainda sem faturamento nenhum');
+ok('restaurante de teste criado, ainda sem faturamento nenhum');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const ctx = await nav.newContext({ viewport:{ width:412, height:915 } });
@@ -130,12 +130,12 @@ const naTela = () => p.evaluate(() => ({
 }));
 
 /* ══════════════════════════════════════════════════════════════════════════
-   1 — ⚠ O SALÃO DO PRIMEIRO DIA
+   1 — ⚠ O RESTAURANTE DO PRIMEIRO DIA
 
-   Vem PRIMEIRO de propósito: é o estado de todo salão recém-criado, e é o
+   Vem PRIMEIRO de propósito: é o estado de todo restaurante recém-criado, e é o
    único momento em que dá para medi-lo. Daqui para baixo o teste fatura.
    ══════════════════════════════════════════════════════════════════════════ */
-secao('O salão que ainda não faturou nada');
+secao('O restaurante que ainda não faturou nada');
 
 verdade('a aba Dashboard existe para a dona',
   await p.evaluate(() => !!document.querySelector('#abas .aba[data-chave="dashboard"]')));
@@ -388,7 +388,7 @@ await p.waitForTimeout(300);
    4 — ⚠ O DINHEIRO DA CASA NÃO É DE QUEM ATENDE
 
    A mesma linha do `relatorio()`. Sem ela, bastaria trocar o uuid na chamada
-   para o dono de um salão ler o faturamento do vizinho.
+   para o dono de um restaurante ler o faturamento do vizinho.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Quem não é gestão não lê o faturamento');
 

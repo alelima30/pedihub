@@ -5,7 +5,7 @@
      PLAYWRIGHT=… node tests/capa-servicos.test.mjs
 
    ── O QUE CHEGOU EM DOIS PRINTS ────────────────────────────────────────────
-   A capa de um salão de verdade, com nove serviços. O que se via, de cima
+   A capa de um restaurante de verdade, com nove serviços. O que se via, de cima
    para baixo:
 
        NOSSOS SERVIÇOS
@@ -21,9 +21,9 @@
    Três defeitos, e nenhum deles é "a foto não subiu":
 
      1. A ESCADA. Uma regra do CSS mandava o serviço SEM foto ocupar a linha
-        toda. Ela está certa para o salão que não subiu foto nenhuma — a capa
+        toda. Ela está certa para o restaurante que não subiu foto nenhuma — a capa
         vira uma lista limpa. E está errada no meio do caminho, que é onde
-        todo salão vive: com alguns com foto e outros sem, a página alterna
+        todo restaurante vive: com alguns com foto e outros sem, a página alterna
         faixa e coluna e parece quebrada.
 
      2. O GRUPO SEM TÍTULO, EM PRIMEIRO LUGAR. Serviço sem categoria não
@@ -34,7 +34,7 @@
         pelo mesmo código mas podiam sair em ordens distintas.
 
    ⚠ O QUE ESTE ARQUIVO NÃO DEIXA VOLTAR é a regra de largura inteira
-   morrendo junto. Ela continua valendo — e é medida aqui — para o salão sem
+   morrendo junto. Ela continua valendo — e é medida aqui — para o restaurante sem
    foto nenhuma. Consertar um caso quebrando o outro seria trocar de
    reclamação, não resolver.
    =========================================================================== */
@@ -64,7 +64,7 @@ const FOTO = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22'
            + ' width=%228%22 height=%226%22%3E%3Crect width=%228%22 height=%226%22'
            + ' fill=%22%23888%22/%3E%3C/svg%3E';
 
-/* Remonta o salão como o dos prints: categorias fora de ordem alfabética, um
+/* Remonta o restaurante como o dos prints: categorias fora de ordem alfabética, um
    serviço sem categoria nenhuma, e foto em só alguns. */
 const montar = (comFoto) => p.evaluate(([foto, comFoto]) => {
   const plano = [
@@ -122,8 +122,8 @@ e('quem não tem foto ganha uma capa com a inicial, e não um buraco',
   misto.iniciais === misto.quantos - 2,
   misto.iniciais + ' iniciais para ' + (misto.quantos - 2) + ' serviços sem foto');
 
-/* ── 2 · O salão que ainda não subiu foto nenhuma ────────────────────────── */
-console.log('\nNenhuma foto no salão inteiro');
+/* ── 2 · O restaurante que ainda não subiu foto nenhuma ────────────────────────── */
+console.log('\nNenhuma foto no restaurante inteiro');
 
 await montar(false);
 await p.waitForTimeout(300);
@@ -180,7 +180,7 @@ e('na lista de todos, os grupos saem em ordem alfabética — '
 
 /* ⚠ E O QUE NÃO TEM CATEGORIA VAI PARA O FIM, COM NOME.
    Nos prints ele abria a página, sem título nenhum em cima — a cliente
-   começava a leitura pelo que o salão não soube classificar.
+   começava a leitura pelo que o restaurante não soube classificar.
 
    ⚠ O NOME É "Serviços" AQUI, e era "Outros" na capa: cada tela passa o
    próprio rótulo de reserva ao `agruparPorCategoria()`. Na capa, sob o título

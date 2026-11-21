@@ -17,8 +17,8 @@
      3. a página, com o relógio PARADO em horas escolhidas: aberto, fechado
         no almoço, fechado à noite, fechado no domingo;
      4. a folha: a semana inteira, hoje destacado, dois períodos, fechar;
-     5. as cores do salão chegando no componente — roxo, verde, vermelho;
-     6. salão sem nada cadastrado: nada aparece, nada quebra;
+     5. as cores do restaurante chegando no componente — roxo, verde, vermelho;
+     6. restaurante sem nada cadastrado: nada aparece, nada quebra;
      7. celular estreito: nada passa da largura.
    =========================================================================== */
 import fs from 'node:fs';
@@ -156,7 +156,7 @@ const salvarDados = async p => {
   await p.waitForTimeout(1800);
 };
 
-/* A página com o relógio PARADO numa hora do salão. `setFixedTime` para o
+/* A página com o relógio PARADO numa hora do restaurante. `setFixedTime` para o
    Date inteiro da página — o mesmo relógio que a cliente teria na mão. */
 const SP = h => new Date(h + '-03:00');
 async function pagina(quando, largura = 412){
@@ -187,9 +187,9 @@ const lerCapa = p => p.evaluate(() => {
 });
 
 /* ══════════════════════════════════════════════════════════════════════════
-   6 (antes de tudo) — SALÃO SEM NADA CADASTRADO
+   6 (antes de tudo) — RESTAURANTE SEM NADA CADASTRADO
    ══════════════════════════════════════════════════════════════════════════ */
-secao('6 · Salão sem horário cadastrado: nada aparece, nada quebra');
+secao('6 · Restaurante sem horário cadastrado: nada aparece, nada quebra');
 {
   const { p, fechar } = await pagina();
   const c = await lerCapa(p);
@@ -253,7 +253,7 @@ secao('2 · O painel: cadastrar, editar, fechar um dia');
   await p.evaluate(() => funcFechar(0));
   await p.evaluate(() => { alternarPagamento('pix'); alternarPagamento('credito'); });
   await p.fill('#cPagObs', 'Parcelamos em até 3x no cartão');
-  await p.fill('#cSobre', 'Salão de beleza com 10 anos de casa.');
+  await p.fill('#cSobre', 'Restaurante de beleza com 10 anos de casa.');
   await p.fill('#cInsta', 'https://instagram.com/salaomegatop/');
   await salvarDados(p);
   await fechar();
@@ -268,7 +268,7 @@ secao('2 · O painel: cadastrar, editar, fechar um dia');
   // O jsonb do banco reordena as chaves: compara campo a campo.
   igual('as formas de pagamento', [c.pagamentos && c.pagamentos.formas, c.pagamentos && c.pagamentos.obs],
     [['pix', 'credito'], 'Parcelamos em até 3x no cartão']);
-  igual('a apresentação', c.sobre, 'Salão de beleza com 10 anos de casa.');
+  igual('a apresentação', c.sobre, 'Restaurante de beleza com 10 anos de casa.');
   igual('o Instagram limpo, sem o endereço em volta', c.instagram, 'salaomegatop');
 
   // Reabrir e EDITAR: o painel traz o que foi gravado, e a troca grava.
@@ -446,9 +446,9 @@ secao('4 · A folha de horários');
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   5 — AS CORES DO SALÃO
+   5 — AS CORES DO RESTAURANTE
    ══════════════════════════════════════════════════════════════════════════ */
-secao('5 · O componente acompanha a cor do salão');
+secao('5 · O componente acompanha a cor do restaurante');
 /* A cor como o NAVEGADOR a pinta, em RGB, venha a regra em que formato vier
    (color-mix devolve "color(srgb …)"): um pixel de canvas lê qualquer um. */
 const PIXEL = `css => { const c = document.createElement('canvas'); c.width = c.height = 1;
@@ -479,13 +479,13 @@ for(const [nome, cor] of [['roxo', '#6D28D9'], ['verde', '#15803D'], ['vermelho'
     const pixel = eval(px);
     return {
       // Os três atalhos são iguais (pedido do dono): o que leva a cor do
-      // salão é o ÍCONE do Horários, não mais o cartão inteiro.
+      // restaurante é o ÍCONE do Horários, não mais o cartão inteiro.
       botao: pixel(getComputedStyle(document.querySelector('.recurso[data-recurso="horarios"] .recurso-ic')).color),
       hoje: pixel(getComputedStyle(document.querySelector('.semana-dia.hoje')).backgroundColor),
     };
   }, PIXEL);
   const h = matiz(hexRgb(cor));
-  verdade(nome + ': o ícone do Horários tem o matiz da cor do salão', pertoDe(matiz(r.botao), h),
+  verdade(nome + ': o ícone do Horários tem o matiz da cor do restaurante', pertoDe(matiz(r.botao), h),
     JSON.stringify(r));
   verdade(nome + ': e o dia de hoje na folha também', pertoDe(matiz(r.hoje), h), JSON.stringify(r));
   await fechar();
@@ -553,7 +553,7 @@ for(const larg of [360, 412]){
    8 — O ENDEREÇO NÃO VIRA CÓDIGO
 
    Achado ao montar a folha de Informações: a capa punha o endereço na página
-   sem escapar. Qualquer pessoa cria um salão, e um HTML no campo Rua rodava
+   sem escapar. Qualquer pessoa cria um restaurante, e um HTML no campo Rua rodava
    no celular de quem abrisse o link — medido, com um `onerror` que marcava
    a janela. A folha nova mostra o endereço de novo, então a prova vale para
    os dois lugares.

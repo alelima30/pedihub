@@ -11,12 +11,12 @@
 -- precisa chegar antes, atende criança, tem estacionamento...
 --
 -- ── ONDE MORA: saloes.cfg.duvidas ───────────────────────────────────────────
--- Uma lista [{p, r}] no cfg que já existe e que o "Salvar dados" de Meu salão
+-- Uma lista [{p, r}] no cfg que já existe e que o "Salvar dados" de Meu restaurante
 -- já grava. Nenhuma tabela nova, nenhuma coluna nova.
 --
 -- ── ⚠ QUEM ENTREGA É UMA FUNÇÃO À PARTE, E NÃO A vitrine() ───────────────
 -- Pelo mesmo motivo da 62: a vitrine é a função mais sensível do projeto.
--- `duvidas_da_casa(slug)` lê só a chave `duvidas`, de salão ativo, e devolve
+-- `duvidas_da_casa(slug)` lê só a chave `duvidas`, de restaurante ativo, e devolve
 -- só pergunta e resposta, aparadas e com teto. Nada mais do cfg sai daqui.
 -- A tela escapa o HTML na hora de mostrar.
 -- ===========================================================================
@@ -42,7 +42,7 @@ returns jsonb language sql immutable set search_path = public as $$
     ) x
 $$;
 
-/* A entrega para o link: { "duvidas": [{p, r}, ...] }. Salão fora do ar:
+/* A entrega para o link: { "duvidas": [{p, r}, ...] }. Restaurante fora do ar:
    lista vazia. Num objeto, e não a lista solta, porque o PostgREST devolve
    o jsonb como veio — e uma lista solta se confundiria com "uma linha por
    resultado" do lado de lá (a página pegaria só a primeira dúvida). */

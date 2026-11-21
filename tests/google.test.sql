@@ -1,7 +1,7 @@
 -- ===========================================================================
 -- PediHub — entrar com o Google: completar o cadastro (51_google.sql)
 --
--- O Google entrega nome e e-mail. O salão precisa do WhatsApp e do
+-- O Google entrega nome e e-mail. O restaurante precisa do WhatsApp e do
 -- aniversário, e `completar_meu_cadastro` os grava no perfil de quem entrou.
 --
 --   1. a conta do Google nasce sem WhatsApp (só nome e e-mail);
@@ -10,7 +10,7 @@
 --   4. o WhatsApp de OUTRA conta não é tomado, e a frase diz o que fazer;
 --   5. quem já tem WhatsApp não troca por aqui; o aniversário só o vazio;
 --   6. data impossível é recusada;
---   7. depois, a ficha do salão nasce com os dois (48).
+--   7. depois, a ficha do restaurante nasce com os dois (48).
 -- ===========================================================================
 \set ON_ERROR_STOP on
 
@@ -55,7 +55,7 @@ select t_texto('sem login, não completa',
 \echo '4. O WhatsApp de outra conta não é tomado'
 select t_texto('diz que já está em outra conta, e o que fazer',
   erro_de($$select t_completar('c5100000-0000-0000-0000-0000000000f1', '(11) 95100-0001', '1990-01-01')$$),
-  'Este WhatsApp já está em outra conta. Entre com o e-mail e a senha dela, ou fale com o salão.');
+  'Este WhatsApp já está em outra conta. Entre com o e-mail e a senha dela, ou fale com o restaurante.');
 
 \echo ''
 \echo '6. Data impossível'
@@ -82,7 +82,7 @@ select t_texto('continua o mesmo WhatsApp e o mesmo aniversário',
     where id = 'c5100000-0000-0000-0000-0000000000f1'), '+5511951000002 | 1993-08-15');
 
 \echo ''
-\echo '7. A ficha do salão nasce com os dois'
+\echo '7. A ficha do restaurante nasce com os dois'
 select set_config('request.jwt.claim.sub', 'c5100000-0000-0000-0000-0000000000f1', false);
 set role authenticated;
 select public.cadastrar_minha_ficha('55100000-0000-0000-0000-00000000000a') as r7 \gset

@@ -7,7 +7,7 @@
    Não há decodificador nesta máquina — nem biblioteca, nem o `BarcodeDetector`
    do navegador (conferido: não existe neste Chromium). E QR errado é o pior
    tipo de defeito: o desenho fica bonito, a tela parece pronta, e só quem
-   aponta o telefone descobre — no espelho do salão, depois de impresso.
+   aponta o telefone descobre — no espelho do restaurante, depois de impresso.
 
    Então a conferência é por três caminhos que erram de formas diferentes:
 
@@ -353,7 +353,7 @@ verdade('texto longo demais avisa em vez de desenhar errado',
 
 /* Acentos e emoji: o endereço pode ter, e UTF-8 gasta mais de um byte. Um
    contador que contasse LETRAS em vez de BYTES quebraria só aqui. */
-const comAcento = QR.matriz('pedihub.app/salão-da-inês');
+const comAcento = QR.matriz('pedihub.app/restaurante-da-inês');
 verdade('endereço com acento desenha sem quebrar', comAcento.length >= 21);
 
 console.log(`\n${passou} passaram, ${falhou} falharam`);

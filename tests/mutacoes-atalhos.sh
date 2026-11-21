@@ -7,7 +7,7 @@
 #    bash tests/mutacoes-atalhos.sh
 #
 #  Cada mutação que sobreviver é um jeito de o dono escolher "Sem moldura"
-#  ou "Com assombreamento" e ver outra coisa — ou de o salão que nunca
+#  ou "Com assombreamento" e ver outra coisa — ou de o restaurante que nunca
 #  escolheu acordar com a página diferente.
 # ===========================================================================
 set -u

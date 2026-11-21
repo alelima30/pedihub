@@ -8,8 +8,8 @@
    Os defeitos de banco moram no tests/caca_bug.test.sql. Aqui, os de tela:
 
    ── O LINK DA CLIENTE ─────────────────────────────────────────────────────
-     1. a "capa" do salão não roda código no navegador de quem abre o link;
-     2. salão que não existe não mostra o texto da demonstração;
+     1. a "capa" do restaurante não roda código no navegador de quem abre o link;
+     2. restaurante que não existe não mostra o texto da demonstração;
      3. "+55 51 99999-8888" vira (51) 99999-8888, e não um número errado;
      4. a faixa de dias tem os mesmos dias que o aviso promete; dia fechado é
         "fechado", e não "cheio" com lista de espera;
@@ -24,7 +24,7 @@
    ── O PAINEL ──────────────────────────────────────────────────────────────
     10. a tela Hoje usa o cartão do mês (nome, status, serviço, valor);
     11. tirar um item da comanda com a rede lenta tira do banco também;
-    12. o Dashboard não mostra os números de outro salão;
+    12. o Dashboard não mostra os números de outro restaurante;
     13. (demonstração) regra de preço nova grava; exceções de quem está
         inativo ficam; cupom com serviço desativado não vira "todos"; pacote
         conta pelo dia de hoje; busca de cliente sem acento e por telefone;
@@ -69,19 +69,19 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const n7 = String(Date.now() % 10000000).padStart(7, '0');
 const tel = k => '51' + k + n7;
 const masc = d => `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-/* O dia é o do SALÃO (São Paulo), e não o do relógio UTC: das 21h à
+/* O dia é o do RESTAURANTE (São Paulo), e não o do relógio UTC: das 21h à
    meia-noite o UTC já está no dia seguinte, e "ontem" pelo UTC é "hoje" no
-   salão — o cupom vencido "ontem" ainda valia, e o teste reprovava à noite. */
+   restaurante — o cupom vencido "ontem" ainda valia, e o teste reprovava à noite. */
 const hojeNoSalao = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
 const diaMais = d => { const [a, m, dd] = hojeNoSalao().split('-').map(Number);
   return new Date(Date.UTC(a, m - 1, dd + d)).toISOString().slice(0, 10); };
 const espaco = t => String(t || '').replace(/\s/g, ' ');
 
-// ── O salão: segunda a sábado, domingo FECHADO ─────────────────────────────
+// ── O restaurante: segunda a sábado, domingo FECHADO ─────────────────────────────
 const dona = aba();
 await dona.criarConta({ email:`cb-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Caça', p_tipo:'salao',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Caça', p_tipo:'salao',
   p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -151,14 +151,14 @@ secao('1. A capa não vira código');
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('2. Salão que não existe');
+secao('2. Restaurante que não existe');
 {
   const { ctx, p } = await abrirLink('salao-que-nao-existe-' + m);
   const r = await p.evaluate(() => ({ tela,
     titulo: getComputedStyle(document.querySelector('#p-saloes > h2')).display,
     sub: getComputedStyle(document.querySelector('#p-saloes > .sub')).display,
     recado: document.getElementById('listaSaloes').innerText.trim().length > 0 }));
-  igual('mostra só o recado, sem o "Qual salão? … demonstração"', [r.tela, r.titulo, r.sub, r.recado], ['saloes', 'none', 'none', true]);
+  igual('mostra só o recado, sem o "Qual restaurante? … demonstração"', [r.tela, r.titulo, r.sub, r.recado], ['saloes', 'none', 'none', true]);
   await ctx.close();
 }
 
@@ -182,7 +182,7 @@ const TEL_A = tel('81');
   await p.evaluate(() => irPara('quando')); await p.waitForTimeout(600);
   const dom = await p.evaluate(() => [...document.querySelectorAll('#listaDias .dia')]
     .filter(b => /^dom$/i.test(b.querySelector('small').textContent)).map(b => b.querySelector('i').textContent));
-  verdade('domingo, que o salão não abre, aparece como "fechado"', dom.length && dom.every(t => t === 'fechado'), JSON.stringify(dom));
+  verdade('domingo, que o restaurante não abre, aparece como "fechado"', dom.length && dom.every(t => t === 'fechado'), JSON.stringify(dom));
   await p.evaluate(() => { const b = [...document.querySelectorAll('#listaDias .dia')].find(x => /^dom$/i.test(x.querySelector('small').textContent)); b.click(); });
   await p.waitForTimeout(500);
   igual('e tocando nele: "Fechado neste dia", sem lista de espera',
@@ -401,7 +401,7 @@ secao('10 a 12. O painel na nuvem');
       hoje.some(t => /Hoje Ainda Vem/.test(t) && /Corte/.test(t) && /R\$\s?80,00/.test(t) && /Confirmado|A confirmar/.test(t)), JSON.stringify(hoje));
   } else ok('sem vaga hoje a esta hora — a tela Hoje fica para a suíte de amanhã');
 
-  // Dashboard: trocar de salão pede os números de novo.
+  // Dashboard: trocar de restaurante pede os números de novo.
   const pedidos = await p.evaluate(async () => {
     const orig = Dados.chamar; let n = 0;
     Dados.chamar = (f, a) => { if(f === 'painel_grafico') n++; return orig(f, a); };
@@ -416,7 +416,7 @@ secao('10 a 12. O painel na nuvem');
     salaoAtual = antes; Dados.chamar = orig;
     return [mesmo, outro];
   });
-  igual('Dashboard: o mesmo salão não pergunta de novo, outro salão pergunta', pedidos, [0, 1]);
+  igual('Dashboard: o mesmo restaurante não pergunta de novo, outro restaurante pergunta', pedidos, [0, 1]);
 
   // Comanda com a rede lenta: somar, tirar, somar.
   const ag = (await agendamentos())[0];

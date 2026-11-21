@@ -1,7 +1,7 @@
 -- ===========================================================================
 -- PediHub — 33. PREÇO AVANÇADO: vigência, dia da semana e faixa de horário
 --
--- Três regras para o mesmo serviço, que respondem a mesma pergunta do salão:
+-- Três regras para o mesmo serviço, que respondem a mesma pergunta do restaurante:
 -- sábado à tarde lota e terça de manhã fica vazia.
 --
 --   VIGÊNCIA        "a partir de 1º de março a escova passa a R$ 80"
@@ -135,7 +135,7 @@ create policy pr_gerir on public.precos_regras for all to authenticated
 
    ⚠ NADA PARA O `anon`. Quem não tem login recebe os preços prontos dentro da
    `vitrine()`, que é `security definer` e escolhe o que sai. A tabela crua
-   traria o preço por profissional de qualquer salão a quem adivinhasse um id. */
+   traria o preço por profissional de qualquer restaurante a quem adivinhasse um id. */
 grant select, insert, update, delete on public.precos_regras to authenticated;
 
 -- ---------------------------------------------------------------------------
@@ -168,8 +168,8 @@ returns numeric language sql stable set search_path = public as $$
       join public.saloes sa on sa.id = sv.salao_id
      where sv.id = p_servico
   ),
-  /* O dia e a hora NO FUSO DO SALÃO, que não é o fuso de quem está olhando.
-     Uma cliente em Portugal marcando às 3h da manhã dela num salão de Porto
+  /* O dia e a hora NO FUSO DO RESTAURANTE, que não é o fuso de quem está olhando.
+     Uma cliente em Portugal marcando às 3h da manhã dela num restaurante de Porto
      Alegre tem que pegar o preço do dia que é lá. Mesma conta do
      `hoje_no_salao()` no 05. */
   quando as (
@@ -298,7 +298,7 @@ comment on function public.preco_dos_servicos(uuid, uuid[]) is
    O contrato acima dava o direito de combinar o valor a qualquer um da
    equipe, e a policy de escrita da tabela é da equipe inteira. A
    profissional, logada, mudava o preço do PRÓPRIO atendimento direto pela
-   API — de R$ 80 para R$ 500 — e, no salão sem comanda, a comanda automática
+   API — de R$ 80 para R$ 500 — e, no restaurante sem comanda, a comanda automática
    nascia com R$ 500 e a comissão dela subia junto. Achado pelo caça-bug.
 
    Agora: o balcão (dono, admin, recepção — `ve_agenda_toda`) continua
@@ -393,7 +393,7 @@ comment on function public.preco_minimo_do_servico(uuid, date) is
 -- O link não chama nada disto: ele recebe os preços prontos dentro da
 -- `vitrine()`, que é `security definer` e já peneira o que pode sair. Abrir
 -- `preco_do_servico()` ao anônimo seria entregar uma calculadora da tabela de
--- preços de QUALQUER salão a quem adivinhasse um id — inclusive dos preços por
+-- preços de QUALQUER restaurante a quem adivinhasse um id — inclusive dos preços por
 -- profissional, que é acerto interno da casa.
 --
 -- O gatilho roda como dono e não precisa de grant nenhum.
@@ -407,7 +407,7 @@ revoke all on function public.preco_minimo_do_servico(uuid, date)           from
 
    `preco_do_servico()` chama `preco_regra_que_vale()`, e NENHUMA das duas é
    `security definer` — de propósito: assim o RLS continua valendo, e quem
-   pergunta só recebe resposta sobre o salão em que tem vínculo. Mas função
+   pergunta só recebe resposta sobre o restaurante em que tem vínculo. Mas função
    sem `definer` roda como quem chamou, e quem chamou precisa alcançar as duas.
 
    Eu tinha dado grant só nas duas de fora. O painel recebia

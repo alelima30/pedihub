@@ -19,7 +19,7 @@
 -- Enquanto a conta na Meta não estiver aprovada, as linhas nascem
 -- `pendente` e ficam. O painel mostra "pendente", que é a verdade. Marcar
 -- como enviada uma mensagem que não saiu é pior do que não ter mensagem
--- nenhuma: o salão para de ligar para a cliente confiando num aviso que
+-- nenhuma: o restaurante para de ligar para a cliente confiando num aviso que
 -- ninguém recebeu.
 --
 -- ── POR QUE UMA FILA, E NÃO UM ENVIO DIRETO ───────────────────────────────
@@ -47,7 +47,7 @@
 alter table public.profissionais
   add column if not exists telefone text;
 
--- Duas chaves de vontade, por pessoa. O `cfg` do salão liga o recurso para a
+-- Duas chaves de vontade, por pessoa. O `cfg` do restaurante liga o recurso para a
 -- casa; estas duas deixam cada um decidir por si dentro do que a casa ligou.
 alter table public.profissionais
   add column if not exists notif_novo boolean not null default true;
@@ -59,14 +59,14 @@ alter table public.profissionais
   add column if not exists notif_lembrete boolean not null default true;
 
 -- ---------------------------------------------------------------------------
--- 2) AS CONFIGURAÇÕES DO SALÃO
+-- 2) AS CONFIGURAÇÕES DO RESTAURANTE
 --
 -- Moram no `cfg` (jsonb), como `diasLiberados` e `tetoOnlinePct`. Tabela nova
 -- para sete chaves seria tabela para manter, migrar e conferir sem ganhar
 -- nada — e o `cfg` já é o lugar onde a tela sabe gravar.
 --
 -- Cada uma tem padrão, e o padrão é o comportamento de hoje quando existe um:
--- salão que nunca abriu a tela de notificações não muda de comportamento por
+-- restaurante que nunca abriu a tela de notificações não muda de comportamento por
 -- causa de uma publicação.
 -- ---------------------------------------------------------------------------
 create or replace function public.notif_liga(p_salao uuid, p_chave text,
@@ -224,8 +224,8 @@ grant select on public.notificacoes to authenticated;
 -- {{profissional}}, {{empresa}}) são substituídas aqui, uma vez, e o
 -- resultado fica gravado.
 --
--- Tudo no FUSO DO SALÃO. Uma cliente lendo "14:00" precisa que sejam 14:00 no
--- salão, não no servidor.
+-- Tudo no FUSO DO RESTAURANTE. Uma cliente lendo "14:00" precisa que sejam 14:00 no
+-- restaurante, não no servidor.
 -- ---------------------------------------------------------------------------
 /* ── AS PEÇAS, NUM LUGAR SÓ ─────────────────────────────────────────────────
    Nome, profissional, serviço, data e hora saem daqui — e daqui saem DUAS
@@ -322,7 +322,7 @@ begin
       when v_pacote then 'R$ 0,00 — sessão do pacote'
       else 'R$ ' || translate(to_char(v_total, 'FM999,999,990.00'), ',.', '.,') end,
     'pagamento', case
-      when v_pacote and v_pacote_a_pagar then 'Pacote a pagar no salão'
+      when v_pacote and v_pacote_a_pagar then 'Pacote a pagar no restaurante'
       when v_pacote and v_pc_pago and v_pc_valor > 0 then 'Pacote já pago' || coalesce(' (' || case v_pc_forma
              when 'pix' then 'Pix' when 'dinheiro' then 'dinheiro'
              when 'debito' then 'cartão de débito' when 'credito' then 'cartão de crédito'
@@ -333,7 +333,7 @@ begin
       when to_jsonb(a)->>'forma_pagamento' = 'debito'   then 'Cartão de débito'
       when to_jsonb(a)->>'forma_pagamento' = 'credito'  then 'Cartão de crédito'
       when v_total <= 0 then 'Sem custo'
-      else 'A combinar no salão' end);
+      else 'A combinar no restaurante' end);
 end $$;
 
 /* ── A FORMA DE PAGAMENTO NA MENSAGEM: LIGADA PELA PLATAFORMA ───────────────
@@ -368,7 +368,7 @@ create or replace function public.linha_pagamento(p_pecas jsonb)
 returns text language sql stable security definer set search_path = public as $$
   select case when public.mensagens_com_pagamento()
               then E'\n💰 Valor: ' || coalesce(p_pecas->>'valor', '—')
-                || E'\n💳 Pagamento: ' || coalesce(p_pecas->>'pagamento', 'A combinar no salão')
+                || E'\n💳 Pagamento: ' || coalesce(p_pecas->>'pagamento', 'A combinar no restaurante')
               else '' end
 $$;
 
@@ -439,7 +439,7 @@ end $$;
 -- aprovado, e só.
 --
 -- Nossas quatro mensagens são todas fora da janela: a cliente marcou pelo link
--- do site e nunca escreveu para o WhatsApp do salão. Mandar texto livre volta
+-- do site e nunca escreveu para o WhatsApp do restaurante. Mandar texto livre volta
 -- com o erro 131047 — não é configuração errada, é o desenho da plataforma.
 --
 -- Então o `corpo` continua sendo o texto bonito, com quebra de linha e emoji,
@@ -500,8 +500,8 @@ returns text language sql immutable set search_path = public as $$
 $$;
 
 /* O nome do modelo cadastrado na Meta, por tipo. Fixo de propósito: o número
-   do WhatsApp é da plataforma, um só para todos os salões, e portanto os
-   modelos também são. Salão nenhum cadastra modelo próprio. */
+   do WhatsApp é da plataforma, um só para todos os restaurantes, e portanto os
+   modelos também são. Restaurante nenhum cadastra modelo próprio. */
 /* ⚠ STABLE, e não mais IMMUTABLE: o nome depende do ajuste da plataforma.
    Com os modelos de pagamento ligados, os quatro que falam de UM agendamento
    viram o `*_valor` cadastrado ao lado (MODELOS.md), com a forma de
@@ -526,7 +526,7 @@ returns text language sql stable set search_path = public as $$
        chamada no texto. Nome novo porque nome de modelo apagado na Meta fica
        preso por semanas. */
     when 'resumo'      then 'pedihub_agenda_hoje'
-    -- O lembrete para o salão (7c): quem atende e/ou o dono, antes do horário.
+    -- O lembrete para o restaurante (7c): quem atende e/ou o dono, antes do horário.
     when 'lembrete_equipe' then 'pedihub_lembrete_equipe'
   end
   || case when p_tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
@@ -559,12 +559,12 @@ begin
 
   if p_tipo in ('confirmacao','lembrete') then
     -- {{1}} primeiro nome  {{2}} data  {{3}} hora  {{4}} serviço  {{5}} profissional
-    -- {{6}} salão
+    -- {{6}} restaurante
     --
-    -- ⚠ O SALÃO VAI POR ÚLTIMO, E NÃO PODE FALTAR. O número que manda é do
-    -- PediHub, um só para todos os salões: a cliente vê "Pedihub" no topo
+    -- ⚠ O RESTAURANTE VAI POR ÚLTIMO, E NÃO PODE FALTAR. O número que manda é do
+    -- PediHub, um só para todos os restaurantes: a cliente vê "Pedihub" no topo
     -- da conversa. Sem o nome da casa no texto, ela recebe "seu horário está
-    -- confirmado" sem saber onde — e quem frequenta dois salões que usam o
+    -- confirmado" sem saber onde — e quem frequenta dois restaurantes que usam o
     -- sistema não tem como distinguir um do outro. Por último para não mexer
     -- na posição das cinco que já existiam.
     -- (+ {{7}} valor e {{8}} forma de pagamento, só no `*_valor` — `variaveis_pagamento()`)
@@ -576,10 +576,10 @@ begin
 
   elsif p_tipo = 'novo' then
     -- {{1}} primeiro nome de quem atende  {{2}} cliente (nome INTEIRO)
-    -- {{3}} serviço  {{4}} data  {{5}} hora  {{6}} salão
+    -- {{3}} serviço  {{4}} data  {{5}} hora  {{6}} restaurante
     --
     -- O nome inteiro da cliente, e não só o primeiro: é ele que a
-    -- profissional procura na agenda. E o salão, porque quem trabalha em duas
+    -- profissional procura na agenda. E o restaurante, porque quem trabalha em duas
     -- casas que usam o sistema recebe os dois avisos do mesmo número.
     -- (+ {{7}} valor e {{8}} forma de pagamento, só no `*_valor` — `variaveis_pagamento()`)
     return jsonb_build_array(
@@ -644,10 +644,10 @@ update public.notificacoes n
 -- é UM, naturalmente: é uma linha na fila. O item 18 do pedido sai de graça
 -- da modelagem, sem contador especial.
 --
--- `p_profissional` nulo quer dizer "o salão inteiro", que é o resumo do dono
+-- `p_profissional` nulo quer dizer "o restaurante inteiro", que é o resumo do dono
 -- com equipe. Preenchido, é o resumo de uma pessoa só.
 --
--- O período (dia inteiro / manhã / tarde) recorta por hora NO FUSO DO SALÃO.
+-- O período (dia inteiro / manhã / tarde) recorta por hora NO FUSO DO RESTAURANTE.
 -- ---------------------------------------------------------------------------
 create or replace function public.texto_resumo(
   p_salao uuid, p_profissional uuid, p_dia date, p_periodo text default 'dia')
@@ -670,8 +670,8 @@ begin
     from public.saloes s where s.id = p_salao;
   if v_fuso is null then return null; end if;
 
-  -- A janela do período, em horas do salão. Os limites são configuráveis:
-  -- salão que abre às 7h não tem "manhã das 8h".
+  -- A janela do período, em horas do restaurante. Os limites são configuráveis:
+  -- restaurante que abre às 7h não tem "manhã das 8h".
   if p_periodo = 'manha' then
     v_h1 := public.notif_num(p_salao, 'notifManhaIni', 0);
     v_h2 := public.notif_num(p_salao, 'notifManhaFim', 12);
@@ -687,7 +687,7 @@ begin
 
   /* ⚠ O DONO QUE TRABALHA SOZINHO (item 6 do pedido).
 
-     Um salão de uma pessoa não precisa de cabeçalho de equipe: "👤 Alessandro"
+     Um restaurante de uma pessoa não precisa de cabeçalho de equipe: "👤 Alessandro"
      sozinho em cima da própria lista é ruído que só existe porque o código não
      olhou. A pergunta é quantos profissionais ATIVOS a casa tem, e ela é
      respondida aqui, não num ajuste que alguém teria de lembrar de marcar. */
@@ -777,13 +777,13 @@ begin
                 case when v_total = 1 then '' else 's' end);
 end $$;
 
-/* As variáveis do resumo que viaja para a Meta: quem recebe, o salão, quantos
+/* As variáveis do resumo que viaja para a Meta: quem recebe, o restaurante, quantos
    atendimentos e o primeiro horário. A lista inteira NÃO vai.
 
    ── POR QUE NÃO A LISTA ───────────────────────────────────────────────────
    Variável de modelo não aceita quebra de linha. A lista achatada saía como
-   uma linha só — "☀️ Bom dia! · Agenda de hoje — Salão · 👤 Ana · 09:00 —
-   Maria — Corte · …" —, repetindo o "Bom dia" e o salão que o próprio modelo
+   uma linha só — "☀️ Bom dia! · Agenda de hoje — Restaurante · 👤 Ana · 09:00 —
+   Maria — Corte · …" —, repetindo o "Bom dia" e o restaurante que o próprio modelo
    já dizia, e virava um bloco ilegível em dia cheio. O dono escolheu o curto:
    quantos e o primeiro, e um botão "Ver agenda" no modelo que abre o painel,
    onde a lista é bonita. O `corpo` continua com a lista inteira, para o
@@ -793,7 +793,7 @@ end $$;
    mesmos status, mesmas pessoas. A suíte confere que o número daqui é o
    "Total" do corpo, linha por linha.
 
-   {{1}} primeiro nome de quem recebe  {{2}} salão  {{3}} quantos
+   {{1}} primeiro nome de quem recebe  {{2}} restaurante  {{3}} quantos
    {{4}} o primeiro: "09:00 com Maria (Corte)" */
 create or replace function public.variaveis_resumo(
   p_salao uuid, p_profissional uuid, p_dia date, p_periodo text, p_quem text)
@@ -899,7 +899,7 @@ begin
 
      Antes bastava o status ser `pendente` ou `confirmado` — e como nada neste
      sistema criava um pendente, a distinção nunca apareceu. Com o 29 ela passa
-     a existir: o salão que confirma à mão recebe o agendamento `pendente`, e
+     a existir: o restaurante que confirma à mão recebe o agendamento `pendente`, e
      mandar "Seu horário está confirmado" ali seria prometer, em nome do dono,
      uma coisa que ele ainda não decidiu.
 
@@ -923,7 +923,7 @@ begin
 
   /* ── Lembrete, na hora configurada ───────────────────────────────────
      Também espera a confirmação, e pelo mesmo motivo: lembrar a cliente de um
-     horário que o salão ainda não aceitou é confirmá-lo por tabela. Quem
+     horário que o restaurante ainda não aceitou é confirmá-lo por tabela. Quem
      recebe "seu horário é amanhã às 15h" não lê aquilo como "talvez".
 
      Se o dono recusar, o `tg_notificacao_agenda_mudou` logo abaixo cancela o
@@ -968,7 +968,7 @@ begin
     end if;
   end if;
 
-  -- ── Lembrete para o salão (7c) ──────────────────────────────────────
+  -- ── Lembrete para o restaurante (7c) ──────────────────────────────────────
   -- Uma função só decide quem recebe e quando, para este gatilho, para o de
   -- remarcação e para a varredura do agendador falarem a mesma coisa.
   perform public.refazer_lembrete_equipe(new.id);
@@ -1031,7 +1031,7 @@ begin
     end if;
   end if;
 
-  /* O lembrete para o salão (7c) acompanha a hora E a pessoa: trocar a
+  /* O lembrete para o restaurante (7c) acompanha a hora E a pessoa: trocar a
      profissional de um horário já marcado tem de levar o lembrete para a
      nova, e não deixar a antiga ser avisada de um atendimento que não é
      mais dela. */
@@ -1082,7 +1082,7 @@ begin
    where n.agendamento_id = v_ag
      and n.status = 'pendente'
      and n.tipo in ('confirmacao','lembrete','novo');
-  -- O do salão leva o nome de QUEM RECEBE, que mora na própria linha.
+  -- O do restaurante leva o nome de QUEM RECEBE, que mora na própria linha.
   update public.notificacoes n
      set corpo = coalesce(public.texto_lembrete_equipe(v_ag, n.profissional_id), n.corpo),
          variaveis = coalesce(
@@ -1162,16 +1162,16 @@ grant execute on function public.mensagens_com_pagamento() to authenticated;
 revoke all on function public.variaveis_pagamento(jsonb) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- 7c) O LEMBRETE PARA O SALÃO
+-- 7c) O LEMBRETE PARA O RESTAURANTE
 --
--- "Precisamos colocar também para o dono do salão que tem um horário marcado
+-- "Precisamos colocar também para o dono do restaurante que tem um horário marcado
 -- pra tal pessoa — lembrete. Que seja configurável."
 --
 -- O lembrete da seção 6 é da CLIENTE. Este é o do outro lado do balcão:
 -- antes do atendimento, quem vai atender (ou o dono, ou os dois) recebe com
 -- quem, o quê e a que horas.
 --
--- ── O QUE O DONO ESCOLHE (cfg do salão) ────────────────────────────────────
+-- ── O QUE O DONO ESCOLHE (cfg do restaurante) ────────────────────────────────────
 --   notifLembreteEquipe      false   ⚠ DESLIGADO de fábrica: é mensagem nova,
 --                                    custa e gasta a cota; ligar sozinho numa
 --                                    publicação seria mandar o que ninguém pediu
@@ -1191,7 +1191,7 @@ revoke all on function public.variaveis_pagamento(jsonb) from public, anon, auth
 
 /* As variáveis, NA ORDEM do modelo `pedihub_lembrete_equipe`:
    {{1}} primeiro nome de QUEM RECEBE  {{2}} cliente (nome inteiro)
-   {{3}} serviço  {{4}} quem atende  {{5}} data  {{6}} hora  {{7}} salão
+   {{3}} serviço  {{4}} quem atende  {{5}} data  {{6}} hora  {{7}} restaurante
 
    ⚠ O {{4}} existe porque quem recebe pode não ser quem atende: o dono
    recebendo o lembrete do horário da Bia precisa ler "Profissional: Bia". */
@@ -1271,7 +1271,7 @@ begin
        Aqui estava `v_min > 0 and v_quando > now()`: na hora de sair, nenhum
        destinatário era montado, e o cancelamento logo abaixo tirava da fila
        o lembrete que ia sair. E a varredura (gerar_lembretes_equipe) roda
-       ANTES de cada envio, para todo pendente — então o lembrete do salão
+       ANTES de cada envio, para todo pendente — então o lembrete do restaurante
        era cancelado exatamente na hora dele, sempre. "Não chegou o lembrete
        do horário das 9h, só o resumo": o de 08:00 estava lá, cancelado.
 
@@ -1413,7 +1413,7 @@ begin
 end $$;
 
 /* ── O LEMBRETE DA CLIENTE ACOMPANHA O AJUSTE ────────────────────────────
-   "O lembrete chega uma hora antes" — com o salão em outro tempo. O lembrete
+   "O lembrete chega uma hora antes" — com o restaurante em outro tempo. O lembrete
    da cliente era calculado UMA vez, quando o horário era marcado (ou
    remarcado): trocar "1 hora antes" por "24 horas antes" em Notificações não
    mexia em nenhum horário já marcado, e eles continuavam saindo 1 hora antes.
@@ -1443,7 +1443,7 @@ begin
 
   if v_min <= 0 then
     update public.notificacoes
-       set status = 'cancelado', motivo = 'o lembrete foi desligado no salão'
+       set status = 'cancelado', motivo = 'o lembrete foi desligado no restaurante'
      where agendamento_id = a.id and tipo = 'lembrete' and status = 'pendente';
     return;
   end if;
@@ -1516,7 +1516,7 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- 8) O RESUMO ENTRA NA FILA
 --
--- Chamada pelo agendador, de minuto em minuto. Para cada salão cujo horário
+-- Chamada pelo agendador, de minuto em minuto. Para cada restaurante cujo horário
 -- de resumo já chegou HOJE no fuso dele, cria a linha — uma por destinatário.
 --
 -- `p_agora` existe para o teste poder fixar o instante. Sem ele, esta função
@@ -1539,7 +1539,7 @@ declare
   v_quem    text;
   n int := 0;
 begin
-  -- O lembrete para o salão (7c), de carona no agendador que já passa aqui
+  -- O lembrete para o restaurante (7c), de carona no agendador que já passa aqui
   -- de minuto em minuto: liga e desliga valem sem esperar novo agendamento.
   perform public.gerar_lembretes_equipe();
   -- E o da cliente: trocar "1 hora antes" por "24 horas antes" vale também
@@ -1557,7 +1557,7 @@ begin
     v_hoje := (p_agora at time zone v_fuso)::date;
     v_hora := public.notif_num(s.id, 'notifResumoHora', 8);
 
-    -- Ainda não deu a hora no salão.
+    -- Ainda não deu a hora no restaurante.
     if extract(hour from (p_agora at time zone v_fuso))::int < v_hora then
       continue;
     end if;
@@ -1635,12 +1635,12 @@ grant execute on function public.gerar_resumos(timestamptz) to service_role;
 
    Ficaram abertas ao `anon` por uma fase inteira. O caminho era:
 
-     página pública → vitrine(slug) devolve o id do salão
+     página pública → vitrine(slug) devolve o id do restaurante
                     → texto_resumo(id, null, data)
                     → a agenda do dia inteira, com nome de cliente
 
    Sem login, com a chave publicável que está no config.js por desenho. Dava
-   para varrer a agenda de qualquer salão do sistema, dia por dia.
+   para varrer a agenda de qualquer restaurante do sistema, dia por dia.
 
    Nenhuma tela chama estas funções — só gatilhos e o `gerar_resumos`, que
    rodam como dono e continuam passando. O `tests/portas.test.sql` passou a
@@ -1671,4 +1671,4 @@ revoke all on function public.gerar_lembretes_cliente()
 comment on table public.notificacoes is
   'Fila das mensagens que nascem da agenda: confirmação, lembrete, resumo e aviso ao profissional.';
 comment on function public.gerar_resumos(timestamptz) is
-  'Põe o resumo do dia na fila para os salões cuja hora já chegou. Idempotente por dia.';
+  'Põe o resumo do dia na fila para os restaurantes cuja hora já chegou. Idempotente por dia.';

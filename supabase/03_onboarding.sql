@@ -3,7 +3,7 @@
 -- O dono se cadastra sozinho. Rodar DEPOIS do 01 e do 02.
 --
 -- O problema que este arquivo resolve: a policy `salao_criar` só deixa
--- `is_super()` inserir salão, e isso está certo — criar inquilino é ato da
+-- `is_super()` inserir restaurante, e isso está certo — criar inquilino é ato da
 -- plataforma. Mas se só a plataforma cria, alguém precisa atender o telefone
 -- toda vez que um barbeiro quiser testar às 23h de domingo.
 --
@@ -14,7 +14,7 @@
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
--- 1) O APELIDO DO SALÃO NO ENDEREÇO
+-- 1) O APELIDO DO RESTAURANTE NO ENDEREÇO
 -- ---------------------------------------------------------------------------
 
 -- "Barbearia Os Meninos dá Vila" -> "barbearia-os-meninos-da-vila"
@@ -84,13 +84,13 @@ create policy doc_gerir on public.documentos_cobranca for all to authenticated
 grant select on public.documentos_cobranca to authenticated;
 
 -- ---------------------------------------------------------------------------
--- 2) CRIAR O SALÃO
+-- 2) CRIAR O RESTAURANTE
 --
--- Uma chamada faz tudo o que precisa acontecer junto: o salão, a assinatura
+-- Uma chamada faz tudo o que precisa acontecer junto: o restaurante, a assinatura
 -- em teste, o vínculo de dono e o primeiro profissional. Se qualquer parte
 -- falhar, nada fica pela metade — é uma função, logo uma transação.
 --
--- Meia criação seria o pior resultado possível: um salão sem dono é um
+-- Meia criação seria o pior resultado possível: um restaurante sem dono é um
 -- registro que ninguém alcança nem para apagar, porque o RLS pede vínculo.
 -- ---------------------------------------------------------------------------
 
@@ -112,12 +112,12 @@ declare
   v_dias   int := 30;                     -- duração do teste grátis (61_teste_30_dias)
 begin
   if v_perfil is null then
-    raise exception 'Faça login antes de criar o salão.'
+    raise exception 'Faça login antes de criar o restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
   if not exists (select 1 from public.perfis where id = v_perfil) then
-    raise exception 'Complete seu cadastro antes de criar o salão.'
+    raise exception 'Complete seu cadastro antes de criar o restaurante.'
       using errcode = 'foreign_key_violation';
   end if;
 
@@ -126,7 +126,7 @@ begin
       using errcode = 'check_violation';
   end if;
 
-  -- Uma pessoa dona de muitos salões é possível (rede de barbearias), mas
+  -- Uma pessoa dona de muitos restaurantes é possível (rede de barbearias), mas
   -- dezenas viram fábrica de teste grátis. O limite é folgado de propósito.
   if (select count(*) from public.vinculos
        where perfil_id = v_perfil and papel = 'dono') >= 10 then
@@ -150,7 +150,7 @@ begin
 
   insert into public.assinaturas
     (salao_id, plano, status, trial_ate, origem, indicado_por)
-  /* O "hoje" do teste é o do SALÃO, e não o do servidor (UTC). Depois das
+  /* O "hoje" do teste é o do RESTAURANTE, e não o do servidor (UTC). Depois das
      21h em Brasília o servidor já está no dia seguinte, e o teste nascia
      com um dia a mais do que a tela prometia. */
   values (v_salao, 'trial', 'trial',
@@ -166,7 +166,7 @@ begin
   insert into public.profissionais (salao_id, perfil_id, nome, comissao_pct)
   select v_salao, v_perfil, p.nome, 100 from public.perfis p where p.id = v_perfil;
 
-  -- O documento é da COBRANÇA, não do salão: guardar CPF junto do cadastro
+  -- O documento é da COBRANÇA, não do restaurante: guardar CPF junto do cadastro
   -- público seria expor documento em tabela que o cliente final lê.
   --
   -- ⚠ Repare no `documentos_cobranca.salao_id` escrito por extenso. Esta
@@ -175,7 +175,7 @@ begin
   -- dentro para o Postgres com "column reference is ambiguous" — foi
   -- exatamente o que aconteceu na primeira versão. Dentro de plpgsql com
   -- OUT params, qualifique sempre.
-  -- Insert simples, sem `on conflict`: o salão nasceu duas linhas acima,
+  -- Insert simples, sem `on conflict`: o restaurante nasceu duas linhas acima,
   -- então não existe documento para conflitar. E o alvo do `on conflict` é
   -- um dos poucos lugares do SQL que NÃO aceita qualificação por tabela,
   -- então ali a ambiguidade não teria conserto.

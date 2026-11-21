@@ -22,7 +22,7 @@ select t_texto('a ficha que já estava limpa não foi mexida',
 
 -- A que colide fica como está, de propósito. Juntar as duas fichas é mover
 -- agendamento e comanda de uma para a outra: some dinheiro ou some
--- atendimento, e ninguém fica sabendo qual. Fica para o salão decidir.
+-- atendimento, e ninguém fica sabendo qual. Fica para o restaurante decidir.
 select t_texto('a ficha que colidia ficou intacta',
   (select telefone from public.clientes
     where id = 'dddddddd-9999-0000-0000-00000000000d'),
@@ -47,7 +47,7 @@ select t_verdade('telefone novo em dígitos passa',
                  values ('aaaaaaaa-9999-0000-0000-000000000001',
                          'Nova', '31977776666')$$));
 
--- Duas fichas sem número no mesmo salão: era o "duplicate key value violates
+-- Duas fichas sem número no mesmo restaurante: era o "duplicate key value violates
 -- unique constraint ux_cli_tel" que a recepção levava ao cadastrar a segunda
 -- pessoa que passou sem deixar telefone.
 select t_verdade('dá para cadastrar duas fichas sem telefone',

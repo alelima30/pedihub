@@ -18,10 +18,10 @@ insert into auth.users (id, email) values
   ('22222222-2222-2222-2222-222222222222', 'cliente@teste.com');
 
 insert into public.saloes (id, slug, nome, tipo) values
-  ('aaaaaaaa-0000-0000-0000-000000000001', 'salao-da-ana', 'Salão da Ana', 'salao'),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'salao-da-ana', 'Restaurante da Ana', 'salao'),
   ('aaaaaaaa-0000-0000-0000-000000000002', 'barbearia-do-ze', 'Barbearia do Zé', 'barbearia');
 
--- Os salões do cenário assinam um plano que comporta a equipe. Sem isto o
+-- Os restaurantes do cenário assinam um plano que comporta a equipe. Sem isto o
 -- gatilho de limite recusaria o segundo profissional — e recusaria certo.
 insert into public.assinaturas (salao_id, plano, status) values
   ('aaaaaaaa-0000-0000-0000-000000000001', 'time', 'ativa'),
@@ -164,34 +164,34 @@ end $$;
 
 
 \echo ''
-\echo 'Isolamento entre salões'
+\echo 'Isolamento entre restaurantes'
 
 do $$
 begin
-  -- Cliente do salão A com profissional do salão A: ok. O caso perigoso é
-  -- cruzar salões, e é a policy de RLS que barra (02_rls.sql). Aqui só
+  -- Cliente do restaurante A com profissional do restaurante A: ok. O caso perigoso é
+  -- cruzar restaurantes, e é a policy de RLS que barra (02_rls.sql). Aqui só
   -- garantimos que a ficha do cliente não vaza por chave estrangeira.
   if recusado($q$
       insert into public.clientes (salao_id, perfil_id, nome)
       values ('aaaaaaaa-0000-0000-0000-000000000001',
               '22222222-2222-2222-2222-222222222222', 'Maria de novo')$q$)
-  then perform t_ok('mesma pessoa não duplica ficha no mesmo salão');
-  else perform t_falha('DEIXOU criar duas fichas da mesma pessoa no mesmo salão');
+  then perform t_ok('mesma pessoa não duplica ficha no mesmo restaurante');
+  else perform t_falha('DEIXOU criar duas fichas da mesma pessoa no mesmo restaurante');
   end if;
 end $$;
 
--- Mas a MESMA pessoa pode ser cliente de outro salão — é o ponto do modelo.
+-- Mas a MESMA pessoa pode ser cliente de outro restaurante — é o ponto do modelo.
 insert into public.clientes (salao_id, perfil_id, nome)
 values ('aaaaaaaa-0000-0000-0000-000000000002',
         '22222222-2222-2222-2222-222222222222', 'Maria Silva');
-do $$ begin perform t_ok('a mesma pessoa é cliente em dois salões, com fichas separadas'); end $$;
+do $$ begin perform t_ok('a mesma pessoa é cliente em dois restaurantes, com fichas separadas'); end $$;
 
 insert into public.vinculos (perfil_id, salao_id, papel) values
   ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-0000-0000-0000-000000000001', 'cliente'),
   ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-0000-0000-0000-000000000002', 'cliente'),
   ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-0000-0000-0000-000000000001', 'dono'),
   ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-0000-0000-0000-000000000002', 'profissional');
-do $$ begin perform t_ok('um login, papéis diferentes em salões diferentes'); end $$;
+do $$ begin perform t_ok('um login, papéis diferentes em restaurantes diferentes'); end $$;
 
 
 \echo ''
@@ -229,7 +229,7 @@ insert into public.comandas (id, salao_id, cliente_id) values
   ('ffffffff-0000-0000-0000-000000000002',
    'aaaaaaaa-0000-0000-0000-000000000001',
    'dddddddd-0000-0000-0000-000000000001');
--- Outro salão recomeça do 1: a numeração é de cada casa.
+-- Outro restaurante recomeça do 1: a numeração é de cada casa.
 insert into public.comandas (id, salao_id, cliente_id) values
   ('ffffffff-0000-0000-0000-000000000003',
    'aaaaaaaa-0000-0000-0000-000000000002',
@@ -241,11 +241,11 @@ begin
   select numero into a from public.comandas where id = 'ffffffff-0000-0000-0000-000000000001';
   select numero into b from public.comandas where id = 'ffffffff-0000-0000-0000-000000000002';
   select numero into c from public.comandas where id = 'ffffffff-0000-0000-0000-000000000003';
-  if a = 1 and b = 2 then perform t_ok('comanda numera em sequência dentro do salão');
+  if a = 1 and b = 2 then perform t_ok('comanda numera em sequência dentro do restaurante');
   else perform t_falha(format('numeração saiu errada: %s, %s', a, b));
   end if;
-  if c = 1 then perform t_ok('outro salão começa a numeração do 1 de novo');
-  else perform t_falha(format('salão 2 devia começar em 1 e veio %s', c));
+  if c = 1 then perform t_ok('outro restaurante começa a numeração do 1 de novo');
+  else perform t_falha(format('restaurante 2 devia começar em 1 e veio %s', c));
   end if;
 end $$;
 
@@ -467,7 +467,7 @@ end $$;
 -- O teste que impede o bug de fuso de voltar.
 --
 -- O PostgREST roda a sessão em UTC. Se a função usar o fuso da sessão em vez
--- do fuso do salão, "manhã" em São Paulo vira "tarde" para o banco. Aqui
+-- do fuso do restaurante, "manhã" em São Paulo vira "tarde" para o banco. Aqui
 -- forçamos UTC de propósito: a resposta tem que ser a mesma.
 do $$
 declare n_utc int; n_sp int;
@@ -487,7 +487,7 @@ begin
    where id = '11100000-0000-0000-0000-000000000003';
 
   if n_utc = 1 and n_sp = 1 then
-    perform t_ok('o turno sai do fuso do SALÃO, não do fuso da sessão');
+    perform t_ok('o turno sai do fuso do RESTAURANTE, não do fuso da sessão');
   else perform t_falha(format(
     'a fila mudou com o fuso da sessão: UTC=%s, São Paulo=%s', n_utc, n_sp));
   end if;
@@ -497,15 +497,15 @@ end $$;
 \echo ''
 \echo 'Limite do plano — a trava que protege a receita'
 
--- Salão novo, sem assinatura nenhuma. O padrão TEM que ser o mais restrito.
+-- Restaurante novo, sem assinatura nenhuma. O padrão TEM que ser o mais restrito.
 insert into public.saloes (id, slug, nome, tipo) values
-  ('aaaaaaaa-0000-0000-0000-000000000009', 'salao-novo', 'Salão Novo', 'barbearia');
+  ('aaaaaaaa-0000-0000-0000-000000000009', 'salao-novo', 'Restaurante Novo', 'barbearia');
 
 do $$
 begin
   if public.limite_profissionais('aaaaaaaa-0000-0000-0000-000000000009') = 1
-  then perform t_ok('salão sem assinatura vale como 1 profissional, não ilimitado');
-  else perform t_falha('salão sem assinatura ficou com limite '
+  then perform t_ok('restaurante sem assinatura vale como 1 profissional, não ilimitado');
+  else perform t_falha('restaurante sem assinatura ficou com limite '
     || public.limite_profissionais('aaaaaaaa-0000-0000-0000-000000000009'));
   end if;
 end $$;
@@ -655,13 +655,13 @@ begin
   end if;
 end $$;
 
--- Fechar o salão inteiro (profissional_id nulo) vale para todo mundo.
+-- Fechar o restaurante inteiro (profissional_id nulo) vale para todo mundo.
 do $$
 begin
   if recusado($q$insert into public.bloqueios (salao_id, inicio, fim, motivo)
                  values ('aaaaaaaa-0000-0000-0000-000000000001',
                          '2026-09-10 11:30-03', '2026-09-10 12:00-03', 'Feriado')$q$)
-  then perform t_ok('feriado do salão também esbarra em quem já está marcado');
+  then perform t_ok('feriado do restaurante também esbarra em quem já está marcado');
   else perform t_falha('o feriado ignorou os atendimentos do dia');
   end if;
 end $$;
@@ -690,12 +690,12 @@ end $$;
 \echo ''
 \echo 'Planos: quem assina, quem não assina, e quem parou de pagar'
 
--- Nem todo salão vai assinar, e o sistema tem que continuar de pé para quem
+-- Nem todo restaurante vai assinar, e o sistema tem que continuar de pé para quem
 -- não assina — com teto. Estes testes prendem justamente a fronteira entre
 -- o Grátis e o Individual: sem ela, o plano de R$ 57 não vende para ninguém.
 
 insert into public.saloes (id, slug, nome, fuso) values
-  ('aaaaaaaa-0000-0000-0000-00000000000f', 'salao-do-plano', 'Salão do Plano',
+  ('aaaaaaaa-0000-0000-0000-00000000000f', 'salao-do-plano', 'Restaurante do Plano',
    'America/Sao_Paulo');
 insert into public.clientes (id, salao_id, nome) values
   ('dddddddd-0000-0000-0000-00000000000f',
@@ -761,14 +761,14 @@ begin
   else perform t_falha('os recursos do Grátis não bateram'); end if;
 end $$;
 
--- Salão sem nenhuma assinatura: o padrão é o mais apertado, nunca ilimitado.
+-- Restaurante sem nenhuma assinatura: o padrão é o mais apertado, nunca ilimitado.
 do $$
 begin
   insert into public.saloes (id, slug, nome)
   values ('aaaaaaaa-0000-0000-0000-00000000000d','salao-sem-nada','Sem assinatura');
   if public.plano_efetivo('aaaaaaaa-0000-0000-0000-00000000000d') = 'gratuito'
      and public.limite_profissionais('aaaaaaaa-0000-0000-0000-00000000000d') = 1
-  then perform t_ok('salão sem assinatura nenhuma cai no Grátis, não em ilimitado');
+  then perform t_ok('restaurante sem assinatura nenhuma cai no Grátis, não em ilimitado');
   else perform t_falha('falha de cadastro virou plano sem limite'); end if;
 end $$;
 

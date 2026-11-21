@@ -7,7 +7,7 @@
    ── POR QUE ESTE ARQUIVO EXISTE ────────────────────────────────────────────
    Quando o véu passou a poder chegar a zero, os cartões passaram a engrossar
    sozinhos abaixo de 35% — um limiar fixo, escrito por mim, decidindo a
-   aparência do salão dos outros.
+   aparência do restaurante dos outros.
 
    Foto de fundo varia demais para um número servir a todas: parede de tijolo
    escura pede cartão fechado mesmo com véu alto; mármore claro aguenta vidro
@@ -62,7 +62,7 @@ const dona = novaAba();
 await dona.criarConta({ email:`ct-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju dos Cartões',
   telefone:'+5511' + (100000000 + Math.floor(Math.random()*89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Cartões ' + marca,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Cartões ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 const SLUG = cr[0].slug;
@@ -134,9 +134,9 @@ secao('4) Fechado: sempre fecha, mesmo com muito branco');
     r.forte, JSON.stringify(r));
 }
 
-secao('5) Salão que nunca escolheu não vê diferença');
+secao('5) Restaurante que nunca escolheu não vê diferença');
 {
-  /* A migração silenciosa: todo salão criado antes disto tem `cfg` sem a
+  /* A migração silenciosa: todo restaurante criado antes disto tem `cfg` sem a
      chave. Se o ausente não caísse em 'auto', a aparência de quem já usa
      mudaria sozinha numa publicação — a pior forma de estrear um ajuste. */
   const r = await comAjuste({ veu: 0 });

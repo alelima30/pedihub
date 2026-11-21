@@ -1,5 +1,5 @@
 -- ===========================================================================
--- PediHub — 28: o salão que não quer comanda nem caixa
+-- PediHub — 28: o restaurante que não quer comanda nem caixa
 --
 -- "Não quero trabalhar com comanda e nem caixa. Abre, coloca os serviços e já
 --  começa a trabalhar."
@@ -16,7 +16,7 @@
 --
 -- Não era. TODO o dinheiro deste sistema nasce da comanda: o `relatorio()` do
 -- 12 soma `comandas_totais` de comanda FECHADA, a comissão do 16 mora em
--- `comanda_itens`, e a baixa de estoque do 26 sai do item. Um salão que nunca
+-- `comanda_itens`, e a baixa de estoque do 26 sai do item. Um restaurante que nunca
 -- abrisse comanda teria o mês inteiro zerado — sem erro nenhum na tela, só o
 -- número errado, que é a pior forma de errar.
 --
@@ -43,13 +43,13 @@
 -- 1) O INTERRUPTOR
 --
 -- ⚠ O PADRÃO É LIGADO, e isso não é detalhe: a chave não existe em nenhum
--- salão de hoje, e se a ausência valesse "desligado" todos eles passariam a
+-- restaurante de hoje, e se a ausência valesse "desligado" todos eles passariam a
 -- gerar comanda automática amanhã, por cima das comandas de verdade que eles
 -- abrem à mão.
 --
 -- ⚠ E A PENEIRA É DE TEXTO, não `::boolean`. `'abacaxi'::boolean` LEVANTA no
 -- Postgres — não devolve nulo — e um `cfg` com lixo derrubaria a conclusão de
--- todo atendimento do salão. É a mesma armadilha que o `antecedenciaMin` do
+-- todo atendimento do restaurante. É a mesma armadilha que o `antecedenciaMin` do
 -- 14 já tinha custado, com `'abc'::int`.
 --
 -- Só desliga quem escreveu exatamente que quer desligar. Qualquer outra coisa
@@ -57,7 +57,7 @@
 -- um erro de digitação nunca apaga a comanda de ninguém.
 -- ---------------------------------------------------------------------------
 /* ⚠ E O PLANO MANDA ANTES DO INTERRUPTOR: no Grátis não há caixa nem
-   comanda (22_cotas), e o salão trabalha como o "sem comanda" daqui — o
+   comanda (22_cotas), e o restaurante trabalha como o "sem comanda" daqui — o
    atendimento concluído vira comanda sozinho, e o dinheiro do dia não se
    perde. Ligar o interruptor no Grátis não liga nada. */
 create or replace function public.usa_comanda(p_salao uuid)
@@ -71,7 +71,7 @@ returns boolean language sql stable set search_path = public as $$
 $$;
 
 comment on function public.usa_comanda(uuid) is
-  'O salão trabalha com comanda e caixa? cfg.usaComanda, padrão LIGADO. Desligado, o atendimento concluído vira comanda sozinho.';
+  'O restaurante trabalha com comanda e caixa? cfg.usaComanda, padrão LIGADO. Desligado, o atendimento concluído vira comanda sozinho.';
 
 -- ---------------------------------------------------------------------------
 -- 2) "NÃO INFORMADO": A FORMA DE PAGAMENTO QUE FALTAVA
@@ -80,13 +80,13 @@ comment on function public.usa_comanda(uuid) is
 -- "Ainda faltam R$ x". Então a comanda automática precisa de um pagamento, e
 -- nenhuma das formas existentes servia.
 --
--- Pôr 'dinheiro' seria mentira com consequência: no dia em que esse salão
+-- Pôr 'dinheiro' seria mentira com consequência: no dia em que esse restaurante
 -- resolvesse abrir o caixa, a gaveta passaria a esperar um dinheiro que nunca
 -- entrou nela. 'cortesia' seria pior ainda — diria que o atendimento foi de
 -- graça, e o faturamento sumiria.
 --
--- `nao_informado` diz a verdade inteira: a cliente pagou, e o salão escolheu
--- não controlar por onde. É um fato sobre o SALÃO, não sobre a venda.
+-- `nao_informado` diz a verdade inteira: a cliente pagou, e o restaurante escolheu
+-- não controlar por onde. É um fato sobre o RESTAURANTE, não sobre a venda.
 --
 -- ⚠ A restrição é derrubada PELO NOME QUE ELA TEM, descoberto na hora. O
 -- `01_schema.sql` a cria embutida na coluna, e o nome gerado pelo Postgres não
@@ -133,14 +133,14 @@ alter table public.comandas
   add column if not exists automatica boolean not null default false;
 
 comment on column public.comandas.automatica is
-  'Nasceu sozinha ao concluir o atendimento, num salão sem comanda. Desmarcar o atendimento a apaga.';
+  'Nasceu sozinha ao concluir o atendimento, num restaurante sem comanda. Desmarcar o atendimento a apaga.';
 
 -- ---------------------------------------------------------------------------
 -- 4) ⚠ O GATILHO: CONCLUIR VIRA DINHEIRO
 --
 -- Cinco recusas antes de criar qualquer coisa, e nenhuma é dispensável:
 --
---   · o salão usa comanda  → a tela dele faz isso, e melhor: com desconto,
+--   · o restaurante usa comanda  → a tela dele faz isso, e melhor: com desconto,
 --                            produto, forma de pagamento
 --   · já existe comanda    → a recepção montou à mão. Uma segunda cobraria o
 --                            atendimento duas vezes, e o índice único do 15
@@ -247,7 +247,7 @@ create trigger tg_agend_sem_comanda
 -- 5) Quem pode perguntar
 --
 -- `usa_comanda()` responde sobre CONFIGURAÇÃO — e sobre o PLANO, desde que
--- o Grátis ficou sem caixa: aberta a quem tem conta, dizia de qualquer salão
+-- o Grátis ficou sem caixa: aberta a quem tem conta, dizia de qualquer restaurante
 -- se ele paga ou não. A tela não a chama (ela faz a mesma peneira com o que
 -- já carregou); quem chama é o gatilho da comanda automática e a vitrine,
 -- os dois `security definer`. Fechada a todos. Ver o 57_plano_fechado.sql.

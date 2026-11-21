@@ -13,15 +13,15 @@
 
    ── O QUE ESTE ARQUIVO MEDE ────────────────────────────────────────────────
      1. no link: o botão na tela de conta leva ao Google pelo Supabase, com a
-        volta para o salão;
+        volta para o restaurante;
      2. a volta sem WhatsApp abre "Falta pouco": pede WhatsApp e aniversário,
-        confere, grava, e a ficha nasce no salão com os dois;
+        confere, grava, e a ficha nasce no restaurante com os dois;
      3. a ficha do balcão (mesmo WhatsApp e primeiro nome) é LIGADA, sem
         duplicar; o WhatsApp de outra conta é recusado com a frase certa;
      4. "Agora não" volta para a capa;
      5. no painel: o botão em Entrar leva ao Google com a volta para Entrar;
      6. no cadastro do dono, logado pelo Google: some e-mail e senha, o nome
-        vem pronto, e o salão nasce com o WhatsApp no perfil;
+        vem pronto, e o restaurante nasce com o WhatsApp no perfil;
      7. nenhum erro de JavaScript.
    =========================================================================== */
 import fs from 'node:fs';
@@ -69,7 +69,7 @@ const masc = d => `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
 const dona = aba();
 await dona.criarConta({ email:`gg-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Google ' + m,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Google ' + m,
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 // A ficha do balcão da Helena, sem conta.
@@ -137,7 +137,7 @@ for(const [rotulo, google] of [['desligado (o padrão do Supabase)', false], ['S
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('1. No link: o botão leva ao Google, com a volta para o salão');
+secao('1. No link: o botão leva ao Google, com a volta para o restaurante');
 {
   const { p, ctx, pedidos } = await pagina('agendar.html?salao=' + SLUG);
   await esperarTela(p, 'capa'); await p.waitForTimeout(500);
@@ -146,7 +146,7 @@ secao('1. No link: o botão leva ao Google, com a volta para o salão');
   verdade('com o Google ligado, o botão "Continuar com o Google" aparece na tela de conta', await p.isVisible('#btGoogle'));
   igual('com "ou com e-mail e senha" logo abaixo', await p.textContent('#caixaGoogle .ou-linha'), 'ou com e-mail e senha');
   await p.click('#btGoogle'); await p.waitForTimeout(800);
-  verdade('vai ao Supabase com provider=google e a volta para ESTE salão',
+  verdade('vai ao Supabase com provider=google e a volta para ESTE restaurante',
     pedidos.length >= 1 && /\/auth\/v1\/authorize\?provider=google&redirect_to=.*agendar\.html\?salao=/.test(pedidos[0])
     && pedidos[0].includes('salao=' + SLUG + '&conta=google'), pedidos.join(' | '));
   await ctx.close();
@@ -226,7 +226,7 @@ secao('5. No painel: o botão em Entrar');
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('6. O dono que entra com o Google cria o salão sem e-mail e senha');
+secao('6. O dono que entra com o Google cria o restaurante sem e-mail e senha');
 {
   const s = await contaGoogle('Karla Dona', `karla-${m}@gmail.com`);
   const { p, ctx } = await pagina('criar.html' + fragmento(s), 1100);
@@ -245,7 +245,7 @@ secao('6. O dono que entra com o Google cria o salão sem e-mail e senha');
   const r = await linha(`select s.nome, v.papel, pf.telefone from public.vinculos v
       join public.saloes s on s.id = v.salao_id join public.perfis pf on pf.id = v.perfil_id
      where pf.email = $1`, [`karla-${m}@gmail.com`]);
-  igual('o salão nasceu com ela de dona, e o WhatsApp foi para o perfil',
+  igual('o restaurante nasceu com ela de dona, e o WhatsApp foi para o perfil',
     r && [r.nome, r.papel, r.telefone], ['Studio Karla ' + m, 'dono', '+55' + tel('84')]);
   await ctx.close();
 }

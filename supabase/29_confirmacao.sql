@@ -1,5 +1,5 @@
 -- ===========================================================================
--- PediHub — 29: o salão confirma, ou o link confirma sozinho
+-- PediHub — 29: o restaurante confirma, ou o link confirma sozinho
 --
 -- "O cliente receberá uma mensagem de confirmação. Isso é configurável: ou o
 --  dono confirma, ou a confirmação é automática assim que o cliente marca."
@@ -22,7 +22,7 @@
 --   · este módulo acrescenta o gatilho que falta: quando o horário VIRA
 --     confirmado, a mensagem sai naquele momento
 --
--- Sem o segundo, o salão confirmaria e a cliente nunca saberia.
+-- Sem o segundo, o restaurante confirmaria e a cliente nunca saberia.
 --
 -- ── O QUE CONTINUA SAINDO NA HORA ─────────────────────────────────────────
 -- O aviso para quem vai atender (`tipo = 'novo'`). É ele que avisa o dono de
@@ -40,12 +40,12 @@
 -- 1) O INTERRUPTOR
 --
 -- ⚠ O PADRÃO É AUTOMÁTICO, que é como o sistema sempre funcionou. Se a
--- ausência da chave valesse "o dono confirma", todo salão que já usa o link
+-- ausência da chave valesse "o dono confirma", todo restaurante que já usa o link
 -- acordaria amanhã com a agenda cheia de pendências que ninguém pediu — e
 -- clientes esperando uma resposta que o dono não sabe que deve dar.
 --
 -- A peneira é de texto pelo mesmo motivo do 28: `'abacaxi'::boolean` LEVANTA
--- no Postgres, e um cast desprotegido aqui derrubaria TODA marcação do salão.
+-- no Postgres, e um cast desprotegido aqui derrubaria TODA marcação do restaurante.
 -- ---------------------------------------------------------------------------
 /* ⚠ `security definer`, e a falta dele reprovou a seção 7 do teste.
 
@@ -54,10 +54,10 @@
    — e quem abre o link da cliente é exatamente `anon`.
 
    O efeito na tela seria mudo: a chamada falha, o `catch` da página engole, e
-   ela cai no padrão "confirma sozinho". A cliente de um salão que confirma à
+   ela cai no padrão "confirma sozinho". A cliente de um restaurante que confirma à
    mão leria "Pronto, está confirmado" de um horário pendente.
 
-   Não abre nada: a resposta é um sim ou não sobre a política de um salão cujo
+   Não abre nada: a resposta é um sim ou não sobre a política de um restaurante cujo
    link é público de propósito, e o `p_salao` é o mesmo id que está na URL. */
 create or replace function public.confirma_automatico(p_salao uuid)
 returns boolean language sql stable security definer set search_path = public as $$
@@ -69,7 +69,7 @@ returns boolean language sql stable security definer set search_path = public as
 $$;
 
 comment on function public.confirma_automatico(uuid) is
-  'O link confirma sozinho? cfg.confirmaAuto, padrão SIM. Desligado, o agendamento nasce pendente e espera o salão.';
+  'O link confirma sozinho? cfg.confirmaAuto, padrão SIM. Desligado, o agendamento nasce pendente e espera o restaurante.';
 
 -- ---------------------------------------------------------------------------
 -- 2) ⚠ A MENSAGEM QUE ESPERAVA O DONO
@@ -103,7 +103,7 @@ create trigger tg_notif_agend_confirmado
 -- entre "Pronto, está confirmado" e "Você receberá uma mensagem de
 -- confirmação". E quem abre o link não tem conta.
 --
--- Não vaza nada: a resposta é um sim ou não sobre a política de um salão cujo
+-- Não vaza nada: a resposta é um sim ou não sobre a política de um restaurante cujo
 -- link é público de propósito.
 -- ---------------------------------------------------------------------------
 revoke all on function public.confirma_automatico(uuid) from public;

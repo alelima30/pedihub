@@ -9,7 +9,7 @@
 
    Enquanto a conta na Meta não estiver aprovada, as linhas nascem `pendente`
    e ficam. Um teste que aceitasse "enviado" aqui estaria abençoando
-   exatamente o defeito que o pedido proíbe — o salão deixaria de ligar para a
+   exatamente o defeito que o pedido proíbe — o restaurante deixaria de ligar para a
    cliente confiando num aviso que ninguém recebeu.
 
    Por isso tudo aqui é medido na FILA e no BANCO: o que foi criado, quando
@@ -57,14 +57,14 @@ await banco.connect();
 const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const tel = () => '+5511' + (100000000 + Math.floor(Math.random()*89999999));
 
-/* Monta um salão do zero. Devolve tudo o que as seções precisam.
+/* Monta um restaurante do zero. Devolve tudo o que as seções precisam.
    `profs` é quantos profissionais ativos — é o número que decide se o resumo
    do dono vem com cabeçalho de equipe ou não. */
 async function montar(nome, profs = 1){
   const d = novaAba();
   await d.criarConta({ email:`nt-${nome}-${marca}@teste.com`, senha:'minhasenhaboa',
     nome:'Dona ' + nome, telefone: tel() });
-  const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão ' + nome + ' ' + marca,
+  const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante ' + nome + ' ' + marca,
     p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
   const salao = cr[0].salao_id;
   await banco.query(
@@ -136,9 +136,9 @@ verdade('e o aviso de novo agendamento para quem atende',
   f.some(x => x.tipo === 'novo'), JSON.stringify(f.map(x => x.tipo)));
 
 const conf = f.find(x => x.tipo === 'confirmacao');
-verdade('a confirmação traz data, horário, serviço, profissional e o salão',
+verdade('a confirmação traz data, horário, serviço, profissional e o restaurante',
   /14:00/.test(conf.corpo) && /Corte/.test(conf.corpo)
-    && /Joana/.test(conf.corpo) && /Salão Um/.test(conf.corpo),
+    && /Joana/.test(conf.corpo) && /Restaurante Um/.test(conf.corpo),
   JSON.stringify(conf.corpo));
 
 /* ⚠ A verificação que sustenta a fase inteira. */
@@ -230,7 +230,7 @@ await cfg(S.salao, { notifResumo: true, notifResumoHora: 8, notifResumoPeriodo: 
 for(const h of ['09','10','14'])
   await marcar(S, S.equipe[0], `${HOJE}T${h}:00:00${deslocamento(HOJE)}`, 'Cliente ' + h);
 
-// Fixa o instante: às 8h05 do salão o resumo já deve ter saído da hora.
+// Fixa o instante: às 8h05 do restaurante o resumo já deve ter saído da hora.
 const oitoEcinco = `${HOJE}T08:05:00${deslocamento(HOJE)}`;
 await banco.query(`select public.gerar_resumos($1::timestamptz)`, [oitoEcinco]);
 
@@ -251,7 +251,7 @@ const vS = rSozinha[0].variaveis || [];
 igual('o resumo vai pelo modelo de utilidade', rSozinha[0].modelo, 'pedihub_agenda_hoje');
 igual('com quatro variáveis', vS.length, 4);
 igual('a primeira é o primeiro nome de quem recebe', vS[0], 'Dona');
-igual('a segunda é o salão', vS[1],
+igual('a segunda é o restaurante', vS[1],
   (await banco.query(`select nome from public.saloes where id=$1`, [S.salao])).rows[0].nome);
 igual('a terceira é quantos', vS[2], '3');
 igual('a quarta é o primeiro horário, com a cliente e o serviço',
@@ -402,7 +402,7 @@ igual('quinhentas enviadas contam quinhentas',
 verdade('no teto, o banco recusa novos envios',
   (await banco.query(`select public.pode_enviar($1) as p`, [C.salao])).rows[0].p === false);
 
-/* ⚠ E a recusa é do WORKER, não da tela. Uma mensagem pendente de um salão
+/* ⚠ E a recusa é do WORKER, não da tela. Uma mensagem pendente de um restaurante
    estourado não pode ser servida para envio. */
 await marcar(C, C.equipe[0], `${dia3}T09:00:00${deslocamento(dia3)}`, 'Depois do Teto');
 await banco.query(
@@ -411,7 +411,7 @@ await banco.query(
 const servidas = (await banco.query(
   `select id from public.notificacoes_proxima_teste($1)`, [C.salao]).catch(() => null))
   || (await banco.query(`select * from public.notificacao_proxima(10)`));
-verdade('o worker não serve mensagem de salão no teto',
+verdade('o worker não serve mensagem de restaurante no teto',
   !servidas.rows.some(r => r.salao_id === C.salao),
   JSON.stringify(servidas.rows.map(r => r.salao_id)));
 
@@ -471,7 +471,7 @@ await banco.query(
     where codigo='gratuito'`, [JSON.stringify(servicosDoGratis)]);
 
 /* ══════════════════════════════════════════════════════════════════════════
-   TESTE 14 — dois salões, nenhum dado cruzado
+   TESTE 14 — dois restaurantes, nenhum dado cruzado
    ══════════════════════════════════════════════════════════════════════════ */
 secao('11) Isolamento entre estabelecimentos');
 
@@ -480,7 +480,7 @@ await marcar(B, B.equipe[0], `${dia3}T09:00:00${deslocamento(dia3)}`, 'Cliente d
 
 const daA = await fila(A.salao);
 const daB = await fila(B.salao);
-verdade('cada salão só tem as suas notificações',
+verdade('cada restaurante só tem as suas notificações',
   daA.length > 0 && daB.length > 0
     && !daA.some(x => /Cliente do B/.test(x.corpo)),
   `A=${daA.length} B=${daB.length}`);
@@ -583,10 +583,10 @@ igual('e com seis variáveis, na ordem do texto cadastrado',
 igual('a primeira é o PRIMEIRO nome', linhaM.variaveis[0], 'Rita');
 verdade('a segunda é a data', /^\d{2}\/\d{2}\/\d{4}$/.test(linhaM.variaveis[1]),
   JSON.stringify(linhaM.variaveis));
-igual('a terceira é a hora, no fuso do salão', linhaM.variaveis[2], '15:00');
-/* O número que manda é do PediHub, o mesmo para todos os salões. Sem o
+igual('a terceira é a hora, no fuso do restaurante', linhaM.variaveis[2], '15:00');
+/* O número que manda é do PediHub, o mesmo para todos os restaurantes. Sem o
    nome da casa, a cliente recebe "agendamento confirmado" sem saber onde. */
-igual('a sexta é o nome do salão', linhaM.variaveis[5],
+igual('a sexta é o nome do restaurante', linhaM.variaveis[5],
   (await banco.query(`select nome from public.saloes where id=$1`, [M.salao])).rows[0].nome);
 
 /* O aviso ao profissional usa o nome INTEIRO — é ele que a pessoa procura na
@@ -609,7 +609,7 @@ if(novoM){
     novoM.variaveis[0], novoM.prof.split(' ')[0]);
   igual('e a cliente pelo nome COMPLETO, não só o primeiro',
     novoM.variaveis[1], 'Rita Souza');
-  igual('a sexta é o salão', novoM.variaveis[5],
+  igual('a sexta é o restaurante', novoM.variaveis[5],
     (await banco.query(`select nome from public.saloes where id=$1`, [M.salao])).rows[0].nome);
   verdade('e o corpo do histórico diz o mesmo, sem a chamada "Confira"',
     /Um horário foi agendado com você/.test(novoM.corpo)
@@ -649,10 +649,10 @@ if(depoisDeRemarcar){
     depoisDeRemarcar.corpo);
   igual('e a variável da hora junto com ele',
     depoisDeRemarcar.variaveis[2], '17:30');
-  igual('o lembrete também leva seis variáveis, a última o salão',
+  igual('o lembrete também leva seis variáveis, a última o restaurante',
     depoisDeRemarcar.variaveis.length + ':' + depoisDeRemarcar.variaveis[5],
     '6:' + linhaM.variaveis[5]);
-  verdade('e o corpo do lembrete diz o salão',
+  verdade('e o corpo do lembrete diz o restaurante',
     depoisDeRemarcar.corpo.includes('🏪 ' + linhaM.variaveis[5]),
     depoisDeRemarcar.corpo);
 }
@@ -660,11 +660,11 @@ if(depoisDeRemarcar){
 /* A fila entrega o modelo ao worker — sem isso ele cairia em texto livre.
 
    ⚠ CINCO HORAS PARA TRÁS, E NÃO UM MINUTO. O `notificacao_proxima()` pega a
-   MAIS ANTIGA da fila inteira, sem filtrar por salão. Com um minuto, a linha
+   MAIS ANTIGA da fila inteira, sem filtrar por restaurante. Com um minuto, a linha
    deste teste só era a primeira enquanto nada mais na bancada tivesse fila —
    e isso era circunstância, não regra: rodando dentro da bateria, uma suíte
    anterior deixava a dela na frente e este arquivo reprovava por medir a
-   notificação de outro salão.
+   notificação de outro restaurante.
 
    Cinco horas ganha de qualquer outra e continua DENTRO da janela de seis, que
    é onde a própria função aposenta o que venceu. Seis horas ou mais e a linha

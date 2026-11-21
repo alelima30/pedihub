@@ -1,5 +1,5 @@
 -- ===========================================================================
--- PediHub — imagens do salão (Supabase Storage)
+-- PediHub — imagens do restaurante (Supabase Storage)
 -- ---------------------------------------------------------------------------
 -- Logo, foto da fachada/equipe e foto por serviço. São três imagens com o
 -- mesmo destino e a mesma regra, então um balde só resolve.
@@ -8,8 +8,8 @@
 -- existem para aparecer na vitrine, que abre antes de qualquer login. Uma
 -- imagem atrás de autenticação numa página pública é imagem que não carrega.
 --
--- O que NÃO é público é a escrita. Só quem é dono ou gerente do salão escreve,
--- e só dentro da pasta do próprio salão.
+-- O que NÃO é público é a escrita. Só quem é dono ou gerente do restaurante escreve,
+-- e só dentro da pasta do próprio restaurante.
 --
 -- Convenção de caminho — é ela que a policy usa para saber de quem é o arquivo:
 --
@@ -17,8 +17,8 @@
 --     <salao_id>/capa.jpg
 --     <salao_id>/servico-<servico_id>.jpg
 --
--- A primeira pasta é sempre o uuid do salão. Sem isso, qualquer dono logado
--- sobrescreveria a logo do salão do vizinho.
+-- A primeira pasta é sempre o uuid do restaurante. Sem isso, qualquer dono logado
+-- sobrescreveria a logo do restaurante do vizinho.
 --
 -- Rode DEPOIS do 01, 02 e 03.
 -- ===========================================================================
@@ -36,10 +36,10 @@ on conflict (id) do update
 -- e um balde sem limite é conta de armazenamento crescendo sozinha.
 
 -- ---------------------------------------------------------------------------
--- De qual salão é este arquivo
+-- De qual restaurante é este arquivo
 -- ---------------------------------------------------------------------------
 -- `storage.foldername(name)` devolve as pastas do caminho. A primeira é o uuid
--- do salão. O regexp antes do cast não é preciosismo: um arquivo solto na raiz
+-- do restaurante. O regexp antes do cast não é preciosismo: um arquivo solto na raiz
 -- do balde, ou numa pasta com nome qualquer, faria o `::uuid` levantar exceção
 -- dentro da policy — e policy que levanta exceção derruba a consulta inteira,
 -- em vez de simplesmente negar.
@@ -64,7 +64,7 @@ drop policy if exists img_apagar   on storage.objects;
 create policy img_ler on storage.objects for select to anon, authenticated
   using ( bucket_id = 'salao' );
 
--- Escrever: só gestor, só na pasta do próprio salão.
+-- Escrever: só gestor, só na pasta do próprio restaurante.
 create policy img_enviar on storage.objects for insert to authenticated
   with check (
     bucket_id = 'salao'

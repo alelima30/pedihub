@@ -218,7 +218,7 @@ async function conferir(){
     // ── O CATÁLOGO NÃO PODE SER FOLHEADO ────────────────────────────────
     // Esta verificação já foi o contrário: exigia que as três vistas
     // abrissem para quem não fez login. Abriam, e vazavam do lado que
-    // ninguém olha — sem filtro, devolviam TODOS os salões da plataforma com
+    // ninguém olha — sem filtro, devolviam TODOS os restaurantes da plataforma com
     // nome, endereço e WhatsApp. Não é dado de cliente: é a lista de
     // clientes DO NEGÓCIO, entregue a qualquer concorrente com a chave
     // publicável, que fica à vista no código da página de propósito.
@@ -232,8 +232,8 @@ async function conferir(){
     }
 
     // Mas quem TEM o link entra. O apelido não é segredo — quem recebeu o
-    // link tem o salão, e é assim que deve ser. O que mudou é que ninguém
-    // enumera: descobrir um salão passa a exigir já conhecê-lo.
+    // link tem o restaurante, e é assim que deve ser. O que mudou é que ninguém
+    // enumera: descobrir um restaurante passa a exigir já conhecê-lo.
     const vit = await rpc(base, chave, 'vitrine', { p_slug: 'nao-existe-' + Date.now() });
     linha(vit.status !== 404,
       'vitrine() está instalada e responde a quem não fez login',
@@ -267,14 +267,14 @@ async function conferir(){
         body: JSON.stringify({ slug: 'invasor-' + Date.now(),
                                nome: 'Teste de invasão', tipo: 'salao' }),
       });
-      linha(!r.ok, 'e não consegue criar salão nenhum', 'status ' + r.status
-        + ' — se veio 201, QUALQUER PESSOA cria salão no seu banco');
-    }catch(e){ linha(true, 'e não consegue criar salão nenhum'); }
+      linha(!r.ok, 'e não consegue criar restaurante nenhum', 'status ' + r.status
+        + ' — se veio 201, QUALQUER PESSOA cria restaurante no seu banco');
+    }catch(e){ linha(true, 'e não consegue criar restaurante nenhum'); }
 
     grupo('Os cabeçalhos');
 
     // O que o sistema DEPENDE: a chave sozinha no apikey, sem Authorization
-    // nenhum. É assim que a cliente sem conta abre o link do salão.
+    // nenhum. É assim que a cliente sem conta abre o link do restaurante.
     const soApikey = await bater(base, chave, 'planos?select=codigo');
     linha(soApikey.ok,
       'só com apikey, sem Authorization, a vitrine responde',

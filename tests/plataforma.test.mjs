@@ -8,7 +8,7 @@
    prova o outro lado: que a TELA não vaza nada por conta própria, e que a
    recusa chega ao olho de quem abriu em vez de virar tela branca.
 
-   O caso que mais importa é o do meio: uma dona de salão comum abrindo
+   O caso que mais importa é o do meio: uma dona de restaurante comum abrindo
    admin.html. A tela carrega — ela é um arquivo estático, não há como
    impedir —, e o que decide é o banco. Se algum dia alguém desenhar a
    permissão na tela em vez de no `is_super()`, este teste cai.
@@ -78,7 +78,7 @@ console.log('\nQuem não é da plataforma');
   const p = await abrir(c.sessao);
   const txt = await p.textContent('#corpo');
   diz(/não é da plataforma/i.test(txt),
-    'a dona de salão vê a recusa explicada, não tela branca', txt.slice(0,120));
+    'a dona de restaurante vê a recusa explicada, não tela branca', txt.slice(0,120));
   diz(!/Receita do mês/.test(txt),
     'e nenhum número do negócio aparece na tela dela');
   diz(p.erros.length === 0, 'sem erro de JavaScript', p.erros.join(' · '));
@@ -114,13 +114,13 @@ console.log('\nQuem é');
   const p = await abrir(c.sessao);
   const txt = await p.textContent('#corpo');
   diz(/Receita do mês/.test(txt), 'o painel abre para a conta promovida', txt.slice(0,120));
-  diz(/Todos os salões/.test(txt), 'com a lista de salões');
+  diz(/Todos os restaurantes/.test(txt), 'com a lista de restaurantes');
   diz(await p.isVisible('.placar'), 'e os números do topo desenhados');
   diz(p.erros.length === 0, 'sem erro de JavaScript', p.erros.join(' · '));
 
   // O selo existe para você saber, de relance, que esta aba enxerga tudo.
   diz((await p.textContent('.selo')).includes('PLATAFORMA'),
-    'a tela se identifica como a que enxerga todos os salões');
+    'a tela se identifica como a que enxerga todos os restaurantes');
   /* O check-up do sistema (40_saude.sql), logo abaixo do placar. A bancada
      não tem pg_cron: o despertador aparece como problema, com o que fazer —
      é exatamente o que a tela tem de mostrar num banco assim. */
@@ -139,12 +139,12 @@ console.log('\nQuem é');
     '"Verificar de novo" redesenha o cartão');
   await p.context().close();
 
-  /* ── O PAINEL DO SALÃO NÃO BAIXA O SALÃO DOS OUTROS ────────────────────
+  /* ── O PAINEL DO RESTAURANTE NÃO BAIXA O RESTAURANTE DOS OUTROS ────────────────────
      `is_super()` está em toda policy de leitura, então esta conta ALCANÇA,
-     pelo banco, o salão de todo mundo — é de propósito, sem isso não há
+     pelo banco, o restaurante de todo mundo — é de propósito, sem isso não há
      suporte nem cobrança. O que não pode é o app.html arrastar isso para
      dentro do navegador sem ninguém pedir: numa base de teste eram 27
-     salões e 15 clientes de terceiros, com telefone e observação, baixados
+     restaurantes e 15 clientes de terceiros, com telefone e observação, baixados
      na abertura para uma tela que descarta tudo em seguida.
 
      Acesso ela tem; exposição à toa, não. O painel dela é o admin.html, que
@@ -155,8 +155,8 @@ console.log('\nQuem é');
   const outra = novaAba(null);
   const marca = Date.now().toString(36);
   await outra.criarConta({ email:`outro-salao-${marca}@teste.com`, senha:'minhasenhaboa',
-    nome:'Dona de Outro Salão', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-  const cr = await outra.chamar('criar_salao', { p_nome_salao:'Outro Salão ' + marca,
+    nome:'Dona de Outro Restaurante', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
+  const cr = await outra.chamar('criar_salao', { p_nome_salao:'Outro Restaurante ' + marca,
     p_tipo:'salao', p_telefone:'(11) 3222-1100', p_documento:null, p_origem:null });
   await outra.inserir('clientes', { salaoId: cr[0].salao_id, nome:'Cliente de Terceiro',
     telefone:'11' + (900000000 + Math.floor(Math.random() * 99999999)) });
@@ -165,7 +165,7 @@ console.log('\nQuem é');
     headers: { apikey:'k', Authorization: 'Bearer ' + c.sessao.token } })
     .then(r => r.json());
   diz(Array.isArray(bd) && bd.length > 0,
-    'pelo banco, a conta da plataforma alcança cliente de outro salão (de propósito)',
+    'pelo banco, a conta da plataforma alcança cliente de outro restaurante (de propósito)',
     'vieram ' + (Array.isArray(bd) ? bd.length : '?'));
 
   const janela = novaAba(c.sessao);
@@ -176,7 +176,7 @@ console.log('\nQuem é');
     'nenhum cliente de terceiro desce para o navegador dela',
     'vieram ' + (trazido.clientes || []).length);
   diz((trazido.saloes || []).length === 0,
-    'nem a lista de salões dos outros', 'vieram ' + (trazido.saloes || []).length);
+    'nem a lista de restaurantes dos outros', 'vieram ' + (trazido.saloes || []).length);
 
   /* ── A FORMA DE PAGAMENTO NAS MENSAGENS ─────────────────────────────────
      "Colocar o pagamento — Pix, cartão de crédito — nos modelos." Os modelos
@@ -249,7 +249,7 @@ console.log('\nQuem é');
   await pa.waitForTimeout(1200);
   diz(pa.dialogos.some(m => /cortesia/.test(m)) && pedidosAd.length === 1
       && pedidosAd[0].acao === 'cortesia' && pedidosAd[0].adicional === 'crediario' && !!pedidosAd[0].salaoId,
-    'dar cortesia pergunta antes e manda salão, módulo e ação para a borda',
+    'dar cortesia pergunta antes e manda restaurante, módulo e ação para a borda',
     JSON.stringify(pedidosAd) + ' | ' + pa.dialogos.join(' | '));
   diz(pa.erros.length === 0, 'sem erro de JavaScript', pa.erros.join(' · '));
   await pa.context().close();

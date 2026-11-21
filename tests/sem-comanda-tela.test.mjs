@@ -33,7 +33,7 @@ const RAIZ = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const BASE = process.env.BANCADA || 'http://127.0.0.1:8123';
 
 /* `usa_comanda()` saiu do alcance da API (57_plano_fechado.sql): quem tem
-   conta descobria de qualquer salão se ele paga. O teste pergunta direto ao
+   conta descobria de qualquer restaurante se ele paga. O teste pergunta direto ao
    banco, como dono dele. */
 const banco = new pg.Client({ host: process.env.PGHOST || '/tmp',
   port: +(process.env.PGPORT || 5444), user: process.env.PGUSER || 'postgres',
@@ -99,8 +99,8 @@ const abas = () => p.evaluate(() =>
 console.log('\n── O PADRÃO ─────────────────────────────────────────────────');
 const antes = await abas();
 console.log('      abas: ' + JSON.stringify(antes));
-e('a aba Caixa aparece num salão novo', antes.includes('caixa'),
-  'se sumir por padrão, todo salão de hoje perde a gaveta sem pedir');
+e('a aba Caixa aparece num restaurante novo', antes.includes('caixa'),
+  'se sumir por padrão, todo restaurante de hoje perde a gaveta sem pedir');
 
 /* ══════════════════════════════════════════════════════════════════════════
    2 — DESLIGANDO PELA TELA
@@ -108,7 +108,7 @@ e('a aba Caixa aparece num salão novo', antes.includes('caixa'),
 console.log('\n── DESLIGANDO ───────────────────────────────────────────────');
 await p.click('button:has-text("Meu negócio"), a:has-text("Meu negócio")');
 await p.waitForTimeout(1200);
-e('a régua existe na tela do salão', await p.isVisible('#reguaComanda'));
+e('a régua existe na tela do restaurante', await p.isVisible('#reguaComanda'));
 const escolhido = () => p.evaluate(() =>
   (document.querySelector('#reguaComanda button.on') || {}).textContent || '');
 e('e nasce em "Com comanda e caixa" — ' + JSON.stringify(await escolhido()),

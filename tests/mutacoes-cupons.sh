@@ -198,7 +198,7 @@ troca agendar.html \
   "    if(false){" \
   && rodar "a cliente não sabe que é o cupom"
 
-echo "22. loja: o campo aparece em salão sem cupom"
+echo "22. loja: o campo aparece em restaurante sem cupom"
 troca agendar.html \
   "  return NA_NUVEM && salaoTemCupom.produtos && totalDoCarrinho() > 0 && !modoPedidos();" \
   "  return NA_NUVEM && totalDoCarrinho() > 0 && !modoPedidos();" \

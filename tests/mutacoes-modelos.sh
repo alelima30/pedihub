@@ -6,7 +6,7 @@
 #    bash tests/mutacoes-modelos.sh
 #
 #  Cada mutação que sobreviver é um jeito de experimentar gravar sem querer,
-#  de o "Voltar" não voltar, ou de o modelo levar junto o que era do salão.
+#  de o "Voltar" não voltar, ou de o modelo levar junto o que era do restaurante.
 # ===========================================================================
 set -u
 cd "$(dirname "$0")/.."
@@ -113,12 +113,12 @@ troca app.html \
   "" \
   && rodar "diz que nada foi salvo depois de salvar"
 
-echo "11. trocar de salão leva o modelo junto"
+echo "11. trocar de restaurante leva o modelo junto"
 troca app.html \
   "    aparencia = lerAparencia();
     modeloAntes = null; modeloAtual = null;" \
   "    aparencia = lerAparencia();" \
-  && rodar "o Voltar de um salão no outro"
+  && rodar "o Voltar de um restaurante no outro"
 
 echo "12. o cartão não experimenta"
 troca app.html \

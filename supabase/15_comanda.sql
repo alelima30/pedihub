@@ -70,7 +70,7 @@ $$;
    com "could not create unique index", e num arquivo colado de uma vez isso
    é pior do que parece. Tudo que vem ANTES desta linha já rodou e ficou; o
    que vem DEPOIS — a vista nova, as travas do desconto, o gatilho que
-   impede pagar mais do que se deve — não roda. O salão fica com meia
+   impede pagar mais do que se deve — não roda. O restaurante fica com meia
    instalação e uma mensagem em inglês sobre índice.
 
    E não é hipótese: enquanto o painel criava item e pagamento sem `id`, o
@@ -115,7 +115,7 @@ create unique index if not exists ux_comanda_agendamento
 -- 2) O ACRÉSCIMO
 --
 -- Existia desconto e não existia o contrário. Taxa de urgência, domingo,
--- atendimento em casa: o salão cobra a mais e não tinha onde lançar — ia como
+-- atendimento em casa: o restaurante cobra a mais e não tinha onde lançar — ia como
 -- item inventado, e aí entrava na comissão de alguém sem ser serviço.
 -- ---------------------------------------------------------------------------
 alter table public.comandas
@@ -139,7 +139,7 @@ comment on column public.comandas.acrescimo is
 --
 -- `security_invoker = true` continua OBRIGATÓRIO. Sem isso a vista roda com
 -- os poderes de quem a criou e passa por cima do RLS das tabelas de baixo —
--- qualquer pessoa logada leria o faturamento de todos os salões.
+-- qualquer pessoa logada leria o faturamento de todos os restaurantes.
 -- ---------------------------------------------------------------------------
 drop view if exists public.comandas_totais;
 
@@ -321,7 +321,7 @@ create trigger tg_pagamento_cabe
 -- mês mudar de valor sozinho, dias depois de o dono ter conferido.
 --
 -- O caminho para corrigir existe e é explícito: reabrir. A tela já faz isso,
--- e já restringe reabrir comanda de outro dia a quem administra o salão.
+-- e já restringe reabrir comanda de outro dia a quem administra o restaurante.
 -- ---------------------------------------------------------------------------
 create or replace function public.tg_comanda_travada()
 returns trigger language plpgsql security definer set search_path = public as $$

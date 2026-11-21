@@ -8,7 +8,7 @@
    O `confirmacao.test.mjs` mede o banco: que status nasce, que mensagem sai e
    quando. Nada disso diz o que a CLIENTE lê depois de marcar — e é a frase
    dela que faz a diferença entre uma pessoa tranquila e uma pessoa ligando
-   para o salão.
+   para o restaurante.
 
    Duas telas, dois riscos diferentes:
 
@@ -86,7 +86,7 @@ const escolhido = () => p.evaluate(() =>
   (document.querySelector('#reguaConfirma button.on') || {}).textContent || '');
 e('e nasce em "Já entra confirmado" — ' + JSON.stringify(await escolhido()),
   /entra confirmado/i.test(await escolhido()),
-  'se nascesse no outro lado, todo salão que já usa o link acordaria com '
+  'se nascesse no outro lado, todo restaurante que já usa o link acordaria com '
   + 'pendências que ninguém pediu');
 
 await p.click('#reguaConfirma button:has-text("Eu confirmo")');
@@ -184,11 +184,11 @@ console.log('      passo: ' + tela.passo + ' · título: ' + JSON.stringify(tela
 e('a marcação chegou ao fim', tela.passo === 'pronto', JSON.stringify(tela));
 e('o título não afirma que está agendado — ' + JSON.stringify(tela.titulo),
   !/^Agendado/i.test(tela.titulo), tela.titulo);
-// Desde o redesenho: "Aguardando confirmação do salão", e a frase de que a
-// mensagem chega quando o salão confirmar e o horário fica reservado.
-e('a tela diz que está aguardando o salão, e que ela receberá uma mensagem',
-  /Aguardando confirmação do salão/.test(tela.texto)
-  && /mensagem pelo WhatsApp assim que o salão confirmar/i.test(tela.texto), tela.texto.slice(0, 300));
+// Desde o redesenho: "Aguardando confirmação do restaurante", e a frase de que a
+// mensagem chega quando o restaurante confirmar e o horário fica reservado.
+e('a tela diz que está aguardando o restaurante, e que ela receberá uma mensagem',
+  /Aguardando confirmação do restaurante/.test(tela.texto)
+  && /mensagem pelo WhatsApp assim que o restaurante confirmar/i.test(tela.texto), tela.texto.slice(0, 300));
 e('e que o horário fica reservado para ela',
   /reservado para você/i.test(tela.texto), tela.texto.slice(0, 300));
 /* ⚠ A BOLHA DO WHATSAPP NÃO PODE APARECER AQUI. Ela mostra a confirmação que

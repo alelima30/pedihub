@@ -1,7 +1,7 @@
 -- ===========================================================================
 -- PediHub — o painel do dia
 --
---   1. Conta o dia do SALÃO, e não o de quem está olhando?
+--   1. Conta o dia do RESTAURANTE, e não o de quem está olhando?
 --   2. O faturamento é o das comandas FECHADAS — o mesmo critério do
 --      relatório?
 --   3. O que está aberto aparece separado, sem somar no faturamento?
@@ -13,7 +13,7 @@
 \set ON_ERROR_STOP on
 
 insert into public.saloes (id, slug, nome, tipo, fuso) values
-  ('e1000000-1111-0000-0000-00000000000a', 'salao-painel', 'Salão Painel',
+  ('e1000000-1111-0000-0000-00000000000a', 'salao-painel', 'Restaurante Painel',
    'salao', 'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('e1000000-1111-0000-0000-00000000000a', 'time', 'ativa');
@@ -51,7 +51,7 @@ select set_config('request.jwt.claim.sub',
    defeito que é só de fuso horário. */
 \set DIA '2026-03-10'
 
--- Uma comanda FECHADA nesse dia, no fuso do salão: 100 de serviço,
+-- Uma comanda FECHADA nesse dia, no fuso do restaurante: 100 de serviço,
 -- 40 de comissão.
 insert into public.comandas (id, salao_id, cliente_id, status, fechada_em) values
   ('e1000000-aaaa-0000-0000-00000000000a', 'e1000000-1111-0000-0000-00000000000a',
@@ -178,7 +178,7 @@ select set_config('request.jwt.claim.sub',
 
 select t_texto('a recepção não abre o painel do dono',
   erro_de($q$ select public.painel_hoje('e1000000-1111-0000-0000-00000000000a') $q$),
-  'Sem permissão neste salão.');
+  'Sem permissão neste restaurante.');
 
 select set_config('request.jwt.claim.sub', '', false);
 

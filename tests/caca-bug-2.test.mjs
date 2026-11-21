@@ -6,7 +6,7 @@
    ao acaso — preenche, salva, aceita ou recusa as confirmações — no painel,
    no link da cliente e na bancada. O que eles acharam, e que não volta:
 
-     1. "Copiar" o link do salão copiava, mas no site de verdade (https) o
+     1. "Copiar" o link do restaurante copiava, mas no site de verdade (https) o
         botão nunca dizia "Copiado": ele procurava o botão no `event` global,
         que já não existe quando o navigator.clipboard responde.
      2. O "Tirar" de uma cliente do pacote levava o NOME dela escrito dentro
@@ -14,7 +14,7 @@
         &#39; antes de o JS ler): "Joana D'Arc" quebrava o botão, e um nome
         montado no link de agendamento rodava código no painel do dono.
      3. Na página da plataforma (admin.html), o "Suspender"/"Religar" levava
-        o nome do salão por JSON.stringify — aspas duplas dentro de um
+        o nome do restaurante por JSON.stringify — aspas duplas dentro de um
         atributo de aspas duplas. O botão terminava no meio e não fazia nada.
 
    Na demonstração (sem banco). Precisa do servidor estático:
@@ -101,7 +101,7 @@ console.log('\n3. A plataforma: "Suspender" e "Religar" chamam com o nome certo'
   p.on('pageerror', e => erros.push(e.message));
   await p.route(/^https?:\/\/(?!127\.0\.0\.1)/, r => r.abort());
   await p.goto(BASE + 'admin.html'); await p.waitForTimeout(800);
-  for(const [nome, status] of [['Studio Bella', 'ativo'], [`Salão "Top" D'Ávila & Cia`, 'suspenso']]){
+  for(const [nome, status] of [['Studio Bella', 'ativo'], [`Restaurante "Top" D'Ávila & Cia`, 'suspenso']]){
     const r = await p.evaluate(([nome, status]) => {
       window.__chamado = null;
       window.mudarStatus = (...a) => { window.__chamado = a; };

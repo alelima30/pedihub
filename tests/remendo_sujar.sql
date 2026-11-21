@@ -14,7 +14,7 @@
 alter table public.clientes drop constraint if exists cli_tel_so_digitos;
 
 insert into public.saloes (id, slug, nome, tipo) values
-  ('aaaaaaaa-9999-0000-0000-000000000001', 'salao-sujo', 'Salão Sujo', 'salao');
+  ('aaaaaaaa-9999-0000-0000-000000000001', 'salao-sujo', 'Restaurante Sujo', 'salao');
 
 -- `criado_em` explícito: a migração desempata pela ordem de cadastro, e sem
 -- data fixa as quatro fichas nascem no mesmo instante e o desempate vira
@@ -30,7 +30,7 @@ insert into public.clientes (id, salao_id, nome, telefone, criado_em) values
    '2026-01-01 11:00-03'),
   -- 3 e 4) A MESMA pessoa em duas fichas: uma veio pelo link da cliente (já
   -- em dígitos), outra do balcão (com máscara). Limpar a 4 criaria dois
-  -- telefones iguais no mesmo salão, e `ux_cli_tel` derrubaria a migração.
+  -- telefones iguais no mesmo restaurante, e `ux_cli_tel` derrubaria a migração.
   ('dddddddd-9999-0000-0000-00000000000c',
    'aaaaaaaa-9999-0000-0000-000000000001', 'Dividida (link)', '51999990000',
    '2026-01-01 12:00-03'),

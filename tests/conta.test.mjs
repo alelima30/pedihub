@@ -4,7 +4,7 @@
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/conta.test.mjs
 
-   O pedido: "tem que ter no cadastro do salão o e-mail cadastrado e a
+   O pedido: "tem que ter no cadastro do restaurante o e-mail cadastrado e a
    possibilidade de trocar a senha".
 
    Faltavam as duas. Quem esquecia com qual endereço tinha se cadastrado não
@@ -16,7 +16,7 @@
 
      1. TROCAR SEM CONFERIR A ATUAL. O `PUT /user` do Supabase aceita a troca
         só com a sessão aberta. Numa recepção, o computador destravado um
-        minuto basta para alguém trancar a dona para fora do próprio salão.
+        minuto basta para alguém trancar a dona para fora do próprio restaurante.
         A conferência tem que ser DO SERVIDOR — validação de tela é contornada
         por quem abrir o console, e o PUT continua passando.
 
@@ -65,7 +65,7 @@ await dona.criarConta({ email: EMAIL, senha: SENHA_VELHA, nome:'Rita Alves',
 const cr = await dona.chamar('criar_salao', { p_nome_salao:'Casa da Conta',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
-ok('conta e salão criados');
+ok('conta e restaurante criados');
 
 /* ══════════════════════════════════════════════════════════════════════════
    1 — O dados.js, sem navegador

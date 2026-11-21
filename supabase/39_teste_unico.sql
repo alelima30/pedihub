@@ -1,15 +1,15 @@
 -- ===========================================================================
 -- 39_teste_unico.sql — o teste grátis é UM por pessoa, não um por cadastro
 --
--- A pergunta: "o dono do salão pode excluir a conta, cadastrar de novo e usar
+-- A pergunta: "o dono do restaurante pode excluir a conta, cadastrar de novo e usar
 -- 7 dias grátis, e fazer isso direto. O que fazer?"
 --
 -- ── AS DUAS PORTAS QUE ESTAVAM ABERTAS ────────────────────────────────────
 --   1. Excluir e voltar. O "Excluir conta" (36) apaga o login, e com ele o
 --      telefone e o e-mail ficam livres. O cadastro novo, com os MESMOS
 --      dados, nascia com mais 7 dias.
---   2. Nem precisava excluir: cada salão criado pelo `criar_salao()` (03)
---      ganhava um teste — a mesma conta abria "Salão 2", "Salão 3"… e
+--   2. Nem precisava excluir: cada restaurante criado pelo `criar_salao()` (03)
+--      ganhava um teste — a mesma conta abria "Restaurante 2", "Restaurante 3"… e
 --      trocava de casa toda semana.
 --
 -- ── O QUE MUDA ────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@
 -- passados por sha256. A marca não pendura em conta nenhuma, então o
 -- "Excluir conta" não a leva. No cadastro seguinte com o mesmo WhatsApp ou o
 -- mesmo e-mail (inclusive "ana.souza+2@gmail.com" no lugar de
--- "anasouza@gmail.com", e celular com ou sem o nono dígito), o salão nasce
+-- "anasouza@gmail.com", e celular com ou sem o nono dígito), o restaurante nasce
 -- no plano Grátis — que é onde o teste vencido cairia de qualquer jeito. A
 -- conta é criada normalmente: barrar o cadastro seria perder quem talvez
 -- assine; o que não se repete é o presente.
@@ -136,7 +136,7 @@ $$;
 -- 3) ONDE O TESTE NASCE
 -- ---------------------------------------------------------------------------
 /* Na assinatura, e não dentro do `criar_salao()`: assim qualquer caminho que
-   crie um salão em teste passa por aqui, e o 03 continua sendo a única
+   crie um restaurante em teste passa por aqui, e o 03 continua sendo a única
    versão da função de cadastro.
 
    O "Grátis" é escrito do jeito que o admin escreve (plano 'gratuito',
@@ -148,7 +148,7 @@ begin
   if new.status is distinct from 'trial' then return new; end if;
   -- O "Estender teste" e as outras ações da plataforma passam.
   if coalesce(current_setting('pedihub.plataforma', true), '') = 'sim' then return new; end if;
-  -- Sem login (SQL Editor, worker) ou a própria plataforma criando salão de
+  -- Sem login (SQL Editor, worker) ou a própria plataforma criando restaurante de
   -- teste: não é cadastro de dono.
   if auth.uid() is null or public.is_super() then return new; end if;
 
@@ -167,7 +167,7 @@ drop trigger if exists tg_teste_uma_vez on public.assinaturas;
 create trigger tg_teste_uma_vez before insert on public.assinaturas
   for each row execute function public.tg_teste_uma_vez();
 
-/* Ao deixar de ser dono (excluir a conta, sair do salão), as marcas de AGORA
+/* Ao deixar de ser dono (excluir a conta, sair do restaurante), as marcas de AGORA
    ficam: quem trocou de WhatsApp depois do cadastro deixa os dois. O perfil
    ainda existe neste instante — o `excluir_minha_conta()` tira os vínculos
    antes do login. */

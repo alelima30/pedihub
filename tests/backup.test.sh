@@ -29,7 +29,7 @@ e(){ if [ -n "$2" ]; then echo "  ✓ $1"; ok=$((ok+1)); else echo "  ✗ $1${3:
 URL="postgresql://$U@/$B?host=$H&port=$PT"
 SENHA="uma-frase-bem-comprida-de-teste"
 
-# Um salão com um horário marcado, para a volta ter o que conferir (a bancada
+# Um restaurante com um horário marcado, para a volta ter o que conferir (a bancada
 # recém-montada pode estar vazia, e "0 volta igual a 0" não prova nada).
 MARCA=$(date +%s%N | tail -c 9)
 SAL="b0000000-0000-0000-0000-0000$MARCA"; SAL=${SAL:0:36}
@@ -37,7 +37,7 @@ AGE="b1000000-0000-0000-0000-0000$MARCA"; AGE=${AGE:0:36}
 USR="b2000000-0000-0000-0000-0000$MARCA"; USR=${USR:0:36}
 $P -d "$B" -v ON_ERROR_STOP=1 >/dev/null <<SQL
 insert into auth.users (id, email) values ('$USR', 'backup-$MARCA@teste.com');
-insert into public.saloes (id, slug, nome, tipo, status) values ('$SAL', 'backup-$MARCA', 'Salão Backup', 'salao', 'ativo');
+insert into public.saloes (id, slug, nome, tipo, status) values ('$SAL', 'backup-$MARCA', 'Restaurante Backup', 'salao', 'ativo');
 insert into public.assinaturas (salao_id, plano, status) values ('$SAL', 'time', 'ativa');
 insert into public.profissionais (id, salao_id, nome, ativo) values ('$SAL', '$SAL', 'Ana', true);
 insert into public.jornadas (profissional_id, dia_semana, inicio, fim)

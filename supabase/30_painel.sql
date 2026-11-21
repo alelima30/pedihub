@@ -7,7 +7,7 @@
 -- ── POR QUE ISTO É UMA FUNÇÃO E NÃO DOZE CHAMADAS DE `relatorio()` ────────
 -- O cartão do faturamento anual precisa de doze meses. Pelo `relatorio()`
 -- seriam doze idas ao banco para abrir uma tela — num celular em rede de
--- salão, é a tela que demora tanto que ninguém abre duas vezes.
+-- restaurante, é a tela que demora tanto que ninguém abre duas vezes.
 --
 -- ── ⚠ E POR QUE O FATURAMENTO É CONTADO EXATAMENTE COMO LÁ ───────────────
 -- Comanda FECHADA, pelo `fechada_em`, somada pela vista `comandas_totais`.
@@ -15,15 +15,15 @@
 -- projeto já teve dois faturamentos discordando na mesma tela, e a conclusão
 -- do dono — com razão — é parar de confiar no sistema inteiro.
 --
--- Vale nos dois modos do salão. Com comanda, é a comanda que a recepção
+-- Vale nos dois modos do restaurante. Com comanda, é a comanda que a recepção
 -- fecha; sem comanda, o gatilho `tg_agend_sem_comanda` cria uma comanda
 -- fechada quando o atendimento vira "concluído". Os dois caminhos terminam
 -- na mesma linha, então uma consulta só serve para os dois.
 --
--- ── ⚠ O FUSO É O DO SALÃO, NUNCA O DE QUEM OLHA ──────────────────────────
+-- ── ⚠ O FUSO É O DO RESTAURANTE, NUNCA O DE QUEM OLHA ──────────────────────────
 -- Um dono viajando leria o mês começando às 20h do dia 31. Já custou caro
 -- neste projeto mais de uma vez: toda data que o banco compara está no fuso
--- do salão.
+-- do restaurante.
 -- ===========================================================================
 
 create or replace function public.painel_grafico(p_salao uuid)
@@ -35,9 +35,9 @@ declare
 begin
   /* Mesma linha do `relatorio()`: faturamento da casa inteira é assunto de
      GESTÃO, não da recepção nem de quem atende. E é ela que impede o dono do
-     salão B de ler o ano do salão A trocando o uuid na chamada. */
+     restaurante B de ler o ano do restaurante A trocando o uuid na chamada. */
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -51,7 +51,7 @@ begin
        O `generate_series` existe para isto: um mês sem faturamento tem que
        aparecer como zero, e não sumir. Vindo só os meses com venda, a linha
        do gráfico ligaria março a setembro como se fossem vizinhos — e o
-       salão pareceria ter crescido quando na verdade ficou parado. */
+       restaurante pareceria ter crescido quando na verdade ficou parado. */
     'ano', coalesce((
       select jsonb_agg(jsonb_build_object(
                'mes', to_char(m.ini, 'YYYY-MM'),
@@ -86,7 +86,7 @@ begin
     /* ── O QUE ESTÁ ESPERANDO O DONO ──────────────────────────────────────
        Agendamento pendente é cliente que pediu horário e ainda não teve
        resposta. É o número mais urgente do dashboard: cada unidade aqui é
-       alguém esperando, e esperando é como se perde a marcação para o salão
+       alguém esperando, e esperando é como se perde a marcação para o restaurante
        da esquina.
 
        Só do dia de hoje para a frente: pendente de semana passada já não é
@@ -105,7 +105,7 @@ begin
          and (a.inicio at time zone v_fuso)::date = v_hoje),
 
     /* ── O QUE MAIS VENDE, NOS ÚLTIMOS 90 DIAS ────────────────────────────
-       Noventa e não trinta: salão tem serviço de intervalo longo — luzes,
+       Noventa e não trinta: restaurante tem serviço de intervalo longo — luzes,
        progressiva — que em trinta dias aparece uma vez e some do ranking,
        embora seja o que paga o mês.
 
@@ -128,7 +128,7 @@ begin
                order by 3 desc
                limit 5) x), '[]'::jsonb),
 
-    -- As clientes que mais gastaram no mesmo período. É com quem o salão
+    -- As clientes que mais gastaram no mesmo período. É com quem o restaurante
     -- fala primeiro quando abre uma agenda ou lança um pacote.
     'topClientes', coalesce((
       select jsonb_agg(jsonb_build_object(
@@ -147,7 +147,7 @@ begin
 
     /* ── QUEM SUMIU ───────────────────────────────────────────────────────
        Cliente que já veio e não volta há mais de 60 dias. É a lista mais
-       rentável que um salão tem e a que ninguém faz: trazer de volta quem já
+       rentável que um restaurante tem e a que ninguém faz: trazer de volta quem já
        conhece a casa custa uma mensagem, e conquistar uma nova custa
        anúncio.
 
@@ -168,6 +168,6 @@ end $$;
 
 /* A mesma porta do `relatorio()`: só quem está logado, e a própria função
    confere se é gestão. `anon` não entra — a página pública nunca precisa
-   disto, e faturamento do salão não é assunto de visitante. */
+   disto, e faturamento do restaurante não é assunto de visitante. */
 revoke all on function public.painel_grafico(uuid) from public, anon;
 grant execute on function public.painel_grafico(uuid) to authenticated;

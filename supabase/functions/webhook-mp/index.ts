@@ -38,7 +38,7 @@
    Os dois últimos são a assinatura recorrente, e a regra de cima vale igual
    para eles: o corpo do aviso diz só um id, e tudo o mais é RELIDO da API do
    Mercado Pago com o nosso token. O `external_reference` que decide de qual
-   salão é a assinatura vem de lá, nunca do POST — e ele só pode estar lá
+   restaurante é a assinatura vem de lá, nunca do POST — e ele só pode estar lá
    porque fomos nós que o gravamos ao criar a pré-aprovação.
    =========================================================================== */
 
@@ -63,7 +63,7 @@ const rpc = async (nome: string, args: unknown) => {
 };
 
 /* Lê a pré-aprovação NA API do Mercado Pago. É a fonte: o corpo do aviso diz
-   só um id, e é daqui que sai o `external_reference` que decide de qual salão
+   só um id, e é daqui que sai o `external_reference` que decide de qual restaurante
    é a assinatura. Devolve null quando não deu para ler — e aí quem chama
    responde 500, para o Mercado Pago tentar de novo. */
 async function lerPreapproval(id: string) {
@@ -76,13 +76,13 @@ async function lerPreapproval(id: string) {
   return await r.json();
 }
 
-/* Liga o cartão do salão que a pré-aprovação aponta. Devolve se ligou. */
+/* Liga o cartão do restaurante que a pré-aprovação aponta. Devolve se ligou. */
 async function ligarDaPreapproval(pre: Record<string, unknown>) {
   const salao = String(pre?.external_reference ?? '');
-  /* Sem uuid não há salão para ligar. Acontece se a pré-aprovação foi criada
+  /* Sem uuid não há restaurante para ligar. Acontece se a pré-aprovação foi criada
      fora daqui, na mão, dentro do painel do Mercado Pago. */
   if(!/^[0-9a-f-]{36}$/i.test(salao)){
-    console.error('webhook-mp: pré-aprovação sem salão', String(pre?.id ?? ''));
+    console.error('webhook-mp: pré-aprovação sem restaurante', String(pre?.id ?? ''));
     return false;
   }
   const feito = await rpc('ligar_cartao',
@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
     console.log('webhook-mp: assinatura conferida', { tipo, dataId, variante: conf.variante });
 
     /* ── O CARTÃO FOI AUTORIZADO, OU DEIXOU DE SER ───────────────────────────
-       Este é o único lugar do sistema que liga o cartão de um salão. A borda
+       Este é o único lugar do sistema que liga o cartão de um restaurante. A borda
        `assinar-cartao` não liga: chegar lá é ter clicado num botão, não é ter
        autorizado nada. Aqui o dado vem da API do Mercado Pago. */
     if(tipo === 'subscription_preapproval'){
@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
          próprio Mercado Pago depois de tentativas demais num cartão que não
          passa. Nos dois casos o débito parou.
 
-         Desligar do nosso lado é o que devolve o salão para a lista de
+         Desligar do nosso lado é o que devolve o restaurante para a lista de
          renovação por Pix. Sem isto ele continuaria marcado como "renova
          sozinho" e venceria em silêncio, sem cobrança e sem lembrete. */
       /* ⚠ `pre.id`, e não `dataId` — a mesma fonte que o `ligarDaPreapproval`
@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
          id que veio no aviso é comparar duas fontes com `=`, e basta uma
          diferença de caixa ou de formato para não casar. O resultado seria o
          pior silêncio possível: o Mercado Pago parou de cobrar, nós
-         continuaríamos marcando o salão como "renova sozinho", e ele venceria
+         continuaríamos marcando o restaurante como "renova sozinho", e ele venceria
          sem cobrança e sem lembrete — que é exatamente o que esta chamada
          existe para impedir. */
       if(situacao === 'cancelled' || situacao === 'paused'){
@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
        cobrança nossa esperando — ninguém clica em "assinar" no mês 2 — e o
        `registrar_pagamento()` responde `cobranca_desconhecida`. É aqui que a
        linha do mês nasce, porque só aqui existe o `preapproval_id` que diz de
-       qual salão ela é.
+       qual restaurante ela é.
 
        Os dois avisos chegam em ordem imprevisível, e tanto faz: o `mp_id` é
        único, e quem chegar depois cai no `ja_registrada`. */
@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
 
          O Mercado Pago cobra assim que a pré-aprovação é autorizada, e manda
          os dois avisos quase juntos. Se a COBRANÇA chegar primeiro, o banco
-         ainda não sabe de qual salão é a pré-aprovação, e responde
+         ainda não sabe de qual restaurante é a pré-aprovação, e responde
          `preapproval_desconhecida` — o primeiro mês, que já foi debitado, se
          perderia. O dono pagou e o painel diria que o plano não está ativo.
 

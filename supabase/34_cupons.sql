@@ -1,14 +1,14 @@
 -- ===========================================================================
 -- PediHub — 34: CUPONS DE DESCONTO (agendamento no link e loja)
 --
--- O salão cria um código — BEMVINDA10, NATAL15 — e a cliente digita no link:
+-- O restaurante cria um código — BEMVINDA10, NATAL15 — e a cliente digita no link:
 -- na tela "Confira seu agendamento" e no carrinho da loja.
 --
 -- As regras que o dono escolhe:
 --   · desconto em % ou em valor (R$);
 --   · onde vale: agendamento, produtos, ou os dois;
 --   · só alguns serviços (vazio = todos);
---   · validade: de / até (dias do salão);
+--   · validade: de / até (dias do restaurante);
 --   · limite total de usos, e/ou 1 uso por cliente.
 --
 -- ⚠ O DESCONTO SAI DAQUI, NUNCA DO NAVEGADOR. A tela pergunta
@@ -19,7 +19,7 @@
 -- ⚠ O ITEM DO AGENDAMENTO CONTINUA COM O PREÇO CHEIO. O desconto mora em
 -- `agendamentos.desconto` (e o `valor_previsto` já sai com ele descontado):
 -- a comissão é calculada sobre o serviço, e o relatório sabe quanto o cupom
--- custou ao salão. A comanda nasce com o mesmo desconto (painel e 28).
+-- custou ao restaurante. A comanda nasce com o mesmo desconto (painel e 28).
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
@@ -50,7 +50,7 @@ create unique index if not exists ux_cupom_codigo on public.cupons (salao_id, co
 
 /* O código é guardado em MAIÚSCULAS e sem espaço, pelo banco. A cliente
    digita "bemvinda10 " no celular e tem que valer; e dois cupons "Natal" e
-   "NATAL" no mesmo salão seriam o mesmo para quem digita. */
+   "NATAL" no mesmo restaurante seriam o mesmo para quem digita. */
 -- Criar cupom é do Básico para cima (22_cotas, exigir_recurso).
 create or replace function public.tg_cupom_do_plano() returns trigger
 language plpgsql security definer set search_path = public as $$
@@ -94,7 +94,7 @@ create index if not exists ix_cupom_usos_cupom on public.cupom_usos (cupom_id);
 
 /* A CONTA que usou (`auth.uid()`). Na loja é ela que identifica a cliente: o
    cupom da loja só vale com a cliente dentro da conta (6), e quem só compra
-   pode nem ter ficha no salão — sem ficha não há telefone para o "1 por
+   pode nem ter ficha no restaurante — sem ficha não há telefone para o "1 por
    cliente" comparar. O padrão preenche sozinho, também no `agendar()` de quem
    está logada; sem login fica nulo. Coluna e padrão em dois passos: o padrão
    não reescreve as linhas que já existiam. */
@@ -250,7 +250,7 @@ end $$;
 -- a conta na hora de marcar. Não devolve o id do cupom: a tela não precisa.
 --
 -- ⚠ SEM TELEFONE DIGITADO. "1 por cliente" aqui só olha a conta de quem está
--- logado (a ficha dela neste salão). Aceitar um telefone qualquer faria desta
+-- logado (a ficha dela neste restaurante). Aceitar um telefone qualquer faria desta
 -- função, aberta a qualquer um, um jeito de perguntar "o número tal já usou
 -- o cupom tal?". Quem não entrou na conta vê a recusa na hora de marcar —
 -- o `agendar()` confere pelo WhatsApp que ela mesma informou.
@@ -293,19 +293,19 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- 6) O cupom no pedido da loja — SÓ COM A CLIENTE DENTRO DA CONTA
 --
--- O pedido vai pelo WhatsApp, e o salão fecha preço e pagamento na conversa.
+-- O pedido vai pelo WhatsApp, e o restaurante fecha preço e pagamento na conversa.
 -- Ainda assim o uso é REGISTRADO aqui, na hora de enviar: é ele que conta
 -- para o limite total.
 --
 -- ⚠ POR QUE A CONTA. Aberta a qualquer um, esta função gastava o cupom sem
 -- pedido nenhum: chamada em repetição por fora do link, ela registrava um uso
--- por chamada até o limite, e o cupom do salão morria antes de a primeira
+-- por chamada até o limite, e o cupom do restaurante morria antes de a primeira
 -- cliente de verdade chegar (achado pelo caça-bug; decisão do dono do
 -- produto: cupom na loja só com login). Com a conta:
 --   · o mesmo pedido mandado de novo no MESMO DIA (ela corrigiu o carrinho)
 --     não gasta outro uso — chamar em repetição não esgota nada;
 --   · "1 por cliente" compara pela conta, mesmo para quem não tem ficha;
---   · cada uso tem dono (`perfil_id`), e o salão vê de quem foi.
+--   · cada uso tem dono (`perfil_id`), e o restaurante vê de quem foi.
 -- ---------------------------------------------------------------------------
 create or replace function public.cupom_loja_da_conta(p_salao uuid, p_codigo text,
                                                       p_travar boolean)
@@ -382,9 +382,9 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 6b) O salão tem cupom valendo? — para o link decidir se mostra o campo
+-- 6b) O restaurante tem cupom valendo? — para o link decidir se mostra o campo
 --
--- Sem isto, "Tem um cupom?" apareceria em todo salão, inclusive no que nunca
+-- Sem isto, "Tem um cupom?" apareceria em todo restaurante, inclusive no que nunca
 -- criou um, e a cliente ficaria procurando um código que não existe. Responde
 -- só sim ou não, por lugar; nenhum código sai daqui.
 -- ---------------------------------------------------------------------------
@@ -420,7 +420,7 @@ $$;
 -- — por isso não confere validade nem limite de novo, e o desconto é
 -- recalculado para os serviços do horário novo.
 --
--- ⚠ O novo precisa ser da mesma ficha, do mesmo salão, e recém-marcado; e o
+-- ⚠ O novo precisa ser da mesma ficha, do mesmo restaurante, e recém-marcado; e o
 -- antigo precisa estar de pé agora. Sem isso, um horário com cupom
 -- desmarcado há meses viraria desconto em qualquer marcação nova.
 -- ---------------------------------------------------------------------------
@@ -449,7 +449,7 @@ begin
       using errcode = 'check_violation';
   end if;
   if a.inicio <= now() + interval '2 hours' then
-    raise exception 'Faltam menos de 2 horas. Fale com o salão para desmarcar.'
+    raise exception 'Faltam menos de 2 horas. Fale com o restaurante para desmarcar.'
       using errcode = 'check_violation';
   end if;
 
@@ -493,7 +493,7 @@ begin
   /* ⚠ O SINAL PAGO VAI JUNTO (09, 1e). Ela pagou o sinal do horário de
      terça e trocou para quinta: o horário novo nasceu pedindo sinal de novo,
      e ela pagaria duas vezes. O que já foi pago passa para o novo — e, se
-     cobre o que ele pede, o novo é confirmado como o antigo seria (no salão
+     cobre o que ele pede, o novo é confirmado como o antigo seria (no restaurante
      que confirma sozinho, para a cliente que não precisa de confirmação). */
   if coalesce(a.sinal_pago, 0) > 0 and n.status in ('pendente', 'confirmado') then
     update public.agendamentos set sinal_pago = a.sinal_pago where id = n.id;
@@ -525,7 +525,7 @@ $$;
 -- ---------------------------------------------------------------------------
 -- 8) Quem enxerga, quem escreve, quem chama
 --
--- Os cupons são cadastro do salão: a equipe lê, o gestor escreve. A cliente
+-- Os cupons são cadastro do restaurante: a equipe lê, o gestor escreve. A cliente
 -- não lê a tabela — alcança só a prévia (`conferir_cupom`) e o pedido da loja
 -- (`usar_cupom_no_pedido`), que respondem um código de cada vez.
 -- `cupom_calcular`, `cupom_minha_ficha` e `cupom_loja_da_conta` não são de

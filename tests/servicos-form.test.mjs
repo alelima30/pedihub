@@ -41,7 +41,7 @@ async function formulario(largura, extras){
   await p.waitForTimeout(1200);
   await p.evaluate(([n, foto]) => {
     try{ fecharModal(); }catch(e){} if(typeof pdFechar === 'function') pdFechar(true);
-    // Zero extras = o salão pequeno: três serviços só.
+    // Zero extras = o restaurante pequeno: três serviços só.
     if(!n) servsAtivos().slice(3).forEach(s => { s.ativo = false; });
     const base = servsAtivos()[0];
     base.foto = foto;                                   // o primeiro com foto
@@ -110,7 +110,7 @@ secao('1. Cartões com a foto, no celular');
 
   secao('4. Salvar continua igual');
   await p.fill('#fNome', 'Cliente Cartões'); await p.fill('#fTel', '11977776666');
-  // Uma terça às 15h: o salão da demonstração não abre no domingo, e o
+  // Uma terça às 15h: o restaurante da demonstração não abre no domingo, e o
   // encaixe pediria confirmação.
   await p.evaluate(() => { let d = hoje(); while(new Date(d + 'T12:00').getDay() !== 2) d = somarDias(d, 1);
     document.getElementById('fData').value = d; });

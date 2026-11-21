@@ -3,14 +3,14 @@
 --
 -- O caso que motivou: o dono exclui a conta, cadastra de novo e ganha mais 7
 -- dias — toda semana. O que se confere:
---   1. o primeiro salão de uma pessoa nasce em teste, como sempre;
---   2. o segundo salão da MESMA conta nasce no Grátis;
+--   1. o primeiro restaurante de uma pessoa nasce em teste, como sempre;
+--   2. o segundo restaurante da MESMA conta nasce no Grátis;
 --   3. excluída a conta, a marca fica: voltar com o mesmo e-mail (mesmo
 --      escrito com pontos e "+", no Gmail) ou o mesmo WhatsApp (com ou sem o
 --      nono dígito) nasce no Grátis;
 --   4. quem já era dono antes deste módulo e exclui a conta também deixa a
 --      marca;
---   5. pessoa nova, e quem só trabalhava num salão, ganham o teste;
+--   5. pessoa nova, e quem só trabalhava num restaurante, ganham o teste;
 --   6. o "Estender teste" da plataforma continua dando dias;
 --   7. ninguém lê o registro pelo navegador.
 -- ===========================================================================
@@ -69,9 +69,9 @@ select t_verdade('e fixo não ganha nono dígito',
 \echo 'A primeira vez, e a segunda'
 select cadastrar('7e000000-0000-0000-0000-0000000000a1', 'ana.souza@gmail.com', 'Ana Souza', '+5511987654321');
 select abrir_salao('7e000000-0000-0000-0000-0000000000a1', 'Studio Ana') as s1 \gset
-select t_verdade('1. o primeiro salão da Ana nasce em teste', em_teste(:'s1'));
+select t_verdade('1. o primeiro restaurante da Ana nasce em teste', em_teste(:'s1'));
 select abrir_salao('7e000000-0000-0000-0000-0000000000a1', 'Studio Ana 2') as s2 \gset
-select t_verdade('2. o segundo salão da mesma conta nasce no Grátis', no_gratis(:'s2'));
+select t_verdade('2. o segundo restaurante da mesma conta nasce no Grátis', no_gratis(:'s2'));
 select t_verdade('   e o primeiro continua em teste', em_teste(:'s1'));
 
 \echo ''
@@ -121,14 +121,14 @@ select cadastrar('7e000000-0000-0000-0000-0000000000c9', 'bia.outra@exemplo.com'
 select t_verdade('   (a conta nova da Bia nasceu sem telefone no perfil, como sempre foi)',
   (select telefone from public.perfis where id = '7e000000-0000-0000-0000-0000000000c9') is null);
 select abrir_salao('7e000000-0000-0000-0000-0000000000c9', 'Bia Studio 2') as s8 \gset
-select t_verdade('   e mesmo assim o salão nasce no Grátis: o número digitado conta', no_gratis(:'s8'));
+select t_verdade('   e mesmo assim o restaurante nasce no Grátis: o número digitado conta', no_gratis(:'s8'));
 
 select cadastrar('7e000000-0000-0000-0000-0000000000c2', 'caio@exemplo.com', 'Caio Prado', '+5531944443333');
 insert into public.vinculos (perfil_id, salao_id, papel, status)
   values ('7e000000-0000-0000-0000-0000000000c2', :'s6', 'profissional', 'ativo');
 delete from public.vinculos where perfil_id = '7e000000-0000-0000-0000-0000000000c2';
 select abrir_salao('7e000000-0000-0000-0000-0000000000c2', 'Barbearia do Caio') as s7 \gset
-select t_verdade('   quem só trabalhava no salão da Bia ganha o teste no salão dele', em_teste(:'s7'));
+select t_verdade('   quem só trabalhava no restaurante da Bia ganha o teste no restaurante dele', em_teste(:'s7'));
 
 select cadastrar('7e000000-0000-0000-0000-0000000000ad', 'plataforma@exemplo.com', 'Plataforma', '+5511900009999');
 update public.perfis set super_admin = true where id = '7e000000-0000-0000-0000-0000000000ad';

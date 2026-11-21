@@ -2,7 +2,7 @@
 -- PediHub — 23: assinatura no cartão, que se renova sozinha
 --
 -- ── O PROBLEMA QUE ISTO RESOLVE ───────────────────────────────────────────
--- Pix não renova. Todo mês o dono do salão precisa lembrar, abrir o painel,
+-- Pix não renova. Todo mês o dono do restaurante precisa lembrar, abrir o painel,
 -- gerar um Pix e pagar. Uma parte simplesmente não faz — e essa parte não sai
 -- por insatisfação, sai por atrito. É a pior forma de perder cliente, porque
 -- não aparece em lugar nenhum: some.
@@ -39,7 +39,7 @@
 --
 -- `registrar_pagamento()` responderia `cobranca_desconhecida` e a assinatura
 -- NÃO renovaria. O mês 1 funcionaria e o mês 2 falharia em silêncio — defeito
--- que só aparece trinta dias depois, com o salão achando que está em dia.
+-- que só aparece trinta dias depois, com o restaurante achando que está em dia.
 --
 -- É por isso que existe `registrar_recorrencia()` aqui: ela CRIA a linha do
 -- mês a partir da pré-aprovação e só então entrega para o caminho que já
@@ -60,7 +60,7 @@ alter table public.cobrancas
   check (metodo in ('pix','boleto','cartao'));
 
 /* ── ⚠ A COBRANÇA DE CARTÃO NÃO OCUPA A VAGA DA PENDENTE ──────────────────
-   O `ux_cobranca_aberta` garante UMA cobrança pendente por salão. O motivo
+   O `ux_cobranca_aberta` garante UMA cobrança pendente por restaurante. O motivo
    dele está escrito no 13_cobranca.sql, e é sobre o dono CLICANDO: sem o
    índice, cada clique em "Assinar" abria um Pix novo, e ele ficava com seis
    na mão sem saber qual valia.
@@ -87,7 +87,7 @@ returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -114,15 +114,15 @@ end $$;
 
 /* O vínculo com a assinatura recorrente lá no Mercado Pago.
 
-   Fica em `assinaturas` e não em `cobrancas` porque é UM por salão e dura
+   Fica em `assinaturas` e não em `cobrancas` porque é UM por restaurante e dura
    enquanto o cartão durar — cobranças são muitas, uma por mês. */
 alter table public.assinaturas
   add column if not exists mp_preapproval text;
 alter table public.assinaturas
   add column if not exists cartao_desde timestamptz;
 
-/* Único: uma pré-aprovação pertence a um salão só. Sem isto, um aviso
-   recorrente casaria com dois salões e estenderia o plano do errado. */
+/* Único: uma pré-aprovação pertence a um restaurante só. Sem isto, um aviso
+   recorrente casaria com dois restaurantes e estenderia o plano do errado. */
 create unique index if not exists ux_assinatura_preapproval
   on public.assinaturas(mp_preapproval)
   where mp_preapproval is not null;
@@ -140,7 +140,7 @@ create unique index if not exists ux_assinatura_preapproval
 
 /* ⚠ POR QUE ISTO EXISTE EM VEZ DE A BORDA MONTAR O PEDIDO SOZINHA.
    Ela precisa de três coisas para falar com o Mercado Pago: se esta pessoa
-   pode assinar por este salão, quanto custa o plano, e para qual e-mail
+   pode assinar por este restaurante, quanto custa o plano, e para qual e-mail
    endereçar a assinatura. As três moram no banco, e as três já têm dono aqui.
 
    O preço em especial: `transaction_amount` da pré-aprovação é o valor que
@@ -167,13 +167,13 @@ begin
          where v.perfil_id = p_quem and v.salao_id = p_salao
            and v.status = 'ativo' and v.papel in ('dono','admin'))
      and not public.is_super() then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
   select preco_mes, nome into v_preco, v_nome
     from public.planos where codigo = p_plano;
-  -- Com o preço especial do salão, se houver (13_cobranca, 1b), e os módulos
+  -- Com o preço especial do restaurante, se houver (13_cobranca, 1b), e os módulos
   -- adicionais dele (46_adicionais): a mensalidade do cartão nasce aqui e se
   -- repete todo mês.
   if v_preco is not null then v_preco := public.valor_da_mensalidade(p_salao, p_plano); end if;
@@ -187,7 +187,7 @@ begin
   /* ⚠ E SEM LINHA EM `assinaturas` NÃO SE CRIA PRÉ-APROVAÇÃO NENHUMA.
 
      Esta é a metade que PREVINE; o `returning` do `ligar_cartao` é a metade
-     que denuncia. Sem ela, um salão sem assinatura passava por aqui, a borda
+     que denuncia. Sem ela, um restaurante sem assinatura passava por aqui, a borda
      criava a pré-aprovação no Mercado Pago, e o cartão do dono começava a ser
      debitado todo mês — sem linha nenhuma para o `registrar_recorrencia`
      encontrar depois. Cobrança de verdade, renovação nenhuma.
@@ -197,14 +197,14 @@ begin
   select mp_preapproval into v_pre
     from public.assinaturas where salao_id = p_salao;
   if not found then
-    raise exception 'Este salão não tem assinatura para renovar.'
+    raise exception 'Este restaurante não tem assinatura para renovar.'
       using errcode = 'check_violation';
   end if;
 
   v_pag := public.dados_do_pagador(p_salao);
 
   /* `jaLigado` é o que faz a borda recusar em vez de criar uma segunda
-     pré-aprovação. Duas ativas no mesmo salão é cobrança dobrada todo mês, e
+     pré-aprovação. Duas ativas no mesmo restaurante é cobrança dobrada todo mês, e
      o dono só descobre na fatura. Trocar de plano no cartão é cancelar e
      assinar de novo — dois cliques, e nenhum deles cobra em duplicidade. */
   return jsonb_build_object(
@@ -226,11 +226,11 @@ declare
   v_tocado uuid;
 begin
   if p_salao is null or coalesce(p_preapproval,'') = '' then
-    raise exception 'Faltou o salão ou a pré-aprovação.'
+    raise exception 'Faltou o restaurante ou a pré-aprovação.'
       using errcode = 'check_violation';
   end if;
 
-  /* ⚠ Uma pré-aprovação já usada por OUTRO salão é sinal de id trocado no
+  /* ⚠ Uma pré-aprovação já usada por OUTRO restaurante é sinal de id trocado no
      caminho, não de renovação. Recusa em vez de mover plano alheio. */
   select salao_id into v_dono from public.assinaturas
    where mp_preapproval = p_preapproval;
@@ -238,7 +238,7 @@ begin
     return jsonb_build_object('ok', false, 'motivo', 'preapproval_de_outro');
   end if;
 
-  /* ⚠ E o salão que JÁ TEM uma pré-aprovação não troca por outra por baixo.
+  /* ⚠ E o restaurante que JÁ TEM uma pré-aprovação não troca por outra por baixo.
 
      Sobrescrever aqui seria o pior desfecho silencioso do módulo: as duas
      continuam ativas no Mercado Pago, as duas debitam todo mês, e a gente
@@ -260,10 +260,10 @@ begin
   /* ⚠ E O `returning` NÃO É ENFEITE: sem ele, esta função respondia
      `{"ok": true}` depois de atualizar ZERO linhas.
 
-     Um salão sem linha em `assinaturas` fazia o UPDATE não achar nada, e a
+     Um restaurante sem linha em `assinaturas` fazia o UPDATE não achar nada, e a
      função jurava ter ligado. O webhook gravava sucesso no log, o Mercado Pago
      passava a debitar o cartão todo mês, e o `registrar_recorrencia` nunca
-     achava esse salão — respondia `preapproval_desconhecida` para sempre. O
+     achava esse restaurante — respondia `preapproval_desconhecida` para sempre. O
      dono pagava e o plano vencia assim mesmo, sem nada no sistema explicando.
 
      "Não deveria acontecer" não é mecanismo. Quando acontecer, a função tem
@@ -297,7 +297,7 @@ end $$;
    Ela é separada do `meu_cartao()` de propósito: aquele é a tela do dono e
    NÃO devolve o identificador. Este devolve, e por isso está fechado para o
    navegador. Um `p_quem` inventado no console viraria o id que move a
-   assinatura de qualquer salão. */
+   assinatura de qualquer restaurante. */
 create or replace function public.cartao_do_salao(p_salao uuid, p_quem uuid)
 returns jsonb
 language plpgsql stable security definer set search_path = public as $$
@@ -311,7 +311,7 @@ begin
          where v.perfil_id = p_quem and v.salao_id = p_salao
            and v.status = 'ativo' and v.papel in ('dono','admin'))
      and not public.is_super() then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -338,7 +338,7 @@ begin
          where v.perfil_id = p_quem and v.salao_id = p_salao
            and v.status = 'ativo' and v.papel in ('dono','admin'))
      and not public.is_super() then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -369,7 +369,7 @@ end $$;
 
    Nos dois casos o débito para e ninguém nos avisa por dentro. Se o
    `mp_preapproval` continuasse preenchido, o `assinaturas_a_vencer()` seguiria
-   pulando este salão — "está no cartão, renova sozinho" — e ele venceria em
+   pulando este restaurante — "está no cartão, renova sozinho" — e ele venceria em
    silêncio, sem cobrança, sem lembrete e sem ninguém entender por quê. É
    exatamente o silêncio que aquelas funções existem para quebrar.
 
@@ -437,7 +437,7 @@ begin
   end if;
 
   -- O mesmo preço que a pré-aprovação nasceu (13_cobranca, 1b): sem isso o
-  -- salão de preço especial teria a 2ª mensalidade recusada por divergir.
+  -- restaurante de preço especial teria a 2ª mensalidade recusada por divergir.
   if coalesce(public.preco_do_plano(a.salao_id, a.plano), 0) <= 0 then
     return jsonb_build_object('ok', false, 'motivo', 'plano_sem_preco');
   end if;
@@ -486,7 +486,7 @@ language sql security definer set search_path = public as $$
         índice de cobrança aberta e o `minha_cobranca` são os outros dois. A
         regra é sempre a mesma: pendente que o dono PODE PAGAR na mão suprime
         a cobrança; tentativa automática de cartão, não.
-        Sem isto, um salão que saiu do cartão com uma recorrência recusada
+        Sem isto, um restaurante que saiu do cartão com uma recorrência recusada
         atrás ficava invisível na lista de renovação — e vencia sem ninguém
         avisar, que é exatamente o silêncio que estas funções existem para
         quebrar. */
@@ -501,7 +501,7 @@ $$;
 -- ---------------------------------------------------------------------------
 -- 5) O QUE A TELA PRECISA SABER
 --
--- Só leitura, e só do próprio salão. O `mp_preapproval` NÃO sai daqui: é o
+-- Só leitura, e só do próprio restaurante. O `mp_preapproval` NÃO sai daqui: é o
 -- identificador que move dinheiro no Mercado Pago, e a tela não precisa dele
 -- para nada — só precisa saber que existe.
 -- ---------------------------------------------------------------------------
@@ -511,7 +511,7 @@ language plpgsql stable security definer set search_path = public as $$
 declare a public.assinaturas;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   select * into a from public.assinaturas where salao_id = p_salao;
@@ -532,7 +532,7 @@ end $$;
 -- quem chama continua sendo a borda — o painel não fala com o banco sobre
 -- dinheiro. E `preparar_cartao`, que nem escreve, fica igualmente fechada:
 -- ela devolve o e-mail do dono, e um `p_quem` inventado no navegador viraria
--- uma consulta de e-mail de qualquer salão pelo id.
+-- uma consulta de e-mail de qualquer restaurante pelo id.
 --
 -- ⚠ E o `grant ... to service_role` ao lado de cada revoke. Sem ele, o
 -- `revoke ... from public` tranca a porta com o carteiro do lado de fora, e
@@ -564,4 +564,4 @@ grant execute on function public.meu_cartao(uuid) to authenticated, service_role
 comment on function public.registrar_recorrencia(text, text, numeric, text) is
   'A cobrança mensal do cartão: cria a linha do mês e entrega ao registrar_pagamento.';
 comment on function public.meu_cartao(uuid) is
-  'Se o salão está no cartão e quando é a próxima. Não devolve o id da pré-aprovação.';
+  'Se o restaurante está no cartão e quando é a próxima. Não devolve o id da pré-aprovação.';

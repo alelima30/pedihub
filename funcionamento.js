@@ -17,7 +17,7 @@
    este projeto já pagou com as cores e com o preço.
 
    ── O QUE NÃO ESTÁ AQUI, DE PROPÓSITO ──────────────────────────────────────
-   Nenhum horário de exemplo. Salão sem horário cadastrado recebe `null` e a
+   Nenhum horário de exemplo. Restaurante sem horário cadastrado recebe `null` e a
    página esconde o status inteiro — "08:00 – 18:00" inventado seria a casa
    prometendo uma porta aberta que ninguém combinou.
 
@@ -60,7 +60,7 @@ function hhmm(min){
    Devolve { 0: [{ini, fim}], ..., 6: [...] } em minutos, cada dia ordenado e
    com os períodos que se tocam ou se cruzam emendados — ou `null` quando não
    há NENHUM dia aberto. `null` é "não informado", e a página esconde o
-   status; um salão com todos os dias fechados seria o cartão FECHADO para
+   status; um restaurante com todos os dias fechados seria o cartão FECHADO para
    sempre na primeira dobra da página, que é pior do que não dizer nada.
 
    Aceita lixo sem quebrar: o `cfg` é jsonb e já recebeu de tudo neste
@@ -134,11 +134,11 @@ function validar(cru){
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   AGORA, NO RELÓGIO DO SALÃO
+   AGORA, NO RELÓGIO DO RESTAURANTE
 
    O instante vem do relógio do APARELHO, e é convertido para o fuso do
-   salão. A cliente que viajou, ou que está com o celular em outro fuso, tem
-   que ver "aberto" quando a porta do salão está aberta — e não quando a do
+   restaurante. A cliente que viajou, ou que está com o celular em outro fuso, tem
+   que ver "aberto" quando a porta do restaurante está aberta — e não quando a do
    hotel dela estaria.
 
    `hourCycle:'h23'` e não `hour12:false`, pelo mesmo motivo do `noFuso()`
@@ -231,7 +231,7 @@ function pagamentos(cru){
   const formas = (Array.isArray(cru.formas) ? cru.formas : [])
     .map(String).filter((f, i, a) => validas.includes(f) && a.indexOf(f) === i);
   const obs = String(cru.obs || '').trim().slice(0, 200);
-  /* A chave Pix do salão, para a cliente copiar no link. Só com Pix marcado,
+  /* A chave Pix do restaurante, para a cliente copiar no link. Só com Pix marcado,
      e curta: a aleatória tem 36 caracteres, e telefone, e-mail, CPF e CNPJ
      cabem em 77 (o teto do Banco Central). Sem chave, o formato é o de
      sempre — quem já gravou não vê diferença. */

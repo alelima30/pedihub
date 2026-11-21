@@ -63,7 +63,7 @@ const dona = novaAba();
 await dona.criarConta({ email:`fecho-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju do Fecho',
   telefone:'+5511' + (100000000 + Math.floor(Math.random()*89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Fecho ' + marca,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Fecho ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 

@@ -7,7 +7,7 @@
 -- POR QUE ISTO SÓ EXISTE AQUI, E NÃO NUMA TELA
 --
 -- Uma conta `super_admin` lê a clientela, a agenda e o faturamento de TODOS
--- os salões da plataforma. É a única credencial do sistema cuja perda não tem
+-- os restaurantes da plataforma. É a única credencial do sistema cuja perda não tem
 -- conserto parcial.
 --
 -- Se houvesse um caminho pela aplicação — um botão, uma rota, uma chamada de
@@ -19,12 +19,12 @@
 -- e ele fecha —
 --
 --     ✓ não consegue se tornar dona da plataforma
---     ✓ não consegue se dar o papel de dona do salão
+--     ✓ não consegue se dar o papel de dona do restaurante
 --
 -- ---------------------------------------------------------------------------
 -- ANTES DE RODAR, DUAS DECISÕES
 --
--- 1. USE UMA CONTA SEPARADA da que você usa como dono de salão.
+-- 1. USE UMA CONTA SEPARADA da que você usa como dono de restaurante.
 --    Não é burocracia: é o tamanho do estrago quando algo dá errado. Sessão
 --    esquecida aberta, tela emprestada para alguém ver, celular perdido — o
 --    prejuízo é do tamanho da conta que estava logada. Com contas separadas,
@@ -38,7 +38,7 @@
 
 -- ── PASSO 1 ────────────────────────────────────────────────────────────────
 -- Crie a conta com o e-mail que vai ser o seu de administrador. Ela nasce
--- como qualquer outra: sem poder nenhum além do próprio salão.
+-- como qualquer outra: sem poder nenhum além do próprio restaurante.
 --
 -- Dois caminhos, e o segundo é o mais rápido:
 --
@@ -172,7 +172,7 @@ select p.id,
 --   update public.perfis set super_admin = false
 --    where id = (select id from auth.users where lower(email) = lower('fulano@x.com'));
 --
--- Tirar o super_admin NÃO apaga a conta nem os salões da pessoa: ela volta a
--- ser um dono de salão comum. É de propósito — a saída tem que ser tão barata
+-- Tirar o super_admin NÃO apaga a conta nem os restaurantes da pessoa: ela volta a
+-- ser um dono de restaurante comum. É de propósito — a saída tem que ser tão barata
 -- quanto a entrada, senão ninguém revoga acesso quando deveria.
 -- ---------------------------------------------------------------------------

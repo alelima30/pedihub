@@ -8,7 +8,7 @@
    atende"; o link, "Nossos cortes" e "Quem corta" — com um cartão de Barba
    embaixo. "Tem que aparecer Nossos serviços, e não cortes." A barbearia
    passou a falar "Nossos serviços", "Quem atende" e "Agendar horário"; e a
-   prévia, que escrevia as palavras do salão para todo tipo de negócio, passou
+   prévia, que escrevia as palavras do restaurante para todo tipo de negócio, passou
    a usar as do link.
 
    ── O QUE ESTE ARQUIVO PROTEGE ─────────────────────────────────────────────
@@ -56,7 +56,7 @@ for(const tipo of Object.keys(VOCABULARIO)){
     [vocPrevia(sl, 'acao'), vocPrevia(sl, 'oferecemos'), vocPrevia(sl, 'atende')],
     [l.acao, l.oferecemos, l.atende]);
 }
-igual('salão sem tipo: as palavras do salão', [vocPrevia({}, 'acao'), vocPrevia({}, 'oferecemos'), vocPrevia({}, 'atende')],
+igual('restaurante sem tipo: as palavras do restaurante', [vocPrevia({}, 'acao'), vocPrevia({}, 'oferecemos'), vocPrevia({}, 'atende')],
   [VOCABULARIO.salao.acao, VOCABULARIO.salao.oferecemos, VOCABULARIO.salao.atende]);
 
 console.log(falhou ? `\n✗ ${falhou} de ${passou + falhou} falharam.` : `\n✓ ${passou} passaram, 0 falharam.`);

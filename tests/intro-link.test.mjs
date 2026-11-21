@@ -5,7 +5,7 @@
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/intro-link.test.mjs
 
    (A cortina da tela de ENTRAR do painel é outra coisa, e mora no
-   abertura.test.mjs. Esta é a do link que o salão manda para a cliente.)
+   abertura.test.mjs. Esta é a do link que o restaurante manda para a cliente.)
 
    O pedido: "Quando clicar no link do cliente, deixar configurável um efeito
    de slide de entrada, uma intro com o logotipo. É possível?"
@@ -65,7 +65,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`ab-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 await dona.inserir('servicos', { salaoId: SALAO, nome:'Hidratação', duracaoMin:60, intervaloMin:0,
@@ -165,8 +165,8 @@ secao('2. No painel: Aparência → Abertura');
       dentro: el.parentElement.classList.contains('fone') } : null;
   });
   igual('escolher o efeito já toca a abertura dentro do celular da prévia',
-    tocando && [tocando.classe, tocando.nome, tocando.dentro], ['intro intro-deslizar', 'Salão Megatop', true]);
-  igual('na cor do botão do salão, e não na do painel', tocando && tocando.fundo, '#B8356B');
+    tocando && [tocando.classe, tocando.nome, tocando.dentro], ['intro intro-deslizar', 'Restaurante Megatop', true]);
+  igual('na cor do botão do restaurante, e não na do painel', tocando && tocando.fundo, '#B8356B');
   const r2 = await regua();
   igual('aparecem as outras réguas, cada uma no padrão', [r2.opcoes, r2.tempo, r2.fundo, r2.nome],
     [true, ['Rápida · 1s', 'Normal · 2s ●', 'Longa · 3s'], ['Cor do botão ●', 'Fundo da página'],
@@ -205,7 +205,7 @@ secao('3. No link: a abertura, e ela sai sozinha');
   const p = await abrir(ctx);
   const i = await lerIntro(p);
   verdade('ao abrir, a abertura cobre a tela inteira', i && i.cobre, JSON.stringify(i));
-  igual('com o logo do salão e o nome embaixo', i && [i.img, i.nome], [true, 'Salão Megatop']);
+  igual('com o logo do restaurante e o nome embaixo', i && [i.img, i.nome], [true, 'Restaurante Megatop']);
   igual('no efeito e no tempo escolhidos', i && [i.classe, i.ms], ['intro intro-deslizar', '1200ms']);
   igual('e diz para leitor de tela que dá para pular', i && i.rotulo, 'Pular a abertura');
   verdade('no fundo da cor do botão, em degradê', i && /radial-gradient/.test(i.fundo), i && i.fundo);

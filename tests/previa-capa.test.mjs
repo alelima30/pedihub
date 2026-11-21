@@ -11,7 +11,7 @@
    tomando toda a tela roxo... ele não tem que tomar somente o formato do
    celular? E ali seria um fundo diferente?"
 
-   Medido antes de mexer, com o salão do print montado aqui:
+   Medido antes de mexer, com o restaurante do print montado aqui:
      · a prévia cortava a foto reto; a página, num arco;
      · a prévia não lia o modo, a forma da logo, o anel nem a cor dele — a
        logo ficava pequena e solta embaixo da foto;
@@ -72,20 +72,20 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`pc-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 
 // Aberto a semana inteira, o dia inteiro: o status é ABERTO a qualquer hora
 // em que o teste rodar, e as cores comparadas são sempre as do verde.
 const SEMANA = [0,1,2,3,4,5,6].reduce((o, d) => (o[d] = [['00:00','00:00']], o), {});
-/* O salão do print: marca azul, botão roxo, letras claras sobre um gradiente
+/* O restaurante do print: marca azul, botão roxo, letras claras sobre um gradiente
    roxo. A marca NÃO é a do botão de propósito — era essa a confusão da
    prévia, que tingia o Horários com a cor do botão. */
 const BASE_CFG = { diasLiberados:30, cor:'#1D4ED8', tema:'escuro',
   fundoTipo:'gradiente', gradiente:'#A100FF,#5B0F9E,#1A1030',
   cores:{ botao:'#5B21B6' },
-  funcionamento: SEMANA, pagamentos:{ formas:['pix','credito'] }, sobre:'Salão de beleza' };
+  funcionamento: SEMANA, pagamentos:{ formas:['pix','credito'] }, sobre:'Restaurante de beleza' };
 const porCfg = extra => dona.atualizar('saloes', SALAO, { cfg: Object.assign({}, BASE_CFG, extra) });
 await dona.atualizar('saloes', SALAO, {
   endereco:{ logradouro:'Rua Avanhandava', numero:'10', bairro:'Cidade Nova', cidade:'Itu', uf:'SP' },

@@ -11,7 +11,7 @@
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Criar conta — PediHub</title>
-<meta name="description" content="Crie seu link de agendamento e teste 30 dias grátis, sem cartão." />
+<meta name="description" content="Crie seu cardápio com link de pedidos e teste 30 dias grátis, sem cartão." />
 <meta name="theme-color" content="#FFFFFF" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" type="image/png" href="icones/icone-192.png" />
@@ -292,7 +292,7 @@ input.bom{border-color:rgba(21,128,61,.5)!important}
        recusar que existe.
        ══════════════════════════════════════════════════════════════════ -->
   <section class="passo on" id="p-conta">
-    <h1>Sua agenda online, <span>pronta hoje</span></h1>
+    <h1>Seu cardápio de pedidos, <span>pronto hoje</span></h1>
     <p class="sub">O cliente marca sozinho pelo link, a qualquer hora.
       Comece grátis, sem cartão.</p>
 
@@ -399,7 +399,7 @@ input.bom{border-color:rgba(21,128,61,.5)!important}
         <div class="entrada sem-ic">
           <select id="fOrigem">
             <option value="">Prefiro não dizer</option>
-            <option>Indicação de outro profissional</option>
+            <option>Indicação de outro restaurante</option>
             <option>Instagram</option>
             <option>Google</option>
             <option>WhatsApp de um cliente</option>
@@ -407,7 +407,7 @@ input.bom{border-color:rgba(21,128,61,.5)!important}
           </select></div>
       </div>
 
-      <button class="grande" id="btCriar" onclick="criarConta()">Criar minha agenda</button>
+      <button class="grande" id="btCriar" onclick="criarConta()">Criar meu cardápio</button>
       <p class="sob-botao">Pronto em 2 minutos · Você escolhe o plano depois,
         dentro do sistema</p>
     </div>
@@ -426,19 +426,19 @@ input.bom{border-color:rgba(21,128,61,.5)!important}
       <button onclick="copiarLink()" id="btCopiar">Copiar</button>
     </div>
     <p class="ajuda" style="margin-top:-8px">Coloque na bio do Instagram, mande
-      no WhatsApp, imprima como QR no espelho. É por aqui que o cliente marca.</p>
+      no WhatsApp, imprima como QR na mesa e no balcão. É por aqui que o cliente pede.</p>
 
     <div style="margin-top:20px">
       <a class="grande" id="irAgenda" href="app.html"
          style="display:block;text-align:center;text-decoration:none">
-        Abrir minha agenda</a>
+        Abrir meu painel</a>
     </div>
 
     <div class="proximos">
       <b>Para o link funcionar de verdade, faltam 3 coisas:</b>
       <ol>
-        <li>Cadastrar seus serviços, com duração e preço — é a duração que monta a agenda</li>
-        <li>Definir sua jornada: que dias e horas você atende</li>
+        <li>Montar o cardápio: os pratos e lanches, com foto e preço</li>
+        <li>Definir entrega e pagamento: taxa por bairro, pedido mínimo e formas de pagar</li>
         <li>Mandar o link para os primeiros clientes</li>
       </ol>
     </div>
@@ -468,7 +468,7 @@ input.bom{border-color:rgba(21,128,61,.5)!important}
    pior desfecho: alguém preencher oito campos e desistir ao descobrir
    quanto custa. Quem chega no formulário já aceitou o preço.
 
-   MODO DEMONSTRAÇÃO: grava no mesmo localStorage do app.html, então o salão
+   MODO DEMONSTRAÇÃO: grava no mesmo localStorage do app.html, então o restaurante
    criado aqui aparece lá. No sistema de verdade este arquivo chama
    `supabase.auth.signUp()` e depois a função `criar_salao()`
    (supabase/03_onboarding.sql), que faz tudo numa transação só.
@@ -535,7 +535,7 @@ const PLANOS = [
   {codigo:'equipe',     nome:'Equipe',       quem:'Para até 5',        max:5, preco:187,
    ic:'<span data-ico="predio"></span>', recursos:['5 profissionais','Tudo do Time','Vários caixas',
                       'Controle de estoque','Suporte prioritário']},
-  {codigo:'salao',      nome:'Salão',        quem:'Para até 20',       max:20, preco:297,
+  {codigo:'salao',      nome:'Restaurante',        quem:'Para até 20',       max:20, preco:297,
    ic:'<span data-ico="predio"></span>', recursos:['20 profissionais','Tudo do Equipe','Múltiplas unidades',
                       'Exportação de dados','Atendimento dedicado']},
 ];
@@ -749,7 +749,7 @@ function mudouNomeSalao(){
 /* ── CRIAR COM O GOOGLE ───────────────────────────────────────────────────
    O Supabase Auth leva ao Google e volta para esta tela com a sessão no
    #fragmento. Aí a conta já existe: o passo 1 pede só o nome (e-mail e senha
-   somem), e o passo 2 cria o salão com ela. O WhatsApp digitado vai para o
+   somem), e o passo 2 cria o restaurante com ela. O WhatsApp digitado vai para o
    perfil (`completar_meu_cadastro`, 51_google.sql) — é dele que o teste
    grátis (39) sabe se a pessoa já usou os 7 dias. */
 let modoGoogle = false;
@@ -789,7 +789,7 @@ async function voltouDoGoogle(){
   }catch(e){}
   document.getElementById('avisoGeral').innerHTML = '<div class="aviso neutro"><span class="ic">'
     + ico('info') + '</span><div><b>Você entrou como ' + textoSeguro(eu.email || 'sua conta Google')
-    + '</b>Agora é só conferir seu nome e criar o seu salão.</div></div>';
+    + '</b>Agora é só conferir seu nome e criar o seu restaurante.</div></div>';
 }
 
 function irNegocio(){
@@ -859,9 +859,9 @@ async function criarConta(){
 
   // ── Modo nuvem: quem faz tudo é o banco ──
   //
-  // `signUp` cria a conta; `criar_salao()` cria salão, assinatura, vínculo
+  // `signUp` cria a conta; `criar_salao()` cria restaurante, assinatura, vínculo
   // de dono e o primeiro profissional numa transação só. Meia criação
-  // deixaria um salão sem dono, que ninguém alcança nem para apagar.
+  // deixaria um restaurante sem dono, que ninguém alcança nem para apagar.
   if(window.Dados && Dados.ligado){
     /* ── O BOTÃO QUE ESPERA TEM QUE SER O BOTÃO QUE FOI APERTADO ──────────
        Aqui estava `document.querySelector('button.grande')`, que devolve o
@@ -881,7 +881,7 @@ async function criarConta(){
     bt.disabled = true; bt.textContent = 'Criando…';
     try{
       /* Com o Google, a conta já existe e já está logada: o WhatsApp vai para
-         o perfil, e segue direto para criar o salão. */
+         o perfil, e segue direto para criar o restaurante. */
       if(modoGoogle){
         await Dados.chamar('completar_meu_cadastro', { p_telefone: paraE164(tel), p_nascimento: null });
       }
@@ -894,18 +894,18 @@ async function criarConta(){
          O Supabase pode exigir confirmação por e-mail. Nesse caso o signup
          devolve a conta SEM `access_token`: a pessoa existe e não está
          logada. A chamada seguinte, `criar_salao()`, roda como anônima e
-         levanta "Faça login antes de criar o salão" — uma frase que não
+         levanta "Faça login antes de criar o restaurante" — uma frase que não
          explica nada para quem acabou de preencher tudo.
 
          Pior: sem sessão, tentar de novo esbarra em "e-mail já cadastrado".
-         O cadastro fica num beco, com a conta criada e o salão não.
+         O cadastro fica num beco, com a conta criada e o restaurante não.
 
          Então isto é conferido AQUI, com nome próprio, antes de seguir. */
       if(!(conta && conta.access_token)){
         avisar('ruim', 'Confirme seu e-mail para terminar',
           'Sua conta foi criada, mas este projeto exige confirmação por '
         + 'e-mail antes de entrar. Abra o link que acabamos de enviar e '
-        + 'depois volte em <b>Entrar</b> — o salão você cria lá dentro, '
+        + 'depois volte em <b>Entrar</b> — o restaurante você cria lá dentro, '
         + 'em um passo só.');
         bt.disabled = false; bt.textContent = rotulo;
         return;
@@ -921,10 +921,10 @@ async function criarConta(){
 
       const criado = Array.isArray(r) ? r[0] : r;
       const apelido = (criado && criado.slug) || slug;
-      /* O HORÁRIO DA CIDADE. Todo salão nasce no horário de Brasília. Se o
+      /* O HORÁRIO DA CIDADE. Todo restaurante nasce no horário de Brasília. Se o
          aparelho de quem está criando está num dos fusos do Brasil que NÃO
          são o de Brasília (Manaus, Cuiabá, Campo Grande, Porto Velho, Boa
-         Vista, Rio Branco, Noronha), o salão já nasce nele — senão o lembrete
+         Vista, Rio Branco, Noronha), o restaurante já nasce nele — senão o lembrete
          sairia uma hora adiantado desde o primeiro dia. Fuso de fora do
          Brasil não entra: é dono viajando ou celular desregulado, e dá para
          trocar depois em Meu negócio. Falhar aqui não atrapalha o cadastro. */
@@ -935,7 +935,7 @@ async function criarConta(){
           'America/Eirunepe', 'America/Noronha'];
         if(criado && criado.salao_id && OUTROS.includes(doAparelho))
           await Dados.atualizar('saloes', criado.salao_id, { fuso: doAparelho });
-      }catch(e){ console.info('[PediHub] fuso do salão novo:', e.message); }
+      }catch(e){ console.info('[PediHub] fuso do restaurante novo:', e.message); }
       const url = location.href.replace(/\/[^\/]*$/, '/')
                 + 'agendar.html?salao=' + apelido;
       /* Quem ganha o teste é o BANCO (39_teste_unico): o WhatsApp ou o e-mail
@@ -946,7 +946,7 @@ async function criarConta(){
       try{
         if(criado && criado.salao_id)
           assinatura = (await Dados.lista('assinaturas', { salaoId: criado.salao_id }))[0] || null;
-      }catch(e){ console.info('[PediHub] plano do salão novo:', e.message); }
+      }catch(e){ console.info('[PediHub] plano do restaurante novo:', e.message); }
       document.getElementById('textoPronto').innerHTML = textoDoTeste(nomeSalao, assinatura);
       document.getElementById('linkFinal').textContent = url;
       irPasso(3);
@@ -1020,7 +1020,7 @@ async function criarConta(){
   document.getElementById('textoPronto').innerHTML = textoDoTeste(nomeSalao);
   document.getElementById('linkFinal').textContent = url;
   // Na demonstração, a agenda também: sem o `?demo=1` o painel pedia login
-  // e o salão recém-criado sumia (achado pelo caça-bug).
+  // e o restaurante recém-criado sumia (achado pelo caça-bug).
   document.getElementById('irAgenda').href =
     new URLSearchParams(location.search).get('demo') === '1' ? 'app.html?demo=1' : 'app.html';
   irPasso(3);
@@ -1087,26 +1087,26 @@ function carregar(){
    liberado por 7 dias" no meio de uma frase longa, e o dono terminava o
    cadastro sem saber em que plano estava nem até quando. Agora é um quadro:
    o plano (Teste grátis), o prazo com data, que não tem cobrança, e o que
-   acontece depois. O nome do salão vai escapado — é texto digitado. */
+   acontece depois. O nome do restaurante vai escapado — é texto digitado. */
 function textoDoTeste(nomeSalao, assinatura){
   const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   // O teste é um por pessoa: com este WhatsApp ou e-mail ele já foi usado, e
-  // o salão nasceu no Grátis. Diz isso, e por onde seguir.
+  // o restaurante nasceu no Grátis. Diz isso, e por onde seguir.
   if(assinatura && assinatura.status !== 'trial'){
     return `<b>${esc(nomeSalao)}</b> está no ar.`
       + `<span class="teste-gratis" id="quadroTeste"><b>Você está no plano Grátis.</b> `
       + `O teste grátis de 30 dias é um por pessoa, e este WhatsApp ou e-mail já o usou.<br>`
-      + `A agenda, as clientes e o link funcionam normalmente. Para liberar tudo, escolha um plano em `
+      + `O cardápio, os clientes e o link funcionam normalmente. Para liberar tudo, escolha um plano em `
       + `<b>Meu plano</b>, dentro do painel.</span>`;
   }
   const ate = assinatura && assinatura.trialAte
     ? new Date(String(assinatura.trialAte).slice(0, 10) + 'T12:00:00').toLocaleDateString('pt-BR')
     : new Date(Date.now() + 30 * 864e5).toLocaleDateString('pt-BR');
   return `<b>${esc(nomeSalao)}</b> está no ar.`
-    + `<span class="teste-gratis" id="quadroTeste"><b>Você está no Teste grátis: 30 dias com tudo liberado, para até 2 profissionais</b>, `
+    + `<span class="teste-gratis" id="quadroTeste"><b>Você está no Teste grátis: 30 dias com tudo liberado</b>, `
     + `até ${ate}. Sem cartão e sem cobrança.<br>`
-    + `Depois dos 30 dias, você escolhe um plano — ou continua no plano <b>Grátis</b>, com a agenda, `
-    + `as clientes e o link simples.</span>`;
+    + `Depois dos 30 dias, você escolhe um plano — ou continua no plano <b>Grátis</b>, com o cardápio, `
+    + `os clientes e o link simples.</span>`;
 }
 
 // O cadastro é a primeira porta do dono — quem chega por um anúncio cai aqui,

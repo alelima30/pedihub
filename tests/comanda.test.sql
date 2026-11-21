@@ -23,7 +23,7 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do update set nome = excluded.nome;
 
 insert into public.saloes (id, slug, nome, tipo, fuso) values
-  ('d0000000-1111-0000-0000-00000000000a','salao-d','Salão D','salao','America/Sao_Paulo');
+  ('d0000000-1111-0000-0000-00000000000a','salao-d','Restaurante D','salao','America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('d0000000-1111-0000-0000-00000000000a','time','ativa');
 insert into public.vinculos (perfil_id, salao_id, papel, status) values
@@ -106,7 +106,7 @@ select t_igual('e continua havendo uma só',
   (select count(*) from public.comandas
     where agendamento_id = 'd0000000-4444-0000-0000-00000000000a'), 1);
 
-/* Comanda de balcão, sem agendamento, não disputa com ninguém — o salão
+/* Comanda de balcão, sem agendamento, não disputa com ninguém — o restaurante
    atende quem chega sem ter marcado, e podem ser muitas no mesmo dia. */
 select t_texto('comanda avulsa abre', abrir(null), null);
 select t_texto('e outra avulsa também', abrir(null), null);

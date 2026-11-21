@@ -13,7 +13,7 @@
 --
 -- ── UMA DIVERGÊNCIA QUE PRECISA FICAR ESCRITA ─────────────────────────────
 -- O pedido descreve quatro planos — START, ESSENCIAL, PRO e MARKETING, de
--- R$ 0 a R$ 159,90. O sistema no ar tem SETE, de R$ 57 a R$ 297, com salão
+-- R$ 0 a R$ 159,90. O sistema no ar tem SETE, de R$ 57 a R$ 297, com restaurante
 -- assinando. Renomear e reprecificar plano de quem já paga é decisão
 -- comercial, não técnica, e desfazer isso depois é bem mais caro do que
 -- fazer.
@@ -21,11 +21,11 @@
 -- Então este arquivo implementa a ESTRUTURA que o pedido descreve — cota
 -- central, configurável, sem número solto — sobre os planos que existem. As
 -- cotas foram mapeadas por tamanho: o grátis recebe as do START, e os pagos
--- recebem escala crescente até o Salão. Trocar qualquer uma é editar a
+-- recebem escala crescente até o Restaurante. Trocar qualquer uma é editar a
 -- seção 1.
 --
 -- ── O QUE NÃO ENTRA AQUI ──────────────────────────────────────────────────
--- Nada apaga dado. O item 33 do pedido é regra deste arquivo: se o salão
+-- Nada apaga dado. O item 33 do pedido é regra deste arquivo: se o restaurante
 -- descer de plano e ficar acima do teto, o que existe CONTINUA existindo — só
 -- não dá para incluir mais. Nenhum gatilho deste arquivo faz delete.
 -- ===========================================================================
@@ -75,8 +75,8 @@ begin
   end if;
 end $$;
 
-/* OS DIAS DE TESTE, NO DIA DO SALÃO. O prazo do teste grátis passou a ser
-   contado no fuso do salão (criar_salao, 03): depois das 21h em Brasília o
+/* OS DIAS DE TESTE, NO DIA DO RESTAURANTE. O prazo do teste grátis passou a ser
+   contado no fuso do restaurante (criar_salao, 03): depois das 21h em Brasília o
    servidor já está no dia seguinte, e a conta pelo `current_date` dele dava
    um dia a menos. A vista é refeita AQUI, num módulo, e não só no 03: é este
    arquivo que entra também no caminho de quem atualiza (98_modulos). */
@@ -105,9 +105,9 @@ grant select on public.minha_assinatura to authenticated;
 
 /* O PLANO, PARA A EQUIPE. A assinatura só o gestor lê (preço e vencimento são
    conta do dono). Sem ela, a tela da recepção e da profissional achava que o
-   salão estava no Grátis e trancava o caixa de quem paga o Básico. Isto
+   restaurante estava no Grátis e trancava o caixa de quem paga o Básico. Isto
    devolve SÓ o código do plano em vigor — nada de preço, nada de data — e só
-   para quem é da equipe daquele salão. */
+   para quem é da equipe daquele restaurante. */
 create or replace function public.plano_do_salao(p_salao uuid)
 returns text language sql stable security definer set search_path = public as $$
   select case when public.e_equipe(p_salao) then public.plano_efetivo(p_salao) end
@@ -144,10 +144,10 @@ update public.planos set recursos = recursos || jsonb_build_object(
 
      Teste grátis   100   (7 dias; custo máximo ~R$ 5 por teste)
      Essencial      500   Dupla   800   Time  1.100
-     Equipe       2.000   Salão 3.600
+     Equipe       2.000   Restaurante 3.600
 
    A ~R$ 0,05 por mensagem, a franquia usada inteira fica entre 26% e 36% da
-   mensalidade — e quase ninguém usa inteira. Quando chega ao fim, as do salão
+   mensalidade — e quase ninguém usa inteira. Quando chega ao fim, as do restaurante
    param antes (seção 2b), e as últimas ficam para a cliente. */
 update public.planos set recursos = recursos || jsonb_build_object(
     'max_clientes',  500, 'max_servicos',  50, 'mensagens_mes', 100)
@@ -186,9 +186,9 @@ update public.planos set recursos = recursos || jsonb_build_object(
 --   Duo         R$  87 / 600      = 41,4%             R$ 157 / 500 = 14,3%
 --   Time        R$ 127 /1000      = 47,2%             R$ 197 / 700 = 16,0%
 --   Equipe      R$ 187 /1500      = 48,1%  ←pior      R$ 297 /1200 = 18,2%
---   Salão       R$ 297 /2000      = 40,4%             R$ 497 /2200 = 19,9%
+--   Restaurante       R$ 297 /2000      = 40,4%             R$ 497 /2200 = 19,9%
 --
--- O Equipe entregava quase METADE da mensalidade em WhatsApp. E o Salão dava
+-- O Equipe entregava quase METADE da mensalidade em WhatsApp. E o Restaurante dava
 -- 20 vagas por R$ 297 — R$ 14,85 por profissional, o cliente maior sendo o
 -- pior negócio.
 --
@@ -199,7 +199,7 @@ update public.planos set recursos = recursos || jsonb_build_object(
 -- uma vez; se amanhã você mudar um preço à mão, recolar isto não desfaz.
 -- ---------------------------------------------------------------------------
 
-/* ⚠ Reduzir vaga de plano em uso deixaria salão acima do teto. O Salão vai de
+/* ⚠ Reduzir vaga de plano em uso deixaria restaurante acima do teto. O Restaurante vai de
    20 para 12 vagas, e o Equipe de 5 para 6 (esse só cresce, é seguro).
 
    Nenhum gatilho deste projeto desativa profissional — quem está acima do teto
@@ -223,7 +223,7 @@ begin
        colado NUMA LINHA SÓ, que é como ele chega quando alguém copia no
        celular. O teste de colagem pegou isto na primeira execução. */
     raise exception '%',
-      'Há ' || v_estourando || ' salão(ões) no plano Salão com mais de 12 '
+      'Há ' || v_estourando || ' restaurante(ões) no plano Restaurante com mais de 12 '
       || 'profissionais ativos. Reduzir a vaga agora os deixaria acima do '
       || 'teto. Resolva com eles antes, ou mantenha 20 vagas e ajuste só o '
       || 'preço.'
@@ -253,7 +253,7 @@ update public.planos set preco_mes = 497.00, max_profissionais = 12
 -- a conta da Meta ainda não existe não gasta cota de ninguém — e no dia em
 -- que passar a sair, aí sim conta.
 --
--- O mês é o do SALÃO. Sem isso, um envio das 22h do dia 31 em São Paulo
+-- O mês é o do RESTAURANTE. Sem isso, um envio das 22h do dia 31 em São Paulo
 -- cairia no mês seguinte, porque o servidor fala UTC. É o mesmo cuidado do
 -- `checar_limite_agendamentos`, e o mesmo defeito que já apareceu duas vezes
 -- neste projeto.
@@ -282,7 +282,7 @@ update public.planos set preco_mes = 497.00, max_profissionais = 12
 
    Dia 31 em mês curto vira o último dia do mês: os dois limites saem da
    MESMA âncora (âncora menos k meses), então um ciclo termina exatamente
-   onde o seguinte começa. Devolve o começo e o fim, no fuso do salão.
+   onde o seguinte começa. Devolve o começo e o fim, no fuso do restaurante.
    `p_hoje` existe para o teste poder fixar o dia. */
 create or replace function public.ciclo_mensagens(p_salao uuid, p_hoje date default null)
 returns table (ini timestamptz, fim timestamptz)
@@ -355,7 +355,7 @@ returns boolean language sql stable security definer set search_path = public as
   end
 $$;
 
--- Nem quem tem conta chama estas três: o uso e o teto de UM salão são dele,
+-- Nem quem tem conta chama estas três: o uso e o teto de UM restaurante são dele,
 -- e conta qualquer um cria. Quem lê é o `uso_do_plano()`, que confere o
 -- gestor, e o worker (service_role). Ver o 57_plano_fechado.sql.
 revoke all on function public.mensagens_no_mes(uuid) from public, anon, authenticated;
@@ -369,15 +369,15 @@ grant execute on function public.pode_enviar(uuid)      to service_role;
 -- 2b) A RESERVA DA CLIENTE
 --
 -- Quando a franquia está no fim, nem toda mensagem vale o mesmo. A cliente
--- que não recebe o lembrete é a que falta; o salão tem a agenda aberta no
--- celular. Então as mensagens PARA O SALÃO — aviso de horário novo, lembrete
--- para o salão, resumo do dia — usam até 90% da franquia, e os últimos 10%
+-- que não recebe o lembrete é a que falta; o restaurante tem a agenda aberta no
+-- celular. Então as mensagens PARA O RESTAURANTE — aviso de horário novo, lembrete
+-- para o restaurante, resumo do dia — usam até 90% da franquia, e os últimos 10%
 -- ficam só para a confirmação e o lembrete da cliente.
 --
 -- No teto, para tudo, como antes: a franquia é o que o plano paga, e passar
 -- dela é custo que ninguém cobriu.
 --
--- Tipo que não seja da cliente cai na regra do salão, inclusive um que ainda
+-- Tipo que não seja da cliente cai na regra do restaurante, inclusive um que ainda
 -- não existe: errar para o lado de gastar menos.
 -- ---------------------------------------------------------------------------
 create or replace function public.teto_mensagens_salao(p_salao uuid)
@@ -404,16 +404,16 @@ revoke all on function public.pode_enviar_tipo(uuid, text) from public, anon, au
 -- 2c) A CAMPANHA NÃO PASSA POR FORA DO LIMITE
 --
 -- As campanhas (promoção, aniversário — 10_campanhas) tinham fila própria, e
--- o `fila_proxima()` não perguntava por cota nenhuma: um salão no Grátis,
+-- o `fila_proxima()` não perguntava por cota nenhuma: um restaurante no Grátis,
 -- pelo console do navegador, montava uma campanha para a clientela inteira
 -- e ela sairia pelo número do PediHub, sem limite e sem contar no mês —
 -- e mensagem de promoção é a mais cara (~R$ 0,35) e a que mais arrisca o
--- número, que é um só para todos os salões. Não há tela de campanha hoje;
+-- número, que é um só para todos os restaurantes. Não há tela de campanha hoje;
 -- a porta estava aberta pelo banco.
 --
 -- Agora: campanha só sai se o PLANO tiver `campanhas_whatsapp` ligado (nenhum
 -- tem — ausente é não), e ainda assim dentro da franquia, pela regra das
--- mensagens do salão (para nos 90%, a reserva fica para a cliente). Quem
+-- mensagens do restaurante (para nos 90%, a reserva fica para a cliente). Quem
 -- confere é o banco, no `iniciar_campanha()` e no `fila_proxima()` — a tela
 -- não decide nada.
 -- ---------------------------------------------------------------------------
@@ -431,7 +431,7 @@ revoke all on function public.campanha_liberada(uuid) from public, anon, authent
 -- que sai na primeira linha quando o plano não tem teto.
 --
 -- ⚠ Só no INSERT. Editar uma ficha que já existe não pode ser bloqueado por
--- cota — senão o salão que desceu de plano fica sem conseguir corrigir o
+-- cota — senão o restaurante que desceu de plano fica sem conseguir corrigir o
 -- telefone da própria cliente, que é castigo sem propósito.
 -- ---------------------------------------------------------------------------
 create or replace function public.checar_limite_clientes()
@@ -442,7 +442,7 @@ begin
   if teto is null then return new; end if;
   select count(*) into usados from public.clientes where salao_id = new.salao_id;
   if usados >= teto then
-    raise exception 'O seu plano cobre % clientes, e o salão já tem %. Mude de plano para cadastrar mais.',
+    raise exception 'O seu plano cobre % clientes, e o restaurante já tem %. Mude de plano para cadastrar mais.',
       teto, usados using errcode = 'check_violation';
   end if;
   return new;
@@ -460,7 +460,7 @@ begin
   if teto is null then return new; end if;
   select count(*) into usados from public.servicos where salao_id = new.salao_id;
   if usados >= teto then
-    raise exception 'O seu plano cobre % serviços, e o salão já tem %. Mude de plano para cadastrar mais.',
+    raise exception 'O seu plano cobre % serviços, e o restaurante já tem %. Mude de plano para cadastrar mais.',
       teto, usados using errcode = 'check_violation';
   end if;
   return new;
@@ -487,7 +487,7 @@ declare
   v_preco numeric;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
 
   select a.plano, pl.nome, pl.preco_mes into v_plano, v_nome, v_preco
@@ -510,7 +510,7 @@ begin
     'mensagens', jsonb_build_object(
       'usado', public.mensagens_no_mes(p_salao),
       'teto',  public.teto_mensagens(p_salao),
-      -- até onde vão as do salão; o resto é a reserva da cliente (22, 2b)
+      -- até onde vão as do restaurante; o resto é a reserva da cliente (22, 2b)
       'tetoSalao', public.teto_mensagens_salao(p_salao)));
 end $$;
 
@@ -522,9 +522,9 @@ grant execute on function public.uso_do_plano(uuid) to authenticated;
 --
 -- ⚠ TUDO NESTA SEÇÃO É SÓ PARA `service_role`.
 --
--- Estas funções contornam o RLS de propósito: o worker não é dono de salão
+-- Estas funções contornam o RLS de propósito: o worker não é dono de restaurante
 -- nenhum e precisa atender todos. Se alguma aparecer concedida a
--- `authenticated`, dá para varrer o telefone de qualquer salão da plataforma.
+-- `authenticated`, dá para varrer o telefone de qualquer restaurante da plataforma.
 -- ---------------------------------------------------------------------------
 
 /* Pega o próximo da fila e marca 'enviando' NA MESMA transação.
@@ -539,9 +539,9 @@ grant execute on function public.uso_do_plano(uuid) to authenticated;
      · não venceu — mensagem parada há mais de seis horas NÃO sai. "Seu
        horário é daqui a duas horas", entregue no dia seguinte, é pior que
        silêncio;
-     · o salão pode enviar — cota do plano, conferida AQUI, no servidor. A
+     · o restaurante pode enviar — cota do plano, conferida AQUI, no servidor. A
        tela também mostra, mas quem recusa é esta linha. Conferida POR TIPO:
-       perto do fim, as do salão param antes e as da cliente seguem (2b).
+       perto do fim, as do restaurante param antes e as da cliente seguem (2b).
 
    E um quarto, que as seis horas não pegavam: a mensagem de um horário que
    JÁ COMEÇOU não sai. Um lembrete das 12h para as 14h, parado pela
@@ -671,7 +671,7 @@ end $$;
    `failed` é a Meta dizendo que ACEITOU a mensagem — devolveu `wam_id`, e por
    isso a linha já está 'enviado' e já custou cota — e depois não conseguiu
    entregar: número que não tem WhatsApp, bloqueio, aparelho que nunca voltou.
-   Sem tratá-lo, a linha diz "enviado" para sempre, e o salão continua achando
+   Sem tratá-lo, a linha diz "enviado" para sempre, e o restaurante continua achando
    que avisou.
 
    E a cota volta sozinha: `mensagens_no_mes()` conta só enviado/entregue/
@@ -725,6 +725,6 @@ grant execute on function public.notificacao_status(text, text, text, text)
 comment on function public.uso_do_plano(uuid) is
   'Uso e teto de profissionais, clientes, serviços e mensagens do mês, num jsonb só.';
 comment on function public.notificacao_proxima(int) is
-  'Fila do worker. Só service_role: contorna o RLS para atender todos os salões.';
+  'Fila do worker. Só service_role: contorna o RLS para atender todos os restaurantes.';
 comment on function public.notificacao_status(text, text, text, text) is
   'Webhook de status da Meta: entregue, lido e falhou, casados pelo wam_id. Nunca anda para trás.';

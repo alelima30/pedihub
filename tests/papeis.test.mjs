@@ -21,7 +21,7 @@
    cliente "a Bia tem 14h" com a Bia cheia é pior do que não mostrar a Bia.
 
    ── COMO ELA MEDE ──────────────────────────────────────────────────────────
-   Três pessoas de verdade, três navegadores separados, no MESMO salão. Não
+   Três pessoas de verdade, três navegadores separados, no MESMO restaurante. Não
    se troca papel por variável: o papel vem do vínculo, como no ar.
    =========================================================================== */
 import fs from 'node:fs';
@@ -57,11 +57,11 @@ function novaAba(){
 const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const tel = () => '+5511' + (100000000 + Math.floor(Math.random()*89999999));
 
-// ── A dona monta o salão ───────────────────────────────────────────────────
+// ── A dona monta o restaurante ───────────────────────────────────────────────────
 const dDona = novaAba();
 await dDona.criarConta({ email:`p-dona-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone: tel() });
-const cr = await dDona.chamar('criar_salao', { p_nome_salao:'Salão Papéis ' + marca,
+const cr = await dDona.chamar('criar_salao', { p_nome_salao:'Restaurante Papéis ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 
@@ -162,7 +162,7 @@ const abasDona = await abasDe(pgDona);
 
    O que importa não é quantas são: é que a dona veja TODAS. */
 /* "Todas" quer dizer as que valem para ESTE tipo de negócio: a aba Pedidos só
-   existe no restaurante (37_pedidos), e este salão é de beleza. E a aba
+   existe no restaurante (37_pedidos), e este restaurante é de beleza. E a aba
    Crediário (47_crediario) só aparece com o módulo adicional — ou, para a
    gestão, quando ele está à venda, para poder contratar. A regra é a da
    própria tela (`crediarioNaAba`); a aba tem o teste dela, no
@@ -216,7 +216,7 @@ const relRecusado = await pgRecep.evaluate(async s => {
   }catch(e){ return e.message || 'recusado'; }
 }, SALAO);
 verdade('e o BANCO recusa o relatório para ela, não só a tela',
-  relRecusado !== null, 'a recepção leu o faturamento do salão inteiro');
+  relRecusado !== null, 'a recepção leu o faturamento do restaurante inteiro');
 
 // A lista de serviços continua: ela precisa conferir preço no balcão.
 verdade('vê a lista de Serviços', abasRecep.includes('servicos'));
@@ -269,7 +269,7 @@ igual('e a grade dela tem UMA coluna: a dela',
 /* ⚠ A PERGUNTA MUDOU DE LUGAR: DO CABEÇALHO PARA A COLUNA.
 
    Antes daqui se cobrava o NOME "Bia" no `.col-h .nm`. Isso deixou de valer
-   quando a grade passou a esconder o cabeçalho num salão de uma pessoa só —
+   quando a grade passou a esconder o cabeçalho num restaurante de uma pessoa só —
    e para ela é uma pessoa só, porque a colega é filtrada. Dizer o nome de
    quem está olhando a própria agenda é dizer o óbvio ocupando uma faixa de
    tela, que no celular é o que mais falta.
@@ -305,7 +305,7 @@ verdade('nenhuma coluna de colega aparecendo vazia',
    profissional de verdade, os dois terminando na MESMA frase:
 
        "O banco não autorizou esta gravação para a sua conta.
-        Se você acabou de trocar de salão, entre de novo."
+        Se você acabou de trocar de restaurante, entre de novo."
 
    Que é um conselho impossível de seguir: não era sessão velha, era o RLS
    fazendo exatamente o que foi escrito para fazer. Entrar de novo devolve a
@@ -320,7 +320,7 @@ verdade('nenhuma coluna de colega aparecendo vazia',
    ══════════════════════════════════════════════════════════════════════════ */
 secao('O caixa e a comanda, para quem atende');
 
-verdade('NÃO vê a aba Caixa — a gaveta é dinheiro do salão inteiro',
+verdade('NÃO vê a aba Caixa — a gaveta é dinheiro do restaurante inteiro',
   !abasProf.includes('caixa'), JSON.stringify(abasProf));
 
 await pgProf.evaluate(() => irPara('caixa'));
@@ -335,7 +335,7 @@ const caixaRecusado = await pgProf.evaluate(async s => {
   }catch(e){ return e.message || 'recusado'; }
 }, SALAO);
 verdade('e o BANCO recusa abrir o caixa para ela, não só a tela',
-  caixaRecusado !== null, 'quem atende abriu a gaveta do salão');
+  caixaRecusado !== null, 'quem atende abriu a gaveta do restaurante');
 
 // Volta para a agenda dela e abre a ficha do atendimento.
 await pgProf.evaluate(dd => { irPara('agenda'); diaAtual = dd; pintar(); }, AMANHA);

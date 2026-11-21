@@ -61,7 +61,7 @@ troca app.html \
   "dd === 28));" \
   && rodar "parabéns duas vezes no ano bissexto"
 
-echo "3. o \"hoje\" vira o do aparelho, e não o do salão"
+echo "3. o \"hoje\" vira o do aparelho, e não o do restaurante"
 troca app.html \
   "function aniversariantes(dias){
   const hj = hoje();" \
@@ -130,7 +130,7 @@ echo "12. o cartão entra no padrão de quem nunca mexeu no Dashboard"
 troca app.html \
   "const PADRAO_DASHBOARD = ['pendentes', 'fatAno', 'fatSemana'];" \
   "const PADRAO_DASHBOARD = ['pendentes', 'fatAno', 'fatSemana', 'aniversarios'];" \
-  && rodar "muda o dashboard de todo salão sem ninguém pedir"
+  && rodar "muda o dashboard de todo restaurante sem ninguém pedir"
 
 echo
 echo "mortas: $morta · sobreviveram: $viva · não rodaram: $perdida"

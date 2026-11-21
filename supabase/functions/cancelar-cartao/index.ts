@@ -81,9 +81,9 @@ Deno.serve(async (req) => {
 
     const pedidoTela = await req.json().catch(() => ({}));
     const salaoId = String(pedidoTela.salaoId ?? '');
-    if(!salaoId) return responder({ erro: 'Faltou o salão.' }, 400);
+    if(!salaoId) return responder({ erro: 'Faltou o restaurante.' }, 400);
 
-    // 1) Quem é a pré-aprovação deste salão — e esta pessoa pode mexer nela?
+    // 1) Quem é a pré-aprovação deste restaurante — e esta pessoa pode mexer nela?
     let atual;
     try{
       atual = await rpc('cartao_do_salao', { p_salao: salaoId, p_quem: quem });

@@ -1,5 +1,5 @@
 /* ===========================================================================
-   PediHub — o link público não enche a agenda do salão
+   PediHub — o link público não enche a agenda do restaurante
 
      bash tests/bancada/subir.sh
      node tests/teto-online.test.mjs
@@ -22,12 +22,12 @@
    Telefone novo, ficha nova, freio zerado.
 
    ── O NÚMERO FIXO QUE ESTE TESTE DERRUBOU ──────────────────────────────────
-   O primeiro desenho era um teto de 20 marcações por salão por dia. Este
+   O primeiro desenho era um teto de 20 marcações por restaurante por dia. Este
    arquivo reprovou na cara: as 12 marcações acima JÁ ERAM o dia inteiro. Numa
    jornada de 08:00 às 20:00 com serviço de uma hora cabem doze pessoas — um
-   teto de vinte nunca chega a valer, e um de dez estraga o dia de um salão
+   teto de vinte nunca chega a valer, e um de dez estraga o dia de um restaurante
    movimentado. Não existe número fixo certo, porque "o dia" tem tamanho
-   diferente em cada salão.
+   diferente em cada restaurante.
 
    ── O QUE ESTE ARQUIVO EXIGE ───────────────────────────────────────────────
    Dois limites que ANDAM COM A AGENDA, cada um provado SOZINHO — com o outro
@@ -83,7 +83,7 @@ const tel = () => '+5511' + (100000000 + Math.floor(Math.random()*89999999));
 const dona = novaAba();
 await dona.criarConta({ email:`teto-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju do Teto', telefone: tel() });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Teto ' + marca,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Teto ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 
@@ -152,12 +152,12 @@ async function encher(teto = 40){
   return { feitos, ultimo };
 }
 
-/* O deslocamento do fuso do salão, para montar um instante sem depender do
+/* O deslocamento do fuso do restaurante, para montar um instante sem depender do
    que o link está oferecendo — que é justamente o que os limites mexem. */
 const desl = deslocamento(AMANHA);
 const instante = (dia, hora) => `${dia}T${hora}:00${desl}`;
 
-// A agenda de verdade, do ponto de vista do SALÃO: quanto do dia está livre.
+// A agenda de verdade, do ponto de vista do RESTAURANTE: quanto do dia está livre.
 const livreNaCasa = async (dia = AMANHA) => {
   const r = await banco.query(
     `select public.minutos_de_jornada($1,$2::date)
@@ -268,7 +268,7 @@ verdade('a recepção marca no que o link não alcança',
 
 /* E o que o balcão marcou não come a cota do link: a reserva conta só o que
    veio pela internet. Contar tudo faria um dia cheio de telefonema fechar o
-   link — punindo o salão pelo próprio movimento. */
+   link — punindo o restaurante pelo próprio movimento. */
 igual('e o que a recepção marcou não entra na conta do link',
   Number((await banco.query(
     `select public.minutos_online_no_dia($1, $2::date) as m`,
@@ -306,7 +306,7 @@ for(let i = 0; i < 25; i++){
 }
 console.log(`      (entraram ${entraram} desconhecidas; parou em: ${recusa})`);
 
-/* O contador da janela é do SALÃO, e as seções acima já marcaram nele. O que
+/* O contador da janela é do RESTAURANTE, e as seções acima já marcaram nele. O que
    importa não é quantas entraram AQUI, e sim que o freio tenha disparado com
    dia livre pela frente — medido pelo contador e pela frase, não por uma
    contagem local que dependeria do que sobrou lá de cima. */
@@ -321,11 +321,11 @@ verdade('sem ter enchido a agenda: sobra dia de sobra',
   (await livreNaCasa(longe)) >= 600,
   `sobraram ${await livreNaCasa(longe)} minutos de 720`);
 
-/* ⚠ O CONTADOR SÓ ENXERGA QUEM O SALÃO NUNCA ATENDEU.
+/* ⚠ O CONTADOR SÓ ENXERGA QUEM O RESTAURANTE NUNCA ATENDEU.
 
    A primeira versão contava toda marcação online da janela, com teto de
    cinco — e reprovou a suíte de auditoria inteira com "congestionada". A
-   reprova não era do teste: era o retrato do dia bom do salão. O dono publica
+   reprova não era do teste: era o retrato do dia bom do restaurante. O dono publica
    um story, oito clientes remarcam em dez minutos, e o freio manda todas
    embora.
 
@@ -391,7 +391,7 @@ igual('e o link volta a aceitar', await porqueNao(maisDias(6)), null);
 /* ══════════════════════════════════════════════════════════════════════════
    5. O DONO MANDA NOS DOIS NÚMEROS
    ══════════════════════════════════════════════════════════════════════════ */
-secao('5) Os limites são ajuste do salão, não número meu');
+secao('5) Os limites são ajuste do restaurante, não número meu');
 
 igual('quem só trabalha com link põe 100 e desliga a reserva',
   Number((await banco.query(`select public.teto_online_pct($1) as p`, [SALAO]))
@@ -413,7 +413,7 @@ igual('e rajada absurda é aparada em 100',
 secao('6) Quem desmarca não fica devendo');
 
 /* A reserva mede OCUPAÇÃO. Se contasse chamadas, uma cliente que desmarcou e
-   remarcou no mesmo dia gastaria duas vezes a cota do salão — e a casa
+   remarcou no mesmo dia gastaria duas vezes a cota do restaurante — e a casa
    perderia agenda por causa de quem se organizou. */
 const antesDoCancel = Number((await banco.query(
   `select public.minutos_online_no_dia($1, $2::date) as m`,
@@ -467,10 +467,10 @@ await pg2.waitForTimeout(4000);
 await pg2.click('#abas .aba[data-chave="salao"]');
 await pg2.waitForTimeout(1200);
 
-/* Este salão já teve os dois mexidos lá em cima (10 e 100, os aparados).
-   A tela tem que mostrar O QUE O SALÃO TEM, e não o primeiro item da lista —
+/* Este restaurante já teve os dois mexidos lá em cima (10 e 100, os aparados).
+   A tela tem que mostrar O QUE O RESTAURANTE TEM, e não o primeiro item da lista —
    senão o Salvar seguinte trocaria o ajuste do dono sem ninguém pedir. */
-igual('a tela abre com a reserva que o salão realmente tem',
+igual('a tela abre com a reserva que o restaurante realmente tem',
   await pg2.inputValue('#cTetoPct'), '10');
 igual('e com a rajada que ele realmente tem',
   await pg2.inputValue('#cTetoRajada'), '100');
@@ -508,7 +508,7 @@ await nav.close();
 
 /* Os agendamentos primeiro. `agendamento_servicos.servico_id` é `on delete
    restrict` de propósito — serviço com horário marcado não some do catálogo —
-   e isso faz o cascade do salão esbarrar em si mesmo se a ordem for a de
+   e isso faz o cascade do restaurante esbarrar em si mesmo se a ordem for a de
    sempre. */
 await banco.query(`delete from public.agendamentos where salao_id=$1`, [SALAO]);
 await banco.query(`delete from public.saloes where id=$1`, [SALAO]);

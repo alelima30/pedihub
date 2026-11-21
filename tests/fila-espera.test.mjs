@@ -1,5 +1,5 @@
 /* ===========================================================================
-   PediHub — a fila de espera aparece para quem trabalha no salão
+   PediHub — a fila de espera aparece para quem trabalha no restaurante
 
      bash tests/bancada/subir.sh
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/fila-espera.test.mjs
@@ -9,7 +9,7 @@
    palavras:
 
        "Pronto! Você está na lista. Assim que alguém cancelar nesse período,
-        o salão te chama no WhatsApp."
+        o restaurante te chama no WhatsApp."
 
    E o painel não tinha essa tela. A palavra `lista_espera` aparecia ZERO
    vezes no app.html: a fila era baixada do banco a cada carregamento, entrava
@@ -68,7 +68,7 @@ const dona = novaAba();
 await dona.criarConta({ email:`fila-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju da Fila',
   telefone:'+5511' + (100000000 + Math.floor(Math.random()*89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Fila ' + marca,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Fila ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 
@@ -114,7 +114,7 @@ await entrar('Cleide Souza', '11977665544', [corte.id], DE, ATE, 'manha');
    link — o `entrar_na_fila()` recusa data velha, e faz bem. Ela nasce do
    tempo: a pessoa entrou na fila em julho pedindo vaga para julho, e hoje é
    agosto. Por isso vai direto no banco, que é o estado em que ela de fato
-   aparece num salão de verdade. */
+   aparece num restaurante de verdade. */
 const cliVelha = await dona.inserir('clientes', { salaoId: SALAO,
   nome:'Fantasma Antiga', telefone:'11966554433' });
 await banco.query(
@@ -135,7 +135,7 @@ const comToken = (await banco.query(
 igual('e cada uma tem o segredo de acompanhar', comToken, 3);
 
 /* ══════════════════════════════════════════════════════════════════════════
-   2. E O SALÃO VÊ — QUE É O PONTO DESTE ARQUIVO
+   2. E O RESTAURANTE VÊ — QUE É O PONTO DESTE ARQUIVO
    ══════════════════════════════════════════════════════════════════════════ */
 secao('2) A recepção abre a Agenda e a fila está lá');
 
@@ -152,10 +152,10 @@ await p.addInitScript(([b, s]) => {
 await p.goto(BASE + '/app.html');
 await p.waitForTimeout(4000);
 
-/* O salão nasceu agora, sem horário de ninguém, e o passo a passo do
+/* O restaurante nasceu agora, sem horário de ninguém, e o passo a passo do
    primeiro dia abre sozinho e cobre a tela — certo para ele, atravessado
    para este teste, que é sobre a fila de espera. Dispensado como "já fiz":
-   a marca fica no `cfg` do salão, no banco. Quem prova que ele aparece é o
+   a marca fica no `cfg` do restaurante, no banco. Quem prova que ele aparece é o
    `funil-nuvem.test.mjs`. */
 await p.evaluate(() => { if(typeof pdFechar === 'function') pdFechar(true); });
 await p.waitForTimeout(1800);
@@ -171,7 +171,7 @@ const fila = () => p.evaluate(() => {
 
 verdade('a Agenda TEM onde desenhar a fila',
   (await fila()) !== null,
-  'não existe #filaEspera na Agenda — a fila continua invisível para o salão');
+  'não existe #filaEspera na Agenda — a fila continua invisível para o restaurante');
 verdade('a Agenda mostra o cartão da fila',
   /esperando vaga/.test(await fila() || ''), (await fila() || '').slice(0, 160));
 verdade('com as duas que ainda esperam, e não a terceira',

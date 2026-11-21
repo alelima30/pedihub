@@ -5,27 +5,27 @@
 -- escolha entre guardar por um tempo ou apagar, "apaga tudo na hora".
 --
 -- ── O QUE ACONTECE, POR PAPEL ─────────────────────────────────────────────
---   · DONA, e a ÚNICA dona ativa do salão: o salão inteiro vai junto — agenda,
+--   · DONA, e a ÚNICA dona ativa do restaurante: o restaurante inteiro vai junto — agenda,
 --     clientes, serviços, equipe, caixa, campanhas, cobranças. Não fica nada
---     para "desfazer", e a tela diz isso antes, com o nome de cada salão.
---   · Dona de um salão que tem OUTRA dona ativa: o salão fica com a outra; sai
+--     para "desfazer", e a tela diz isso antes, com o nome de cada restaurante.
+--   · Dona de um restaurante que tem OUTRA dona ativa: o restaurante fica com a outra; sai
 --     só o vínculo de quem excluiu.
---   · Equipe (profissional, recepção, gerente): sai o login. O salão é de
+--   · Equipe (profissional, recepção, gerente): sai o login. O restaurante é de
 --     outra pessoa e continua inteiro; o que ela fez lá (quem marcou, quem
 --     abriu o caixa) fica sem o nome — as colunas `*_por` são `set null`.
---   · Cliente que entrou pelo link: sai o login. A ficha dela é do SALÃO
---     (nome e telefone que o salão cadastrou), e `clientes.perfil_id` é
+--   · Cliente que entrou pelo link: sai o login. A ficha dela é do RESTAURANTE
+--     (nome e telefone que o restaurante cadastrou), e `clientes.perfil_id` é
 --     `set null`: a ficha fica, desligada da conta.
 --
 -- ── ⚠ UM `DELETE FROM SALOES` SOZINHO NÃO BASTA — MEDIDO ──────────────────
--- Tudo do salão pendura em `saloes` com `on delete cascade`, mas quatro
+-- Tudo do restaurante pendura em `saloes` com `on delete cascade`, mas quatro
 -- chaves no caminho são `restrict`. Três delas ligam vizinhos do MESMO nível
 -- (agendamentos → clientes e profissionais, comandas → clientes), e essas a
 -- cascata resolve sozinha. A quarta não:
 --
 --     agendamento_servicos.servico_id → servicos   (restrict)
 --
--- O item do atendimento mora DOIS níveis abaixo do salão (salão →
+-- O item do atendimento mora DOIS níveis abaixo do restaurante (restaurante →
 -- agendamento → item), e o serviço, um só. A cascata apaga o serviço antes de
 -- descer até o item, e o Postgres recusa: «update or delete on table
 -- "servicos" violates foreign key constraint
@@ -36,8 +36,8 @@
 -- itens dela saem.
 --
 -- ── ⚠ O CARTÃO TEM DE ESTAR DESLIGADO ANTES ──────────────────────────────
--- A renovação automática mora no Mercado Pago. Apagar o salão aqui com a
--- assinatura ligada lá deixaria o cartão sendo cobrado todo mês por um salão
+-- A renovação automática mora no Mercado Pago. Apagar o restaurante aqui com a
+-- assinatura ligada lá deixaria o cartão sendo cobrado todo mês por um restaurante
 -- que não existe mais — e sem tela nenhuma para desligar. O painel desliga
 -- primeiro (pela borda `cancelar-cartao`, que só limpa o nosso lado depois de
 -- o Mercado Pago confirmar); este arquivo RECUSA se ainda estiver ligado.
@@ -45,24 +45,24 @@
 --
 -- ── AS FOTOS ─────────────────────────────────────────────────────────────
 -- Moram no Storage, e o Supabase não deixa apagar arquivo do Storage por SQL
--- (só pela API dele). Quem apaga a pasta do salão é o painel, ANTES de chamar
+-- (só pela API dele). Quem apaga a pasta do restaurante é o painel, ANTES de chamar
 -- esta função — enquanto ainda é gestor, que é o que a policy `img_apagar`
 -- exige. Depois daqui ele já não teria permissão.
 -- ===========================================================================
 
 /* O que a exclusão vai fazer, para a tela mostrar ANTES de pedir o EXCLUIR:
    os estabelecimentos em que a pessoa TRABALHA, um por linha, dizendo se o
-   salão vai junto (`apaga`) e se tem cartão ligado. A regra de "sou a única
+   restaurante vai junto (`apaga`) e se tem cartão ligado. A regra de "sou a única
    dona" mora aqui, e não na tela, para que o aviso e a exclusão nunca
    discordem.
 
    ⚠ O VÍNCULO DE CLIENTE NÃO ENTRA. Quem entra pelo link ganha um vínculo
-   `cliente` com o salão (01_schema), e ele não é "administrar" nada: contado
+   `cliente` com o restaurante (01_schema), e ele não é "administrar" nada: contado
    aqui, a cliente que quisesse excluir a conta pelo link seria mandada ao
-   painel de um salão que não é dela. Ele sai junto na exclusão, como todos.
+   painel de um restaurante que não é dela. Ele sai junto na exclusão, como todos.
 
-   Agrupado por salão: a mesma pessoa pode ser dona E profissional no mesmo
-   lugar (a chave do vínculo inclui o papel), e o salão apareceria duas vezes. */
+   Agrupado por restaurante: a mesma pessoa pode ser dona E profissional no mesmo
+   lugar (a chave do vínculo inclui o papel), e o restaurante apareceria duas vezes. */
 create or replace function public.o_que_excluir_apaga()
 returns jsonb
 language sql stable security definer set search_path = public as $$
@@ -86,7 +86,7 @@ $$;
 revoke all on function public.o_que_excluir_apaga() from public, anon;
 grant execute on function public.o_que_excluir_apaga() to authenticated;
 
-/* Um salão inteiro: os itens dos atendimentos primeiro, e a cascata leva o
+/* Um restaurante inteiro: os itens dos atendimentos primeiro, e a cascata leva o
    resto (ver o topo). Interna — ninguém de fora chama isto, só a
    `excluir_minha_conta()`, que já conferiu quem é e o que pode. */
 create or replace function public.apagar_salao_inteiro(p_salao uuid)
@@ -113,7 +113,7 @@ begin
       using errcode = 'insufficient_privilege';
   end if;
   /* A palavra é conferida AQUI, e não só na tela: um clique torto, ou uma
-     chamada direta à API, não apaga um salão inteiro. */
+     chamada direta à API, não apaga um restaurante inteiro. */
   if upper(btrim(coalesce(p_confirmacao, ''))) <> 'EXCLUIR' then
     raise exception 'Para excluir a conta, digite EXCLUIR.'
       using errcode = 'check_violation';
@@ -136,7 +136,7 @@ begin
 
   delete from public.vinculos where perfil_id = v_eu;
   /* O login. `perfis` vai junto (cascade), e tudo o que apontava para o
-     perfil em salões de OUTRAS pessoas fica sem o nome (set null). */
+     perfil em restaurantes de OUTRAS pessoas fica sem o nome (set null). */
   delete from auth.users where id = v_eu;
 
   return jsonb_build_object('ok', true, 'saloes_apagados', v_feitos);

@@ -32,7 +32,7 @@
 --
 -- Recusar seria o sistema travando uma venda que já aconteceu: a cliente está
 -- no balcão com o vidro na mão, o dinheiro na mesa, e o PediHub dizendo não
--- por causa de um número que ninguém atualizou desde março. O salão não
+-- por causa de um número que ninguém atualizou desde março. O restaurante não
 -- desfaz a venda — ele xinga o sistema, e com razão.
 --
 -- Negativo é informação: quer dizer "você vendeu mais do que tinha

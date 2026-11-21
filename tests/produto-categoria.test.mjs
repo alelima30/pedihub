@@ -55,7 +55,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`pc-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 await dona.inserir('servicos', { salaoId: SALAO, nome:'Hidratação', duracaoMin:60, intervaloMin:0,
@@ -192,7 +192,7 @@ secao('3. No link: as categorias embaixo de "Buscar produto…"');
     const on = document.querySelector('#lojaCats button[aria-pressed="true"]');
     return [getComputedStyle(on).backgroundColor, getComputedStyle(on).color];
   });
-  igual('a categoria escolhida na cor do botão do salão', cores, ['rgb(142, 36, 87)', 'rgb(255, 255, 255)']);
+  igual('a categoria escolhida na cor do botão do restaurante', cores, ['rgb(142, 36, 87)', 'rgb(255, 255, 255)']);
   await fechar();
 }
 {

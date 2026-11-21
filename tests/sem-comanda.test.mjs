@@ -1,5 +1,5 @@
 /* ===========================================================================
-   PediHub — o salão que trabalha sem comanda e sem caixa
+   PediHub — o restaurante que trabalha sem comanda e sem caixa
 
      bash tests/bancada/subir.sh
      node tests/sem-comanda.test.mjs
@@ -8,9 +8,9 @@
    "Não quero comanda nem caixa. Abre, coloca os serviços e já começa a
    trabalhar."
 
-   Atender o pedido só na tela zeraria o mês do salão: TODO o dinheiro deste
+   Atender o pedido só na tela zeraria o mês do restaurante: TODO o dinheiro deste
    sistema nasce da comanda — o `relatorio()` do 12 soma comanda FECHADA, a
-   comissão do 16 mora em `comanda_itens`. Um salão que nunca abrisse comanda
+   comissão do 16 mora em `comanda_itens`. Um restaurante que nunca abrisse comanda
    teria faturamento zero, sem erro nenhum na tela.
 
    Então o 28 faz o contrário: o atendimento concluído VIRA comanda sozinho,
@@ -20,7 +20,7 @@
    consegue ver quanto faturou.
 
    ── ⚠ E A SEÇÃO 1 É A MAIS IMPORTANTE DE TODAS ─────────────────────────────
-   O padrão é LIGADO. Se a ausência da chave valesse "desligado", todo salão
+   O padrão é LIGADO. Se a ausência da chave valesse "desligado", todo restaurante
    que existe hoje passaria a gerar comanda automática por cima das comandas
    de verdade que a recepção abre à mão — com desconto, produto e forma de
    pagamento próprios. A seção 1 é o que impede isso de passar despercebido.
@@ -34,7 +34,7 @@ const RAIZ = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const BASE = process.env.BANCADA || 'http://127.0.0.1:8123';
 
 /* `usa_comanda()` não responde mais pela API (57_plano_fechado.sql): aberta a
-   quem tem conta, dizia de QUALQUER salão se ele paga ou não. Quem a chama é
+   quem tem conta, dizia de QUALQUER restaurante se ele paga ou não. Quem a chama é
    o gatilho da comanda automática e a vitrine. O teste pergunta direto ao
    banco, como dono dele — e confere, mais abaixo, que a API recusa. */
 const banco = new pg.Client({ host: process.env.PGHOST || '/tmp',
@@ -66,7 +66,7 @@ function novaAba(){
 const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const tel = n => '+5551' + String(900000000 + n + (Date.now() % 89000000)).slice(0, 9);
 
-// ── O salão ────────────────────────────────────────────────────────────────
+// ── O restaurante ────────────────────────────────────────────────────────────────
 const d = novaAba();
 await d.criarConta({ email:`sc-dona-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Dona Sem Comanda', telefone: tel(1) });
@@ -91,15 +91,15 @@ const corte = await d.inserir('servicos', { salaoId:SALAO, nome:'Corte',
    derruba a montagem antes de medir qualquer coisa. */
 const cliente = await d.inserir('clientes', { salaoId:SALAO, nome:'Joana Teste',
   telefone: String(51900000000 + (Date.now() % 89000000)) });
-ok('salão com um serviço de R$ 50 e comissão de 40%');
+ok('restaurante com um serviço de R$ 50 e comissão de 40%');
 
 /* A recepção marcando pelo painel: insert direto, `origem: recepcao`. É este
-   o caminho do salão que não usa comanda — ele vive na agenda. */
+   o caminho do restaurante que não usa comanda — ele vive na agenda. */
 const FUSO = 'America/Sao_Paulo';
 const hojeNoSalao = new Intl.DateTimeFormat('en-CA', { timeZone: FUSO,
   year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
 
-/* ⚠ UM DIA DIFERENTE PARA CADA MARCAÇÃO, ÀS 10H DO SALÃO.
+/* ⚠ UM DIA DIFERENTE PARA CADA MARCAÇÃO, ÀS 10H DO RESTAURANTE.
 
    Primeiro eu tinha escrito "daqui a 36 horas, mais 3 a cada chamada" — e na
    quarta marcação o relógio já tinha saído da jornada das 08h às 20h. O erro
@@ -137,12 +137,12 @@ const desligar = () => d.atualizar('saloes', SALAO, { cfg:{ usaComanda: false } 
 /* ══════════════════════════════════════════════════════════════════════════
    1 — ⚠ O PADRÃO É LIGADO, E NADA MUDA PARA QUEM JÁ USA
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Salão novo, sem a chave no cfg');
+secao('Restaurante novo, sem a chave no cfg');
 
 const semChave = await usaComandaNoBanco(SALAO);
-verdade('o salão nasce USANDO comanda — ' + JSON.stringify(semChave),
+verdade('o restaurante nasce USANDO comanda — ' + JSON.stringify(semChave),
   semChave === true,
-  'se nascesse desligado, todo salão de hoje passaria a gerar comanda '
+  'se nascesse desligado, todo restaurante de hoje passaria a gerar comanda '
   + 'automática por cima das que a recepção abre à mão');
 
 const a1 = await marcarNaRecepcao();
@@ -166,7 +166,7 @@ try{ await d.chamar('usa_comanda', { p_salao: SALAO }); }
 catch(e){ recusaDaApi = e.message || String(e); }
 verdade('pela API a pergunta é recusada — ' + JSON.stringify(recusaDaApi),
   recusaDaApi !== null && /permission denied|permiss/i.test(recusaDaApi),
-  'aberta, qualquer conta descobria de qualquer salão se ele está no Grátis');
+  'aberta, qualquer conta descobria de qualquer restaurante se ele está no Grátis');
 
 const a2 = await marcarNaRecepcao();
 igual('antes de concluir, nenhuma comanda', (await comandasDo(a2.id)).length, 0);
@@ -189,9 +189,9 @@ const pgs = await d.lista('pagamentos', { comandaId: c2[0].id });
 igual('com o pagamento pelo total', pgs.length, 1);
 igual('de R$ 50', Number(pgs[0].valor), 50);
 /* ⚠ `nao_informado`, e não `dinheiro`. Pôr dinheiro seria mentira com
-   consequência: no dia em que esse salão abrisse o caixa, a gaveta passaria a
+   consequência: no dia em que esse restaurante abrisse o caixa, a gaveta passaria a
    esperar um dinheiro que nunca entrou nela. */
-igual('na forma "não informado" — a verdade sobre este salão',
+igual('na forma "não informado" — a verdade sobre este restaurante',
   pgs[0].forma, 'nao_informado');
 verdade('e fora de qualquer gaveta, porque não há caixa aberto',
   pgs[0].caixaId == null, JSON.stringify(pgs[0].caixaId));
@@ -217,7 +217,7 @@ igual('e o faturamento do dia é os R$ 50 do atendimento concluído',
 
    O item do agendamento foi gravado com `comissaoPct: 0`. Se a comanda
    automática copiasse esse número, a comissão de todo mundo seria zero num
-   salão que não usa comanda — em silêncio, e só descoberto no fim do mês.
+   restaurante que não usa comanda — em silêncio, e só descoberto no fim do mês.
    Quem decide é o gatilho do 16, pelo cadastro do profissional: 40%.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('A comissão');
@@ -312,7 +312,7 @@ igual('e não nasce comanda — não houve dinheiro nenhum a contar',
 
    `cfg` é jsonb e guarda o que puserem nele. `'abacaxi'::boolean` LEVANTA no
    Postgres — e um cast desprotegido aqui derrubaria a conclusão de TODO
-   atendimento do salão. A peneira é de texto, e o lado seguro é o ligado: um
+   atendimento do restaurante. A peneira é de texto, e o lado seguro é o ligado: um
    erro de digitação nunca pode apagar a comanda de ninguém.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Valor inválido no cfg');

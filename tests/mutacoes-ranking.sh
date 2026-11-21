@@ -50,7 +50,7 @@ PY
   return $r
 }
 
-echo "1. quem atende vê o salão inteiro"
+echo "1. quem atende vê o restaurante inteiro"
 troca supabase/60_dashboard.sql \
   "       and (v_prof is null or a.profissional_id = v_prof)" \
   "       and true" \

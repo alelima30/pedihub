@@ -13,7 +13,7 @@
                                     o aviso muda a cada tecla no campo de hora
 
    Duas implementações da mesma regra divergem calado. A que ninguém confere é
-   a que quebra — e o modo como isso aparece no salão é o pior possível: a
+   a que quebra — e o modo como isso aparece no restaurante é o pior possível: a
    tela diz que dá, a recepção clica, e o banco recusa com a cliente na
    frente.
 
@@ -60,7 +60,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`motor-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Dona Motor', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Motor ' + marca,
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Motor ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 

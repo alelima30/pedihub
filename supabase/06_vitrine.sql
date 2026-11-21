@@ -1,10 +1,10 @@
 -- ===========================================================================
--- PediHub — 06: a vitrine de UM salão
+-- PediHub — 06: a vitrine de UM restaurante
 --
 -- ── O PROBLEMA QUE ESTE ARQUIVO FECHA ──────────────────────────────────────
 -- As vistas `saloes_publicos`, `servicos_publicos` e `profissionais_publicos`
 -- estavam liberadas para `anon` sem nenhum filtro. Funcionava, e o isolamento
--- entre donos continuava intacto: nenhum salão lia agendamento, cliente ou
+-- entre donos continuava intacto: nenhum restaurante lia agendamento, cliente ou
 -- faturamento de outro — isso o RLS garante e os testes provam.
 --
 -- Mas havia outra coisa vazando, e não é dado de cliente: é a SUA LISTA DE
@@ -13,22 +13,22 @@
 --
 --     GET /rest/v1/saloes_publicos
 --
--- e recebia TODOS os salões da plataforma, com nome, endereço e WhatsApp. Um
+-- e recebia TODOS os restaurantes da plataforma, com nome, endereço e WhatsApp. Um
 -- concorrente monta com isso uma lista de prospecção pronta: exatamente quem
 -- usa o PediHub, onde fica e por onde falar. Você levou meses para reunir
 -- essa lista; ela sai numa requisição.
 --
 -- ── O QUE MUDA ─────────────────────────────────────────────────────────────
--- A cliente chega por um link com o apelido do salão. Ela NUNCA precisa de um
--- catálogo — precisa de um salão, o dela. Então o catálogo deixa de existir
+-- A cliente chega por um link com o apelido do restaurante. Ela NUNCA precisa de um
+-- catálogo — precisa de um restaurante, o dela. Então o catálogo deixa de existir
 -- para quem não fez login, e no lugar entra esta função, que só responde
 -- quando alguém já sabe o apelido.
 --
--- Isso não torna o apelido secreto: quem tem o link tem o salão, e é assim
--- que deve ser. O que muda é que ninguém mais ENUMERA. Descobrir um salão
+-- Isso não torna o apelido secreto: quem tem o link tem o restaurante, e é assim
+-- que deve ser. O que muda é que ninguém mais ENUMERA. Descobrir um restaurante
 -- passa a exigir já conhecê-lo.
 --
--- Vem tudo de uma vez — salão, serviços e profissionais — em vez de três
+-- Vem tudo de uma vez — restaurante, serviços e profissionais — em vez de três
 -- idas ao servidor. No 3G da cliente, isso é a diferença entre a tela abrir
 -- e a tela demorar.
 -- ===========================================================================
@@ -47,7 +47,7 @@ language sql stable security definer set search_path = public as $$
       -- regra — e não ter como discordar dela.
       'diasLiberados', public.dias_liberados(s.id),
 
-      /* ── A APARÊNCIA QUE O SALÃO ESCOLHEU ──────────────────────────────
+      /* ── A APARÊNCIA QUE O RESTAURANTE ESCOLHEU ──────────────────────────────
          Só as três chaves visuais, nomeadas uma a uma — nunca o `cfg`
          inteiro. `cfg` é jsonb e vai crescer; devolvê-lo por atacado
          significa publicar para qualquer visitante toda configuração que
@@ -55,7 +55,7 @@ language sql stable security definer set search_path = public as $$
          aparece aqui se for escrita aqui, de propósito.
 
          Nulo quer dizer "não escolheu", e a tela usa o padrão dela — assim
-         salão antigo, criado antes disto existir, continua bonito sem
+         restaurante antigo, criado antes disto existir, continua bonito sem
          precisar de migração. */
       'cor',  s.cfg->>'cor',
       'tema', s.cfg->>'tema',
@@ -63,7 +63,7 @@ language sql stable security definer set search_path = public as $$
          `'abacaxi'::boolean` e `'abacaxi'::int` LEVANTAM no Postgres — não
          devolvem nulo. Dentro da `vitrine()` isso não é "o ajuste não pega":
          é a função inteira caindo, e ela é a ÚNICA porta da página da
-         cliente. A casa sai do ar por um caractere, com o link que o salão
+         cliente. A casa sai do ar por um caractere, com o link que o restaurante
          mandou no WhatsApp.
 
          Medido, uma chave por vez, num banco de verdade: as quatro derrubavam
@@ -84,10 +84,10 @@ language sql stable security definer set search_path = public as $$
                        in ('true', 't', '1', 'yes', 'sim'),
       -- A imagem de fundo da página, que o dono anexa em Identidade visual.
       -- Mora no `cfg` e não numa coluna própria de propósito: `cfg` é jsonb
-      -- e já existe, então nenhum salão precisa de migração de tabela.
+      -- e já existe, então nenhum restaurante precisa de migração de tabela.
       'fundo', s.cfg->>'fundo',
       -- O brilho do botão principal. Ausente quer dizer LIGADO: é o padrão, e
-      -- assim salão criado antes disto existir já nasce com ele.
+      -- assim restaurante criado antes disto existir já nasce com ele.
       'brilho', lower(btrim(coalesce(s.cfg->>'brilho', 'true')))
                   not in ('false', 'f', '0', 'no', 'nao', 'não'),
       -- A letra do nome na capa. Nulo = a tela decide pelo tipo do negócio.
@@ -106,7 +106,7 @@ language sql stable security definer set search_path = public as $$
                   then (s.cfg->>'veu')::int end,
       /* Quanto os cartões fecham sobre a foto de fundo: 'auto', 'vidro' ou
          'fechado'. Nulo = 'auto', que é o que a tela faz sozinha — então
-         salão criado antes disto não precisa de migração nenhuma.
+         restaurante criado antes disto não precisa de migração nenhuma.
 
          ⚠ Precisa ESTAR AQUI para existir. O `cfg` inteiro nunca é
          devolvido, cada chave é nomeada uma a uma, e ajuste que não aparece
@@ -115,7 +115,7 @@ language sql stable security definer set search_path = public as $$
       'cartoes', s.cfg->>'cartoes',
 
       /* A FORMA do cartão de serviço: `reta` (o de sempre) ou
-         `elegante`. Ausente vale `reta`, então salão criado antes
+         `elegante`. Ausente vale `reta`, então restaurante criado antes
          disto existir não muda de aparência e não há migração.
 
          ⚠ É outro eixo, e não um valor de `cartoes`. Aquele decide o
@@ -125,15 +125,15 @@ language sql stable security definer set search_path = public as $$
       'moldura', coalesce(s.cfg->>'moldura', 'reta'),
 
       /* ── A CAMADA DE PERSONALIZAÇÃO POR ESTABELECIMENTO ────────────────
-         Cinco chaves, e as cinco AUSENTES no salão que nunca mexeu — que é
-         o estado de todo salão que já existe. Ausente aqui não é "vazio": é
+         Cinco chaves, e as cinco AUSENTES no restaurante que nunca mexeu — que é
+         o estado de todo restaurante que já existe. Ausente aqui não é "vazio": é
          "faça como sempre fez", e a página da cliente trata assim.
 
          ⚠ `cores` É UM OBJETO COM BURACOS, DE PROPÓSITO. Cada cor que o dono
          NÃO escolheu fica de fora, e a tela a calcula a partir da principal,
          como faz desde sempre — medindo contraste para decidir a letra. Se
          gravássemos as nove sempre, a conta de hoje congelaria dentro do
-         salão, e melhorar o cálculo depois não chegaria em ninguém.
+         restaurante, e melhorar o cálculo depois não chegaria em ninguém.
 
          `modo` ausente vale `atual`: o visual de hoje, sem nada novo ligado.
          É o que garante que ninguém acorde com a página diferente. */
@@ -144,7 +144,7 @@ language sql stable security definer set search_path = public as $$
       -- A forma da caixa do carrossel. `panoramico` é o 16/8 de antes.
       'slideForma', coalesce(s.cfg->>'slideForma', 'panoramico'),
       /* ── A FITA DO CARRINHO, EM METAL ─────────────────────────────────
-         Cinco chaves, e as cinco AUSENTES no salão que nunca mexeu. Ausente
+         Cinco chaves, e as cinco AUSENTES no restaurante que nunca mexeu. Ausente
          não quer dizer "desligado": quer dizer "o metal de fábrica", que é o
          mesmo do botão de agendar.
 
@@ -199,7 +199,7 @@ language sql stable security definer set search_path = public as $$
       select jsonb_agg(jsonb_build_object(
                'id', p.id, 'nome', coalesce(p.apelido, p.nome),
                'foto', p.foto,
-               -- Lista vazia = faz tudo. É como um salão pequeno começa, e a
+               -- Lista vazia = faz tudo. É como um restaurante pequeno começa, e a
                -- tela já trata assim.
                'servicos', (select coalesce(jsonb_agg(sp.servico_id), '[]'::jsonb)
                               from public.servicos_profissionais sp

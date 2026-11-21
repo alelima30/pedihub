@@ -292,7 +292,7 @@ begin
   end if;
   if p_profissional is not null and not exists (
        select 1 from public.profissionais pr where pr.id = p_profissional and pr.salao_id = p_salao) then
-    raise exception 'Quem vendeu não é deste salão.' using errcode = 'check_violation';
+    raise exception 'Quem vendeu não é deste restaurante.' using errcode = 'check_violation';
   end if;
 
   insert into public.comandas (salao_id, cliente_id, status) values (p_salao, p_cliente, 'aberta')
@@ -307,7 +307,7 @@ begin
       select pr.nome, pr.preco into v_desc, v_preco from public.produtos pr
        where pr.id = (x->>'id')::uuid and pr.salao_id = p_salao;
       if v_desc is null then
-        raise exception 'Um dos produtos não é deste salão.' using errcode = 'check_violation';
+        raise exception 'Um dos produtos não é deste restaurante.' using errcode = 'check_violation';
       end if;
       insert into public.comanda_itens (comanda_id, tipo, produto_id, descricao, qtd, preco_unit, profissional_id)
            values (v_com, 'produto', (x->>'id')::uuid, v_desc, v_qtd, v_preco, p_profissional);
@@ -315,7 +315,7 @@ begin
       select sv.nome, sv.preco into v_desc, v_preco from public.servicos sv
        where sv.id = (x->>'id')::uuid and sv.salao_id = p_salao;
       if v_desc is null then
-        raise exception 'Um dos serviços não é deste salão.' using errcode = 'check_violation';
+        raise exception 'Um dos serviços não é deste restaurante.' using errcode = 'check_violation';
       end if;
       insert into public.comanda_itens (comanda_id, tipo, servico_id, descricao, qtd, preco_unit, profissional_id)
            values (v_com, 'servico', (x->>'id')::uuid, v_desc, v_qtd, v_preco, p_profissional);

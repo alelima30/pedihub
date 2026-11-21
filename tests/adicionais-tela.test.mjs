@@ -63,7 +63,7 @@ async function salaoNoPlano(nome, plano){
   const d = novaAba();
   await d.criarConta({ email:`adic-${plano}-${nome.split(' ')[0].toLowerCase()}-${marca}@teste.com`, senha:'minhasenhaboa', nome,
     telefone:'+5511' + (100000000 + Math.floor(Math.random() * 89999999)) });
-  const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão ' + nome + ' ' + marca,
+  const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante ' + nome + ' ' + marca,
     p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:'11222333000181', p_origem:null });
   const salao = cr[0].salao_id;
   await banco.query(`update public.assinaturas set plano = $2, status = 'ativa', trial_ate = null,
@@ -138,7 +138,7 @@ verdade('o dono vê antes: de R$ 97,00 para R$ 146,90, liberado agora',
 await p.click('#fundo button:has-text("Confirmar")');
 await p.waitForFunction(() => /Ativo\. Entra na sua mensalidade/.test(
   (document.getElementById('adicional-crediario') || {}).innerText || ''), null, { timeout: 15000 }).catch(() => {});
-igual('o painel mandou só o salão, o módulo e a ação (nada de preço)',
+igual('o painel mandou só o restaurante, o módulo e a ação (nada de preço)',
   Object.keys((p.pedidos[0] || {}).corpo || {}).sort(), ['acao', 'adicional', 'salaoId']);
 verdade('   com a sessão de quem pediu', /^Bearer .+/.test((p.pedidos[0] || {}).auth || ''));
 verdade('depois: "Ativo. Entra na sua mensalidade."',

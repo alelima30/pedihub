@@ -8,7 +8,7 @@
 
    Barra lateral escura de 252px, fixa, em qualquer tema; conteúdo claro ao
    lado; topo com trilha e data. É o arranjo do AdminPro, e é o certo para
-   este tipo de produto: o dono do salão fica o dia inteiro na mesma tela e
+   este tipo de produto: o dono do restaurante fica o dia inteiro na mesma tela e
    troca de assunto dezenas de vezes. Aba horizontal some quando a lista de
    assuntos cresce; barra lateral aguenta doze itens sem encolher nada.
 
@@ -17,7 +17,7 @@
 
    ROXO SOBRE GRAFITE
 
-   Um produto, dois públicos: metade dos salões que usam isto é barbearia. A
+   Um produto, dois públicos: metade dos restaurantes que usam isto é barbearia. A
    primeira versão era magenta, e magenta chapado em botão faz o barbeiro
    fechar a tela em dois segundos.
 
@@ -44,7 +44,7 @@
    larga que dá altura. Uma sombra só, chapada, denuncia layout às pressas.
 
    A tipografia é a do sistema: Segoe UI, que é a do Windows. O computador da
-   recepção é Windows em praticamente todo salão do Brasil, e usar a fonte
+   recepção é Windows em praticamente todo restaurante do Brasil, e usar a fonte
    nativa tem três efeitos que fonte baixada não tem — nada para descarregar,
    nenhuma troca de letra no meio do carregamento, e a tela parece parte do
    sistema operacional em vez de parecer um site aberto dentro dele.
@@ -194,8 +194,8 @@
   --sombra-marca:0 1px 2px rgba(124,45,18,.22), 0 6px 16px -5px rgba(234,88,12,.34);
 
   /* ── Tipografia ──────────────────────────────────────────────────────
-     A fonte do Windows, que é onde o salão trabalha: o computador da recepção
-     é Windows em praticamente todo salão do Brasil.
+     A fonte do Windows, que é onde o restaurante trabalha: o computador da recepção
+     é Windows em praticamente todo restaurante do Brasil.
 
      "Segoe UI Variable Text" vem primeiro porque é a do Windows 11 — é a
      mesma família, redesenhada, e num texto de 15px ela tem o espacejamento
@@ -207,7 +207,7 @@
      projeto; isso sai, e a primeira pintura da tela acontece antes. */
   --fonte:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,
           "Roboto","Helvetica Neue",Arial,sans-serif;
-  /* Para título de abertura e nome de salão: a mesma família, mas na variação
+  /* Para título de abertura e nome de restaurante: a mesma família, mas na variação
      de display do Windows 11, que tem contraste maior e serve para tamanho
      grande. Onde ela não existe, é a mesma fonte do resto — e tudo bem. */
   --fonte-display:"Segoe UI Variable Display","Segoe UI",system-ui,
@@ -339,7 +339,7 @@
   align-self:center;
 }
 
-/* ── O seletor de salão ──────────────────────────────────────────────── */
+/* ── O seletor de restaurante ──────────────────────────────────────────────── */
 .lat-salao{ padding:13px 16px 4px }
 .lat-salao label{
   display:block; font-size:10px; font-weight:600; letter-spacing:.1em;
@@ -388,7 +388,7 @@
    Sem `--ico` definida, `inherit` faz exatamente o que o ícone já fazia: ele
    toma a cor do texto em volta, que é o comportamento do projeto inteiro
    (ver `currentColor` no icones.js). Quer dizer: esta linha é um no-op em
-   todo salão que não escolheu cor de ícone — e a variável só é definida pelo
+   todo restaurante que não escolheu cor de ícone — e a variável só é definida pelo
    `aplicarCoresSoltas()` da página da cliente.
 
    ⚠ Especificidade baixa de propósito (0,1,0). As regras que já pintam ícone
@@ -472,7 +472,7 @@
 
 /* ── DUAS ABAS COM PESO PRÓPRIO ────────────────────────────────────────────
    "Ver como cliente" não é mais uma seção: é a única que mostra a página que
-   a CLIENTE vê, e é o que o dono abre para conferir se o salão está bonito
+   a CLIENTE vê, e é o que o dono abre para conferir se o restaurante está bonito
    antes de mandar o link. Vive em azul claro o tempo todo, não só quando
    selecionada.
 
@@ -542,7 +542,7 @@
 /* Ajuda pelo WhatsApp: no topo de toda tela, para nunca cobrir a agenda nem
    o botão de salvar das janelas. Só cores do tema. */
 /* O asterisco dos campos obrigatórios do cadastro da cliente — na cor de
-   destaque do tema do salão, e a legenda no cinza do texto discreto. */
+   destaque do tema do restaurante, e a legenda no cinza do texto discreto. */
 .obrig{ color:var(--ac-600); font-weight:700; margin-left:1px }
 .obrig-legenda{ font-size:12.5px; color:var(--txt3, var(--txt2)); margin:-4px 0 12px }
 /* A faixa do teste grátis no alto do painel — só tokens do tema. */
@@ -551,7 +551,7 @@
   background:var(--ac-soft); border:1px solid var(--ac-line); color:var(--txt);
   border-radius:var(--r-md, 12px); padding:9px 12px; margin:0 0 12px; font-size:13.5px; line-height:1.4;
 }
-/* O modo suporte: a plataforma dentro do painel de um salão cliente. Colada
+/* O modo suporte: a plataforma dentro do painel de um restaurante cliente. Colada
    embaixo do topo; com a edição liberada, no tom de alerta. Só tokens do tema. */
 .faixa-suporte{
   position:sticky; top:60px; z-index:39;
@@ -654,7 +654,7 @@ a.lat-acao{ text-decoration:none }
 /* ===========================================================================
    TIPOGRAFIA
    Uma escala só. Título grande pede letra mais junta; texto pequeno pede o
-   contrário. A serifa entra só onde o assunto é identidade — nome do salão,
+   contrário. A serifa entra só onde o assunto é identidade — nome do restaurante,
    abertura de página — e nunca em dado, tabela ou botão.
    =========================================================================== */
 body{
@@ -670,7 +670,7 @@ h2{font-size:1.1rem;font-weight:600;letter-spacing:-.016em;line-height:1.32}
 h3{font-size:.95rem;font-weight:600;letter-spacing:-.01em}
 b,strong{font-weight:600}
 
-/* Título de abertura e nome de salão. No Windows 11 sai na variação Display
+/* Título de abertura e nome de restaurante. No Windows 11 sai na variação Display
    da Segoe, desenhada para tamanho grande: contraste maior e espacejamento
    mais apertado. Onde ela não existe, é a mesma fonte do resto. */
 .display, .marca-salao h2, .cabeca h1, .pub-topo h3{
@@ -730,7 +730,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
   background:var(--tinta) !important; color:var(--tinta-txt) !important;
   border-radius:var(--r-sm) !important; box-shadow:var(--sombra-xs);
 }
-/* Com logo, o quadrado deixa de ser fundo e vira moldura: a logo do salão
+/* Com logo, o quadrado deixa de ser fundo e vira moldura: a logo do restaurante
    tem fundo próprio, e pintar atrás dela cria uma borda de cor que não
    estava no arquivo que o dono subiu. */
 .avatar-salao.com-logo{
@@ -746,7 +746,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
    pequeno, onde degradê vira borrão.
 
    ⚠ Usa `--tinta-marca`, e não `--tinta`. Na página da cliente o `--tinta`
-   passou a ser a cor que o SALÃO escolheu — é ela que pinta seleção, borda e
+   passou a ser a cor que o RESTAURANTE escolheu — é ela que pinta seleção, borda e
    avatar. A marca do PediHub não acompanha: ela é de outra empresa, e virar
    dourada porque a barbearia é dourada seria a assinatura do fornecedor se
    passando pela do cliente. */
@@ -884,7 +884,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
   box-shadow:var(--sombra) !important; border-color:transparent !important;
 }
 .dia.sel small, .dia.sel i{color:var(--tinta-txt) !important;opacity:.72}
-/* A régua de planos é a mesma nas duas telas: o cadastro e o app do salão. */
+/* A régua de planos é a mesma nas duas telas: o cadastro e o app do restaurante. */
 .regua{display:flex;gap:7px;flex-wrap:wrap}
 .regua button{
   min-width:44px;height:42px;padding:0 13px;border-radius:var(--r-sm);
@@ -903,7 +903,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
 /* ═══════════════════════════════════════════════════════════════════════════
    A APARÊNCIA DO LINK DA CLIENTE — paleta e prévia
 
-   Quem tem salão não escolhe hexadecimal: escolhe uma cor que combina com a
+   Quem tem restaurante não escolhe hexadecimal: escolhe uma cor que combina com a
    fachada. Daí as fichas de cor prontas, com o seletor livre atrás para quem
    tem marca definida.
 
@@ -933,14 +933,14 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
 
        elemento           na página    na prévia
        fundo              #102030      #fbf8f1
-       nome do salão      #203040      #172033
+       nome do restaurante      #203040      #172033
        endereço           #405060      #172033
        título de seção    #708090      #94a3b8
        fundo do cartão    #c0d0e0      #000000
        botão              #804020      #6d28d9
 
    Seis de seis. A prévia mostrava o tema de fábrica enquanto a página mostrava
-   as cores do salão, e nenhuma das duas estava "quebrada" — cada uma, sozinha,
+   as cores do restaurante, e nenhuma das duas estava "quebrada" — cada uma, sozinha,
    parecia certa.
 
    O efeito para quem usa é pior do que a divergência: ele escolhe a cor do
@@ -983,7 +983,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
    (rua)" escolhido, o dono tem que ver a cor que escolheu, e não 60% dela. */
 .fone-topo [data-cfg="rua"]{ opacity:1;
   color:var(--fone-rua, var(--fone-texto, var(--fone-ico-texto, inherit))) }
-/* O "Agende seu horário" (salão sem endereço) também na cor cheia, pelo mesmo
+/* O "Agende seu horário" (restaurante sem endereço) também na cor cheia, pelo mesmo
    motivo da rua: é a cor que a página pinta. */
 .fone-topo [data-cfg="subtitulo"]{ opacity:1;
   color:var(--fone-subtitulo, var(--fone-texto, var(--fone-ico-texto, inherit))) }
@@ -1239,7 +1239,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
 }
 .ap-mais[open] > summary{ border-bottom:1px solid var(--borda); margin-bottom:4px }
 
-/* O deslizante. Alvo de 40px para o dedo, e a trilha na cor do salão até o
+/* O deslizante. Alvo de 40px para o dedo, e a trilha na cor do restaurante até o
    ponto escolhido — sem isso não dá para ver de relance onde está. */
 .desliza{
   width:100%; height:40px; appearance:none; background:transparent;
@@ -1324,7 +1324,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
 .fone-slide-pontos i.on{ width:11px; background:var(--fone-marca) }
 
 /* O cartão de boas-vindas, com o botão dentro — como na página de verdade. */
-/* Os tons vêm do salão (--fone-ac*, escritos pelo `tonsDaMarcaNaPrevia()`),
+/* Os tons vêm do restaurante (--fone-ac*, escritos pelo `tonsDaMarcaNaPrevia()`),
    e o `--ac-*` do painel fica só de reserva. */
 .fone-boas{
   border:1px solid var(--fone-ac-line, var(--ac-line)); border-radius:12px; padding:10px;
@@ -1425,7 +1425,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
 /* ── A MOLDURA CURVADA, DENTRO DA PRÉVIA ──────────────────────────────────
    O mesmo desenho do `.sv-cartao` da página da cliente, em 106px de largura.
    Não é a mesma folha: a prévia vive dentro do painel, onde `--acao` é a cor
-   do SISTEMA e não a do salão. Quem carrega a cor escolhida aqui é o
+   do SISTEMA e não a do restaurante. Quem carrega a cor escolhida aqui é o
    `--fone-marca`, que o `pintarPreviaFone()` põe no elemento — por isso o
    botão redondo usa ele, e não `--acao`.
 
@@ -1729,7 +1729,7 @@ input.ruim, select.ruim{border-color:var(--er-500) !important}
 .trilha i.on, .trilho .bolas i.on{background:var(--acao)}
 
 /* ===========================================================================
-   IMAGENS DO SALÃO — marca, foto e card de serviço
+   IMAGENS DO RESTAURANTE — marca, foto e card de serviço
    ---------------------------------------------------------------------------
    Toda imagem aqui é de terceiro: entra pelo celular do dono, em proporção
    imprevisível. Por isso `object-fit:cover` em todas — a alternativa é a
@@ -1742,7 +1742,7 @@ input.ruim, select.ruim{border-color:var(--er-500) !important}
    =========================================================================== */
 /* Na capa, a barra do topo se apaga e sobra só o botão de "meus horários":
    quem carrega a identidade ali é o selo grande, logo abaixo. Nos outros
-   passos a barra volta inteira, porque aí ela é a única âncora do salão. */
+   passos a barra volta inteira, porque aí ela é a única âncora do restaurante. */
 body[data-passo="capa"] .cabeca{ background:transparent; border-bottom:none; padding-bottom:0 }
 body[data-passo="capa"] .cabeca .avatar-salao,
 body[data-passo="capa"] .cabeca h1,
@@ -1759,11 +1759,11 @@ body[data-passo="capa"] .cabeca-linha{ min-height:34px }
 /* ── O FUNDO QUE O DONO ESCOLHE ───────────────────────────────────────────
    Camada própria, presa na tela, e NÃO `background-attachment:fixed` no
    body: no Safari do iPhone o fixed é ignorado ou treme na rolagem, e o
-   fundo do salão apareceria certo no Android e quebrado no iPhone — sem
+   fundo do restaurante apareceria certo no Android e quebrado no iPhone — sem
    ninguém do lado de cá ficar sabendo.
 
    O véu por cima não é opcional. Foto atrás de texto é ilegível em metade
-   dos casos, e a foto é do salão: não dá para prever se vem parede branca ou
+   dos casos, e a foto é do restaurante: não dá para prever se vem parede branca ou
    madeira escura. O véu é a própria cor de fundo da página em 84%, então o
    contraste do texto continua o mesmo de sempre — a foto vira atmosfera, não
    plano de leitura. É assim que aplicativo sério usa imagem de fundo. */
@@ -1829,7 +1829,7 @@ body.tem-fundo .barra-baixo{
    disso o branco ainda domina e o vidro leve basta.
 
    A classe vem do JavaScript (`aplicarAparencia`), e não de uma media query,
-   porque o valor é do salão e não da tela. */
+   porque o valor é do restaurante e não da tela. */
 body.fundo-forte .cartao, body.fundo-forte .opcao, body.fundo-forte .boas,
 body.fundo-forte .na-fila, body.fundo-forte .aviso{
   background:color-mix(in srgb, var(--painel) 97%, transparent);
@@ -1848,7 +1848,7 @@ body.fundo-forte .marca-end{
 
 body.capa-com-foto[data-passo="capa"] .cabeca{ display:none }
 /* `--foco` é a altura da foto que fica à vista: 0% mostra o topo, 100% o pé.
-   Existe porque a foto do salão quase nunca é 16:9 — recortada no centro, ela
+   Existe porque a foto do restaurante quase nunca é 16:9 — recortada no centro, ela
    corta a cabeça de quem está na imagem, que foi exatamente o que aconteceu.
    O dono ajusta em Aparência e vê na prévia. */
 .hero-foto{
@@ -1865,7 +1865,7 @@ body.capa-com-foto[data-passo="capa"] .cabeca{ display:none }
      18px de altura é medido, e apanhei para chegar nele: comecei com 30 e a
      foto virou um BALÃO — a curva descia tanto no meio que a imagem parecia
      abaulada, e o rosto de quem estava nela ficava dentro do arco. Foto de
-     salão é quase sempre alguém olhando para a câmera, então o que sobra
+     restaurante é quase sempre alguém olhando para a câmera, então o que sobra
      para o arco é a faixa morta de baixo. Abaixo de 12 ninguém percebe que é
      curvo, e aí é só um canto arredondado torto.
 
@@ -1888,7 +1888,7 @@ body.capa-com-foto[data-passo="capa"] .cabeca{ display:none }
   /* ── A MOLDURA, EM DUAS VARIÁVEIS ─────────────────────────────────────
      A espessura e a cor saem de `--selo-anel` e `--selo-cor`, que a página da
      cliente escreve quando o dono escolhe. Os valores de reserva são o que
-     havia antes desta linha existir: 5px na cor do cartão. Salão que não
+     havia antes desta linha existir: 5px na cor do cartão. Restaurante que não
      escolher nada não muda de aparência.
 
      O padrão é `--painel`, a cor do cartão, e não `--bg`, o papel da página.
@@ -1991,7 +1991,7 @@ body.capa-com-foto[data-passo="capa"] .cabeca{ display:none }
   display:flex; align-items:center; gap:9px; padding:9px 10px 10px;
 }
 .pr-txt{ flex:1; min-width:0; display:block; line-height:1.3 }
-/* Duas linhas no máximo: nome de produto de salão é comprido ("Máscara de
+/* Duas linhas no máximo: nome de produto de restaurante é comprido ("Máscara de
    hidratação profunda 500ml") e, sem teto, um cartão fica o dobro do outro. */
 .pr-txt b{
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
@@ -2032,7 +2032,7 @@ body.capa-com-foto[data-passo="capa"] .cabeca{ display:none }
    a primeira vez que alguém mexesse num só a página sairia com metade das
    fotos onduladas e metade quadrada — sem nada errado no código, e feio.
 
-   Sem o atributo (todo salão que nunca escolheu) nenhuma destas regras casa,
+   Sem o atributo (todo restaurante que nunca escolheu) nenhuma destas regras casa,
    e o cartão quadrado é o que aparece. A onda é a MESMA máscara SVG do cartão
    de serviço, copiada com o mesmo comentário de origem: branco por causa do
    canal alfa, e `preserveAspectRatio='none'` para ela esticar com o cartão. */
@@ -2065,7 +2065,7 @@ body.capa-com-foto[data-passo="capa"] .cabeca{ display:none }
    shampoo no carrinho.
 
    ⚠ A COR SAI DA PERSONALIZAÇÃO, como todo o resto desta folha. `--acao` é a
-   cor que o salão escolheu e `--acao-txt` é a letra que o cálculo de
+   cor que o restaurante escolheu e `--acao-txt` é a letra que o cálculo de
    contraste decidiu para cima dela — então a fita se lê em dourado, em roxo
    ou em verde-escuro sem ninguém escrever cor nenhuma aqui.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -2237,7 +2237,7 @@ body.com-fita .conteudo{ padding-bottom:78px }
 .marca-end .rua .ic-svg{ width:15px; height:15px; flex:none; opacity:.75 }
 /* A logo cresceu de 76 para 104: é a primeira coisa que a cliente vê ao
    abrir o link no WhatsApp, e reconhecer a casa no primeiro segundo é o que
-   separa "é do meu salão" de "isso é golpe". */
+   separa "é do meu restaurante" de "isso é golpe". */
 /* ── A LOGO, COM RELEVO ───────────────────────────────────────────────────
    Quatro camadas, e cada uma faz uma coisa que as outras não fazem:
 
@@ -2344,7 +2344,7 @@ body.sem-brilho .marca-selo{ animation:none }
 
    TRÊS ESTILOS, E NENHUM VEM DE CDN. Fonte de fora seria mais vistosa e
    traria uma dependência que o projeto inteiro evita: se o servidor de
-   fontes cair ou demorar, o nome do salão pisca ou aparece em Times. Aqui as
+   fontes cair ou demorar, o nome do restaurante pisca ou aparece em Times. Aqui as
    três famílias já estão no aparelho — as listas cobrem Android, iPhone,
    Windows e Mac, e a última opção de cada uma é genérica.
 
@@ -2359,7 +2359,7 @@ body.sem-brilho .marca-selo{ animation:none }
 /* Moderno — a letra da interface, só que grande. Neutro e limpo. */
 .marca-salao[data-letra="moderno"] h2{ font-weight:680 }
 
-/* Elegante — serifada. É a letra de salão de beleza e de clínica: passa
+/* Elegante — serifada. É a letra de restaurante de beleza e de clínica: passa
    cuidado e preço, que é exatamente o que esses negócios vendem. */
 .marca-salao[data-letra="elegante"] h2{
   font-family:"Playfair Display","Georgia","Times New Roman",serif;
@@ -2404,7 +2404,7 @@ body.sem-brilho .marca-selo{ animation:none }
    foto queria mostrar. `contain` sozinho deixaria duas tarjas vazias, então
    o fundo é uma cópia BORRADA da mesma imagem — o recurso que todo
    aplicativo de foto usa para mídia fora de proporção, e que aqui resolve
-   sem pedir ao dono do salão que recorte nada.
+   sem pedir ao dono do restaurante que recorte nada.
    ──────────────────────────────────────────────────────────────────────── */
 /* ⚠ `relative` AQUI, senão os pontinhos somem no rodapé. Eles são irmãos de
    `.slides`, não filhos — então `position:absolute` neles procura o primeiro
@@ -2728,7 +2728,7 @@ body.sem-brilho .marca-selo{ animation:none }
 
 /* O número grande É o conteúdo do cartão, não um enfeite: quem abre o
    dashboard está com o celular a um braço de distância, conferindo de
-   relance antes de abrir a porta do salão. */
+   relance antes de abrir a porta do restaurante. */
 .dash-num{ font-size:38px; font-weight:700; line-height:1.05; letter-spacing:-.02em }
 .dash-num.alerta{ color:var(--alerta) }
 .dash-sub{ margin:2px 0 12px; color:var(--txt2); font-size:13.5px }
@@ -2841,7 +2841,7 @@ body.sem-brilho .marca-selo{ animation:none }
    serviços parecia uma lista de compras.
 
    Tudo pendurado em `--acao` e `--acao-txt`, que a página reescreve com a
-   cor que o salão escolheu. Nada de cor fixa aqui dentro: cor escrita à mão
+   cor que o restaurante escolheu. Nada de cor fixa aqui dentro: cor escrita à mão
    é a que não obedece à personalização.
    ═══════════════════════════════════════════════════════════════════════════ */
 .boas{
@@ -2866,7 +2866,7 @@ body.sem-brilho .marca-selo{ animation:none }
    escovado tem a mesma cor em toda a peça e mesmo assim tem claro e escuro,
    porque a luz bate em ângulo — borda de cima acesa, corpo mais fundo, uma
    faixa clara atravessando, borda de baixo em sombra. Todas as tonalidades
-   saem da cor que o salão escolheu, via `color-mix`: nenhuma cor nova entra,
+   saem da cor que o restaurante escolheu, via `color-mix`: nenhuma cor nova entra,
    então dourado vira ouro, grafite vira aço e rosa vira metal rosado.
 
    O `background:var(--acao)` sozinho vem PRIMEIRO de propósito. Navegador que
@@ -2893,7 +2893,7 @@ body.sem-brilho .marca-selo{ animation:none }
     0 10px 26px -10px color-mix(in srgb, var(--acao) 65%, transparent);
 }
 /* A faixa de luz que atravessa. Passa em 1,1s e descansa 4 — brilho contínuo
-   vira pisca-pisca de vitrine, e a página é de um salão, não de um cassino. */
+   vira pisca-pisca de vitrine, e a página é de um restaurante, não de um cassino. */
 .boas-cta::after{
   content:""; position:absolute; top:0; bottom:0; left:0; width:38%;
   background:linear-gradient(100deg, transparent,
@@ -3073,7 +3073,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
    estava na ordem errada — a nota completa está lá.
 
    O embrulho só existe com DOIS botões. Com um, o HTML é exatamente o de
-   antes, e o caminho que todo salão de hoje usa não passa por nenhuma regra
+   antes, e o caminho que todo restaurante de hoje usa não passa por nenhuma regra
    nova. */
 .boas-acoes{ display:grid; gap:9px }
 .boas-acoes .boas-b2{ margin-top:0 }
@@ -3115,19 +3115,19 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
 .sv-cartao-dur{ font-size:12.5px; color:var(--cor-duracao, var(--txt3)) }
 
 /* Serviço sem foto não ganha um buraco cinza: o cartão vira uma linha e
-   ocupa a largura toda. Salão que ainda não subiu foto nenhuma continua com
+   ocupa a largura toda. Restaurante que ainda não subiu foto nenhuma continua com
    uma capa apresentável, em vez de uma grade de retângulos vazios. */
 .sv-cartao.sem-foto{ grid-column:1 / -1 }
 .sv-cartao.sem-foto .sv-cartao-txt{ padding:13px 14px }
 
 /* ⚠ MAS SÓ ENQUANTO NÃO HOUVER FOTO NENHUMA.
    A regra de cima sozinha resolvia as duas pontas e estragava o meio — que é
-   onde todo salão vive. Com ALGUNS serviços com foto e outros sem, ela fazia
+   onde todo restaurante vive. Com ALGUNS serviços com foto e outros sem, ela fazia
    uma escada: duas colunas, uma faixa inteira, duas colunas, outra faixa. Na
    capa, que é a primeira coisa que a cliente vê, isso lê como página
    quebrada.
    O `com-foto` é posto pelo `agendar.html` quando existe pelo menos uma foto
-   no salão. A partir daí a grade é uma só, e quem não tem foto ganha uma capa
+   no restaurante. A partir daí a grade é uma só, e quem não tem foto ganha uma capa
    com a inicial em vez de um retângulo vazio. */
 .sv-grade.com-foto .sv-cartao.sem-foto{ grid-column:auto }
 .sv-grade.com-foto .sv-cartao.sem-foto .sv-cartao-txt{ padding:11px 12px 12px }
@@ -3155,7 +3155,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
 
 /* ── "Ver todos os serviços" ─────────────────────────────────────────────
    A capa mostra os destaques; este botão é a porta para o resto. Sem ele, o
-   que não coube some — e o salão perde a venda do serviço que não cabia na
+   que não coube some — e o restaurante perde a venda do serviço que não cabia na
    primeira dobra. O NÚMERO ao lado existe para a pessoa saber que vale a
    pena tocar: "ver todos" sem contagem pode ser mais três ou mais trinta. */
 .ver-todos{
@@ -3226,7 +3226,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
    ao `[data-moldura="elegante"]` que o `aplicarAparencia()` põe no <html>
    quando o dono escolhe essa forma em Aparência. Sem o atributo, nenhuma
    destas regras casa, e o cartão clássico é o que aparece — inclusive nos
-   salões que já existem, porque a `vitrine()` devolve `reta` quando o dono
+   restaurantes que já existem, porque a `vitrine()` devolve `reta` quando o dono
    nunca escolheu nada.
 
    ── A CURVA, E POR QUE ELA É UMA MÁSCARA ─────────────────────────────────
@@ -3365,7 +3365,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
 /* A escolhida se vê de longe: o anel na cor do botão, e não só o tom suave. */
 .sv-cartao.sv-escolha.sel{ border-color:var(--acao); box-shadow:0 0 0 2px var(--acao) }
 [data-moldura="elegante"] .sv-cartao-marca{ top:auto; bottom:11px; right:11px }
-/* Sem foto nenhuma no salão, cada serviço é uma linha: a marca fica no meio
+/* Sem foto nenhuma no restaurante, cada serviço é uma linha: a marca fica no meio
    da altura, à direita, e o texto não passa por baixo dela. */
 .sv-grade:not(.com-foto) .sv-escolha.sem-foto .sv-cartao-marca{ top:50%; bottom:auto; transform:translateY(-50%) }
 .sv-grade:not(.com-foto) .sv-escolha.sem-foto .sv-cartao-txt{ padding-right:52px }
@@ -3405,7 +3405,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
 /* "no seu pacote" no lugar do preço, na lista de serviços da cliente.
 
    Verde de OK e não a cor de marca: é uma boa notícia sobre o dinheiro dela,
-   e a cor de marca muda de salão para salão — o recado ficaria dourado num,
+   e a cor de marca muda de restaurante para restaurante — o recado ficaria dourado num,
    rosa noutro, e em algum deles sem contraste nenhum. */
 .vv-pacote{
   display:inline-block; font-size:13px; font-weight:700; line-height:1.25;
@@ -3997,7 +3997,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
 /* Bloqueio não é atendimento: é hora fechada. Cor diferente, e some quando não
    há — senão a legenda passaria a explicar uma cor que nunca aparece. */
 .mes-qtd.bloq{ background:var(--n-200); color:var(--txt2) }
-/* Tem gente esperando o salão confirmar: âmbar, a cor do "a confirmar". */
+/* Tem gente esperando o restaurante confirmar: âmbar, a cor do "a confirmar". */
 .mes-qtd.pend{ background:var(--wa-soft); color:var(--wa-500); box-shadow:inset 0 0 0 1.5px var(--wa-500) }
 .mes-dia.sel .mes-qtd.pend{ background:#FEF3C7; color:#92400E }
 
@@ -4110,7 +4110,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
 .qr-txt span{ font-size:13px; color:var(--txt2) }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   O PRIMEIRO DIA — o assistente que enche o salão novo
+   O PRIMEIRO DIA — o assistente que enche o restaurante novo
 
    Tela cheia de propósito, e não um modal pequeno: são oito passos com lista,
    preço e horário dentro, e uma caixinha no meio da tela faria a pessoa rolar
@@ -4280,7 +4280,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
    ⚠ TUDO AQUI ESTÁ PRESO A UM ATRIBUTO NA RAIZ. Sem `data-modo` e sem
    `data-logo`, nenhuma regra deste bloco casa — e a página é, byte a byte, a
    de sempre. É o que faz o pedido "não quebre nada" ser verdade por
-   construção, e não por cuidado: o salão que nunca escolher não entra aqui.
+   construção, e não por cuidado: o restaurante que nunca escolher não entra aqui.
 
    O HTML da capa não mudou. Ele já tinha a estrutura da referência — foto,
    logo sobreposto, nome, endereço — e o que muda é o peso de cada peça.
@@ -4299,7 +4299,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
    referência: a foto apresenta a casa, e o logo diz de quem ela é.
 
    A proporção passa de 16/9 para 3/2 no celular — uma faixa mais alta, que é
-   o que faz a foto do salão parecer a capa de um perfil e não um banner. */
+   o que faz a foto do restaurante parecer a capa de um perfil e não um banner. */
 [data-modo="premium"] .hero-foto{ aspect-ratio:3 / 2 }
 [data-modo="premium"] .marca-salao.com-foto .marca-selo{
   margin-top:-60px;
@@ -4371,7 +4371,7 @@ body.tem-gradiente .boas, body.tem-papel .boas{
 
    Com a tela mais larga que a coluna, o fundo escolhido passa a pintar só a
    coluna, e as margens ficam com o `--mesa`: o papel de fábrica do tema, o
-   mesmo que um salão sem fundo escolhido já tem em volta da página. No
+   mesmo que um restaurante sem fundo escolhido já tem em volta da página. No
    celular (até 480px) nada disto casa, e a tela é a de antes.
 
    O gradiente é `fixed` também aqui: medido pela janela, como no celular, e
@@ -4386,7 +4386,7 @@ body.tem-gradiente .boas, body.tem-papel .boas{
   }
   /* Com imagem a coluna continua transparente: a foto e o véu ficam atrás
      dela, e são eles que encolhem. Vem por último para ganhar do papel —
-     salão com foto antiga e papel escolhido tem as duas classes. */
+     restaurante com foto antiga e papel escolhido tem as duas classes. */
   body.tem-fundo .app{ background:transparent !important; box-shadow:var(--sombra) }
   .fundo-imagem, .fundo-veu{ left:50%; right:auto; width:480px; transform:translateX(-50%) }
 }
@@ -4396,10 +4396,10 @@ body.tem-gradiente .boas, body.tem-papel .boas{
 
    ⚠ NENHUMA COR CRAVADA. A marca entra por --ac-600/--ac-soft/--ac-line —
    as mesmas que a página inteira usa e que o `aplicarAparencia()` reescreve
-   com a cor do salão —, o cartão por --painel e --borda, que o dono também
+   com a cor do restaurante —, o cartão por --painel e --borda, que o dono também
    escolhe em "Cards" e "Bordas", e o status pelos tokens de estado
-   (--su-*, --er-*), que já têm a versão para o fundo escuro. Salão roxo vê
-   roxo; salão verde vê verde; o personalizado vê o dele.
+   (--su-*, --er-*), que já têm a versão para o fundo escuro. Restaurante roxo vê
+   roxo; restaurante verde vê verde; o personalizado vê o dele.
    ══════════════════════════════════════════════════════════════════════════ */
 #capaInfo{ margin:2px 0 14px }
 #capaInfo:empty{ display:none }
@@ -4674,7 +4674,7 @@ body.com-folha{ overflow:hidden }
 /* A fileira e o status dentro da prévia do painel — miniatura do que a página
    desenha (.recurso e .status-casa), com as MESMAS contas: o cartão, a borda,
    a cor escrita da marca (--fone-ac, o `--ac-600` da página) e o verde e o
-   vermelho do tema do SALÃO. A prévia tingia o Horários com a cor do botão e
+   vermelho do tema do RESTAURANTE. A prévia tingia o Horários com a cor do botão e
    o verde com o do painel — no print dele, a prévia roxa e o link azul. */
 .fone{ --fone-su:#15803D; --fone-er:#DC2626 }
 .fone-escuro{ --fone-su:#4ADE80; --fone-er:#F87171 }   /* os --su-500/--er-500 do escuro */
@@ -4747,7 +4747,7 @@ body.com-folha{ overflow:hidden }
 
 /* ── ETAPA 2 · PARA QUEM É O ATENDIMENTO ──────────────────────────────────
    Duas portas grandes (Para mim / Para outra pessoa) e, na segunda tela, a
-   relação em grade de dois e o nome. Tudo nas cores do salão: o círculo do
+   relação em grade de dois e o nome. Tudo nas cores do restaurante: o círculo do
    ícone no tom suave da marca, a borda da escolhida na cor dos botões. */
 .etapa-rot{
   font-size:12px; font-weight:750; letter-spacing:.12em; text-transform:uppercase;
@@ -4805,9 +4805,9 @@ body.com-folha{ overflow:hidden }
    (agendar.html → tocarIntro; a prévia do painel → verIntroNaPrevia)
 
    As cores vêm de quatro variáveis com reserva nas da página: no link, o
-   botão (`--acao`) e o cartão (`--painel`) do salão; na prévia do painel, o
+   botão (`--acao`) e o cartão (`--painel`) do restaurante; na prévia do painel, o
    JS escreve as quatro no próprio elemento, porque lá `--acao` é a cor do
-   PAINEL, e não a do salão.
+   PAINEL, e não a do restaurante.
    ═══════════════════════════════════════════════════════════════════════════ */
 .intro{
   --i-fundo:var(--acao); --i-txt:var(--acao-txt);
@@ -4918,7 +4918,7 @@ body.com-folha{ overflow:hidden }
 .loja-cartao .loja-add, .loja-cartao .loja-qtd{ margin-top:auto; width:100% }
 .loja-cartao .loja-qtd{ justify-content:space-between }
 
-/* O Adicionar: cheio, na cor do botão do salão. `#listaProdutos` na frente
+/* O Adicionar: cheio, na cor do botão do restaurante. `#listaProdutos` na frente
    para ganhar do botão secundário (.btn:not(.btn-primary)...), que é papel
    com contorno. */
 /* O `padding` é deste botão: no link não existe o `.btn` do painel com a
@@ -5130,7 +5130,7 @@ body[data-passo="confirmar"] #btSecundario .ic-svg{ width:18px; height:18px; col
 .cf-nota{ text-align:center; font-size:14px; line-height:1.45; color:var(--txt2); margin:2px 8px 16px }
 /* O sinal por Pix (09_cliente.sql, 1e): quanto, a chave, o prazo e o
    comprovante — na tela de pronto e na folha de "Meus horários". As cores são
-   as do tema do salão. */
+   as do tema do restaurante. */
 .sinal-pagar{ text-align:left; margin:2px 0 14px }
 .sinal-valor{ display:flex; justify-content:space-between; align-items:baseline; gap:12px;
   padding:14px 16px; border-radius:var(--r-lg); background:var(--ac-soft); border:1px solid var(--ac-line) }
@@ -5380,7 +5380,7 @@ label.pedido-chave{ font-weight:600 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    A FICHA DO SERVIÇO — "COMO FUNCIONA" (62_ficha_servico.sql)
-   Só variáveis do tema: a ficha veste a cor de cada salão.
+   Só variáveis do tema: a ficha veste a cor de cada restaurante.
    ═══════════════════════════════════════════════════════════════════════════ */
 /* Com quatro atalhos, o rótulo pode quebrar em duas linhas ("Como / funciona"),
    mas NUNCA no meio da palavra. "Pagamento / s" e "Informaçõe / s" apareceram
@@ -5503,7 +5503,7 @@ label.pedido-chave{ font-weight:600 }
 .duv-x{ font-size:12.5px; color:var(--txt3) }
 .duv-comparar .boas-b2{ grid-column:1 / -1; width:100%; justify-content:center }
 
-/* As dúvidas da casa no painel (Meu salão). */
+/* As dúvidas da casa no painel (Meu restaurante). */
 .duv-ed-linha{ display:grid; gap:6px; padding:10px; margin-bottom:8px;
                border:1.5px solid var(--borda); border-radius:12px }
 .duv-ed-topo{ display:flex; gap:6px; align-items:center }

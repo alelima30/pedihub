@@ -34,7 +34,7 @@
    deles, não acreditado do corpo do aviso.
 
    Se esta função marcasse o cartão como ligado, bastaria clicar em "Assinar"
-   e fechar a aba para o salão constar como pagante sem nunca ter pago.
+   e fechar a aba para o restaurante constar como pagante sem nunca ter pago.
 
    ── ⚠ E O VALOR NUNCA VEM DO CORPO DA REQUISIÇÃO ───────────────────────────
    O navegador manda `salaoId` e `plano`. O preço é lido de `planos` dentro do
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
     const pedidoTela = await req.json().catch(() => ({}));
     const salaoId = String(pedidoTela.salaoId ?? '');
     const plano   = String(pedidoTela.plano ?? '');
-    if(!salaoId || !plano) return responder({ erro: 'Faltou o salão ou o plano.' }, 400);
+    if(!salaoId || !plano) return responder({ erro: 'Faltou o restaurante ou o plano.' }, 400);
 
     if(!PAINEL_URL){
       /* No log, e não só na resposta: quem vai olhar aqui é alguém tentando
@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
     }
 
     /* Permissão, preço e pagador vêm do banco de uma vez só. Se esta pessoa
-       não for gestão deste salão, `preparar_cartao` recusa e a gente para
+       não for gestão deste restaurante, `preparar_cartao` recusa e a gente para
        aqui — a autorização é do banco, não deste arquivo. */
     let base;
     try{
@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
       return responder({ erro: 'Não consegui preparar a assinatura.' }, 403);
     }
 
-    /* ⚠ DUAS PRÉ-APROVAÇÕES ATIVAS NO MESMO SALÃO É COBRANÇA DOBRADA.
+    /* ⚠ DUAS PRÉ-APROVAÇÕES ATIVAS NO MESMO RESTAURANTE É COBRANÇA DOBRADA.
        O Mercado Pago não sabe que as duas são nossas, e debita as duas todo
        mês. O dono descobre na fatura seguinte, e a conversa começa com ele já
        tendo pago duas vezes.
@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
        Trocar de plano no cartão é cancelar e assinar de novo. São dois
        cliques, e é a versão desta tela que não cobra em duplicidade. */
     if(base?.jaLigado){
-      return responder({ erro: 'Este salão já está no cartão. Para trocar de '
+      return responder({ erro: 'Este restaurante já está no cartão. Para trocar de '
         + 'plano, cancele a renovação automática e assine de novo.' }, 409);
     }
 
@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
     }
 
     /* ── O pedido ao Mercado Pago ────────────────────────────────────────────
-       `external_reference` é o id do SALÃO, e não o de uma cobrança — porque
+       `external_reference` é o id do RESTAURANTE, e não o de uma cobrança — porque
        aqui o vínculo é permanente: uma pré-aprovação vale enquanto o cartão
        durar, e as cobranças mensais nascem dela.
 
@@ -209,7 +209,7 @@ Deno.serve(async (req) => {
       if(/Invalid users involved|cannot.*same user/i.test(cru)){
         return responder({ erro: 'O e-mail do responsável é o mesmo da conta '
           + 'que recebe os pagamentos. O Mercado Pago não deixa alguém assinar '
-          + 'de si mesmo — use outro e-mail no cadastro do salão.' }, 400);
+          + 'de si mesmo — use outro e-mail no cadastro do restaurante.' }, 400);
       }
       return responder({ erro: 'O Mercado Pago não aceitou a assinatura '
         + 'agora. Tente de novo em alguns minutos.' }, 502);
@@ -224,7 +224,7 @@ Deno.serve(async (req) => {
 
     /* O `id` da pré-aprovação NÃO volta para a tela, e não é gravado aqui.
        Ele chega pelo webhook, depois de autorizado — que é o único momento em
-       que ele significa alguma coisa. Guardá-lo agora daria um salão com
+       que ele significa alguma coisa. Guardá-lo agora daria um restaurante com
        cartão "ligado" que nunca foi autorizado. */
     console.log('assinar-cartao', JSON.stringify({ plano, criada: true }));
     return responder({ ok: true, url: endereco });

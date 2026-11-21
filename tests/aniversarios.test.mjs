@@ -11,10 +11,10 @@
 
    ── O QUE ESTE ARQUIVO PROTEGE ─────────────────────────────────────────────
      1. O DIA CERTO. Hoje entra no cartão do Hoje; amanhã e a semana, só no
-        Dashboard; daqui a dez dias, em nenhum. E o "hoje" é o do SALÃO.
+        Dashboard; daqui a dez dias, em nenhum. E o "hoje" é o do RESTAURANTE.
      2. 29 DE FEVEREIRO. Nos anos que não são bissextos a festa é no dia 28 —
         senão a cliente some do aviso três anos em cada quatro.
-     3. O BOTÃO. Abre o WhatsApp do salão com o recado de parabéns, com o
+     3. O BOTÃO. Abre o WhatsApp do restaurante com o recado de parabéns, com o
         primeiro nome dela e o nome da casa — e só no dia. Ficha sem telefone
         avisa, em vez de abrir uma conversa com ninguém.
      4. SÓ AVISA. Nada vai para a fila de mensagens da Meta.
@@ -50,7 +50,7 @@ function novaAba(){
   return j.Dados;
 }
 
-/* O "hoje" do SALÃO (São Paulo), e não o do relógio da máquina de teste —
+/* O "hoje" do RESTAURANTE (São Paulo), e não o do relógio da máquina de teste —
    o mesmo cuidado do `hojeNoSalao()` das outras suítes. */
 const hojeSP = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
 const maisDias = (isoDia, n) => {
@@ -84,7 +84,7 @@ for(const f of Object.values(fichas)){
   const c = await dona.inserir('clientes', { salaoId: SALAO, ...f });
   f.id = c.id;
 }
-ok('salão com seis fichas: hoje (duas), amanhã, daqui a 5 e a 10 dias, e sem data');
+ok('restaurante com seis fichas: hoje (duas), amanhã, daqui a 5 e a 10 dias, e sem data');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const ctx = await nav.newContext({ viewport:{ width:412, height:915 } });
@@ -218,7 +218,7 @@ if(naHoje){
     !naHoje.linhas.some(l => /Carla/.test(l)));
 }
 
-// O botão abre o WhatsApp do salão com o recado de parabéns.
+// O botão abre o WhatsApp do restaurante com o recado de parabéns.
 await p.evaluate(() => { window.__abertos.length = 0; });
 await p.click('#niverHoje .niver-linha:first-of-type .btn');
 await p.waitForTimeout(300);
@@ -228,7 +228,7 @@ verdade('o botão abre o WhatsApp',
   aberto.length === 1 && aberto[0].startsWith('https://wa.me/55' + fichas.bia.telefone + '?text='),
   JSON.stringify(aberto));
 const texto = aberto[0] ? decodeURIComponent(aberto[0].split('?text=')[1] || '') : '';
-verdade('com o primeiro nome dela, o parabéns e o nome do salão',
+verdade('com o primeiro nome dela, o parabéns e o nome do restaurante',
   /Bia\b/.test(texto) && !/Souza/.test(texto) && /feliz aniversário/i.test(texto)
     && texto.includes(NOME_SALAO), texto);
 verdade('sem a sobra do ${horario}', !/\$\{|\bde\s*[.!?]?$/.test(texto), texto);
@@ -310,7 +310,7 @@ const banco = new pg.Client({ host: process.env.PGHOST || '/tmp',
   port: Number(process.env.PGPORT || 5444), user: process.env.PGUSER || 'postgres',
   database: process.env.PGBANCO || 'app' });
 await banco.connect();
-igual('nenhuma notificação nasceu para o salão',
+igual('nenhuma notificação nasceu para o restaurante',
   Number((await banco.query(`select count(*) from public.notificacoes where salao_id=$1`,
     [SALAO])).rows[0].count), 0);
 await banco.end();

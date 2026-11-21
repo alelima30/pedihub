@@ -1,19 +1,19 @@
 /* ===========================================================================
-   PediHub — o preço especial por salão (13_cobranca.sql, seção 1b)
+   PediHub — o preço especial por restaurante (13_cobranca.sql, seção 1b)
 
      bash tests/bancada/subir.sh
      node tests/preco-especial.test.mjs
 
    ── O PEDIDO ───────────────────────────────────────────────────────────────
-   "Pode abrir a venda — e o preço deixa 1 real por enquanto neste salão."
+   "Pode abrir a venda — e o preço deixa 1 real por enquanto neste restaurante."
    O preço é do PLANO, igual para todos: baixar o Essencial para R$ 1 e abrir
-   a venda seria vender a R$ 1 para todo mundo. O preço especial é do salão.
+   a venda seria vender a R$ 1 para todo mundo. O preço especial é do restaurante.
 
    ── O QUE ESTE ARQUIVO PROTEGE ─────────────────────────────────────────────
-     1. O salão com preço especial paga o especial — no Pix e no cartão.
-     2. Os outros salões pagam o preço do plano.
+     1. O restaurante com preço especial paga o especial — no Pix e no cartão.
+     2. Os outros restaurantes pagam o preço do plano.
      3. O especial vale só para o plano marcado.
-     4. Ninguém dá desconto a si mesmo: o salão não escreve em `assinaturas`,
+     4. Ninguém dá desconto a si mesmo: o restaurante não escreve em `assinaturas`,
         e a função do preço não é chamável do navegador.
    =========================================================================== */
 import fs from 'node:fs';
@@ -56,7 +56,7 @@ async function montar(nome){
   const d = novaAba();
   await d.criarConta({ email:`pe-${nome}-${marca}@teste.com`, senha:'minhasenhaboa',
     nome:'Dona ' + nome, telefone: tel() });
-  const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão ' + nome + ' ' + marca,
+  const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante ' + nome + ' ' + marca,
     p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
   const salao = cr[0].salao_id;
   const dona = (await um(`select perfil_id from public.vinculos where salao_id=$1 and papel='dono'`,
@@ -71,7 +71,7 @@ await banco.query(`update public.assinaturas set precos_especiais = '{"individua
 const precoPlano = Number((await um(`select preco_mes from public.planos where codigo='individual'`)).preco_mes);
 
 secao('1) Quem tem preço especial paga o especial');
-igual('preco_do_plano: o especial do salão',
+igual('preco_do_plano: o especial do restaurante',
   Number((await um(`select public.preco_do_plano($1,'individual') as v`, [ESPECIAL.salao])).v), 1);
 igual('o Pix sai com o especial',
   Number((await um(`select (public.abrir_cobranca($1,'individual','pix',$2)).valor as v`,
@@ -80,16 +80,16 @@ igual('e o cartão também nasce com ele',
   Number((await um(`select (public.preparar_cartao($1,'individual',$2))->>'valor' as v`,
     [ESPECIAL.salao, ESPECIAL.dona])).v), 1);
 
-secao('2) Os outros salões pagam o preço do plano');
+secao('2) Os outros restaurantes pagam o preço do plano');
 igual('preco_do_plano: o do plano',
   Number((await um(`select public.preco_do_plano($1,'individual') as v`, [NORMAL.salao])).v), precoPlano);
-igual('o Pix do salão normal sai com o preço do plano',
+igual('o Pix do restaurante normal sai com o preço do plano',
   Number((await um(`select (public.abrir_cobranca($1,'individual','pix',$2)).valor as v`,
     [NORMAL.salao, NORMAL.dona])).v), precoPlano);
 
 secao('3) O especial vale só para o plano marcado');
 const precoDuo = Number((await um(`select preco_mes from public.planos where codigo='duo'`)).preco_mes);
-igual('outro plano, no mesmo salão, sai pelo preço normal',
+igual('outro plano, no mesmo restaurante, sai pelo preço normal',
   Number((await um(`select (public.abrir_cobranca($1,'duo','pix',$2)).valor as v`,
     [ESPECIAL.salao, ESPECIAL.dona])).v), precoDuo);
 await banco.query(`update public.assinaturas set precos_especiais = '{"individual": "1"}'
@@ -100,14 +100,14 @@ await banco.query(`update public.assinaturas set precos_especiais = '{"individua
                     where salao_id = $1`, [ESPECIAL.salao]);
 
 secao('4) Ninguém dá desconto a si mesmo');
-// O dono do salão NORMAL tenta escrever o próprio preço pela API, com a sessão dele.
+// O dono do restaurante NORMAL tenta escrever o próprio preço pela API, com a sessão dele.
 const r = await fetch(`${BASE}/rest/v1/assinaturas?salao_id=eq.${NORMAL.salao}`, {
   method: 'PATCH',
   headers: { apikey:'k', Authorization: 'Bearer ' + NORMAL.d.sessao().token,
              'Content-Type':'application/json', Prefer:'return=representation' },
   body: JSON.stringify({ precos_especiais: { individual: 0.01 } }),
 }).catch(e => ({ status: 0, erro: e.message }));
-igual('o salão não consegue gravar preço especial para si',
+igual('o restaurante não consegue gravar preço especial para si',
   (await um(`select precos_especiais from public.assinaturas where salao_id=$1`, [NORMAL.salao])).precos_especiais, {});
 verdade('(a API recusou ou não mudou nada)', r.status !== 0, JSON.stringify(r.status));
 for(const papel of ['anon', 'authenticated'])

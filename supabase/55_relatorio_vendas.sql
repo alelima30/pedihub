@@ -16,7 +16,7 @@
 -- Uma função à parte do `relatorio()` (12), e não mais um pedaço dele: o
 -- relatório de sempre continua igual, e banco sem este arquivo só não mostra
 -- os dois blocos novos. As mesmas regras: só a gestão, o mesmo recurso do
--- plano, o dia do salão.
+-- plano, o dia do restaurante.
 --
 -- ⚠ O VALOR DA LOJA E O DOS PACOTES JÁ ESTÃO NO FATURAMENTO. A venda da loja
 -- é uma comanda fechada; o pacote, a comanda do pagamento. Aqui é o detalhe
@@ -28,7 +28,7 @@ returns jsonb language plpgsql stable security definer set search_path = public 
 declare v_fuso text; v_ini timestamptz; v_fim timestamptz;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   perform public.exigir_recurso(p_salao, 'relatorios', 'O relatório');
   if p_de is null or p_ate is null or p_ate < p_de then

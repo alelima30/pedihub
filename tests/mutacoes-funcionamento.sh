@@ -82,7 +82,7 @@ troca funcionamento.js \
   "  return dias;" \
   && rodar "FECHADO para sempre na página"
 
-echo "6. o relógio ignora o fuso do salão"
+echo "6. o relógio ignora o fuso do restaurante"
 troca funcionamento.js \
   "    timeZone: fuso || 'America/Sao_Paulo', weekday:'short'," \
   "    timeZone: 'UTC', weekday:'short'," \
@@ -142,13 +142,13 @@ echo "15. o ícone do Horários com cor cravada"
 troca estilo.css \
   ".recurso-ic{ display:inline-flex; color:var(--at-tinta, var(--ico-destaque, var(--ac-marca, var(--ac-600)))) }" \
   ".recurso-ic{ display:inline-flex; color:#6D28D9 }" \
-  && rodar "salão verde com ícone roxo"
+  && rodar "restaurante verde com ícone roxo"
 
 echo "16. o dia de hoje com cor cravada"
 troca estilo.css \
   ".semana-dia.hoje{ background:var(--ac-soft) }" \
   ".semana-dia.hoje{ background:rgba(109,40,217,.10) }" \
-  && rodar "folha roxa em salão vermelho"
+  && rodar "folha roxa em restaurante vermelho"
 
 echo "17. o endereço volta a entrar sem escape na folha"
 troca agendar.html \

@@ -16,9 +16,9 @@
 --      daquela conta caía no histórico dela — para sempre, porque a busca
 --      seguinte acha pelo perfil antes de olhar o telefone.
 --
---   2. O SALÃO TEM QUE SABER QUEM VEM. Se o nome informado não é o da ficha,
+--   2. O RESTAURANTE TEM QUE SABER QUEM VEM. Se o nome informado não é o da ficha,
 --      ele fica registrado em `atendido_nome`. O painel mostra como
---      "Quem vem". Melhor um nome a mais na tela do que o salão ligar para
+--      "Quem vem". Melhor um nome a mais na tela do que o restaurante ligar para
 --      a mãe perguntando de um horário que ela não marcou.
 -- ===========================================================================
 
@@ -29,7 +29,7 @@ insert into auth.users (id, email) values
   ('cccccccc-2222-2222-2222-222222222222', 'filha@teste.com');
 
 insert into public.saloes (id, slug, nome, tipo) values
-  ('cccccccc-0000-0000-0000-000000000001', 'salao-do-tel', 'Salão do Telefone', 'salao');
+  ('cccccccc-0000-0000-0000-000000000001', 'salao-do-tel', 'Restaurante do Telefone', 'salao');
 insert into public.assinaturas (salao_id, plano, status) values
   ('cccccccc-0000-0000-0000-000000000001', 'time', 'ativa');
 

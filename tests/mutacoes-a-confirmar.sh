@@ -82,7 +82,7 @@ echo "6. o recado não fala da confirmação"
 troca app.html \
   "    + (esperam ? '<br><b>' + (esperam === 1 ? '1 espera' : esperam + ' esperam')" \
   "    + (false ? '<br><b>' + (esperam === 1 ? '1 espera' : esperam + ' esperam')" \
-  && rodar "horário novo sem dizer que espera o salão"
+  && rodar "horário novo sem dizer que espera o restaurante"
 
 echo "7. a tarja do pendente igual à dos outros"
 troca estilo.css \

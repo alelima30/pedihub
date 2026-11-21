@@ -40,10 +40,10 @@ update public.perfis set super_admin = true where id = 'e4600000-0000-0000-0000-
 
 insert into public.saloes (id, slug, nome, tipo, fuso) values
   ('54600000-0000-0000-0000-00000000000a', 'adic-ana',  'Lingerie da Ana', 'salao', 'America/Sao_Paulo'),
-  ('54600000-0000-0000-0000-00000000000b', 'adic-bia',  'Salão da Bia',    'salao', 'America/Sao_Paulo'),
-  ('54600000-0000-0000-0000-00000000000c', 'adic-cris', 'Salão da Cris',   'salao', 'America/Sao_Paulo'),
-  ('54600000-0000-0000-0000-00000000000d', 'adic-dani', 'Salão da Dani',   'salao', 'America/Sao_Paulo'),
-  ('54600000-0000-0000-0000-00000000000e', 'adic-edu',  'Salão do Edu',    'salao', 'America/Sao_Paulo');
+  ('54600000-0000-0000-0000-00000000000b', 'adic-bia',  'Restaurante da Bia',    'salao', 'America/Sao_Paulo'),
+  ('54600000-0000-0000-0000-00000000000c', 'adic-cris', 'Restaurante da Cris',   'salao', 'America/Sao_Paulo'),
+  ('54600000-0000-0000-0000-00000000000d', 'adic-dani', 'Restaurante da Dani',   'salao', 'America/Sao_Paulo'),
+  ('54600000-0000-0000-0000-00000000000e', 'adic-edu',  'Restaurante do Edu',    'salao', 'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status, vence_em, trial_ate) values
   ('54600000-0000-0000-0000-00000000000a', 'individual', 'ativa', current_date + 20, null),
   ('54600000-0000-0000-0000-00000000000b', 'basico',     'ativa', current_date + 20, null),
@@ -250,7 +250,7 @@ select t_texto('a plataforma dá cortesia (até no Básico): vale, e não entra 
   public.recurso_bool('54600000-0000-0000-0000-00000000000b', 'crediario')
     || ' | ' || public.valor_da_mensalidade('54600000-0000-0000-0000-00000000000b', 'basico'), 'true | 49.90');
 select t_mudar('54600000-0000-0000-0000-00000000000a', 'preco', 'e4600000-0000-0000-0000-0000000000ad', 29.90);
-select t_texto('e preço especial para um salão',
+select t_texto('e preço especial para um restaurante',
   public.valor_da_mensalidade('54600000-0000-0000-0000-00000000000a', 'individual')::text, '126.90');
 select set_config('request.jwt.claim.sub', 'a4600000-0000-0000-0000-00000000000a', false);
 set role authenticated;
@@ -278,7 +278,7 @@ select t_verdade('a dona não chama as metades da borda',
 select t_verdade('nem escreve na tabela',
   recusado($$insert into public.salao_adicionais (salao_id, adicional, status, cortesia)
     values ('54600000-0000-0000-0000-00000000000a', 'crediario', 'ativo', true)$$));
-select t_verdade('nem lê a dos outros salões',
+select t_verdade('nem lê a dos outros restaurantes',
   (select count(*) from public.salao_adicionais where salao_id <> '54600000-0000-0000-0000-00000000000a') = 0);
 reset role;
 select set_config('request.jwt.claim.sub', '', false);

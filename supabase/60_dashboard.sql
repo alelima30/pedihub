@@ -16,7 +16,7 @@
 -- ── AS VISITAS SÃO SÓ NÚMEROS ─────────────────────────────────────────────
 -- Escolha do dono: contar sem saber quem é. A página guarda no aparelho um
 -- código aleatório (não é nome, telefone nem conta), e o banco guarda só um
--- resumo embaralhado dele COM O DIA (md5 de salão + dia + código): a mesma
+-- resumo embaralhado dele COM O DIA (md5 de restaurante + dia + código): a mesma
 -- pessoa vira uma linha por dia, e duas linhas de dias diferentes não se
 -- ligam. Dá para dizer "73 pessoas diferentes abriram o link hoje, 41 pelo
 -- Instagram", e não dá para dizer "a Maria abriu". Sem dado pessoal, sem
@@ -27,7 +27,7 @@
 --
 -- ── QUEM VÊ O QUÊ ─────────────────────────────────────────────────────────
 -- Do Básico para cima (como os Relatórios: a mesma chave `relatorios`).
--- A gestão (dono e admin) vê o salão inteiro. Quem atende vê SÓ os próprios
+-- A gestão (dono e admin) vê o restaurante inteiro. Quem atende vê SÓ os próprios
 -- números: as clientes dela, os serviços dela, a posição dela — sem o
 -- faturamento da casa, sem as outras profissionais, sem as visitas do link.
 -- A recepção sem ficha de quem atende não vê (a regra dos Relatórios).
@@ -39,7 +39,7 @@
 create table if not exists public.link_visitas (
   salao_id    uuid not null references public.saloes(id) on delete cascade,
   dia         date not null,
-  visitante   text not null,           -- md5(salão + dia + código do aparelho)
+  visitante   text not null,           -- md5(restaurante + dia + código do aparelho)
   origem      text not null default 'direto'
               check (origem in ('instagram','whatsapp','facebook','google','tiktok','direto','outro')),
   vezes       int  not null default 1,
@@ -70,7 +70,7 @@ begin
     v_origem := case when v_origem = '' then 'direto' else 'outro' end;
   end if;
 
-  -- Teto por salão e por dia: códigos inventados em série não enchem o banco.
+  -- Teto por restaurante e por dia: códigos inventados em série não enchem o banco.
   select count(*) into n from public.link_visitas where salao_id = v_salao and dia = v_dia;
   if n >= 5000 then return; end if;
 
@@ -88,7 +88,7 @@ returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare
   v_gestor boolean;
-  v_prof   uuid;          -- nulo = o salão inteiro
+  v_prof   uuid;          -- nulo = o restaurante inteiro
   v_fuso   text;
   v_ini    timestamptz;
   v_fim    timestamptz;
@@ -97,7 +97,7 @@ declare
   r        jsonb;
 begin
   if auth.uid() is null or p_salao is null or not public.e_equipe(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   v_gestor := coalesce(public.e_gestor(p_salao), false);
   if not v_gestor then
@@ -105,7 +105,7 @@ begin
      where p.salao_id = p_salao and p.perfil_id = auth.uid() and p.ativo
      order by p.criado_em limit 1;
     if v_prof is null then
-      raise exception 'O Ranking é da gestão do salão e de quem atende.'
+      raise exception 'O Ranking é da gestão do restaurante e de quem atende.'
         using errcode = 'insufficient_privilege';
     end if;
   end if;
@@ -122,7 +122,7 @@ begin
   v_ini_a := v_ini - make_interval(days => v_dias);
 
   with
-  -- Toda a agenda do escopo (o salão, ou só a profissional), fora o arquivo.
+  -- Toda a agenda do escopo (o restaurante, ou só a profissional), fora o arquivo.
   todos as (
     select a.* from public.agendamentos a
      where a.salao_id = p_salao and a.arquivado_em is null
@@ -130,7 +130,7 @@ begin
   ),
   ag as (select * from todos where inicio >= v_ini and inicio < v_fim),
   ag_a as (select * from todos where inicio >= v_ini_a and inicio < v_ini),
-  -- A primeira vez de cada cliente NO SALÃO (horário que não foi cancelado).
+  -- A primeira vez de cada cliente NO RESTAURANTE (horário que não foi cancelado).
   primeira as (
     select distinct on (a.cliente_id) a.cliente_id, a.inicio, a.origem, a.profissional_id
       from public.agendamentos a

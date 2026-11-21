@@ -7,7 +7,7 @@
 --      número de variáveis — o modelo cadastrado na Meta não quebra;
 --   2. só a plataforma liga;
 --   3. ligado, a confirmação, o lembrete, o aviso à profissional e o lembrete
---      para o salão vão pelo `*_valor`, com a forma como ÚLTIMA variável
+--      para o restaurante vão pelo `*_valor`, com a forma como ÚLTIMA variável
 --      e a linha "💳 Pagamento" no texto do histórico;
 --   4. ligar refaz o que já estava na fila, e desligar volta;
 --   5. o que vai escrito: Pix, Cartão de crédito, Pacote (já pago), A combinar;
@@ -36,7 +36,7 @@ insert into public.servicos (id, salao_id, nome, duracao_min, preco) values
 insert into public.clientes (id, salao_id, nome, telefone) values
   ('6e400000-0000-0000-0000-000000000001', '6e100000-0000-0000-0000-000000000001', 'Maria Lima', '11977776666');
 
--- Um horário daqui a uns dias, dentro da jornada, no fuso do salão.
+-- Um horário daqui a uns dias, dentro da jornada, no fuso do restaurante.
 create or replace function marcar(p_id uuid, p_dia int, p_forma text) returns void
 language plpgsql as $f$
 declare v_ini timestamptz := (date_trunc('day', now() at time zone 'America/Sao_Paulo')
@@ -66,7 +66,7 @@ select t_verdade('1. a confirmação vai pelo modelo de hoje, com as 6 variávei
 select t_verdade('   o aviso à profissional também (6)',
   (linha('6e500000-0000-0000-0000-000000000001', 'novo')).modelo = 'pedihub_aviso_profissional'
   and jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'novo')).variaveis) = 6);
-select t_verdade('   e o lembrete para o salão (7)',
+select t_verdade('   e o lembrete para o restaurante (7)',
   (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).modelo = 'pedihub_lembrete_equipe'
   and jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).variaveis) = 7);
 select t_verdade('   e o texto do histórico não fala de pagamento (não foi o que saiu)',
@@ -75,7 +75,7 @@ select t_verdade('   e o texto do histórico não fala de pagamento (não foi o 
 \echo ''
 \echo 'Quem liga'
 select set_config('request.jwt.claim.sub', '6e000000-0000-0000-0000-0000000000d0', false);
-select t_verdade('2. a dona do salão não liga os modelos da plataforma',
+select t_verdade('2. a dona do restaurante não liga os modelos da plataforma',
   recusado($$select public.definir_mensagens_com_pagamento(true)$$));
 select t_verdade('   nem lê os ajustes', recusado($$select public.ajustes_da_plataforma()$$));
 select set_config('request.jwt.claim.sub', '6e000000-0000-0000-0000-0000000000ad', false);
@@ -104,7 +104,7 @@ select t_verdade('   o aviso à profissional também (8: R$ 60,00, Pix)',
   and (linha('6e500000-0000-0000-0000-000000000001', 'novo')).variaveis->>6 = 'R$ 60,00'
   and (linha('6e500000-0000-0000-0000-000000000001', 'novo')).variaveis->>7 = 'Pix'
   and (linha('6e500000-0000-0000-0000-000000000001', 'novo')).corpo like '%💰 Valor: R$ 60,00%');
-select t_verdade('   e o lembrete para o salão (9: R$ 60,00, Pix)',
+select t_verdade('   e o lembrete para o restaurante (9: R$ 60,00, Pix)',
   (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).modelo = 'pedihub_lembrete_equipe_pagamento'
   and jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).variaveis) = 9
   and (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).variaveis->>7 = 'R$ 60,00'
@@ -116,8 +116,8 @@ select t_verdade('   o resumo do dia não muda (não é de um agendamento só)',
 \echo ''
 \echo 'O que vai escrito'
 select marcar('6e500000-0000-0000-0000-000000000002', 4, null);
-select t_verdade('5. sem forma informada: "A combinar no salão"',
-  (linha('6e500000-0000-0000-0000-000000000002', 'confirmacao')).variaveis->>7 = 'A combinar no salão');
+select t_verdade('5. sem forma informada: "A combinar no restaurante"',
+  (linha('6e500000-0000-0000-0000-000000000002', 'confirmacao')).variaveis->>7 = 'A combinar no restaurante');
 update public.agendamentos set forma_pagamento = 'credito' where id = '6e500000-0000-0000-0000-000000000002';
 select t_verdade('6. a recepção anota "cartão de crédito" depois: o que não saiu passa a dizer isso',
   (linha('6e500000-0000-0000-0000-000000000002', 'lembrete')).variaveis->>7 = 'Cartão de crédito'
@@ -153,6 +153,6 @@ select t_verdade('4. desligado de novo, o que está na fila volta ao modelo de a
   (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).modelo = 'pedihub_confirmacao'
   and jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).variaveis) = 6
   and (linha('6e500000-0000-0000-0000-000000000001', 'confirmacao')).corpo not like '%Pagamento%');
-select t_verdade('   e o lembrete para o salão volta a 7, sem valor nem pagamento',
+select t_verdade('   e o lembrete para o restaurante volta a 7, sem valor nem pagamento',
   jsonb_array_length((linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).variaveis) = 7
   and (linha('6e500000-0000-0000-0000-000000000001', 'lembrete_equipe')).modelo = 'pedihub_lembrete_equipe');

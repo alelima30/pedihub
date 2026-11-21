@@ -75,13 +75,13 @@ troca $F \
   where codigo = 'individual';" \
   && rodar "quem atende 6 por dia fica sem lembrete no fim do mês"
 
-echo "3. o lembrete da cliente cai na regra do salão"
+echo "3. o lembrete da cliente cai na regra do restaurante"
 troca $F \
   "    when p_tipo in ('confirmacao', 'lembrete')" \
   "    when p_tipo in ('confirmacao')" \
-  && rodar "a cliente perde o lembrete antes do salão perder o resumo"
+  && rodar "a cliente perde o lembrete antes do restaurante perder o resumo"
 
-echo "4. as do salão vão até o teto"
+echo "4. as do restaurante vão até o teto"
 troca $F \
   "    else public.mensagens_no_mes(p_salao) < public.teto_mensagens_salao(p_salao)" \
   "    else public.mensagens_no_mes(p_salao) < public.teto_mensagens(p_salao)" \
@@ -97,7 +97,7 @@ echo "6. a reserva vira 20%"
 troca $F \
   "floor(x.t * 0.9)::int" \
   "floor(x.t * 0.8)::int" \
-  && rodar "o salão perde o aviso cedo demais"
+  && rodar "o restaurante perde o aviso cedo demais"
 
 echo "7. lembrete de horário que já passou sai"
 troca $F \
@@ -111,7 +111,7 @@ troca $F \
   "     and a.inicio <= now() + interval '1 day';" \
   && rodar "o lembrete de amanhã é cancelado hoje"
 
-echo "9. a tela não recebe até onde vão as do salão"
+echo "9. a tela não recebe até onde vão as do restaurante"
 troca supabase/24_produtos.sql \
   "      'tetoSalao', public.teto_mensagens_salao(p_salao)," \
   "      'tetoSalao', null," \

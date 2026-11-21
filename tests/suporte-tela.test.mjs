@@ -4,13 +4,13 @@
      bash tests/bancada/subir.sh
      PLAYWRIGHT=.../node_modules/playwright node tests/suporte-tela.test.mjs
 
-   O pedido: "se o dono do salão precisa de suporte, como faço?" — e, entre
+   O pedido: "se o dono do restaurante precisa de suporte, como faço?" — e, entre
    abrir já editando ou só olhando, "só leitura com liberar edição".
 
    O suporte.test.sql prova a trava no banco. Aqui, o caminho de quem usa:
-     · no admin, cada salão tem "Abrir painel", "Falar com o dono" e
+     · no admin, cada restaurante tem "Abrir painel", "Falar com o dono" e
        "Estender teste", e o teste vencido não aparece mais como "teste até";
-     · o painel abre no salão do cliente, e SÓ nele, com a faixa no topo;
+     · o painel abre no restaurante do cliente, e SÓ nele, com a faixa no topo;
      · só leitura: mexer não grava, e a tela diz por quê;
      · "Liberar edição" pergunta antes, e aí grava — registrado;
      · "Sair do suporte" encerra a sessão e volta ao admin;
@@ -46,7 +46,7 @@ const rpc = (s, f, a) => fetch(BANCADA + '/rest/v1/rpc/' + f, { method: 'POST',
   headers: { apikey: 'k', Authorization: 'Bearer ' + s.token, 'Content-Type': 'application/json' },
   body: JSON.stringify(a || {}) }).then(r => r.json());
 
-// A dona do salão que pede ajuda, um vizinho, e a plataforma.
+// A dona do restaurante que pede ajuda, um vizinho, e a plataforma.
 const ju = await conta('Ju Barbosa');
 const salaoJu = (await rpc(ju, 'criar_salao', { p_nome_salao: 'Studio Ju ' + marca, p_tipo: 'salao',
   p_telefone: '(11) 3333-' + String(1000 + seq), p_documento: null, p_origem: null }))[0].salao_id;
@@ -87,7 +87,7 @@ console.log('\nNo admin');
   const p = await aba(plat, 'admin.html');
   await p.waitForSelector(linhaDoJu, { timeout: 15000 });
   const href = await p.getAttribute(linhaDoJu + ' a:has-text("Abrir painel")', 'href');
-  diz(href === 'app.html?suporte=' + salaoJu, 'cada salão tem "Abrir painel", no endereço do modo suporte', href);
+  diz(href === 'app.html?suporte=' + salaoJu, 'cada restaurante tem "Abrir painel", no endereço do modo suporte', href);
   diz(await p.getAttribute(linhaDoJu + ' a:has-text("Abrir painel")', 'target') === '_blank',
     'e abre noutra aba, sem fechar o admin');
   const etq = (await p.textContent(linhaDoJu + ' .etq')).trim();
@@ -105,7 +105,7 @@ console.log('\nNo admin');
   await p.click(linhaDoJu + ' button:has-text("Estender teste")');
   await p.waitForTimeout(1200);
   const ate = sql(`select status || ' ' || (trial_ate - current_date) from assinaturas where salao_id = '${salaoJu}'`);
-  diz(ate === 'trial 10', '"Estender teste" pergunta os dias e devolve o salão ao teste', ate);
+  diz(ate === 'trial 10', '"Estender teste" pergunta os dias e devolve o restaurante ao teste', ate);
   await p.waitForSelector(linhaDoJu + ' .etq', { timeout: 8000 });
   diz(/teste até/.test(await p.textContent(linhaDoJu + ' .etq')), 'e a etiqueta volta a dizer "teste até"');
   diz(p.erros.length === 0, 'sem erro de JavaScript no admin', p.erros.join(' | '));
@@ -125,12 +125,12 @@ console.log('\nO painel do cliente, em modo suporte');
     titulo: document.title,
   }));
   diz(r.atual === salaoJu && r.saloes.length === 1 && r.saloes[0] === salaoJu,
-    'o painel abre no salão da Ju — e só nele', JSON.stringify(r.saloes));
+    'o painel abre no restaurante da Ju — e só nele', JSON.stringify(r.saloes));
   diz(r.servicos.includes('Escova da Ju') && !r.servicos.includes('Corte do Ze'),
     'com os dados dela, e nada da casa do vizinho', JSON.stringify(r.servicos));
   diz(!r.perfis.includes('Ze Vizinho'), 'nem o perfil de quem não é da casa', JSON.stringify(r.perfis));
   diz(r.visivel && /Modo suporte/.test(r.faixa) && r.faixa.includes('Studio Ju ' + marca) && /só leitura/.test(r.faixa),
-    'a faixa no topo diz: modo suporte, o nome do salão, só leitura', r.faixa.trim().slice(0, 140));
+    'a faixa no topo diz: modo suporte, o nome do restaurante, só leitura', r.faixa.trim().slice(0, 140));
   diz(/^Suporte · /.test(r.titulo), 'e a aba do navegador também', r.titulo);
   diz(!p.dialogos.length, 'abrir não dispara aviso nenhum (nada foi gravado na abertura)', p.dialogos.join(' | '));
 
@@ -151,7 +151,7 @@ console.log('\nO painel do cliente, em modo suporte');
   p.dialogos.length = 0;
   await p.evaluate(() => assinar('individual', 'pix'));
   diz(p.dialogos.some(d => /modo suporte não dá para assinar/i.test(d)),
-    'assinar plano pelo salão do cliente é recusado na tela', p.dialogos.join(' | '));
+    'assinar plano pelo restaurante do cliente é recusado na tela', p.dialogos.join(' | '));
   await p.evaluate(() => irPara('conta'));
   await p.waitForTimeout(300);
   diz(await p.evaluate(() => !document.getElementById('btExcluirConta')),
@@ -192,7 +192,7 @@ console.log('\nO painel do cliente, em modo suporte');
   await p.waitForSelector('#corpo h2:has-text("Acessos de suporte")', { timeout: 10000 });
   const acesso = await p.textContent('#corpo h2:has-text("Acessos de suporte") + .rolo tbody tr:first-child');
   diz(acesso.includes('Studio Ju ' + marca) && /liberada às/.test(acesso) && /encerrado/.test(acesso),
-    'o admin lista o acesso: salão, edição liberada, encerrado', acesso.replace(/\s+/g, ' ').trim());
+    'o admin lista o acesso: restaurante, edição liberada, encerrado', acesso.replace(/\s+/g, ' ').trim());
   await p.context().close();
 }
 

@@ -63,7 +63,7 @@ $P -d $DB -qc "update public.planos set nome = convert_from(convert_to(nome,'UTF
 $P -d $DB -q -f supabase/00_tudo.sql >/dev/null 2>&1
 nomes=$($P -d $DB -tAc "select string_agg(codigo || '=' || nome, ' ' order by codigo) from public.planos")
 e "os nomes voltam, o Básico também" \
-  "$(echo "$nomes" | grep -q 'basico=Básico' && echo "$nomes" | grep -q 'salao=Salão' && echo "$nomes" | grep -q 'trial=Teste grátis' && echo 1)" "$nomes"
+  "$(echo "$nomes" | grep -q 'basico=Básico' && echo "$nomes" | grep -q 'salao=Restaurante' && echo "$nomes" | grep -q 'trial=Teste grátis' && echo 1)" "$nomes"
 c=$($P -d $DB -tA -F'|' -f supabase/CONFERIR.sql 2>/dev/null | grep 'Acentos do banco')
 e "e o CONFERIR volta a dizer certo" "$(echo "$c" | grep -q '|certo|' && echo 1)" "$c"
 

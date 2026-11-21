@@ -1,12 +1,12 @@
 -- ===========================================================================
--- PediHub — os produtos que o salão vende
+-- PediHub — os produtos que o restaurante vende
 --
 -- ── O QUE ESTE ARQUIVO EXISTE PARA PEGAR ──────────────────────────────────
 -- O módulo 24 é pequeno, e é justamente por isso que ele tem uma decisão fácil
 -- de desfazer sem querer: `venda_online` NASCE FALSO.
 --
 -- Em `servicos` o equivalente nasce TRUE. Alguém lendo os dois lado a lado vai
--- achar que é esquecimento e "corrigir" — e nesse dia todo produto que o salão
+-- achar que é esquecimento e "corrigir" — e nesse dia todo produto que o restaurante
 -- cadastrou para o caixa interno aparece na internet de uma vez, com o preço
 -- de balcão, sem ninguém ter decidido isso.
 --
@@ -16,7 +16,7 @@
 
 \set ON_ERROR_STOP on
 
--- ── Cenário: um salão no Básico, o menor plano que tem produtos ────────────
+-- ── Cenário: um restaurante no Básico, o menor plano que tem produtos ────────────
 -- (o Grátis não tem catálogo nenhum — 0 produtos; isso o planos-modulos cobre)
 insert into auth.users (id) values
   ('a1000000-0000-0000-0000-00000000000a') on conflict do nothing;
@@ -25,7 +25,7 @@ insert into public.perfis (id, nome, email) values
   on conflict (id) do update
     set nome = excluded.nome, email = excluded.email;
 insert into public.saloes (id, slug, nome) values
-  ('a1000000-1111-0000-0000-00000000000b', 'salao-produtos', 'Salão com Produtos');
+  ('a1000000-1111-0000-0000-00000000000b', 'salao-produtos', 'Restaurante com Produtos');
 insert into public.vinculos (perfil_id, salao_id, papel, status) values
   ('a1000000-0000-0000-0000-00000000000a',
    'a1000000-1111-0000-0000-00000000000b', 'dono', 'ativo');
@@ -93,7 +93,7 @@ begin
   end loop;
 end $$;
 
-select t_igual('o salão chegou exatamente ao teto',
+select t_igual('o restaurante chegou exatamente ao teto',
   (select count(*) from public.produtos
     where salao_id = 'a1000000-1111-0000-0000-00000000000b'), :teto_basico::bigint);
 
@@ -102,7 +102,7 @@ select t_verdade('e o próximo é recusado, com o número na mensagem',
     like 'O seu plano cobre%produtos%');
 
 /* ⚠ E O TETO NÃO PODE TRAVAR QUEM ESTÁ SE AJUSTANDO.
-   O gatilho é só de INSERT de propósito: um salão que baixou de plano precisa
+   O gatilho é só de INSERT de propósito: um restaurante que baixou de plano precisa
    continuar conseguindo CORRIGIR o preço do que já cadastrou. Cobrar no UPDATE
    faria o teto punir exatamente quem está tentando se acertar. */
 update public.produtos set preco = 39.90
@@ -151,7 +151,7 @@ select t_verdade('a tabela tem RLS ligado',
   (select relrowsecurity from pg_class where oid = 'public.produtos'::regclass));
 
 /* O gatilho roda como dono. Sem `security definer` ele rodaria como quem fez o
-   INSERT e exigiria que a dona do salão pudesse executar `recurso_num()` —
+   INSERT e exigiria que a dona do restaurante pudesse executar `recurso_num()` —
    que é exatamente como o `comanda_numera` quebrou abrir comanda em produção. */
 select t_verdade('o gatilho do teto é security definer',
   (select prosecdef from pg_proc where proname = 'checar_limite_produtos'));

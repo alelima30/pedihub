@@ -7,7 +7,7 @@
 # ── O DEFEITO QUE ISTO EXISTE PARA PEGAR ───────────────────────────────────
 # O painel na loja está sempre à frente do banco do cliente. Ele atualiza
 # sozinho (é uma página); o banco só muda quando alguém cola SQL no Supabase.
-# Então todo salão vive, por algumas horas ou algumas semanas, num estado que
+# Então todo restaurante vive, por algumas horas ou algumas semanas, num estado que
 # a suíte inteira nunca testava: banco de uma versão velha, tela da nova.
 #
 # `tests/rodar.sh` instala tudo do zero antes de cada arquivo. É o certo para
@@ -24,7 +24,7 @@
 # O estrago aparecia longe da causa. A função de quatro argumentos era criada
 # sem reclamar — corpo plpgsql não é conferido contra o schema no `create` —
 # o PostgREST passava a enxergá-la, o erro "Could not find the function"
-# sumia da tela, e só no clique do dono, no salão de verdade, estourava
+# sumia da tela, e só no clique do dono, no restaurante de verdade, estourava
 # `column "profissional_id" does not exist`. Instalação bem-sucedida,
 # convite quebrado.
 #
@@ -198,7 +198,7 @@ erro="$(psql -v ON_ERROR_STOP=1 -q -d atu_linha -f "$TMP/linha.sql" 2>&1 \
 # Um banco vazio aceita qualquer índice único. Um banco com movimento, não:
 # `create unique index` não nasce em cima de linha que já o viola, e num
 # arquivo colado de uma vez a falha parte a instalação ao meio — o que veio
-# antes ficou, o que vem depois não roda. O salão fica com meia instalação e
+# antes ficou, o que vem depois não roda. O restaurante fica com meia instalação e
 # uma mensagem em inglês sobre índice.
 #
 # Duas comandas no mesmo atendimento não é hipótese: é o rastro que o defeito

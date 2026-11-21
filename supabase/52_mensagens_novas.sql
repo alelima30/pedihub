@@ -2,12 +2,12 @@
 -- 52_mensagens_novas.sql — as mensagens do Crediário e a de horário remarcado
 --
 -- O pedido: "todos os modelos foram enviados para a Meta, aguardando
--- aprovar — e no sistema tem que ter a opção de desligar pelo dono do salão;
+-- aprovar — e no sistema tem que ter a opção de desligar pelo dono do restaurante;
 -- no crediário, uma aba se ele quiser desligar cada mensagem".
 --
 -- ── O CREDIÁRIO (47): QUATRO AVISOS PARA A CLIENTE ──────────────────────
 --   · COMPRA: logo depois da venda, o resumo — o valor e as parcelas;
---   · LEMBRETE: dois dias antes de cada vencimento, às 10h do salão;
+--   · LEMBRETE: dois dias antes de cada vencimento, às 10h do restaurante;
 --   · VENCE HOJE: no dia, às 10h, se a parcela ainda estiver em aberto;
 --   · ATRASO: um dia depois, às 10h, se continuar em aberto. Uma vez só.
 -- Pagou a parcela (ou a venda foi desfeita), o que estava na fila sai.
@@ -23,7 +23,7 @@
 -- Crediário esperam o mês seguinte.
 --
 -- ── O HORÁRIO REMARCADO (49) ─────────────────────────────────────────────
--- O salão remarcou pelo painel (o dia ou a hora): a cliente recebe o
+-- O restaurante remarcou pelo painel (o dia ou a hora): a cliente recebe o
 -- horário de antes e o novo. Trocar só a profissional não avisa. Remarcou de
 -- novo antes de sair, só a última vai.
 --
@@ -165,7 +165,7 @@ $$;
 -- 3) O QUE DEVE ESTAR NA FILA, PARA UMA VENDA NO CREDIÁRIO
 --
 -- Uma função diz o que deve estar lá; os gatilhos a chamam sempre que algo
--- muda (a venda, um recebimento, a chave do salão, o interruptor). A gravação
+-- muda (a venda, um recebimento, a chave do restaurante, o interruptor). A gravação
 -- é a do pacote (`gravar_aviso_do_pacote`, 45): cria, refaz o texto, volta
 -- da fila cancelada, e nunca toca no que já saiu.
 -- ---------------------------------------------------------------------------
@@ -191,10 +191,10 @@ begin
 
   v_tel := public.so_digitos(r.telefone);
   v_nome := public.variavel_limpa(split_part(btrim(coalesce(r.cliente, 'cliente')), ' ', 1));
-  -- A chave Pix só quando o salão aceita Pix (como o pacote, 45).
+  -- A chave Pix só quando o restaurante aceita Pix (como o pacote, 45).
   v_pix := case when coalesce(r.cfg->'pagamentos'->'formas', '[]'::jsonb) ? 'pix'
                 then 'Pix (chave: ' || nullif(btrim(coalesce(r.cfg->'pagamentos'->>'pix', '')), '') || ')' end;
-  v_pag := coalesce(v_pix, 'combine com o salão');
+  v_pag := coalesce(v_pix, 'combine com o restaurante');
 
   v_comum := case
     when r.desfeito_em is not null then 'venda desfeita'
@@ -211,14 +211,14 @@ begin
     into v_lista
     from public.crediario_parcelas pa2 where pa2.crediario_id = r.id;
   v_motivo := coalesce(v_comum, case
-    when not public.notif_liga(r.salao_id, 'notifCredCompra', true) then 'desligado pelo salão' end);
+    when not public.notif_liga(r.salao_id, 'notifCredCompra', true) then 'desligado pelo restaurante' end);
   perform public.gravar_aviso_do_pacote(r.salao_id, 'crediario_compra', 'crediario_compra:' || r.id,
     v_motivo, r.criado_em, interval '-1 hour', r.criado_em + interval '6 hours',
     v_tel, r.cliente_id, null,
     'Olá, ' || v_nome || '. Resumo da sua compra no crediário em ' || r.casa || '.'
       || E'\n\n💰 Valor no crediário: ' || public.reais(r.valor)
       || E'\n🗓️ Parcelas: ' || coalesce(v_lista, '—')
-      || E'\n\nGuarde esta mensagem. Mensagem automática do sistema do salão.',
+      || E'\n\nGuarde esta mensagem. Mensagem automática do sistema do restaurante.',
     jsonb_build_array(v_nome, public.variavel_limpa(r.casa),
                       public.variavel_limpa(public.reais(r.valor)), public.variavel_limpa(v_lista)));
 
@@ -233,7 +233,7 @@ begin
     v_10h := ((pa.vence_em - 2) + time '10:00') at time zone r.fuso;
     v_motivo := coalesce(v_comum, case
       when v_saldo <= 0 then 'parcela paga'
-      when not public.notif_liga(r.salao_id, 'notifCredLembrete', true) then 'desligado pelo salão' end);
+      when not public.notif_liga(r.salao_id, 'notifCredLembrete', true) then 'desligado pelo restaurante' end);
     perform public.gravar_aviso_do_pacote(r.salao_id, 'crediario_lembrete', 'crediario_lembrete:' || pa.id,
       v_motivo, v_10h, interval '0', (pa.vence_em + time '00:00') at time zone r.fuso,
       v_tel, r.cliente_id, null,
@@ -241,7 +241,7 @@ begin
         || E'\n\n💰 Valor: ' || public.reais(v_saldo)
         || E'\n📅 Vencimento: ' || v_venc
         || E'\n💳 Pagamento: ' || v_pag
-        || E'\n\nSe você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do salão.',
+        || E'\n\nSe você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do restaurante.',
       jsonb_build_array(v_nome, v_qual, public.variavel_limpa(r.casa),
                         public.variavel_limpa(public.reais(v_saldo)), v_venc, public.variavel_limpa(v_pag)));
 
@@ -249,14 +249,14 @@ begin
     v_10h := (pa.vence_em + time '10:00') at time zone r.fuso;
     v_motivo := coalesce(v_comum, case
       when v_saldo <= 0 then 'parcela paga'
-      when not public.notif_liga(r.salao_id, 'notifCredVenceHoje', true) then 'desligado pelo salão' end);
+      when not public.notif_liga(r.salao_id, 'notifCredVenceHoje', true) then 'desligado pelo restaurante' end);
     perform public.gravar_aviso_do_pacote(r.salao_id, 'crediario_vence_hoje', 'crediario_vence_hoje:' || pa.id,
       v_motivo, v_10h, interval '0', ((pa.vence_em + 1) + time '00:00') at time zone r.fuso,
       v_tel, r.cliente_id, null,
       'Olá, ' || v_nome || '. A parcela ' || v_qual || ' do seu crediário em ' || r.casa || ' vence hoje.'
         || E'\n\n💰 Valor: ' || public.reais(v_saldo)
         || E'\n💳 Pagamento: ' || v_pag
-        || E'\n\nSe você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do salão.',
+        || E'\n\nSe você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do restaurante.',
       jsonb_build_array(v_nome, v_qual, public.variavel_limpa(r.casa),
                         public.variavel_limpa(public.reais(v_saldo)), public.variavel_limpa(v_pag)));
 
@@ -264,7 +264,7 @@ begin
     v_10h := ((pa.vence_em + 1) + time '10:00') at time zone r.fuso;
     v_motivo := coalesce(v_comum, case
       when v_saldo <= 0 then 'parcela paga'
-      when not public.notif_liga(r.salao_id, 'notifCredAtraso', true) then 'desligado pelo salão' end);
+      when not public.notif_liga(r.salao_id, 'notifCredAtraso', true) then 'desligado pelo restaurante' end);
     perform public.gravar_aviso_do_pacote(r.salao_id, 'crediario_atraso', 'crediario_atraso:' || pa.id,
       v_motivo, v_10h, interval '0', ((pa.vence_em + 2) + time '00:00') at time zone r.fuso,
       v_tel, r.cliente_id, null,
@@ -272,13 +272,13 @@ begin
         || ' venceu em ' || v_venc || ' e ainda aparece em aberto.'
         || E'\n\n💰 Valor: ' || public.reais(v_saldo)
         || E'\n💳 Pagamento: ' || v_pag
-        || E'\n\nSe você já pagou, desconsidere esta mensagem. Em caso de dúvida, fale com o salão. Mensagem automática do sistema do salão.',
+        || E'\n\nSe você já pagou, desconsidere esta mensagem. Em caso de dúvida, fale com o restaurante. Mensagem automática do sistema do restaurante.',
       jsonb_build_array(v_nome, v_qual, public.variavel_limpa(r.casa), v_venc,
                         public.variavel_limpa(public.reais(v_saldo)), public.variavel_limpa(v_pag)));
   end loop;
 end $$;
 
-/* As vendas de um salão (ou de todos) que ainda têm parcela em aberto: ligou
+/* As vendas de um restaurante (ou de todos) que ainda têm parcela em aberto: ligou
    ou desligou uma chave, ou o interruptor, a fila de todas é refeita. */
 create or replace function public.refazer_avisos_do_crediario(p_salao uuid default null)
 returns int language plpgsql security definer set search_path = public as $$
@@ -404,7 +404,7 @@ begin
             || E'\n🕐 Novo horário: ' || (d->>'hora')
             || E'\n✂️ Serviço: ' || (d->>'servico')
             || E'\n👤 Profissional: ' || (d->>'prof')
-            || E'\n\nSe o novo horário não for bom para você, fale com o salão. Aviso automático do sistema de agendamento.',
+            || E'\n\nSe o novo horário não for bom para você, fale com o restaurante. Aviso automático do sistema de agendamento.',
           'remarcado:' || a.id || ':' || to_char(clock_timestamp(), 'YYYYMMDDHH24MISSUS'),
           public.modelo_de('remarcado'),
           jsonb_build_array(public.variavel_limpa(d->>'primeiro'), public.variavel_limpa(d->>'casa'),

@@ -22,7 +22,7 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do update set nome = excluded.nome;
 
 insert into public.saloes (id, slug, nome, tipo, fuso) values
-  ('a0000000-1111-0000-0000-00000000000a', 'salao-motor', 'Salão Motor',
+  ('a0000000-1111-0000-0000-00000000000a', 'salao-motor', 'Restaurante Motor',
    'salao', 'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('a0000000-1111-0000-0000-00000000000a', 'time', 'ativa');
@@ -51,7 +51,7 @@ insert into public.clientes (id, salao_id, nome, telefone) values
 -- Amanhã, para nunca esbarrar na regra de "cedo demais" nem na data passada.
 \set amanha '(current_date + 1)'
 
-/* Atalho: monta um instante de amanhã, na hora de parede do salão. */
+/* Atalho: monta um instante de amanhã, na hora de parede do restaurante. */
 create or replace function h(t text) returns timestamptz
 language sql stable as $$
   select ((current_date + 1) + t::time) at time zone 'America/Sao_Paulo'
@@ -306,7 +306,7 @@ select t_igual('e a Ana, com almoço de verdade no meio, continua com DUAS',
 \echo 'QUEM AINDA NÃO CONFIGUROU A JORNADA CONSEGUE TRABALHAR'
 
 /* ⚠ ESTA SEÇÃO EXISTE PORQUE A PRIMEIRA VERSÃO DO MOTOR ERRAVA AQUI.
-   Ela recusava tudo quando não havia jornada — e um salão recém-cadastrado
+   Ela recusava tudo quando não havia jornada — e um restaurante recém-cadastrado
    não tem jornada, porque preencher jornada é outro passo. Ele não
    conseguiria marcar NADA no primeiro dia e concluiria que o sistema não
    deixa trabalhar.

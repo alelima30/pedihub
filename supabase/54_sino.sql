@@ -1,7 +1,7 @@
 -- ===========================================================================
 -- 54_sino.sql — o sino do painel
 --
--- O pedido: "dentro do painel do dono do salão, um ícone de sino para as
+-- O pedido: "dentro do painel do dono do restaurante, um ícone de sino para as
 -- notificações do sistema". Cada aviso morava num canto: o pedido novo na
 -- aba Pedidos, o horário esperando na agenda, a parcela atrasada no
 -- Crediário, o fim do teste numa faixa. O sino junta o que PEDE AÇÃO, com
@@ -12,9 +12,9 @@
 -- item some sozinho quando o motivo some (o horário foi confirmado, a
 -- parcela foi paga). Não há "marcar como lido" nesses — lido é resolvido.
 --
---   a_confirmar   horários esperando o "sim" do salão (sem os de pacote a
+--   a_confirmar   horários esperando o "sim" do restaurante (sem os de pacote a
 --                 receber, que esperam o pagamento, não uma resposta);
---   sinal         horários esperando o salão conferir o Pix do sinal;
+--   sinal         horários esperando o restaurante conferir o Pix do sinal;
 --   pedidos_loja  pedidos da loja novos (53);
 --   pedidos       pedidos do restaurante recebidos e ainda não aceitos (37);
 --   parcelas      parcelas do crediário vencidas e não pagas (47);
@@ -26,7 +26,7 @@
 --                 ver o aviso.
 --
 -- E os AVISOS DO PEDIHUB: o que a plataforma escreve no admin (novidade,
--- manutenção, recado) aparece no sino de todos os salões até a pessoa
+-- manutenção, recado) aparece no sino de todos os restaurantes até a pessoa
 -- marcar como lido.
 --
 -- ── QUEM VÊ O QUÊ ─────────────────────────────────────────────────────────
@@ -54,9 +54,9 @@ create table if not exists public.avisos_plataforma (
 );
 create index if not exists ix_avisos_plataforma_vivos
   on public.avisos_plataforma(publicado_em desc) where arquivado_em is null;
-/* PARA UM SALÃO SÓ ("como envio somente para um usuário?"): com o salão
+/* PARA UM RESTAURANTE SÓ ("como envio somente para um usuário?"): com o restaurante
    escolhido, o aviso aparece só no sino dele — a prorrogação da cortesia de
-   um dono, um recado para uma casa. Vazio: para todos os salões. */
+   um dono, um recado para uma casa. Vazio: para todos os restaurantes. */
 alter table public.avisos_plataforma
   add column if not exists salao_id uuid references public.saloes(id) on delete cascade;
 
@@ -84,7 +84,7 @@ declare
   v_uso int; v_teto int; s record; v_cfg jsonb; v_nomes text[]; v_hor int; v_pac int;
 begin
   if auth.uid() is null or p_salao is null or not public.e_equipe(p_salao) then
-    raise exception 'Só a equipe do salão vê os avisos.' using errcode = 'insufficient_privilege';
+    raise exception 'Só a equipe do restaurante vê os avisos.' using errcode = 'insufficient_privilege';
   end if;
   v_toda   := public.ve_agenda_toda(p_salao);
   v_gestor := public.e_gestor(p_salao);
@@ -109,7 +109,7 @@ begin
   end if;
 
   if v_toda then
-    -- O sinal por Pix esperando o salão conferir (o prazo ainda não venceu:
+    -- O sinal por Pix esperando o restaurante conferir (o prazo ainda não venceu:
     -- vencido, o agendador libera o horário sozinho).
     select count(*) into n
       from public.agendamentos ag
@@ -249,7 +249,7 @@ grant execute on function public.marcar_aviso_lido(uuid) to authenticated;
 -- ---------------------------------------------------------------------------
 -- O admin: publicar, listar e arquivar os avisos. Só a plataforma.
 -- ---------------------------------------------------------------------------
--- A versão de antes, sem o salão: sai, para não ficarem duas.
+-- A versão de antes, sem o restaurante: sai, para não ficarem duas.
 drop function if exists public.publicar_aviso_plataforma(text, text, text, date);
 create or replace function public.publicar_aviso_plataforma(
   p_titulo text, p_texto text, p_para text default 'gestao', p_ate date default null,
@@ -258,7 +258,7 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare v_id uuid; v_titulo text := btrim(coalesce(p_titulo, '')); v_texto text := btrim(coalesce(p_texto, ''));
 begin
   if not public.is_super() then
-    raise exception 'Só a plataforma publica avisos para os salões.' using errcode = 'insufficient_privilege';
+    raise exception 'Só a plataforma publica avisos para os restaurantes.' using errcode = 'insufficient_privilege';
   end if;
   if length(v_titulo) < 3 or length(v_titulo) > 120 then
     raise exception 'O título precisa ter de 3 a 120 letras.' using errcode = 'check_violation';
@@ -273,7 +273,7 @@ begin
     raise exception 'A data de saída já passou.' using errcode = 'check_violation';
   end if;
   if p_salao is not null and not exists (select 1 from public.saloes s where s.id = p_salao) then
-    raise exception 'Não achei esse salão.' using errcode = 'check_violation';
+    raise exception 'Não achei esse restaurante.' using errcode = 'check_violation';
   end if;
   insert into public.avisos_plataforma (titulo, texto, para, ate, criado_por, salao_id)
        values (v_titulo, v_texto, coalesce(p_para, 'gestao'), p_ate, auth.uid(), p_salao)

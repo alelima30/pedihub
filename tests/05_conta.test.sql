@@ -3,7 +3,7 @@
 --
 -- O cadastro cria a conta em `auth.users` e logo depois chama criar_salao(),
 -- que exige um perfil. Nada criava esse perfil: quem se cadastrasse no
--- Supabase de verdade levava "Complete seu cadastro antes de criar o salão"
+-- Supabase de verdade levava "Complete seu cadastro antes de criar o restaurante"
 -- com a conta metade criada e o e-mail preso.
 --
 -- A suíte inteira estava verde porque a bancada de teste inseria em `perfis`
@@ -99,7 +99,7 @@ end $$;
 do $$
 declare v_id uuid := gen_random_uuid(); v_slug text;
 begin
-  -- É esta sequência que quebrava: criar conta, e em seguida criar o salão.
+  -- É esta sequência que quebrava: criar conta, e em seguida criar o restaurante.
   insert into auth.users (id, email, raw_user_meta_data)
        values (v_id, 'novo@salao.com',
                '{"nome":"Novo Dono","telefone":"11955554444"}'::jsonb);
@@ -109,11 +109,11 @@ begin
 
   -- criar_salao() devolve uma TABELA (salao_id, slug), não um escalar.
   select c.slug into v_slug
-    from public.criar_salao(p_nome_salao := 'Salão Novo', p_tipo := 'salao') c;
+    from public.criar_salao(p_nome_salao := 'Restaurante Novo', p_tipo := 'salao') c;
 
   perform t_verdade('criar_salao() não reclama mais de cadastro incompleto',
                     v_slug is not null);
-  perform t_texto('e o apelido do link sai do nome do salão',
+  perform t_texto('e o apelido do link sai do nome do restaurante',
                   v_slug, 'salao-novo');
 end $$;
 

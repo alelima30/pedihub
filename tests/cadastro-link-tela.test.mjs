@@ -9,7 +9,7 @@
 
    ── O QUE ESTE ARQUIVO MEDE ────────────────────────────────────────────────
      1. o link de cadastro (`&cadastro=1`) abre em "Faça seu cadastro"; criar
-        a conta faz a ficha no salão, marcada "pelo link", e mostra "Cadastro
+        a conta faz a ficha no restaurante, marcada "pelo link", e mostra "Cadastro
         feito"; daí ela marca um horário se quiser;
      2. quem já tem conta entra pelo mesmo link: a ficha do balcão (mesmo
         WhatsApp e primeiro nome) é ligada, sem ficha nova;
@@ -18,7 +18,7 @@
      4. criar a conta pela tela de conta de sempre também faz a ficha, e volta
         para onde ela estava;
      5. entrar logada pelo link de sempre NÃO cria ficha (abrir o link de um
-        salão não é se cadastrar nele);
+        restaurante não é se cadastrar nele);
      6. o painel: a marca "cadastrou pelo link" em Clientes, e o botão "Link
         de cadastro" com o link, copiar e mandar no WhatsApp;
      7. o aniversário: obrigatório no cadastro, vai para a ficha e aparece
@@ -73,7 +73,7 @@ const TEL = { maria: tel('91'), lu: tel('92'), carla: tel('93'), dani: tel('94')
 const dona = aba();
 await dona.criarConta({ email:`cl-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -115,12 +115,12 @@ const estado = p => p.evaluate(() => ({ tela,
 const cabe = p => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('1. O link de cadastro: a conta nova vira ficha no salão');
+secao('1. O link de cadastro: a conta nova vira ficha no restaurante');
 {
   const { p, ctx } = await aparelho('&cadastro=1', 360, 'conta');
   const e = await estado(p);
-  igual('abre direto em "Faça seu cadastro", com o nome do salão', [e.tela, e.titulo, e.bp,
-    e.texto.includes('Salão Megatop') && /sem precisar marcar horário/.test(e.texto)],
+  igual('abre direto em "Faça seu cadastro", com o nome do restaurante', [e.tela, e.titulo, e.bp,
+    e.texto.includes('Restaurante Megatop') && /sem precisar marcar horário/.test(e.texto)],
     ['conta', 'Faça seu cadastro', 'Fazer meu cadastro', true]);
   igual('o aviso sai do endereço (recarregar não repete)', e.endereco, '?salao=' + SLUG);
   verdade('a 360px a tela de cadastro cabe', await cabe(p));
@@ -136,9 +136,9 @@ secao('1. O link de cadastro: a conta nova vira ficha no salão');
   await p.click('#btPrincipal');
   await p.waitForFunction(() => tela === 'cadastro', null, { timeout: 10000 }).catch(() => {});
   const f = await estado(p);
-  igual('"Cadastro feito", pelo nome, com o salão', [f.tela, f.titulo,
-    f.texto.startsWith('Pronto, Luana!') && f.texto.includes('Salão Megatop'), f.bp, f.bs],
-    ['cadastro', 'Cadastro feito', true, 'Marcar um horário', 'Ver o salão']);
+  igual('"Cadastro feito", pelo nome, com o restaurante', [f.tela, f.titulo,
+    f.texto.startsWith('Pronto, Luana!') && f.texto.includes('Restaurante Megatop'), f.bp, f.bs],
+    ['cadastro', 'Cadastro feito', true, 'Marcar um horário', 'Ver o restaurante']);
   verdade('a 360px o cadastro feito cabe', await cabe(p));
   const lu = (await fichas()).find(x => x.nome === 'Luana Teste');
   igual('no banco: a ficha nasceu, ligada à conta, com o WhatsApp sem o 55 e a marca',
@@ -259,13 +259,13 @@ secao('6. O painel: a marca em Clientes e o botão do link');
   await p.click('button:has-text("Link de cadastro")');
   await p.waitForSelector('#linkCadastro');
   const link = await p.inputValue('#linkCadastro');
-  verdade('a janela mostra o link do salão com o cadastro', link.endsWith('agendar.html?salao=' + SLUG + '&cadastro=1'), link);
+  verdade('a janela mostra o link do restaurante com o cadastro', link.endsWith('agendar.html?salao=' + SLUG + '&cadastro=1'), link);
   const botoes = await p.evaluate(() => [...document.querySelectorAll('#modalPe .btn')].map(b => b.textContent.trim()));
   igual('com Fechar, Copiar e Mandar no WhatsApp', botoes, ['Fechar', 'Copiar o link', 'Mandar no WhatsApp']);
   await p.click('#modalPe .btn:has-text("Mandar no WhatsApp")');
   const abriu = await p.evaluate(() => window.__abriu.slice(-1)[0] || '');
   verdade('o WhatsApp abre com o convite e o link', abriu.startsWith('https://wa.me/?text=')
-    && decodeURIComponent(abriu).includes('Faça seu cadastro no Salão Megatop')
+    && decodeURIComponent(abriu).includes('Faça seu cadastro no Restaurante Megatop')
     && decodeURIComponent(abriu).includes(link), abriu);
   verdade('a 390px a janela cabe', await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));
   await ctx.close();

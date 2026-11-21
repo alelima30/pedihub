@@ -6,11 +6,11 @@
 -- Client ID e o Client Secret do Google Cloud — que NUNCA passam por aqui
 -- nem pelo navegador). O que o Google entrega é só nome e e-mail.
 --
--- E o salão precisa do WhatsApp (é por ele que a ficha é achada e que as
+-- E o restaurante precisa do WhatsApp (é por ele que a ficha é achada e que as
 -- mensagens chegam) e do aniversário (Aniversariantes). Então, na primeira
 -- vez, a tela pede os dois — e esta função os grava no perfil de quem está
 -- logado. Depois disso o caminho é o de sempre: `cadastrar_minha_ficha`
--- (48) liga ou cria a ficha no salão, sem duplicar.
+-- (48) liga ou cria a ficha no restaurante, sem duplicar.
 --
 -- ── AS REGRAS ─────────────────────────────────────────────────────────────
 --   · só a própria pessoa, logada;
@@ -42,7 +42,7 @@ begin
       raise exception 'Falta o WhatsApp com DDD.' using errcode = 'check_violation';
     end if;
     if exists (select 1 from public.perfis o where o.telefone = v_tel and o.id <> v_eu) then
-      raise exception 'Este WhatsApp já está em outra conta. Entre com o e-mail e a senha dela, ou fale com o salão.'
+      raise exception 'Este WhatsApp já está em outra conta. Entre com o e-mail e a senha dela, ou fale com o restaurante.'
         using errcode = 'check_violation';
     end if;
     update public.perfis set telefone = v_tel where id = v_eu;

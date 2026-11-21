@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ===========================================================================
-#  Quebrar de propósito o lembrete para o salão — o teste tem de reprovar.
+#  Quebrar de propósito o lembrete para o restaurante — o teste tem de reprovar.
 #
 #    bash tests/bancada/subir.sh          (noutro terminal)
 #    bash tests/mutacoes-lembrete-salao.sh
@@ -62,7 +62,7 @@ troca $F \
     v_min    :=" \
   "     and public.notif_liga(a.salao_id, 'notifLembreteEquipe', true) then
     v_min    :=" \
-  && rodar "todo salão passa a pagar por mensagem que não pediu"
+  && rodar "todo restaurante passa a pagar por mensagem que não pediu"
 
 # (Tirar o "não repetir o telefone" é mutação EQUIVALENTE: a chave da fila
 #  leva o telefone, e a segunda linha esbarra na primeira. Fica a regra no
@@ -78,7 +78,7 @@ troca $F \
   "    v_min    := greatest(0, least(1440,
                   public.notif_num(a.salao_id, 'notifLembreteEquipeMin', 60)));" \
   "    v_min    := public.lembrete_minutos(a.salao_id);" \
-  && rodar "o ajuste do salão não vale"
+  && rodar "o ajuste do restaurante não vale"
 
 echo "4. o cancelado não revive"
 troca $F \
@@ -148,7 +148,7 @@ troca $F \
       select coalesce(cfg->>'notifLembreteEquipePara', 'atende') into v_para" \
   "    if v_min > 0 and v_quando > now() then
       select coalesce(cfg->>'notifLembreteEquipePara', 'atende') into v_para" \
-  && rodar "o lembrete do salão é cancelado na hora de sair"
+  && rodar "o lembrete do restaurante é cancelado na hora de sair"
 
 echo "14. com a hora chegada, o pendente de outra chave é cancelado"
 troca $F \

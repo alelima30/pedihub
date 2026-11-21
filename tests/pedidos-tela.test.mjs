@@ -7,7 +7,7 @@
    O banco é cobrado no `pedidos.test.mjs`. Aqui é o caminho de gente:
 
      1. o link do restaurante diz "Faça seu pedido" e "Cardápio", não
-        "Agendar horário" — e o do salão continua exatamente como era;
+        "Agendar horário" — e o do restaurante continua exatamente como era;
      2. a cliente monta o pedido, escolhe entrega, bairro, pagamento e troco,
         confere a conta (com a taxa do bairro) e confirma;
      3. ela acompanha o andamento, e o aviso da capa a leva de volta;
@@ -59,7 +59,7 @@ async function casa(nome, tipo){
   return d;
 }
 const zé = await casa('Pizzaria do Zé ' + m, 'restaurante');
-const salao = await casa('Salão Bela ' + m, 'salao');
+const salao = await casa('Restaurante Bela ' + m, 'salao');
 const ids = [];
 for(const [n, p, cat] of [['Pizza calabresa', 45, 'Pizzas'], ['Pizza marguerita', 42, 'Pizzas'],
                           ['Refrigerante 2L', 12, 'Bebidas']]){
@@ -68,12 +68,12 @@ for(const [n, p, cat] of [['Pizza calabresa', 45, 'Pizzas'], ['Pizza marguerita'
 }
 await zé.atualizar('saloes', zé.salao, { cfg:{ pedidos:{ taxas:[{ bairro:'Centro', taxa:5 }, { bairro:'Vila Nova', taxa:8 }],
   minimo: 20, tempo:'40 a 60 min' } } });
-// O salão tem serviço e produto: o link dele não pode mudar nada.
+// O restaurante tem serviço e produto: o link dele não pode mudar nada.
 await salao.inserir('servicos', { salaoId: salao.salao, nome:'Corte', duracaoMin:30, intervaloMin:0, preco:60,
   ativo:true, aceitaOnline:true });
 await salao.inserir('produtos', { salaoId: salao.salao, nome:'Shampoo', preco:30, custo:0, estoque:0,
   ativo:true, vendaOnline:true });
-ok('uma pizzaria com cardápio, taxa por bairro e mínimo; e um salão com serviço e produto');
+ok('uma pizzaria com cardápio, taxa por bairro e mínimo; e um restaurante com serviço e produto');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
@@ -103,7 +103,7 @@ verdade('a vitrine da capa é "Do cardápio", com o botão do cardápio completo
   /Do cardápio/.test(await c.textContent('#capaLoja')) && /Ver o cardápio completo/.test(await c.textContent('#capaLoja')));
 {
   const s = await link(salao.slug);
-  igual('o salão continua com "Agendar horário" no pé', limpo(await s.textContent('#btPrincipal')), 'Agendar horário');
+  igual('o restaurante continua com "Agendar horário" no pé', limpo(await s.textContent('#btPrincipal')), 'Agendar horário');
   verdade('e com "Produtos em destaque" na capa', /Produtos em destaque/.test(await s.textContent('#capaLoja')));
   await s.evaluate(() => irPara('loja'));
   await s.evaluate(() => mudarNoCarrinho(produtosDaLoja()[0].id, 1));

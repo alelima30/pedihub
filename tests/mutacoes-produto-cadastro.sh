@@ -137,7 +137,7 @@ troca supabase/32_produto_cadastro.sql \
 echo "8. o histórico abre para quem não é gestão"
 troca supabase/32_produto_cadastro.sql \
   "  if not public.e_gestor(v_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;" \
   "  if false then

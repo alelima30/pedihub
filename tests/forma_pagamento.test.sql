@@ -2,7 +2,7 @@
 -- PediHub — como a cliente vai pagar (09_cliente.sql, 1d)
 --
 --   1. O que ela escolhe no link é gravado no agendamento.
---   2. Forma estranha, ou que o salão não aceita, vira nula — e a marcação
+--   2. Forma estranha, ou que o restaurante não aceita, vira nula — e a marcação
 --      não cai por isso.
 --   3. Atendimento que sai por R$ 0 (pacote) não guarda forma.
 --   4. "Meus horários" devolve a forma.
@@ -12,10 +12,10 @@
 \set ON_ERROR_STOP on
 
 insert into public.saloes (id, slug, nome, tipo, status, fuso, cfg) values
-  ('fb000000-1111-0000-0000-000000000001', 'salao-pagamento', 'Salão Pagamento', 'salao',
+  ('fb000000-1111-0000-0000-000000000001', 'salao-pagamento', 'Restaurante Pagamento', 'salao',
    'ativo', 'America/Sao_Paulo', '{"diasLiberados": 30}'),
-  -- Este salão marcou o que aceita: só Pix e crédito.
-  ('fb000000-1111-0000-0000-000000000002', 'salao-pix-credito', 'Salão Pix', 'salao',
+  -- Este restaurante marcou o que aceita: só Pix e crédito.
+  ('fb000000-1111-0000-0000-000000000002', 'salao-pix-credito', 'Restaurante Pix', 'salao',
    'ativo', 'America/Sao_Paulo', '{"diasLiberados": 30, "pagamentos": {"formas": ["pix", "credito"]}}');
 insert into public.assinaturas (salao_id, plano, status) values
   ('fb000000-1111-0000-0000-000000000001', 'time', 'ativa'),
@@ -68,11 +68,11 @@ create temporary table m2 as
 select * from public.agendar('fb000000-2222-0000-0000-000000000001'::uuid,
   vaga_fp('fb000000-2222-0000-0000-000000000001', 'fb000000-3333-0000-0000-000000000001', 3),
   array['fb000000-3333-0000-0000-000000000001'::uuid], 'Caio Reis', '51911110002');
-select t_texto('sem escolher (salão que não marcou formas): fica sem forma, e marca igual',
+select t_texto('sem escolher (restaurante que não marcou formas): fica sem forma, e marca igual',
   forma_de((select id from m2)), '(nula)');
 
 \echo ''
-\echo '2) Forma estranha, ou que o salão não aceita'
+\echo '2) Forma estranha, ou que o restaurante não aceita'
 
 create temporary table m3 as
 select * from public.agendar('fb000000-2222-0000-0000-000000000001'::uuid,
@@ -87,7 +87,7 @@ select * from public.agendar('fb000000-2222-0000-0000-000000000002'::uuid,
   vaga_fp('fb000000-2222-0000-0000-000000000002', 'fb000000-3333-0000-0000-000000000002', 1),
   array['fb000000-3333-0000-0000-000000000002'::uuid], 'Eva Dias', '51911110004',
   p_forma_pagamento => 'dinheiro');
-select t_texto('o salão aceita só Pix e crédito: "dinheiro" não é gravado',
+select t_texto('o restaurante aceita só Pix e crédito: "dinheiro" não é gravado',
   forma_de((select id from m4)), '(nula)');
 
 create temporary table m5 as

@@ -56,13 +56,13 @@ const tel = () => '+5511' + (100000000 + Math.floor(Math.random()*89999999));
 const dona = novaAba();
 await dona.criarConta({ email:`cx-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju do Caixa', telefone: tel() });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Caixa ' + marca,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Caixa ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 
 /* A profissional que o `criar_salao()` já cria para a dona — e não uma
    nova. O plano de teste cobre UMA, e inserir a segunda esbarra na cota:
-   "o salão já tem 1". O teste morria ali, num erro que não tem nada a ver
+   "o restaurante já tem 1". O teste morria ali, num erro que não tem nada a ver
    com caixa. */
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
 await dona.atualizar('profissionais', prof.id, { comissaoPct: 40 });
@@ -101,10 +101,10 @@ await p.addInitScript(([b, s]) => {
 await p.goto(BASE + '/app.html');
 await p.waitForTimeout(4000);
 
-/* O salão nasceu agora, sem horário de ninguém, e o passo a passo do
+/* O restaurante nasceu agora, sem horário de ninguém, e o passo a passo do
    primeiro dia abre sozinho e cobre a tela — certo para ele, atravessado
    para este teste, que é sobre o caixa. Dispensado como "já fiz": a marca
-   fica no `cfg` do salão, no banco, e por isso atravessa o reload lá
+   fica no `cfg` do restaurante, no banco, e por isso atravessa o reload lá
    embaixo. Quem prova que ele aparece é o `funil-nuvem.test.mjs`. */
 await p.evaluate(() => { if(typeof pdFechar === 'function') pdFechar(true); });
 await p.waitForTimeout(1800);
@@ -426,7 +426,7 @@ verdade('o painel abre sem erro', !/Não consegui montar/.test(hoje),
    O "na agenda" fica: é contagem de gente, não de dinheiro, e é o que
    responde a pergunta que faz alguém abrir esta tela de manhã.
 
-   ⚠ E ISSO VALE PORQUE ESTE SALÃO USA COMANDA. Num salão que desligou a
+   ⚠ E ISSO VALE PORQUE ESTE RESTAURANTE USA COMANDA. Num restaurante que desligou a
    comanda a aba Caixa some do menu, e aí o dinheiro volta a ficar aqui —
    senão não teria onde aparecer. Quem mede esse outro caso é o
    `sem-comanda-tela.test.mjs`. */
@@ -457,7 +457,7 @@ verdade('e o Caixa é quem mostra o faturamento, o ticket e o previsto',
 
    E `saloes` não tinha mapa de colunas — todo campo dele era palavra única.
    `comissaoSobre` iria cru para o PostgREST, que não tem essa coluna, e a
-   gravação inteira do cadastro do salão cairia: nome, telefone, endereço,
+   gravação inteira do cadastro do restaurante cairia: nome, telefone, endereço,
    tudo junto.
    ═══════════════════════════════════════════════════════════════════════════ */
 secao('7) Cadastrar as regras novas de comissão');
@@ -499,7 +499,7 @@ verdade('a regra chegou ao banco',
   sl.comissao_sobre === 'liquido', JSON.stringify(sl));
 verdade('e a data de corte também',
   !!sl.comissao_regra_desde, JSON.stringify(sl));
-verdade('e o cadastro do salão não caiu junto',
+verdade('e o cadastro do restaurante não caiu junto',
   !avisos.some(a => /NÃO consegui salvar/.test(a)),
   JSON.stringify(avisos.slice(-2)));
 
@@ -626,22 +626,22 @@ verdade('e o Caixa mostra o MESMO faturamento que o banco calculou',
   'a tela somou ' + fatCaixa + ', o banco calculou ' + t2.total);
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   8c) "HOJE" É O DIA DO SALÃO
+   8c) "HOJE" É O DIA DO RESTAURANTE
 
    O `hoje()` da tela devolvia a data do APARELHO, enquanto `a.data` e
-   `c.data` saem do fuso do SALÃO. Enquanto os dois coincidem — celular
-   brasileiro, salão brasileiro — não se vê nada. Quando não coincidem, a
+   `c.data` saem do fuso do RESTAURANTE. Enquanto os dois coincidem — celular
+   brasileiro, restaurante brasileiro — não se vê nada. Quando não coincidem, a
    agenda abre num dia vazio e o Caixa filtra `c.data === diaAtual` sem achar
    comanda nenhuma. Sem erro nenhum para investigar.
 
-   Foi assim que a seção 8b acima apareceu: a bancada roda em UTC, o salão é
+   Foi assim que a seção 8b acima apareceu: a bancada roda em UTC, o restaurante é
    America/Sao_Paulo, e o Caixa mostrou R$ 0,00 com R$ 230 fechados no banco.
 
    O fuso escolhido aqui é o que GARANTE data diferente da do aparelho a
    qualquer hora do dia. Sem esse cuidado o teste passaria por sorte de
    horário — que é o mesmo que não testar.
    ═══════════════════════════════════════════════════════════════════════════ */
-secao('8c) O dia é o do salão, não o do aparelho');
+secao('8c) O dia é o do restaurante, não o do aparelho');
 
 /* ⚠ A FRONTEIRA É 11, NÃO 12 — E ERRAR ISSO ABRIA UMA HORA DE FALHA POR DIA.
 
@@ -670,9 +670,9 @@ const diaDaTela = await p.evaluate(() => ({ hoje: hoje(), diaAtual }));
 verdade('o fuso escolhido de fato cai noutro dia que o do aparelho',
   emFuso(FUSO_LONGE) !== emFuso(null),
   FUSO_LONGE + ' → ' + emFuso(FUSO_LONGE) + ' · aparelho → ' + emFuso(null));
-verdade('e o hoje() da tela segue o salão',
+verdade('e o hoje() da tela segue o restaurante',
   diaDaTela.hoje === emFuso(FUSO_LONGE),
-  'a tela disse ' + diaDaTela.hoje + ', no salão é ' + emFuso(FUSO_LONGE));
+  'a tela disse ' + diaDaTela.hoje + ', no restaurante é ' + emFuso(FUSO_LONGE));
 
 await dona.atualizar('saloes', SALAO, { fuso: 'America/Sao_Paulo' });
 await carregarNaTela();

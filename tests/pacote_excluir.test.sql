@@ -12,7 +12,7 @@
 --   6. vencido, mas com sessão do pacote ainda marcada para a frente: conta
 --      como cliente no pacote — só depois de tirar (e o Tirar cancela a
 --      sessão que viria) ele sai;
---   7. excluir o salão (a conta) ainda leva tudo junto, em cascata.
+--   7. excluir o restaurante (a conta) ainda leva tudo junto, em cascata.
 -- ===========================================================================
 \set ON_ERROR_STOP on
 
@@ -24,7 +24,7 @@ insert into public.perfis (id, nome, telefone) values
   ('b5000000-0000-0000-0000-00000000000b', 'Rita', '+5511950000002')
 on conflict (id) do update set nome = excluded.nome;
 insert into public.saloes (id, slug, nome, status, fuso) values
-  ('55000000-0000-0000-0000-00000000000a', 'pacote-excluir', 'Salão Exclui', 'ativo', 'America/Sao_Paulo');
+  ('55000000-0000-0000-0000-00000000000a', 'pacote-excluir', 'Restaurante Exclui', 'ativo', 'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('55000000-0000-0000-0000-00000000000a', 'time', 'ativa');
 insert into public.vinculos (perfil_id, salao_id, papel) values
@@ -140,8 +140,8 @@ select t_texto('   e aí o pacote sai (arquivado: já foi vendido)', t_excluir('
   '55200000-0000-0000-0000-0000000000b4')->>'acao', 'arquivado');
 
 \echo ''
-\echo '7. Excluir o salão ainda leva tudo junto'
+\echo '7. Excluir o restaurante ainda leva tudo junto'
 delete from public.saloes where id = '55000000-0000-0000-0000-00000000000a';
-select t_verdade('o salão e os pacotes (com histórico) saíram em cascata',
+select t_verdade('o restaurante e os pacotes (com histórico) saíram em cascata',
   not exists (select 1 from public.pacotes where salao_id = '55000000-0000-0000-0000-00000000000a'));
 select set_config('request.jwt.claim.sub', '', false);

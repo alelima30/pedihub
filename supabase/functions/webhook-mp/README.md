@@ -67,7 +67,7 @@ Hoje o PediHub cobra **só por Pix**. O `abrir_cobranca()` recusa `boleto`
 A conta que decidiu isso: a tarifa do boleto é fixa por emissão, então num
 plano de entrada ela pesava mais de 6% da mensalidade — cinco vezes o que
 pesa num plano de R$ 297. Somado à compensação de até 3 dias úteis, com o
-salão sem plano enquanto espera, ele não se pagava.
+restaurante sem plano enquanto espera, ele não se pagava.
 
 **O que continua funcionando:** cobrança de boleto emitida antes da mudança
 segue sendo lida, paga e conciliada normalmente. O valor `'boleto'` continua
@@ -187,10 +187,10 @@ recusar.
 |---|---|
 | escolher o próprio preço | o valor é lido de `planos` **no banco**; o navegador manda só o código do plano |
 | chamar `registrar_pagamento` pelo console | a função é negada a `anon` e `authenticated` |
-| editar `assinaturas` direto | policy de escrita exige `is_super()`; o salão só tem `select` |
+| editar `assinaturas` direto | policy de escrita exige `is_super()`; o restaurante só tem `select` |
 | forjar o aviso de pagamento | HMAC-SHA256 com `MP_WEBHOOK_SECRET`, janela de 10 min, comparação em tempo constante |
 | reenviar um aviso legítimo | `cobrancas.mp_id` é único e `registrar_pagamento` é idempotente |
 | trocar o id dentro de um aviso legítimo | o id entra no texto assinado |
 | mentir no corpo do aviso | status e valor são relidos da API do Mercado Pago, não do corpo |
 | pagar R$ 1 numa cobrança de R$ 297 | o valor é conferido contra o gravado antes de ativar |
-| assinar pelo salão dos outros | `abrir_cobranca` confere o vínculo de quem pediu |
+| assinar pelo restaurante dos outros | `abrir_cobranca` confere o vínculo de quem pediu |

@@ -2,7 +2,7 @@
 -- PediHub — o sinal por Pix para garantir o horário (09_cliente.sql, 1e)
 --
 -- "Como fazer para colocar sinal?" — quem marca pelo link paga uma parte
--- para a chave Pix do salão, e o dono confirma quando o comprovante chega.
+-- para a chave Pix do restaurante, e o dono confirma quando o comprovante chega.
 --
 --   1. percentual: o horário entra pendente, com o valor e o prazo do banco;
 --   2. "Meus horários" diz quanto, até quando e para onde mandar;
@@ -25,10 +25,10 @@ insert into public.saloes (id, slug, nome, tipo, status, fuso, whatsapp, cfg) va
    'America/Sao_Paulo', null,
    '{"diasLiberados": 30, "pagamentos": {"formas": ["pix"], "pix": "11999990000",
      "sinal": {"tipo": "fixo", "valor": 80}}}'),
-  ('51000000-1111-0000-0000-000000000003', 'sinal-sem-chave', 'Salão Sem Chave', 'salao', 'ativo',
+  ('51000000-1111-0000-0000-000000000003', 'sinal-sem-chave', 'Restaurante Sem Chave', 'salao', 'ativo',
    'America/Sao_Paulo', null,
    '{"diasLiberados": 30, "pagamentos": {"formas": ["pix"], "sinal": {"tipo": "pct", "valor": 10}}}'),
-  ('51000000-1111-0000-0000-000000000004', 'sinal-nenhum', 'Salão Sem Sinal', 'salao', 'ativo',
+  ('51000000-1111-0000-0000-000000000004', 'sinal-nenhum', 'Restaurante Sem Sinal', 'salao', 'ativo',
    'America/Sao_Paulo', null,
    '{"diasLiberados": 30, "pagamentos": {"formas": ["pix"], "pix": "pix@semsinal.com"}}');
 insert into public.assinaturas (salao_id, plano, status)
@@ -44,7 +44,7 @@ insert into public.jornadas (profissional_id, dia_semana, inicio, fim)
   select p.id, d, '08:00', '20:00' from public.profissionais p, generate_series(0, 6) d
    where p.salao_id in (select id from public.saloes where slug like 'sinal-%');
 
--- A n-ésima vaga livre daqui a três dias, no salão n.
+-- A n-ésima vaga livre daqui a três dias, no restaurante n.
 create or replace function vaga_s(p_salao int, p_n int) returns timestamptz
 language sql stable as $f$
   select h from public.horarios_livres(('51000000-2222-0000-0000-00000000000' || p_salao)::uuid,
@@ -68,7 +68,7 @@ $f$;
 \echo ''
 \echo '1. Percentual (10% de R$ 50)'
 create temporary table a1 as select * from marcar_s(1, 1, 'Bia Lima', '11911110001');
-select t_texto('com sinal, o horário entra pendente (o salão confirma sozinho, mas não sem o sinal)',
+select t_texto('com sinal, o horário entra pendente (o restaurante confirma sozinho, mas não sem o sinal)',
   (ag((select id from a1))).status, 'pendente');
 select t_texto('o sinal é 10% do que ela vai pagar: R$ 5,00, calculado pelo banco',
   (ag((select id from a1))).sinal_exigido::text, '5.00');
@@ -79,7 +79,7 @@ select t_texto('e nada pago ainda', (ag((select id from a1))).sinal_pago::text, 
 \echo ''
 \echo '2. "Meus horários" diz como pagar'
 select t_texto('o valor', meu((select token from a1))->'sinal'->>'valor', '5.00');
-select t_texto('a chave Pix do salão', meu((select token from a1))->'sinal'->>'chave', 'pix@studiosinal.com.br');
+select t_texto('a chave Pix do restaurante', meu((select token from a1))->'sinal'->>'chave', 'pix@studiosinal.com.br');
 select t_texto('quem recebe', meu((select token from a1))->'sinal'->>'titular', 'Ju Barbosa');
 select t_verdade('a regra de cancelamento', meu((select token from a1))->'sinal'->>'regra' like 'Devolvo%');
 select t_texto('o WhatsApp para o comprovante', meu((select token from a1))->'sinal'->>'whatsapp', '11988887777');
@@ -91,7 +91,7 @@ select t_verdade('com o prazo', (meu((select token from a1))->'sinal'->>'ate') i
 create temporary table a2 as select * from marcar_s(2, 1, 'Caio Reis', '11911110002');
 select t_texto('R$ 80 fixo num atendimento de R$ 50: o sinal fica nos R$ 50',
   (ag((select id from a2))).sinal_exigido::text, '50.00');
-select t_texto('sem WhatsApp nem telefone no salão, não há número para o comprovante',
+select t_texto('sem WhatsApp nem telefone no restaurante, não há número para o comprovante',
   coalesce(meu((select token from a2))->'sinal'->>'whatsapp', '(vazio)'), '(vazio)');
 
 \echo ''

@@ -7,7 +7,7 @@
 -- tem. `drop ... if exists` e `create` de novo: colar duas vezes dá no mesmo.
 --
 -- 1) O CATÁLOGO É DA EQUIPE. Era `tem_acesso()`, que inclui o papel
---    "cliente" — e virar cliente de um salão é livre (`vinc_virar_cliente`).
+--    "cliente" — e virar cliente de um restaurante é livre (`vinc_virar_cliente`).
 --    Qualquer conta criava o vínculo com o id que a vitrine mostra e lia o
 --    telefone pessoal e a comissão de cada profissional, a comissão de cada
 --    serviço, os serviços desligados e a jornada. A cliente escolhe pela
@@ -15,7 +15,7 @@
 --
 -- 2) A CLIENTE NÃO ESCREVE NA PRÓPRIA FICHA. A ficha nasce e se completa
 --    pelo `agendar()` (security definer). Com o UPDATE aberto ela tirava a
---    marca "precisa de confirmação" e reescrevia a anotação do salão; com o
+--    marca "precisa de confirmação" e reescrevia a anotação do restaurante; com o
 --    INSERT aberto, uma conta criava antes uma ficha com o telefone de outra
 --    pessoa e passava a receber as marcações dela.
 -- ===========================================================================

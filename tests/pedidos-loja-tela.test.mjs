@@ -157,7 +157,7 @@ await pp.waitForFunction(() => typeof bd !== 'undefined' && bd && Array.isArray(
   null, { timeout: 20000 });
 await pp.waitForTimeout(1200);
 await pp.evaluate(() => { try{ fecharModal(); }catch(e){} if(typeof pdFechar === 'function') pdFechar(true); });
-verdade('a aba Pedidos aparece (salão com produto na loja)',
+verdade('a aba Pedidos aparece (restaurante com produto na loja)',
   await pp.evaluate(() => minhasTelas().some(t => t[0] === 'pedidosloja')));
 await pp.evaluate(() => irPara('pedidosloja'));
 await pp.waitForSelector('.pl-pedido', { timeout: 15000 });

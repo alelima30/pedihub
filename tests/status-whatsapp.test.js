@@ -185,7 +185,7 @@ igual('vários avisos no mesmo pacote saem todos',
   ['wamid.1:entregue', 'wamid.3:lido']);
 
 /* ⚠ MENSAGEM DE CLIENTE NÃO É DA CONTA DESTE ARQUIVO.
-   `value.messages` é por onde chega gente escrevendo para o salão. Responder
+   `value.messages` é por onde chega gente escrevendo para o restaurante. Responder
    a isso é chatbot, que está fora desta fase de propósito. */
 igual('mensagem que chega de cliente é ignorada',
   statusesDoAviso({ object:'whatsapp_business_account', entry:[{ changes:[{

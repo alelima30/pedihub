@@ -74,7 +74,7 @@ const serv = await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte',
   duracaoMin:30, intervaloMin:0, preco:100, ativo:true, aceitaOnline:true });
 const cli = await dona.inserir('clientes', { salaoId: SALAO, nome:'Clara',
   telefone:'11' + (900000000 + Math.floor(Math.random()*99999999)) });
-ok('salão de teste criado');
+ok('restaurante de teste criado');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const ctx = await nav.newContext({ viewport:{ width:1360, height:900 } });
@@ -281,7 +281,7 @@ igual('e o item de comanda continua com dono',
 
    "Se tiver um só, tanto faz, não aparecer quando tiver um só profissional."
 
-   Num salão de uma pessoa o cabeçalho diz o nome de quem já está olhando a
+   Num restaurante de uma pessoa o cabeçalho diz o nome de quem já está olhando a
    própria agenda. É uma faixa a menos no celular, que é onde a agenda mais
    sofre de espaço.
 

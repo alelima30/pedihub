@@ -24,7 +24,7 @@
         recusado na hora de marcar;
      8. a loja do link: aplicar, o carrinho que muda, a mensagem com o cupom
         e o uso registrado uma vez só;
-     9. as cores saem do tema; salão sem cupom não mostra o campo;
+     9. as cores saem do tema; restaurante sem cupom não mostra o campo;
     10. nenhum erro de JavaScript.
    =========================================================================== */
 import fs from 'node:fs';
@@ -67,9 +67,9 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const n7 = String(Date.now() % 10000000).padStart(7, '0');
 const tel = k => '51' + k + n7;                 // 11 dígitos, um por pessoa
 const masc = d => `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-/* O dia é o do SALÃO (São Paulo), e não o do relógio UTC: das 21h à
+/* O dia é o do RESTAURANTE (São Paulo), e não o do relógio UTC: das 21h à
    meia-noite o UTC já está no dia seguinte, e "ontem" pelo UTC é "hoje" no
-   salão — o cupom vencido "ontem" ainda valia, e o teste reprovava à noite. */
+   restaurante — o cupom vencido "ontem" ainda valia, e o teste reprovava à noite. */
 const hojeNoSalao = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
 const diaMais = d => { const [a, m, dd] = hojeNoSalao().split('-').map(Number);
   return new Date(Date.UTC(a, m - 1, dd + d)).toISOString().slice(0, 10); };
@@ -77,7 +77,7 @@ const diaMais = d => { const [a, m, dd] = hojeNoSalao().split('-').map(Number);
 const dona = aba();
 await dona.criarConta({ email:`cp-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -155,9 +155,9 @@ igual('o código é guardado em maiúsculas e sem espaço', BEM.codigo, 'BEMVIND
   igual('item inventado não vira base de desconto',
     (await naLoja('LOJA20', [{ id: corte.id, qtd: 5 }])).motivo,
     'Escolha um produto com preço antes de usar o cupom.');
-  igual('o salão tem cupom valendo, nos dois lugares', um(await anon.chamar('salao_tem_cupom', { p_salao: SALAO })),
+  igual('o restaurante tem cupom valendo, nos dois lugares', um(await anon.chamar('salao_tem_cupom', { p_salao: SALAO })),
     { produtos: true, agendamento: true });
-  igual('e um salão sem cupom não tem', um(await anon.chamar('salao_tem_cupom', { p_salao: '00000000-0000-4000-8000-000000000000' })),
+  igual('e um restaurante sem cupom não tem', um(await anon.chamar('salao_tem_cupom', { p_salao: '00000000-0000-4000-8000-000000000000' })),
     { produtos: false, agendamento: false });
 }
 
@@ -231,7 +231,7 @@ secao('4. O que é fechado');
   verdade('nem o pedido da loja',
     !!(await falha(() => anon.chamar('usar_cupom_no_pedido', { p_salao: SALAO, p_codigo:'LOJA10',
       p_itens:[{ id: shampoo.id, qtd: 1 }], p_telefone: TEL_ANA }))));
-  verdade('e a contagem de usos não sai para quem não é do salão',
+  verdade('e a contagem de usos não sai para quem não é do restaurante',
     !!(await falha(() => anon.chamar('usos_dos_cupons', { p_salao: SALAO }))));
 }
 
@@ -260,7 +260,7 @@ secao('6. O painel');
   await p.goto(BASE + '/app.html');
   const chegou = await p.waitForFunction(() => typeof bd !== 'undefined' && bd && Array.isArray(bd.cupons) && bd.cupons.length >= 8,
     null, { timeout: 20000 }).then(() => true, () => false);
-  verdade('o painel recebe os cupons do banco', chegou, 'bd.cupons não chegou com os 8 cupons do salão');
+  verdade('o painel recebe os cupons do banco', chegou, 'bd.cupons não chegou com os 8 cupons do restaurante');
   await p.waitForTimeout(800);
   await p.evaluate(() => { try{ fecharModal(); }catch(e){} if(typeof pdFechar === 'function') pdFechar(true); });
   verdade('"Cupons" está no menu, em Cadastros', await p.evaluate(() =>
@@ -483,7 +483,7 @@ secao('8. A loja do link');
   verdade('sem o cupom, a mensagem é a de sempre', !/Cupom/.test(semCupom) && /Total estimado: R\$\s?80,00/.test(semCupom), semCupom);
 
   /* ══════════════════════════════════════════════════════════════════════ */
-  secao('9. As cores saem do tema; salão sem cupom não mostra o campo');
+  secao('9. As cores saem do tema; restaurante sem cupom não mostra o campo');
   await aplicar(p, 'LOJA10', '#cupomLojaTxt');
   await p.evaluate(() => tirarCupomLoja()); await p.waitForTimeout(200);
   const cores = await p.evaluate(() => {
@@ -501,7 +501,7 @@ secao('8. A loja do link');
   const blocoCss = css.slice(css.indexOf('.cupom-linha'), css.indexOf('.cupom-ok-txt small'));
   verdade('e o CSS do cupom não tem cor escrita (só variáveis do tema)', blocoCss.length > 200
     && !/#[0-9a-f]{3,8}\b|rgba?\(|hsl\(/i.test(blocoCss), blocoCss.match(/#[0-9a-f]{3,8}\b|rgba?\(|hsl\(/i));
-  igual('salão sem cupom valendo: o campo some da loja', await p.evaluate(() => {
+  igual('restaurante sem cupom valendo: o campo some da loja', await p.evaluate(() => {
     salaoTemCupom = { agendamento: false, produtos: false }; desenharLoja();
     return !!document.getElementById('lojaCupomCaixa'); }), false);
   await ctx.close();

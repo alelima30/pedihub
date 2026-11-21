@@ -14,7 +14,7 @@
 
    ⚠ POR QUE O FALLBACK É O QUE MAIS PRECISA DE TESTE. Uma personalização que
    não funciona aparece na hora: o dono escolhe roxo, a página continua azul,
-   ele reclama no mesmo dia. Uma personalização que VAZA não aparece: o salão
+   ele reclama no mesmo dia. Uma personalização que VAZA não aparece: o restaurante
    que nunca abriu essa tela acorda com a página diferente, e ninguém liga a
    mudança à funcionalidade nova — porque ele não usou a funcionalidade nova.
 
@@ -82,7 +82,7 @@ await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte', duracaoMin:30,
 const cfgInicial = (await dona.lista('saloes', { id: SALAO }))[0].cfg || {};
 await dona.atualizar('saloes', SALAO,
   { cfg: Object.assign({}, cfgInicial, { passoHorarios:'30' }) });
-ok('salão de teste criado, sem personalização visual nenhuma');
+ok('restaurante de teste criado, sem personalização visual nenhuma');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const ctxCli = await nav.newContext({ viewport:{ width:412, height:915 } });
@@ -127,9 +127,9 @@ async function olharCapa(){
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   1 — ⚠ O SALÃO QUE NÃO ESCOLHEU NADA
+   1 — ⚠ O RESTAURANTE QUE NÃO ESCOLHEU NADA
 
-   Vem primeiro, e é o mais importante do arquivo: é o estado de TODO salão
+   Vem primeiro, e é o mais importante do arquivo: é o estado de TODO restaurante
    que já existe no dia em que isto entra no ar.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Sem personalização nenhuma, nada pode mudar');
@@ -220,7 +220,7 @@ igual('os campos do gradiente ficam escondidos até ele pedir gradiente',
   daTela.gradEscondido, 'none');
 
 /* ⚠ O TEMA PRONTO SÓ PREENCHE. Ele não é um estado guardado: aplicar e depois
-   mexer numa cor não pode deixar nada dizendo "este salão é Dourado", senão
+   mexer numa cor não pode deixar nada dizendo "este restaurante é Dourado", senão
    passam a existir duas verdades sobre a mesma tela — a do tema e a das
    cores — e elas discordam no primeiro ajuste. */
 const aposTema = await p.evaluate(() => {
@@ -263,7 +263,7 @@ verdade('e as cores que ele trocou', noBanco.cores
   && noBanco.cores.card === '#1B1B1F' && noBanco.cores.icone === '#F5C34B',
   JSON.stringify(noBanco.cores));
 
-/* ⚠ E SÓ AS QUE ELE TROCOU. Gravar as nove sempre congelaria dentro do salão
+/* ⚠ E SÓ AS QUE ELE TROCOU. Gravar as nove sempre congelaria dentro do restaurante
    as contas de hoje — e melhorar o cálculo depois não chegaria em ninguém.
    Mesma lição dos recados do WhatsApp. */
 verdade('e SÓ elas — as herdadas não viram valor fixo',
@@ -420,7 +420,7 @@ igual('herdando, o cinza volta a ser deduzido do texto',
 /* ══════════════════════════════════════════════════════════════════════════
    5 — ⚠ A FOTO DE FUNDO QUE JÁ ESTAVA LÁ
 
-   O caso que só aparece depois de publicado: o salão anexou uma foto de fundo
+   O caso que só aparece depois de publicado: o restaurante anexou uma foto de fundo
    meses atrás e nunca vai ver o seletor novo. Se `fundoTipo` ausente
    desligasse a foto, a funcionalidade nova apagaria a decisão dele.
    ══════════════════════════════════════════════════════════════════════════ */
@@ -492,7 +492,7 @@ const hexDe = c => {
 };
 const LADOS = [
   ['fundo da página', 'body',              '#previaFone .fone',         'backgroundColor'],
-  ['nome do salão',   '.marca-salao h2',   '#previaFone .fone-topo b',  'color'],
+  ['nome do restaurante',   '.marca-salao h2',   '#previaFone .fone-topo b',  'color'],
   ['endereço',        '.marca-end .rua',   '#previaFone .fone-topo span','color'],
   ['título de seção', '.cat',              '#previaFone .fone-rot',     'color'],
   ['fundo do cartão', '.sv-cartao',        '#previaFone .fone-cartao',  'backgroundColor'],

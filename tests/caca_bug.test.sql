@@ -2,11 +2,11 @@
 -- PediHub — os defeitos de banco que o caça-bug achou, e que não voltam
 --
 --   1. O catálogo (telefone e comissão da equipe) não abre para quem só
---      "virou cliente" do salão.
+--      "virou cliente" do restaurante.
 --   2. A cliente não escreve na própria ficha: não tira a marca "precisa de
 --      confirmação", não cria ficha com o telefone de outra pessoa.
 --   3. O mesmo WhatsApp, com ou sem o 55, é a mesma ficha.
---   4. Sessão de pacote não vira comanda de preço cheio no salão sem comanda.
+--   4. Sessão de pacote não vira comanda de preço cheio no restaurante sem comanda.
 --   5. O estorno sai da gaveta de hoje, não do caixa de ontem já fechado.
 --   6. Remarcar pelo link leva o cupom junto — e não reaproveita cupom de
 --      horário desmarcado há tempo.
@@ -26,7 +26,7 @@
 
 -- ── Cenário ────────────────────────────────────────────────────────────────
 insert into public.saloes (id, slug, nome, tipo, status, fuso, cfg) values
-  ('cb000000-1111-0000-0000-000000000001', 'salao-cacabug', 'Salão Caça', 'salao',
+  ('cb000000-1111-0000-0000-000000000001', 'salao-cacabug', 'Restaurante Caça', 'salao',
    'ativo', 'America/Sao_Paulo', '{"diasLiberados": 30, "usaComanda": false}');
 insert into public.assinaturas (salao_id, plano, status) values
   ('cb000000-1111-0000-0000-000000000001', 'time', 'ativa');
@@ -109,7 +109,7 @@ commit;
 
 select t_verdade('a marca "precisa de confirmação" continua lá',
   (select exige_confirmacao from public.clientes where id = 'cb000000-7777-0000-0000-000000000001'));
-select t_texto('a anotação do salão também',
+select t_texto('a anotação do restaurante também',
   (select obs from public.clientes where id = 'cb000000-7777-0000-0000-000000000001'), 'paga no pix');
 select t_texto('e o telefone',
   (select telefone from public.clientes where id = 'cb000000-7777-0000-0000-000000000001'), '51911112222');
@@ -329,7 +329,7 @@ commit;
 select t_igual('agora são 2 usos', (select count(*) from public.cupom_usos
   where cupom_id = 'cb000000-dddd-0000-0000-000000000002'), 2);
 
--- "1 por cliente" pela conta, mesmo sem ficha no salão.
+-- "1 por cliente" pela conta, mesmo sem ficha no restaurante.
 begin;
   set local role authenticated;
   set local request.jwt.claim.sub = 'cb000000-0000-0000-0000-00000000000e';

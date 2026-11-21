@@ -11,10 +11,10 @@
 --   3. a última terça muda de dia: o aviso muda junto (hora e texto);
 --   4. a última terça cai e volta: o aviso cai e volta, sem linha nova;
 --   5. "Recebi" e desfazer: o aviso fica, e lembrete de pagamento não nasce;
---   6. a chave do salão desliga e religa o aviso;
+--   6. a chave do restaurante desliga e religa o aviso;
 --   7. a primeira sessão chega perto: nem assim nasce lembrete de pagamento;
 --   8. renovou: o aviso do pacote antigo sai; o novo tem a lista de horários
---      com o salão (e não a profissional); cancelar o pacote tira o aviso;
+--      com o restaurante (e não a profissional); cancelar o pacote tira o aviso;
 --   9. agenda incompleta não tem "última sessão"; cliente sem telefone, nada;
 --  10. a plataforma desliga: tudo o que estava na fila sai; e as peças de
 --      dentro não abrem para ninguém.
@@ -33,7 +33,7 @@ on conflict (id) do update set nome = excluded.nome;
 update public.perfis set super_admin = true where id = 'e4500000-0000-0000-0000-0000000000ad';
 
 insert into public.saloes (id, slug, nome, status, fuso, cfg) values
-  ('54500000-0000-0000-0000-00000000000a', 'pacote-mensagens', 'Salão Recado', 'ativo',
+  ('54500000-0000-0000-0000-00000000000a', 'pacote-mensagens', 'Restaurante Recado', 'ativo',
    'America/Sao_Paulo', '{"pagamentos":{"formas":["pix","dinheiro"],"pix":"pix@recado.com"}}');
 insert into public.assinaturas (salao_id, plano, status) values
   ('54500000-0000-0000-0000-00000000000a', 'time', 'ativa');
@@ -104,15 +104,15 @@ select set_config('request.jwt.claim.sub', '', false);
 
 \echo ''
 \echo '2. O aviso da última sessão, na hora certa e com o texto certo'
-select t_texto('última sessão: seis dias antes da última terça, às 10h do salão',
+select t_texto('última sessão: seis dias antes da última terça, às 10h do restaurante',
   to_char((t_msg(:'pc', 'pacote_renovar')).quando at time zone 'America/Sao_Paulo', 'YYYY-MM-DD HH24:MI'),
   to_char(:'terca'::date + 21 - 6, 'YYYY-MM-DD') || ' 10:00');
-select t_texto('   pelo modelo novo (o de renovação a Meta aprovou como Marketing): nome, pacote, última sessão e salão',
+select t_texto('   pelo modelo novo (o de renovação a Meta aprovou como Marketing): nome, pacote, última sessão e restaurante',
   (t_msg(:'pc', 'pacote_renovar')).modelo || ' | ' || (t_msg(:'pc', 'pacote_renovar')).variaveis::text,
   'pedihub_pacote_ultima_sessao | ["Maria", "Mão e pé mensal", "terça, '
-    || to_char(:'terca'::date + 21, 'DD/MM') || ' às 14:00", "Salão Recado"]');
+    || to_char(:'terca'::date + 21, 'DD/MM') || ' às 14:00", "Restaurante Recado"]');
 select t_verdade('   sem convite para renovar, no texto do histórico',
-  (t_msg(:'pc', 'pacote_renovar')).corpo like 'Olá, Maria. Informação sobre o seu pacote Mão e pé mensal.%Última sessão incluída: terça, %Local: Salão Recado%Depois dessa sessão, o pacote se encerra.%'
+  (t_msg(:'pc', 'pacote_renovar')).corpo like 'Olá, Maria. Informação sobre o seu pacote Mão e pé mensal.%Última sessão incluída: terça, %Local: Restaurante Recado%Depois dessa sessão, o pacote se encerra.%'
   and (t_msg(:'pc', 'pacote_renovar')).corpo not like '%renova%');
 select t_verdade('   presa à última terça, para o número da Maria',
   (t_msg(:'pc', 'pacote_renovar')).agendamento_id = t_sessao(:'pc', 4)
@@ -165,11 +165,11 @@ select t_igual('desfez o recebimento: e lembrete de pagamento continua sem nasce
   (select count(*) from public.notificacoes where chave = 'pacote_pagamento:' || :'pc'), 0);
 
 \echo ''
-\echo '6. A chave do salão'
+\echo '6. A chave do restaurante'
 update public.saloes set cfg = cfg || '{"notifPacoteRenova": false}' where id = '54500000-0000-0000-0000-00000000000a';
 select t_texto('desligou o aviso da última sessão em Notificações: sai da fila',
   (t_msg(:'pc', 'pacote_renovar')).status || ' | ' || (t_msg(:'pc', 'pacote_renovar')).motivo,
-  'cancelado | desligado pelo salão');
+  'cancelado | desligado pelo restaurante');
 update public.saloes set cfg = cfg || '{"notifPacoteRenova": true}' where id = '54500000-0000-0000-0000-00000000000a';
 select t_texto('religou: volta', (t_msg(:'pc', 'pacote_renovar')).status, 'pendente');
 
@@ -220,7 +220,7 @@ select t_verdade('   e as mensagens das terças novas dizem "já pago (Pix)", e 
                  and n.corpo like '%Pacote já pago (Pix)%' and n.corpo like '%R$ 0,00 — sessão do pacote%')
   and exists (select 1 from public.notificacoes n join public.agendamentos a on a.id = n.agendamento_id
                where a.pacote_cliente_id = :'pc2' and n.tipo = 'lembrete' and n.status = 'pendente')
-  and public.pecas_agendamento(t_sessao(:'pc', 1))->>'pagamento' = 'Pacote a pagar no salão');
+  and public.pecas_agendamento(t_sessao(:'pc', 1))->>'pagamento' = 'Pacote a pagar no restaurante');
 select t_texto('com o modelo do pacote ligado, a cliente recebe a lista: cada data, a hora e o procedimento',
   (t_msg(:'pc2', 'pacote_agenda')).modelo || ' | ' || ((t_msg(:'pc2', 'pacote_agenda')).variaveis->>2),
   'pedihub_pacote_agenda | ter ' || to_char(:'terca'::date + 28, 'DD/MM') || ' às 14:00 (Mão); ter '
@@ -230,12 +230,12 @@ select t_texto('com o modelo do pacote ligado, a cliente recebe a lista: cada da
 select t_igual('   no lugar da confirmação (nenhuma confirmação do pacote fica na fila)',
   (select count(*) from public.notificacoes n join public.agendamentos a on a.id = n.agendamento_id
     where a.pacote_cliente_id = :'pc2' and n.tipo = 'confirmacao' and n.status = 'pendente'), 0);
-select t_texto('   com o salão no lugar da profissional ("vai que muda"), quatro variáveis, e saindo agora',
+select t_texto('   com o restaurante no lugar da profissional ("vai que muda"), quatro variáveis, e saindo agora',
   ((t_msg(:'pc2', 'pacote_agenda')).variaveis->>3) || ' | '
     || jsonb_array_length((t_msg(:'pc2', 'pacote_agenda')).variaveis) || ' | '
-    || ((t_msg(:'pc2', 'pacote_agenda')).quando <= now() + interval '1 minute')::text, 'Salão Recado | 4 | true');
+    || ((t_msg(:'pc2', 'pacote_agenda')).quando <= now() + interval '1 minute')::text, 'Restaurante Recado | 4 | true');
 select t_verdade('   e o texto do histórico: sem a profissional, com o Local',
-  (t_msg(:'pc2', 'pacote_agenda')).corpo like 'Olá, Maria. Seu pacote Mão e pé mensal está com os horários marcados.%Local: Salão Recado%'
+  (t_msg(:'pc2', 'pacote_agenda')).corpo like 'Olá, Maria. Seu pacote Mão e pé mensal está com os horários marcados.%Local: Restaurante Recado%'
   and (t_msg(:'pc2', 'pacote_agenda')).corpo not like '%Profissional%');
 begin;
   set local role authenticated;

@@ -3,9 +3,9 @@
 --
 -- O que tem de valer:
 --   · o link (sem login) recebe só pergunta e resposta, aparadas, com teto,
---     na ordem do dono, até 20 — e nada mais do cfg do salão;
+--     na ordem do dono, até 20 — e nada mais do cfg do restaurante;
 --   · dúvida sem pergunta ou sem resposta, ou que não é objeto, fica de fora;
---   · salão suspenso ou apelido que não existe: lista vazia;
+--   · restaurante suspenso ou apelido que não existe: lista vazia;
 --   · a peneira (duvidas_limpas) é peça de dentro: anon não a chama.
 -- ===========================================================================
 \set ON_ERROR_STOP on
@@ -45,7 +45,7 @@ end $$;
 do $$
 declare n int;
 begin
-  perform t_verdade('salão suspenso: nada', jsonb_array_length(public.duvidas_da_casa('duv-b') -> 'duvidas') = 0);
+  perform t_verdade('restaurante suspenso: nada', jsonb_array_length(public.duvidas_da_casa('duv-b') -> 'duvidas') = 0);
   perform t_verdade('apelido que não existe: nada', jsonb_array_length(public.duvidas_da_casa('nao-existe') -> 'duvidas') = 0);
   perform t_verdade('cfg.duvidas que não é lista: nada', jsonb_array_length(public.duvidas_da_casa('duv-c') -> 'duvidas') = 0);
   select jsonb_array_length(public.duvidas_limpas(

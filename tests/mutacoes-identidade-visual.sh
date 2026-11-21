@@ -12,7 +12,7 @@
 #
 #  ⚠ AS MUTAÇÕES DAQUI SÃO QUASE TODAS DO LADO "NADA PODE MUDAR". É onde um
 #  defeito não dá sinal: a personalização que não funciona o dono reclama no
-#  mesmo dia; a que vaza chega calada no salão que nunca abriu a tela.
+#  mesmo dia; a que vaza chega calada no restaurante que nunca abriu a tela.
 # ===========================================================================
 set -u
 cd "$(dirname "$0")/.."

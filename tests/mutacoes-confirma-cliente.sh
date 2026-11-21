@@ -78,7 +78,7 @@ echo "4. o link diz confirmado para quem ficou esperando"
 troca agendar.html \
   "  if(!salaoConfirmaSozinho || statusDaMarcacao === 'pendente'){" \
   "  if(!salaoConfirmaSozinho){" \
-  && rodar "promete em nome do salão"
+  && rodar "promete em nome do restaurante"
 
 echo "5. o painel não grava a marca"
 troca app.html \

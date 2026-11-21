@@ -94,8 +94,8 @@ troca supabase/25_loja.sql \
 # eu concluí que as linhas eram inúteis e as apaguei.
 #
 # Estavam mesmo inúteis enquanto o rodapé olhava a LISTA. Só que "lista vazia"
-# tem duas causas — módulo desligado, ou salão que acabou de nascer — e tratar
-# as duas igual tirou o botão de entrada de todo salão na primeira hora. Quem
+# tem duas causas — módulo desligado, ou restaurante que acabou de nascer — e tratar
+# as duas igual tirou o botão de entrada de todo restaurante na primeira hora. Quem
 # mostrou foi o `cliente-nuvem.test.mjs`.
 #
 # Agora o rodapé pergunta pelo MÓDULO, as duas linhas voltaram, e as mutações

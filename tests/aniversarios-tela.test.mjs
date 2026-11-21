@@ -30,7 +30,7 @@ p.on('dialog', d => d.dismiss());
 await p.goto(BASE + 'app.html?demo=1');
 await p.waitForTimeout(1200);
 
-/* As datas saem do `hoje()` do próprio painel (fuso do salão), e são
+/* As datas saem do `hoje()` do próprio painel (fuso do restaurante), e são
    montadas de modo que caiam no MESMO mês de hoje — quem já fez, quem faz
    hoje e quem vai fazer. Mais duas fichas: uma de outro mês, uma sem data. */
 const cena = await p.evaluate(() => {

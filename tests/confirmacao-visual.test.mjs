@@ -10,7 +10,7 @@
 
    ── O QUE ESTE ARQUIVO MEDE ────────────────────────────────────────────────
      1. a confirmação: título, dia/hora/profissional no alto, o cartão com
-        salão, serviço, profissional, quando, duração e total (o total
+        restaurante, serviço, profissional, quando, duração e total (o total
         maior), o status, a observação fechada, e os dois botões;
      2. o status segue o dono: "Aguardando confirmação" para quem confirma
         depois; "Confirmado na hora" para quem confirma sozinho;
@@ -18,10 +18,10 @@
         escolhida, e o bloco .cf-* do estilo.css não tem cor escrita;
      4. o escuro: cartão escuro, letra clara, contraste de leitura;
      5. "Alterar horário" volta aos horários com a escolha intacta;
-     6. marcando de verdade (salão que confirma depois): a observação chega
+     6. marcando de verdade (restaurante que confirma depois): a observação chega
         ao banco, e a tela de depois mostra "Agendamento enviado!", o resumo
-        compacto, "Aguardando confirmação do salão", e os dois botões;
-     7. salão que confirma sozinho: "Agendamento confirmado!" e "Confirmado";
+        compacto, "Aguardando confirmação do restaurante", e os dois botões;
+     7. restaurante que confirma sozinho: "Agendamento confirmado!" e "Confirmado";
      8. celular, tablet e computador: nada vaza, e os botões se arrumam.
    =========================================================================== */
 import fs from 'node:fs';
@@ -72,7 +72,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`cv-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -146,7 +146,7 @@ secao('1. A confirmação');
   const t = await lerConfirmacao(p);
   igual('o título', t.titulo, 'Confira seu agendamento');
   igual('no alto: o dia, a hora e com quem', t.quando, 'Quinta-feira, 01/10 às 10:30 com Ju Barbosa');
-  igual('o cartão abre com o salão (sem logo, a inicial no lugar dela)', t.salao, ['S', 'Salão Megatop Salão de beleza']);
+  igual('o cartão abre com o restaurante (sem logo, a inicial no lugar dela)', t.salao, ['S', 'Restaurante Megatop Restaurante de beleza']);
   igual('e segue com cada informação, na ordem', t.rotulos, ['Serviço', 'Profissional', 'Quando', 'Duração', 'Total']);
   igual('com os valores', t.valores,
     ['Coloração', 'Ju Barbosa', 'Quinta-feira, 01/10 10:30 às 12:30', '120 min', 'R$ 150,00']);
@@ -162,7 +162,7 @@ secao('1. A confirmação');
 
   secao('2. O status segue o que o dono escolheu');
   igual('quem confirma depois: "Aguardando confirmação", com as duas frases', t.status,
-    'Aguardando confirmação Você receberá uma mensagem pelo WhatsApp assim que o salão confirmar seu horário. '
+    'Aguardando confirmação Você receberá uma mensagem pelo WhatsApp assim que o restaurante confirmar seu horário. '
     + 'Enquanto isso, este horário fica reservado para você e não pode ser agendado por outra pessoa.');
   verdade('com cara de informação, no tom da marca — e não de erro', !/erro|alerta/.test(t.statusClasse)
     && t.stTit === t.ac600, `${t.statusClasse} / ${t.stTit}`);
@@ -222,7 +222,7 @@ await porCfg({ cor:'#10B981', tema:'escuro' });
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('6. Marcando de verdade — salão que confirma depois');
+secao('6. Marcando de verdade — restaurante que confirma depois');
 await porCfg({ cor:'#B8356B', cores:{ botao:'#8E2457' } });
 async function marcar(){
   const cliente = aba();
@@ -277,13 +277,13 @@ async function marcar(){
       b = document.getElementById('btSecundario').getBoundingClientRect(); return a.top < b.top; })(),
   }));
   igual('"Agendamento enviado!", e para onde ele foi', [t.tela, t.titulo, t.sub],
-    ['pronto', 'Agendamento enviado!', 'Seu horário foi encaminhado para o salão.']);
-  verdade('o resumo compacto: salão, serviço, profissional, dia e hora, duração',
-    /^Salão Megatop Salão de beleza Coloração Ju Barbosa \S+-feira, \d\d\/\d\d · \d\d:\d\d às \d\d:\d\d 120 min Aguardando confirmação do salão$/.test(t.resumo)
-    || /^Salão Megatop Salão de beleza Coloração Ju Barbosa (Sábado|Domingo), \d\d\/\d\d · \d\d:\d\d às \d\d:\d\d 120 min Aguardando confirmação do salão$/.test(t.resumo),
+    ['pronto', 'Agendamento enviado!', 'Seu horário foi encaminhado para o restaurante.']);
+  verdade('o resumo compacto: restaurante, serviço, profissional, dia e hora, duração',
+    /^Restaurante Megatop Restaurante de beleza Coloração Ju Barbosa \S+-feira, \d\d\/\d\d · \d\d:\d\d às \d\d:\d\d 120 min Aguardando confirmação do restaurante$/.test(t.resumo)
+    || /^Restaurante Megatop Restaurante de beleza Coloração Ju Barbosa (Sábado|Domingo), \d\d\/\d\d · \d\d:\d\d às \d\d:\d\d 120 min Aguardando confirmação do restaurante$/.test(t.resumo),
     t.resumo);
   igual('cada linha com o seu ícone, e o selo de espera', [t.icones, t.chip], [4, 'cf-chip cf-chip-espera']);
-  verdade('a nota diz que a mensagem vem quando o salão confirmar', /assim que o salão confirmar/.test(t.nota), t.nota);
+  verdade('a nota diz que a mensagem vem quando o restaurante confirmar', /assim que o restaurante confirmar/.test(t.nota), t.nota);
   igual('sem bolha de WhatsApp desenhada', t.bolhaZap, false);
   igual('os botões: Ver meus horários, e Voltar para a home embaixo', [t.botoes, t.pe],
     [['Ver meus horários', 'Voltar para a home'], true]);
@@ -298,7 +298,7 @@ async function marcar(){
   await fechar();
 }
 
-secao('7. Salão que confirma sozinho');
+secao('7. Restaurante que confirma sozinho');
 await porCfg({ cor:'#B8356B', confirmaAuto:true });
 {
   const { p, fechar } = await marcar();

@@ -13,7 +13,7 @@
 
    O estrago não é o de um webhook de pagamento, mas não é nenhum:
 
-     • marcar como `lido` uma mensagem que ninguém abriu faz o salão parar de
+     • marcar como `lido` uma mensagem que ninguém abriu faz o restaurante parar de
        ligar para a cliente;
      • marcar como `falhou` DEVOLVE COTA — e cota devolvida sem limite é
        mensagem de graça para sempre.
@@ -93,7 +93,7 @@ const DE_META = { delivered: 'entregue', read: 'lido', failed: 'falhou' };
    depois de algumas tentativas.
 
    ⚠ `value.messages` é IGNORADO. É por ali que chega mensagem de cliente
-   escrevendo para o salão, e responder a isso é chatbot — que está fora
+   escrevendo para o restaurante, e responder a isso é chatbot — que está fora
    desta fase de propósito. O que este arquivo faz é ler status, só. */
 export function statusesDoAviso(corpo){
   const fora = [];

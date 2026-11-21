@@ -8,7 +8,7 @@
    O assistente é a única tela do sistema que ESCREVE CADASTRO SOZINHA. Um
    toque cria serviço, produto e profissional de verdade, nas mesmas tabelas
    que a tela de Serviços usa — e um erro aqui não aparece como tela quebrada,
-   aparece como preço errado na parede do salão, ou como profissional sem
+   aparece como preço errado na parede do restaurante, ou como profissional sem
    coluna na agenda.
 
    Por isso quase toda verificação daqui olha o `bd` depois do clique, e não a
@@ -17,7 +17,7 @@
    As três que mais custaram para existir:
 
      · o horário POUSA em alguém. `jornadas` tem `profissional_id`; horário
-       guardado só no `cfg` do salão é um ajuste bonito que não abre um único
+       guardado só no `cfg` do restaurante é um ajuste bonito que não abre um único
        horário na agenda.
 
      · quem já tem horário próprio NÃO é sobrescrito. A pessoa que sai às 16h
@@ -49,7 +49,7 @@ p.on('dialog', d => { avisos.push(d.message()); d.accept(); });
 await p.goto(BASE + 'app.html?demo=1');
 await p.waitForTimeout(2200);
 
-/* Deixa o salão como um salão recém-cadastrado: sem serviço, sem equipe, sem
+/* Deixa o restaurante como um restaurante recém-cadastrado: sem serviço, sem equipe, sem
    produto e sem marca nenhuma do assistente. É o estado que a pessoa encontra
    no minuto seguinte ao cadastro. */
 const esvaziar = () => p.evaluate(() => {
@@ -70,7 +70,7 @@ console.log('\nQuando o assistente aparece sozinho');
 await esvaziar();
 await p.evaluate(() => iniciar());
 await p.waitForTimeout(500);
-e('salão vazio: ele abre sozinho, no passo 1',
+e('restaurante vazio: ele abre sozinho, no passo 1',
   await p.evaluate(() => !document.getElementById('primeiroDia').hidden
     && document.getElementById('pdContador').textContent === 'Passo 1 de 11'),
   await p.evaluate(() => document.getElementById('pdContador').textContent));
@@ -105,8 +105,8 @@ const jaMontado = await p.evaluate(() => {
 });
 /* Quem já usava o sistema antes de este assistente existir não pode receber
    um passo a passo de cadastro — seria sugerir que falta alguma coisa. */
-e('salão que já tem serviço e horário: não abre', !jaMontado,
-  'o assistente apareceu para um salão que já estava funcionando');
+e('restaurante que já tem serviço e horário: não abre', !jaMontado,
+  'o assistente apareceu para um restaurante que já estava funcionando');
 
 await esvaziar();
 await p.evaluate(() => { document.getElementById('primeiroDia').hidden = true; });
@@ -163,12 +163,12 @@ e('os sete dias aparecem, de segunda a domingo — ' + semana.primeiro
   + ' … ' + semana.ultimo,
   semana.cartoes === 7 && semana.primeiro === 'segunda' && semana.ultimo === 'domingo',
   JSON.stringify(semana));
-e('e domingo nasce fechado, como quase todo salão', semana.fechados === 1,
+e('e domingo nasce fechado, como quase todo restaurante', semana.fechados === 1,
   semana.fechados + ' dias fechados');
 
 /* ⚠ COPIAR NÃO PODE ABRIR DOMINGO DE BRINDE.
    Quem tem o mesmo horário de segunda a sexta aperta "copiar" sem pensar. Se
-   o botão abrisse todos os dias, o salão descobriria isso no primeiro domingo
+   o botão abrisse todos os dias, o restaurante descobriria isso no primeiro domingo
    em que uma cliente marcasse — e alguém teria que ir trabalhar. */
 const copiou = await p.evaluate(() => {
   document.getElementById('pdH1a').value = '08:00';
@@ -251,7 +251,7 @@ const pousou = await p.evaluate(() => {
     cfg: (acharSalao(salaoAtual).cfg || {}).horario,
   };
 });
-e('quem não tinha horário recebe o do salão',
+e('quem não tinha horário recebe o do restaurante',
   JSON.stringify(pousou.sem[1]) === '[[480,1080]]',
   JSON.stringify(pousou.sem));
 /* Sem esta linha, reabrir o assistente devolveria a pessoa ao horário da
@@ -260,7 +260,7 @@ e('quem não tinha horário recebe o do salão',
 e('e quem já tinha horário próprio NÃO é mexido',
   JSON.stringify(pousou.com) === '{"5":[[540,960]]}',
   JSON.stringify(pousou.com));
-e('o horário do salão também fica guardado, para os próximos cadastros',
+e('o horário do restaurante também fica guardado, para os próximos cadastros',
   pousou.cfg && JSON.stringify(pousou.cfg[1]) === '[[480,1080]]',
   JSON.stringify(pousou.cfg));
 
@@ -368,7 +368,7 @@ e('quem entra na equipe nasce ativo e com cor própria',
   JSON.stringify(equipe.b && { ativo: equipe.b.ativo, cor: equipe.b.cor }));
 /* Profissional sem jornada não tem coluna na agenda — seria um cadastro que
    não atende ninguém, e o dono só descobriria ao abrir a agenda no dia. */
-e('e já com o horário do salão, senão não teria coluna na agenda',
+e('e já com o horário do restaurante, senão não teria coluna na agenda',
   equipe.b && JSON.stringify(equipe.b.jornada) === JSON.stringify(equipe.horario),
   JSON.stringify(equipe.b && equipe.b.jornada));
 
@@ -442,7 +442,7 @@ e('com a comissão em ZERO, que é o que a coluna do banco aceita',
   JSON.stringify(comProduto.pr && { pct: comProduto.pr.comissaoPct,
                                     fixa: comProduto.pr.comissaoFixa }));
 
-/* ── 8 · Como o salão trabalha ───────────────────────────────────────────── */
+/* ── 8 · Como o restaurante trabalha ───────────────────────────────────────────── */
 console.log('\nOs dois interruptores');
 
 await p.evaluate(() => { pdPasso = 7; pdDesenhar(); });
@@ -518,7 +518,7 @@ const endereco = await p.evaluate(() => {
   const campos = ['pdRua','pdNum','pdCompl','pdBairro','pdCep','pdCidade','pdUf','pdInsta']
     .filter(i => !!document.getElementById(i));
   const pos = (i, v) => { document.getElementById(i).value = v; };
-  // Valores que o salão de demonstração NÃO tem: com os dele, "não gravou"
+  // Valores que o restaurante de demonstração NÃO tem: com os dele, "não gravou"
   // passaria despercebido.
   pos('pdRua', 'Avenida Brasil'); pos('pdNum', '1500'); pos('pdCompl', 'Loja 3');
   pos('pdBairro', 'Jardim Novo'); pos('pdCep', '13309-123'); pos('pdCidade', 'Salto');
@@ -608,7 +608,7 @@ e('tocar no Verde grava a cor da marca, e a Aparência lê a mesma',
 e('cor que não é cor não é gravada',
   await p.evaluate(() => { pdEscolherCor('vermelho'); return (acharSalao(salaoAtual).cfg || {}).cor === '#0C7568'; }));
 
-// O logo, por um arquivo de verdade — partindo de um salão SEM logo, para a
+// O logo, por um arquivo de verdade — partindo de um restaurante SEM logo, para a
 // prévia que aparecer ser a do arquivo escolhido, e não a que já estava lá.
 await p.evaluate(() => { acharSalao(salaoAtual).logo = null; salvar(); pdDesenhar(); });
 await p.waitForTimeout(200);
@@ -648,7 +648,7 @@ e('e com tudo preenchido não diz nada', lembra.completo);
 /* ── 9 · O link e o QR ───────────────────────────────────────────────────── */
 console.log('\nO link, com o QR');
 
-// O fecho fala do estado do salão, então o salão precisa estar num estado
+// O fecho fala do estado do restaurante, então o restaurante precisa estar num estado
 // conhecido: um serviço vivo e alguém com horário para atendê-lo.
 await p.evaluate(() => {
   if(!doSalao(bd.profissionais).some(temJornadaAlguma)){
@@ -675,7 +675,7 @@ const fim = await p.evaluate(() => {
     texto: document.getElementById('pdCorpo').innerText,
   };
 });
-e('o link é o do salão, pelo slug — ' + fim.link,
+e('o link é o do restaurante, pelo slug — ' + fim.link,
   fim.link.includes('agendar.html?salao=' + fim.slug), fim.link);
 e('o QR é desenhado ao lado dele', fim.temQr && /^0 0 (\d+) \1$/.test(fim.caixa || ''),
   String(fim.caixa));
@@ -686,7 +686,7 @@ e('e do tamanho de quem confere na tela, não de meia página — '
   String(fim.largura));
 
 /* ⚠ O QR TEM QUE SER DO LINK QUE ESTÁ NA CAIXA AO LADO.
-   Um QR impresso que leva ao salão errado fica colado na parede por meses,
+   Um QR impresso que leva ao restaurante errado fica colado na parede por meses,
    mandando cliente para outro lugar. Refeito e comparado módulo a módulo. */
 const confere = await p.evaluate(() => {
   const desenhado = document.querySelector('#pdQrCaixa svg path').getAttribute('d');
@@ -701,7 +701,7 @@ e('e o desenho é exatamente o do link que está do lado', confere,
 e('o botão de baixar aponta para a caixa DESTE passo, e não para a do painel',
   await p.evaluate(() => [...document.querySelectorAll('#pdCorpo button')]
     .some(b => (b.getAttribute('onclick') || '').includes("baixarQr('pdQrCaixa')")),
-  ), 'baixaria o QR da outra tela, que num salão novo nem foi desenhada');
+  ), 'baixaria o QR da outra tela, que num restaurante novo nem foi desenhada');
 
 /* O fecho honesto: o link existe desde o primeiro minuto, e sem serviço ele
    abre e não oferece nada. Dizer "pronto!" aqui seria mentir na última tela. */
@@ -785,16 +785,16 @@ const terminou = await p.evaluate(() => {
 e('terminado, ele marca que acabou', terminou.feito, JSON.stringify(terminou));
 /* Assistente que reaparece depois de terminado vira lembrete de uma tarefa
    que acabou — e o botão em Meu negócio é o caminho de volta para quem quiser. */
-e('e nunca mais aparece sozinho, nem com o salão ainda vazio',
+e('e nunca mais aparece sozinho, nem com o restaurante ainda vazio',
   !terminou.voltou, 'apareceu de novo depois de terminado');
 e('nem a faixa de continuar', !terminou.faixa, 'a faixa ficou depois de terminado');
 
 
 /* ══════════════════════════════════════════════════════════════════════════
-   O SALÃO QUE JÁ EXISTIA — e os quatro defeitos que ele revelou
+   O RESTAURANTE QUE JÁ EXISTIA — e os quatro defeitos que ele revelou
 
-   Tudo acima roda num salão vazio, que é o caso para o qual o assistente foi
-   feito. Mas ele é REABRÍVEL, e reabri-lo num salão que já trabalha foi o
+   Tudo acima roda num restaurante vazio, que é o caso para o qual o assistente foi
+   feito. Mas ele é REABRÍVEL, e reabri-lo num restaurante que já trabalha foi o
    que quebrou na mão do dono:
 
      · o serviço cadastrado em "Não está na lista?" não aparecia em canto
@@ -802,14 +802,14 @@ e('nem a faixa de continuar', !terminou.faixa, 'a faixa ficou depois de terminad
        novo, achando que não tinha funcionado;
      · ele nascia com categoria VAZIA, e serviço sem categoria cai num bloco
        solto na página da cliente;
-     · a sugestão do catálogo gravava "Cabelo" onde o salão escrevia
+     · a sugestão do catálogo gravava "Cabelo" onde o restaurante escrevia
        "cabelo", e a página da cliente passou a mostrar DUAS seções "Cabelo"
        e DUAS "Unhas";
      · e nada disso esperava o banco responder.
    ══════════════════════════════════════════════════════════════════════════ */
-console.log('\nReabrindo num salão que já trabalha');
+console.log('\nReabrindo num restaurante que já trabalha');
 
-/* O salão ganha a grafia dele: tudo em "cabelo", minúsculo, como quem
+/* O restaurante ganha a grafia dele: tudo em "cabelo", minúsculo, como quem
    digitou à mão às pressas. */
 await p.evaluate(() => {
   /* As secoes de cima esvaziam o salao de proposito. Aqui ele precisa estar
@@ -860,11 +860,11 @@ console.log('      ' + JSON.stringify(svAMao));
    embaixo mexia, e ninguém olha contador. */
 e('o serviço cadastrado à mão APARECE na tela do passo',
   svAMao.naTela && svAMao.secao, JSON.stringify(svAMao));
-/* ⚠ E a categoria sai com a GRAFIA DO SALÃO, não a do catálogo. O seletor
+/* ⚠ E a categoria sai com a GRAFIA DO RESTAURANTE, não a do catálogo. O seletor
    mostra "Cabelo" porque é o rótulo bonito; o que vai para a coluna é
-   "cabelo", que é como o salão já escreve. Sem isso, a página da cliente
+   "cabelo", que é como o restaurante já escreve. Sem isso, a página da cliente
    ganha uma segunda seção com o mesmo nome. */
-e('com a categoria escolhida, na grafia que o salão já usa — '
+e('com a categoria escolhida, na grafia que o restaurante já usa — '
   + JSON.stringify(svAMao.categoria),
   svAMao.categoria === 'cabelo', JSON.stringify(svAMao));
 
@@ -875,7 +875,7 @@ const daSugestao = await p.evaluate(async () => {
            grafias: [...new Set(doSalao(bd.servicos).map(x => x.categoria))] };
 });
 console.log('      ' + JSON.stringify(daSugestao));
-e('e a sugestão do catálogo também respeita a grafia do salão',
+e('e a sugestão do catálogo também respeita a grafia do restaurante',
   daSugestao.categoria === 'cabelo', JSON.stringify(daSugestao));
 e('nenhuma grafia nova de categoria nasceu — ' + JSON.stringify(daSugestao.grafias),
   !daSugestao.grafias.some(g => g && g !== 'cabelo' && g !== 'unhas'),
@@ -909,7 +909,7 @@ e('três grafias de "Cabelo" viram UMA seção na página da cliente — '
   + JSON.stringify(agrupa),
   agrupa.length === 3 && agrupa.includes('Cabelo:3') && agrupa.includes('Unhas:2'),
   JSON.stringify(agrupa));
-e('e o rótulo mostrado é a primeira grafia, que é a do salão',
+e('e o rótulo mostrado é a primeira grafia, que é a do restaurante',
   agrupa[0] === 'Cabelo:3', JSON.stringify(agrupa));
 
 await p.evaluate(() => { document.getElementById('primeiroDia').hidden = true; });

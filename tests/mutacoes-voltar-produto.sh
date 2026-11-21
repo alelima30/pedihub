@@ -78,7 +78,7 @@ echo "5. a descrição perde as quebras de linha"
 troca estilo.css \
   "color:var(--txt2); white-space:pre-line; overflow-wrap:anywhere }" \
   "color:var(--txt2); overflow-wrap:anywhere }" \
-  && rodar "o texto do salão vira um bloco só"
+  && rodar "o texto do restaurante vira um bloco só"
 
 echo "6. a fita do carrinho repete o pé no produto"
 troca agendar.html \

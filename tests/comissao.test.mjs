@@ -85,7 +85,7 @@ const CLI = uid('7777');
 // prepared statement, e prepared statement aceita UM comando só.
 await cliente.query(
   `insert into public.saloes (id, slug, nome, tipo)
-        values ($1, 'com-${marca}', 'Salão Comissão', 'salao')`, [SALAO]);
+        values ($1, 'com-${marca}', 'Restaurante Comissão', 'salao')`, [SALAO]);
 await cliente.query(
   `insert into public.assinaturas (salao_id, plano, status)
         values ($1, 'time', 'ativa')`, [SALAO]);
@@ -166,12 +166,12 @@ secao('O valor do item — bruto e líquido, tela contra banco');
 for(const regra of ['bruto', 'liquido']){
   const com = uid(regra === 'bruto' ? 'aaa1' : 'aaa2');
 
-  /* ⚠ A regra se muda no SALÃO, não na comanda.
+  /* ⚠ A regra se muda no RESTAURANTE, não na comanda.
 
      A primeira versão deste teste mandava `comissao_sobre` no INSERT da
      comanda e o banco devolvia comissão de bruto mesmo assim — o teste
      acusou 40 contra 36. Não era defeito: `tg_comanda_regra` sobrescreve o
-     campo a partir do ajuste do salão e da data de corte, justamente para
+     campo a partir do ajuste do restaurante e da data de corte, justamente para
      ninguém escolher a regra de comissão no ato de abrir uma comanda.
 
      Ou seja, o teste tentou forjar a regra e a trava barrou. Corrigir o

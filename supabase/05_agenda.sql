@@ -15,7 +15,7 @@
 -- ── POR QUE `security definer` ─────────────────────────────────────────────
 -- Quem abre o link é `anon`: não fez login, e o RLS não deixa ele chegar em
 -- `agendamentos`, `jornadas` nem `bloqueios` — e está certo, porque a lista de
--- clientes do salão não é pública. Mas o horário vago é. Estas funções rodam
+-- clientes do restaurante não é pública. Mas o horário vago é. Estas funções rodam
 -- com o dono delas, olham o que precisam, e devolvem SÓ o horário.
 --
 -- Toda função aqui leva `set search_path = public`. Sem isso, quem consegue
@@ -56,7 +56,7 @@ $$;
 
    Então compara só o PRIMEIRO nome, e por prefixo nos dois sentidos: "ju"
    casa com "juliana", "maria" não casa com "ana". Dois caracteres é o mínimo
-   — abaixo disso qualquer inicial casaria com meio salão.
+   — abaixo disso qualquer inicial casaria com meio restaurante.
 
    Isto erra nos dois sentidos e não tem como não errar: duas Marias
    diferentes no mesmo número passam, e "Bia"/"Beatriz" não passa. É o preço
@@ -73,7 +73,7 @@ returns boolean language sql immutable set search_path = public as $$
   ) end
 $$;
 
--- Até quando o salão aceita marcação. Serve para dois problemas reais: quem
+-- Até quando o restaurante aceita marcação. Serve para dois problemas reais: quem
 -- marca para daqui a seis meses quase sempre falta, e agenda aberta até o
 -- infinito tira do dono a liberdade de mudar jornada, preço ou equipe.
 create or replace function public.dias_liberados(p_salao uuid)
@@ -83,8 +83,8 @@ returns int language sql stable set search_path = public as $$
                where id = p_salao and cfg->>'diasLiberados' ~ '^[0-9]+$'), 30)))
 $$;
 
--- Hoje NO FUSO DO SALÃO, que não é o fuso de quem está olhando. Uma cliente
--- em Portugal abrindo o link de um salão de Porto Alegre às 3h da manhã dela
+-- Hoje NO FUSO DO RESTAURANTE, que não é o fuso de quem está olhando. Uma cliente
+-- em Portugal abrindo o link de um restaurante de Porto Alegre às 3h da manhã dela
 -- tem que ver o dia que é lá, não o dela.
 create or replace function public.hoje_no_salao(p_salao uuid)
 returns date language sql stable set search_path = public as $$
@@ -128,7 +128,7 @@ $$;
 -- Este profissional faz TODOS estes serviços?
 --
 -- Sem nenhuma linha em `servicos_profissionais`, considera-se que ele faz
--- tudo. É como um salão pequeno começa — um profissional, cinco serviços,
+-- tudo. É como um restaurante pequeno começa — um profissional, cinco serviços,
 -- nenhum cruzamento cadastrado — e exigir o cadastro antes de usar é o tipo
 -- de exigência que faz o dono desistir na primeira tarde.
 create or replace function public.profissional_faz(
@@ -146,7 +146,7 @@ returns boolean language sql stable set search_path = public as $$
 $$;
 
 -- ---------------------------------------------------------------------------
--- 3) O salão aceita marcação online agora?
+-- 3) O restaurante aceita marcação online agora?
 --
 -- Uma função só, porque as duas pontas precisam da MESMA resposta.
 -- `horarios_livres()` usa para não oferecer, e `agendar()` usa para não
@@ -178,7 +178,7 @@ begin
     return 'Este profissional não está atendendo pela agenda online.';
   end if;
 
-  -- O profissional existe e está ativo, mas o salão caiu para um plano que
+  -- O profissional existe e está ativo, mas o restaurante caiu para um plano que
   -- não comporta a equipe inteira. O gatilho de cota recusaria a marcação lá
   -- na frente; melhor não oferecer o horário do que oferecer e voltar atrás.
   if not public.profissional_na_cota(p_profissional) then
@@ -186,11 +186,11 @@ begin
   end if;
 
   if not public.recurso_bool(v_salao, 'agenda_online') then
-    return 'Este salão não está aceitando marcação pela internet.';
+    return 'Este restaurante não está aceitando marcação pela internet.';
   end if;
 
-  -- Todo serviço pedido tem que ser deste salão, estar ativo e aceitar
-  -- online. Sem esta conferência, dá para marcar um serviço de OUTRO salão
+  -- Todo serviço pedido tem que ser deste restaurante, estar ativo e aceitar
+  -- online. Sem esta conferência, dá para marcar um serviço de OUTRO restaurante
   -- colando o id na chamada — e o preço que entraria na comanda seria o de lá.
   if exists (
     select 1 from unnest(p_servicos) as pedido(id)
@@ -224,7 +224,7 @@ end $$;
 -- 4) horarios_livres()
 --
 -- Devolve os inícios possíveis, em timestamptz. A tela formata no fuso do
--- salão (que vem em `saloes_publicos.fuso`), não no fuso do aparelho.
+-- restaurante (que vem em `saloes_publicos.fuso`), não no fuso do aparelho.
 --
 -- O passo é de 15 minutos e a última vaga é a que ainda TERMINA dentro da
 -- jornada: com jornada até 19:00 e serviço de 40 minutos, 18:20 é oferecido e
@@ -296,8 +296,8 @@ begin
       from grupos group by g order by 1
   loop
     -- A hora da jornada é hora de parede ("09:00 de segunda"). Vira instante
-    -- no fuso do salão — e é isso que faz a agenda continuar certa na semana
-    -- em que o horário de verão muda, porque o salão abre às 9 dos dois lados
+    -- no fuso do restaurante — e é isso que faz a agenda continuar certa na semana
+    -- em que o horário de verão muda, porque o restaurante abre às 9 dos dois lados
     -- da virada, não "9 menos uma hora".
     v_ini := ((p_data + j.inicio) at time zone v_fuso);
     v_ate := ((p_data + j.fim)    at time zone v_fuso);
@@ -360,7 +360,7 @@ update public.clientes
 -- número. Juntar fichas é mover agendamento, comanda e histórico de uma para
 -- outra, e isso NAO se faz por migração automática — some dinheiro ou some
 -- atendimento, e ninguém fica sabendo qual. As que colidem ficam como estão,
--- à espera de o salão decidir qual é qual.
+-- à espera de o restaurante decidir qual é qual.
 with alvo as (
   select c.id,
          public.so_digitos(c.telefone) as limpo,
@@ -407,18 +407,18 @@ end $trava$;
    esta) e `entrar_na_fila()`. Três cópias, e a regra estava errada nas três
    do mesmo jeito — procurava-se a ficha SÓ pelo telefone.
 
-   O estrago: quem já tinha ficha no salão e marcava digitando um número
+   O estrago: quem já tinha ficha no restaurante e marcava digitando um número
    diferente do que estava lá (trocou de chip, digitou o do marido, corrigiu
    o DDD) não era encontrado, caía no insert, e o insert batia na trava
    `ux_cli_perfil` — que existe justamente para a mesma pessoa não ter duas
-   fichas no mesmo salão. O que a cliente via, no fim de um agendamento
+   fichas no mesmo restaurante. O que a cliente via, no fim de um agendamento
    inteiro preenchido:
 
        Não consegui marcar.
        duplicate key value violates unique constraint "ux_cli_perfil"
 
    Erro de banco em inglês na cara de quem só queria marcar horário, e sem
-   saída nenhuma: tentar de novo dava o mesmo. O salão perde a marcação e nem
+   saída nenhuma: tentar de novo dava o mesmo. O restaurante perde a marcação e nem
    fica sabendo que perdeu.
 
    Agora quem está logado é procurado PELO PERFIL primeiro — é a identidade
@@ -469,10 +469,10 @@ begin
   /* Reencontrou a ficha. Só preenche o que falta: sobrescrever o nome
      apagaria a correção que a recepção fez na ficha.
 
-     O telefone novo entra apenas se ninguém mais o tiver neste salão — a
+     O telefone novo entra apenas se ninguém mais o tiver neste restaurante — a
      outra trava, `ux_cli_tel`, derrubaria a marcação inteira, e a pessoa
      está aqui para marcar horário, não para arrumar cadastro. Na dúvida fica
-     o que já estava, e o salão conserta pelo painel. */
+     o que já estava, e o restaurante conserta pelo painel. */
   update public.clientes c
      set perfil_id = case
            when c.perfil_id is not null then c.perfil_id
@@ -614,10 +614,10 @@ begin
 
      A ficha é reencontrada pelo telefone, e sem SMS não há prova de que o
      número seja de quem digitou. Se alguém marca com o número da mãe, o
-     horário cai na ficha da mãe — e o salão liga para a mãe perguntando de
+     horário cai na ficha da mãe — e o restaurante liga para a mãe perguntando de
      um horário que ela não marcou.
 
-     Não dá para impedir sem verificar o número de verdade. Dá para o salão
+     Não dá para impedir sem verificar o número de verdade. Dá para o restaurante
      saber: o nome informado fica registrado em `atendido_nome`, que o painel
      mostra como "Quem vem". Melhor um nome a mais na tela do que um telefone
      errado em silêncio. */
@@ -632,13 +632,13 @@ begin
 
   -- ── Freio de spam ────────────────────────────────────────────────────────
   -- Marcação online sem senha é um formulário aberto na internet. Sem limite,
-  -- um número só entope a agenda inteira de um salão em dois minutos — e o
+  -- um número só entope a agenda inteira de um restaurante em dois minutos — e o
   -- prejuízo é do dono, que passa o dia ligando para horários fantasma.
   --
   -- Três marcações futuras em aberto atende a cliente de verdade (o corte
   -- desta semana, a escova do casamento, a manutenção do mês) e trava quem
   -- está brincando. Cancelou ou foi atendida, libera vaga na conta.
-  -- Só o que ela marcou pelo link: o que o salão marcou não é spam (ver o 09).
+  -- Só o que ela marcou pelo link: o que o restaurante marcou não é spam (ver o 09).
   select count(*) into v_abertos from public.agendamentos a
    where a.cliente_id = v_cliente
      and a.origem = 'online'
@@ -671,7 +671,7 @@ begin
         using errcode = 'check_violation';
   end;
 
-  -- Duração, preço e comissão são COPIADOS agora. Se o salão reajustar a
+  -- Duração, preço e comissão são COPIADOS agora. Se o restaurante reajustar a
   -- tabela amanhã, o que foi combinado com a cliente hoje continua valendo —
   -- e a comissão do profissional é calculada sobre o combinado, não sobre o
   -- preço novo.
@@ -728,7 +728,7 @@ declare
   v_dia   date;
   v_prof  uuid;
   -- Teto de segurança. A janela que a tela pede é de 28 dias; 62 dá folga
-  -- para relatório e para o dia em que alguém aumentar a janela do salão,
+  -- para relatório e para o dia em que alguém aumentar a janela do restaurante,
   -- sem deixar uma chamada de fora pedir dois anos de agenda de uma vez.
   v_ate   date := least(p_ate, p_de + 62);
 begin
@@ -754,11 +754,11 @@ end $$;
 -- Note que `anon` continua SEM chegar em `agendamentos`, `clientes`,
 -- `jornadas` e `bloqueios` — o grant é da função, não das tabelas. Ele
 -- consegue marcar e consegue ver horário vago; não consegue ler a agenda do
--- salão nem a lista de clientes.
+-- restaurante nem a lista de clientes.
 -- ---------------------------------------------------------------------------
 /* ⚠ `ficha_do_cliente()` NÃO é para ser chamada de fora. Ela é `security
    definer` e escreve em `clientes`: solta, deixaria qualquer visitante criar
-   e alterar ficha em QUALQUER salão, inclusive tomar um telefone de outra
+   e alterar ficha em QUALQUER restaurante, inclusive tomar um telefone de outra
    pessoa. Postgres dá execute ao público em toda função nova, então tirar é
    obrigatório — ela existe só para `agendar()` e `entrar_na_fila()`, que já
    conferem tudo antes de chegar nela. */
@@ -788,7 +788,7 @@ grant execute on function public.so_digitos(text)       to anon, authenticated;
 -- 7) Conserto na vitrine pública
 --
 -- `profissionais_publicos` mostrava todo profissional ativo que aceita
--- online, sem olhar a cota do plano. O salão que caiu do plano de 5 para o
+-- online, sem olhar a cota do plano. O restaurante que caiu do plano de 5 para o
 -- gratuito continuava com os 5 na tela: a cliente escolhia a Bia, e o gatilho
 -- de cota recusava na hora de marcar. Erro do lado errado do funil.
 -- ---------------------------------------------------------------------------
@@ -812,7 +812,7 @@ create or replace view public.profissionais_publicos as
 -- Só que "certo porque roda na ordem" não sobrevive a reaplicar só este
 -- arquivo, que é o que se faz ao mexer numa função da agenda. Medido: `anon`
 -- volta a ler a vista, e uma requisição sem filtro devolve TODOS os
--- profissionais de TODOS os salões, com o salao_id de cada um. É a mesma
+-- profissionais de TODOS os restaurantes, com o salao_id de cada um. É a mesma
 -- enumeração da carteira de clientes que o 06 existe para fechar, entrando
 -- por outra porta.
 --

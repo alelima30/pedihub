@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   O FUSO DO SALÃO, NA TELA (58_fuso.sql)
+   O FUSO DO RESTAURANTE, NA TELA (58_fuso.sql)
 
    "Não posso perder nada sobre horários marcados."
 
@@ -53,7 +53,7 @@ const m = Date.now().toString(36);
 const dona = aba();
 await dona.criarConta({ email:`fuso-${m}@t.com`, senha:'minhasenhaboa',
   nome:'Dona do Fuso', telefone:'+5592' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão de Manaus ' + m,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante de Manaus ' + m,
   p_tipo:'salao', p_telefone:'(92) 99887-6655', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -65,7 +65,7 @@ await dona.inserir('servicos_profissionais', { servicoId: corte.id, profissional
 const cli = await dona.inserir('clientes', { salaoId:SALAO, nome:'Joana',
   telefone: String(92900000000 + (Date.now() % 89000000)) });
 
-// O salão já existe "há um mês": a trava de 90 s só vale para salão antigo.
+// O restaurante já existe "há um mês": a trava de 90 s só vale para restaurante antigo.
 await banco.query(`update public.saloes set criado_em = now() - interval '30 days' where id = $1`, [SALAO]);
 await banco.query(`update public.assinaturas set plano = 'salao', status = 'ativa', trial_ate = null where salao_id = $1`, [SALAO]);
 
@@ -85,7 +85,7 @@ const antes = await instantes();
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
 async function abrir(caminho, sessao){
-  // O aparelho está em Manaus: uma hora atrás do salão, que nasceu em Brasília.
+  // O aparelho está em Manaus: uma hora atrás do restaurante, que nasceu em Brasília.
   const ctx = await nav.newContext({ viewport:{ width:1360, height:900 }, timezoneId:'America/Manaus' });
   const p = await ctx.newPage();
   p.on('pageerror', x => erros.push('pageerror: ' + x.message));
@@ -117,7 +117,7 @@ const opcoes = await p.evaluate(() => [...document.querySelectorAll('#cFuso opti
 e('cada linha diz a hora de lá — ' + JSON.stringify(opcoes[1]),
   opcoes.length >= 9 && opcoes.every(o => /agora \d\d:\d\d$/.test(o)), JSON.stringify(opcoes));
 const dica = await p.evaluate(() => (document.getElementById('fusoDica') || {}).innerText || '');
-e('e avisa que o relógio do aparelho discorda do do salão — ' + JSON.stringify(dica.slice(0, 60)),
+e('e avisa que o relógio do aparelho discorda do do restaurante — ' + JSON.stringify(dica.slice(0, 60)),
   /relógio deste aparelho marca \d\d:\d\d/.test(dica), dica);
 
 secao('2. Cancelar não troca nada');
@@ -139,7 +139,7 @@ await p.waitForTimeout(3500);
 const feito = await p.evaluate(() => document.getElementById('modalTitulo').textContent + ' · '
   + document.getElementById('modalCorpo').innerText);
 e('a tela diz que trocou e quantos horários ficaram — ' + JSON.stringify(feito.slice(0, 80)),
-  /Horário do salão trocado/.test(feito) && /2 horários marcados/.test(feito) && /mesma hora/.test(feito), feito);
+  /Horário do restaurante trocado/.test(feito) && /2 horários marcados/.test(feito) && /mesma hora/.test(feito), feito);
 e('o banco está em Manaus',
   (await um(`select fuso from public.saloes where id = $1`, [SALAO])).fuso === 'America/Manaus');
 const depois = await instantes();
@@ -161,7 +161,7 @@ await outro.waitForTimeout(800);
 const avisoOutro = await outro.evaluate(() => document.getElementById('modalTitulo').textContent + ' · '
   + document.getElementById('modalCorpo').innerText);
 e('ao sincronizar, é avisado — ' + JSON.stringify(avisoOutro.slice(0, 60)),
-  /O horário do salão foi ajustado/.test(avisoOutro) && /continuam os\s+mesmos/.test(avisoOutro), avisoOutro);
+  /O horário do restaurante foi ajustado/.test(avisoOutro) && /continuam os\s+mesmos/.test(avisoOutro), avisoOutro);
 e('e NÃO pintou a agenda com as horas erradas no meio do caminho',
   JSON.stringify(await horasNaTela(outro)) === '[540,600]', JSON.stringify(await horasNaTela(outro)));
 await outro.waitForTimeout(6500);
@@ -178,7 +178,7 @@ try{
     status:'confirmado', origem:'recepcao', valorPrevisto:50 });
 }catch(x){ recusa = x.message || String(x); }
 e('quem tentar gravar com o relógio antigo é recusado — ' + JSON.stringify(recusa),
-  /relógio do salão acabou de ser ajustado/.test(recusa || ''), recusa);
+  /relógio do restaurante acabou de ser ajustado/.test(recusa || ''), recusa);
 await banco.query(`update public.saloes set fuso_mudou_em = now() - interval '2 minutes' where id = $1`, [SALAO]);
 let gravou = null;
 try{
@@ -193,20 +193,20 @@ const trocasAntes = Number((await um(`select count(*) n from public.fuso_mudanca
 await p.click('button:has-text("Meu negócio"), a:has-text("Meu negócio")');
 await p.waitForTimeout(1200);
 e('o campo agora mostra Manaus', await p.inputValue('#cFuso') === 'America/Manaus');
-e('e a dica some: o aparelho e o salão marcam a mesma hora',
+e('e a dica some: o aparelho e o restaurante marcam a mesma hora',
   !(await p.evaluate(() => !!document.getElementById('fusoDica'))));
-await p.fill('#cNome', 'Salão de Manaus Renomeado');
+await p.fill('#cNome', 'Restaurante de Manaus Renomeado');
 await p.click('#tela-salao button:has-text("Salvar dados")');
 await p.waitForTimeout(2500);
 const sl = await um(`select nome, fuso from public.saloes where id = $1`, [SALAO]);
-e('o nome foi salvo', sl.nome === 'Salão de Manaus Renomeado', sl.nome);
+e('o nome foi salvo', sl.nome === 'Restaurante de Manaus Renomeado', sl.nome);
 e('e o fuso ficou onde estava, sem troca nova no histórico',
   sl.fuso === 'America/Manaus'
   && Number((await um(`select count(*) n from public.fuso_mudancas where salao_id = $1`, [SALAO])).n) === trocasAntes);
 
 secao('7. O link da cliente, aberto desde antes da troca');
 e('a página dela ainda pensa em Brasília', await link.evaluate(() => fusoDoSalao()) === 'America/Sao_Paulo');
-e('e percebe que o relógio do salão mudou, antes de marcar',
+e('e percebe que o relógio do restaurante mudou, antes de marcar',
   await link.evaluate(() => relogioDoSalaoMudou()) === true);
 await link.reload();
 await link.waitForTimeout(3000);
@@ -216,19 +216,19 @@ e('recarregada, pensa em Manaus e não vê mais diferença',
 
 secao('8. O cadastro: o fuso do aparelho, só quando é do Brasil');
 const fonte = fs.readFileSync(RAIZ + '/criar.html', 'utf8');
-e('o cadastro lê o fuso do aparelho e grava no salão novo',
+e('o cadastro lê o fuso do aparelho e grava no restaurante novo',
   /resolvedOptions\(\)\.timeZone/.test(fonte) && /Dados\.atualizar\('saloes', criado\.salao_id, \{ fuso: doAparelho \}\)/.test(fonte));
 e('a lista do cadastro não tem o horário de Brasília (já é o padrão) nem fuso de fora',
   !/OUTROS = \[[^\]]*Sao_Paulo/.test(fonte) && !/OUTROS = \[[^\]]*(Europe|Etc|UTC)/.test(fonte));
 const nova = aba();
 await nova.criarConta({ email:`fuso-n-${m}@t.com`, senha:'minhasenhaboa',
   nome:'Dona Nova', telefone:'+5568' + (900000000 + (Date.now() % 89999999)) });
-const cn = await nova.chamar('criar_salao', { p_nome_salao:'Salão do Acre ' + m,
+const cn = await nova.chamar('criar_salao', { p_nome_salao:'Restaurante do Acre ' + m,
   p_tipo:'salao', p_telefone:'(68) 99887-6655', p_documento:null, p_origem:null });
 await nova.atualizar('saloes', cn[0].salao_id, { fuso: 'America/Rio_Branco' });
 const acre = await um(`select fuso, fuso_mudou_em from public.saloes where id = $1`, [cn[0].salao_id]);
-e('o salão recém-criado aceita o fuso do aparelho', acre.fuso === 'America/Rio_Branco', acre.fuso);
-e('sem travar o primeiro horário (salão novo não é carimbado)', acre.fuso_mudou_em === null);
+e('o restaurante recém-criado aceita o fuso do aparelho', acre.fuso === 'America/Rio_Branco', acre.fuso);
+e('sem travar o primeiro horário (restaurante novo não é carimbado)', acre.fuso_mudou_em === null);
 let lixo = null;
 try{ await nova.atualizar('saloes', cn[0].salao_id, { fuso: 'Qualquer/Coisa' }); }catch(x){ lixo = x.message; }
 e('e recusa nome que não é fuso — ' + JSON.stringify(lixo), /Não conheço o fuso horário/.test(lixo || ''), lixo);

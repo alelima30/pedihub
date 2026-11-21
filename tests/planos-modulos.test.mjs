@@ -71,7 +71,7 @@ async function montar(nome, plano){
   const d = novaAba();
   await d.criarConta({ email:`pm-${nome}-${marca}@teste.com`, senha:'minhasenhaboa',
     nome:'Dona ' + nome, telefone: tel() });
-  const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão ' + nome + ' ' + marca,
+  const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante ' + nome + ' ' + marca,
     p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
   const salao = cr[0].salao_id;
   const slug = (await um(`select slug from public.saloes where id=$1`, [salao])).slug;
@@ -159,7 +159,7 @@ igual('sem a cor e o tema guardados', [vg.salao.cor, vg.salao.tema], [null, null
 igual('com o selo "Feito com PediHub"', vg.salao.selo, true);
 igual('sem loja, e sem os produtos', [vg.salao.loja, (vg.produtos || []).length], [false, 0]);
 const cfgG = (await um(`select cfg from public.saloes where id=$1`, [G.salao])).cfg;
-igual('mas a aparência continua guardada no salão', [cfgG.cor, cfgG.tema], ['#123456', 'escuro']);
+igual('mas a aparência continua guardada no restaurante', [cfgG.cor, cfgG.tema], ['#123456', 'escuro']);
 
 /* ══════════════════════════════════════════════════════════════════════════
    3 — O BÁSICO USA TUDO, MENOS MENSAGEM
@@ -187,13 +187,13 @@ igual('mensagem automática: nenhuma (franquia 0)',
    (await um(`select public.pode_enviar($1) as p`, [G.salao])).p], [0, false]);
 
 /* A assinatura só o gestor lê; a recepção e a profissional perguntam o plano
-   por `plano_do_salao` — só o código, e só do salão onde trabalham. Sem isto
+   por `plano_do_salao` — só o código, e só do restaurante onde trabalham. Sem isto
    a tela delas achava que era o Grátis e trancava o caixa de quem paga. */
-secao('3b) A equipe sabe o plano, e só o do próprio salão');
-igual('quem é do salão: recebe o código do plano',
+secao('3b) A equipe sabe o plano, e só o do próprio restaurante');
+igual('quem é do restaurante: recebe o código do plano',
   await G.d.chamar('plano_do_salao', { p_salao: G.salao }), 'basico');
 const F = await montar('Fora');
-igual('quem é de outro salão: não recebe nada',
+igual('quem é de outro restaurante: não recebe nada',
   await F.d.chamar('plano_do_salao', { p_salao: G.salao }), null);
 r = await novaAba().chamar('plano_do_salao', { p_salao: G.salao })
   .then(v => 'respondeu ' + JSON.stringify(v)).catch(() => null);

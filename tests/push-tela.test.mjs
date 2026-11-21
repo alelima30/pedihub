@@ -65,12 +65,12 @@ const CEL = {
   endpoint: 'https://push.teste.pedihub/ep-' + Date.now().toString(36),
 };
 
-/* ── O salão ─────────────────────────────────────────────────────────────── */
+/* ── O restaurante ─────────────────────────────────────────────────────────────── */
 const m = Date.now().toString(36);
 const dona = aba();
 await dona.criarConta({ email:`push-${m}@t.com`, senha:'minhasenhaboa',
   nome:'Dona do Aviso', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão do Aviso ' + m,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante do Aviso ' + m,
   p_tipo:'salao', p_telefone:'(11) 99887-6655', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 await banco.query(`update public.assinaturas set plano = 'salao', status = 'ativa', trial_ate = null where salao_id = $1`, [SALAO]);
@@ -163,7 +163,7 @@ e('e se inscreveu com a chave pública DO BANCO',
 const ap = await um(`select a.*, v.papel from public.push_aparelhos a
   join public.vinculos v on v.perfil_id = a.perfil_id and v.salao_id = a.salao_id
   where a.salao_id = $1`, [SALAO]);
-e('o aparelho ficou gravado para a DONA, neste salão',
+e('o aparelho ficou gravado para a DONA, neste restaurante',
   ap && ap.papel === 'dono' && ap.endpoint === CEL.endpoint && ap.p256dh === CEL.p256dh, JSON.stringify(ap));
 e('com um nome que a pessoa reconhece — ' + JSON.stringify(ap && ap.rotulo),
   /·/.test((ap && ap.rotulo) || ''));
@@ -329,7 +329,7 @@ secao('7. Os caminhos tortos');
 
 e('nenhum erro de JavaScript', erros.length === 0, erros.slice(0, 3).join(' | '));
 
-// O salão de teste sai, com a agenda (o item do serviço antes do serviço).
+// O restaurante de teste sai, com a agenda (o item do serviço antes do serviço).
 await banco.query(`delete from public.agendamento_servicos where agendamento_id in
   (select id from public.agendamentos where salao_id = $1)`, [SALAO]).catch(() => {});
 await banco.query(`delete from public.saloes where id = $1`, [SALAO]).catch(() => {});

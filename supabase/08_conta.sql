@@ -6,7 +6,7 @@
 -- em seguida `criar_salao()`. Só que `criar_salao()` começa assim:
 --
 --     if not exists (select 1 from public.perfis where id = v_perfil) then
---       raise exception 'Complete seu cadastro antes de criar o salão.';
+--       raise exception 'Complete seu cadastro antes de criar o restaurante.';
 --
 -- E nada, em lugar nenhum, criava essa linha. Quem se cadastrasse no Supabase
 -- de verdade levaria essa frase na cara, com a conta metade criada: existe em
@@ -81,7 +81,7 @@ begin
 
   -- Telefone já usado por outra pessoa? Fica nulo, e a conta nasce mesmo
   -- assim. Perder o telefone é um aborrecimento — dá para completar depois
-  -- em Meu salão. Barrar o cadastro por causa dele é perder o cliente na
+  -- em Meu restaurante. Barrar o cadastro por causa dele é perder o cliente na
   -- porta, e por um motivo que ele não entenderia.
   if v_tel is not null
      and exists (select 1 from public.perfis where telefone = v_tel) then

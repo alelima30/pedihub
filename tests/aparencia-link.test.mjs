@@ -21,7 +21,7 @@
    animação). Botão novo que alguém puser na aba entra aqui sozinho — e, se
    não chegar ao link, este arquivo acusa sem ninguém ter escrito o nome dele.
 
-   ⚠ O "Curvada" foi a origem: num salão sem foto nos serviços, ela deixava a
+   ⚠ O "Curvada" foi a origem: num restaurante sem foto nos serviços, ela deixava a
    página praticamente igual à Clássica (a curva mora na foto). A seção 2
    cobre esse caso de propósito.
    =========================================================================== */
@@ -58,16 +58,16 @@ const arte = (a, b) => 'data:image/svg+xml;base64,' + Buffer.from(
   `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="${a}"/>`
   + `<circle cx="320" cy="180" r="120" fill="${b}"/></svg>`).toString('base64');
 
-/* ── UM SALÃO COM TUDO ────────────────────────────────────────────────────
+/* ── UM RESTAURANTE COM TUDO ────────────────────────────────────────────────────
    Cada botão só tem onde aparecer se a peça dele existir: a fita precisa de
    produto no carrinho, o slide de galeria, o véu de foto de fundo, o "Ver
-   todos os serviços" de mais serviços do que cabem na capa. Salão pobre faria
+   todos os serviços" de mais serviços do que cabem na capa. Restaurante pobre faria
    botão bom parecer quebrado. */
 const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`al-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Varredura',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Varredura',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -91,11 +91,11 @@ await dona.atualizar('saloes', SALAO, {
   endereco: ENDERECO, whatsapp:'11988887777',
   logo: arte('#4C1D95', '#A78BFA'), capa: arte('#2E1065', '#7C3AED'),
   cfg: { diasLiberados:30, cor:'#6D28D9', funcionamento: SEMANA, pagamentos:{ formas:['pix'] },
-         sobre:'Salão de beleza', fundo: arte('#7a4a2a', '#d9a066'),
+         sobre:'Restaurante de beleza', fundo: arte('#7a4a2a', '#d9a066'),
          galeria:[{ url: arte('#4C1D95','#9333EA'), tipo:'imagem', legenda:'Antes e depois' },
                   { url: arte('#7C3AED','#F0ABFC'), tipo:'imagem', legenda:'Nosso espaço' }] } });
 const cfgDe = async () => (await dona.lista('saloes', { id: SALAO }))[0].cfg || {};
-ok('salão criado: logo, capa, fundo, galeria, 8 serviços com foto, 3 produtos');
+ok('restaurante criado: logo, capa, fundo, galeria, 8 serviços com foto, 3 produtos');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
@@ -255,7 +255,7 @@ igual('nenhum botão de régua ficou sem ser clicado', nunca, []);
 verdade('e foram dezenas deles, não meia dúzia', feitos.size >= 60, String(feitos.size));
 
 /* ══════════════════════════════════════════════════════════════════════════
-   2 — A CURVADA NUM SALÃO SEM FOTO NOS SERVIÇOS
+   2 — A CURVADA NUM RESTAURANTE SEM FOTO NOS SERVIÇOS
    O caso da reclamação. A curva mora na foto: sem foto, a Curvada ganha a
    capa com a inicial, e a Clássica continua a lista de linhas de sempre.
    ══════════════════════════════════════════════════════════════════════════ */
@@ -347,7 +347,7 @@ secao('3. Cada quadrado de cor e cada deslizante');
 /* ══════════════════════════════════════════════════════════════════════════
    4 — O "AGENDE SEU HORÁRIO" TEM COR
    Era a única frase do topo sem escolha. Ela só aparece quando o endereço não
-   está preenchido — o salão de teste perde o endereço para ela existir.
+   está preenchido — o restaurante de teste perde o endereço para ela existir.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('4. A cor do "Agende seu horário"');
 {

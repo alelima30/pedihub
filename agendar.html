@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Agendar — PediHub</title>
-<meta name="description" content="Agende seu horário no salão pelo celular, 24 horas por dia." />
+<meta name="description" content="Agende seu horário no restaurante pelo celular, 24 horas por dia." />
 <meta name="theme-color" content="#FFFFFF" />
 <link rel="manifest" href="manifest.webmanifest" />
 <meta name="mobile-web-app-capable" content="yes" />
@@ -39,7 +39,7 @@
    nome, o monograma e a lista de serviços, que é como Fresha, Booksy e
    Square resolvem o mesmo problema. O atributo `data-estilo` continua no
    HTML porque o vocabulário ("quem corta" x "quem atende") ainda usa o tipo
-   do salão; o que saiu foi a segunda paleta. */
+   do restaurante; o que saiu foi a segunda paleta. */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{
   font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -316,7 +316,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
    dourado, o amarelo) a crua dava contraste de 1,3:1 a 2,2:1 no "Tirar" e no
    "Esvaziar o carrinho" — ilegível. */
 .link{color:var(--ac-600, var(--marca));font-weight:700;text-decoration:underline;font-size:14px}
-/* Na nuvem o passo dos salões só dá recado: some o texto da demonstração. */
+/* Na nuvem o passo dos restaurantes só dá recado: some o texto da demonstração. */
 #p-saloes.so-recado > h2, #p-saloes.so-recado > .sub, #p-saloes.so-recado > .recado{display:none}
 .rodape-nota{padding:16px 18px 26px;font-size:12px;color:var(--txt3);text-align:center}
 .rodape-nota code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:11px}
@@ -338,7 +338,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
       <div class="avatar-salao" id="avatarSalao" data-ico="tesoura"></div>
       <div style="min-width:0">
         <h1 id="tituloSalao">PediHub</h1>
-        <p id="subSalao">Escolha o salão</p>
+        <p id="subSalao">Escolha o restaurante</p>
       </div>
       <button class="eu" id="btEu" onclick="tocarEu()" style="display:none"></button>
     </div>
@@ -350,11 +350,11 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
 
   <main class="conteudo">
 
-    <!-- ══════ ESCOLHER SALÃO (só quando o link não traz o salão) ══════ -->
+    <!-- ══════ ESCOLHER RESTAURANTE (só quando o link não traz o restaurante) ══════ -->
     <!-- ⚠ NENHUM PASSO COMEÇA COM `on`.
 
-         Este começava, e o resultado era um pisca: quem abria o link do salão
-         via, por uma fração de segundo, a tela "Qual salão?" — com a lista de
+         Este começava, e o resultado era um pisca: quem abria o link do restaurante
+         via, por uma fração de segundo, a tela "Qual restaurante?" — com a lista de
          demonstração e a explicação de como o link funciona — antes de o
          JavaScript trocar para a capa.
 
@@ -363,21 +363,21 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
          improvisado. E ela ainda lia meio segundo de texto que não é para ela.
 
          Agora a página abre sem passo nenhum aceso; quem decide qual mostrar é
-         o `irPara()`, depois de saber que salão é. -->
+         o `irPara()`, depois de saber que restaurante é. -->
     <section class="passo" id="p-saloes">
-      <h2>Qual salão?</h2>
-      <p class="sub">Numa instalação de verdade, cada salão tem o próprio
+      <h2>Qual restaurante?</h2>
+      <p class="sub">Numa instalação de verdade, cada restaurante tem o próprio
         endereço e você cai direto nele. Esta lista existe para a demonstração.</p>
       <div id="listaSaloes"></div>
       <div class="recado" style="margin-top:16px">
-        <b>Como o cliente chega aqui:</b> o salão manda o link
+        <b>Como o cliente chega aqui:</b> o restaurante manda o link
         <code>agendar.html?salao=<i>apelido-do-salao</i></code> no WhatsApp,
         coloca na bio do Instagram ou imprime como QR no espelho.
       </div>
     </section>
 
     <!-- ══════ ABRINDO ══════
-         Enquanto a vitrine não chega, a tela mostrava o passo "Qual salão?" —
+         Enquanto a vitrine não chega, a tela mostrava o passo "Qual restaurante?" —
          título, lista de demonstração e a explicação de como o link funciona.
          Meio segundo disso, e então a capa entrava por cima: a página abrindo
          errado e se corrigindo sozinha, na frente da cliente.
@@ -390,7 +390,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
       <div class="abrindo"><div class="roda-abrindo"></div></div>
     </section>
 
-    <!-- ══════ CAPA DO SALÃO ══════ -->
+    <!-- ══════ CAPA DO RESTAURANTE ══════ -->
     <section class="passo" id="p-capa">
       <div id="capaMarca"></div>
       <!-- Pagamentos, Horários, Informações e o cartão ABERTO/FECHADO, logo
@@ -435,7 +435,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
          fecha a venda é a conversa. O porquê está no 25_loja.sql. -->
     <section class="passo" id="p-loja">
       <h2 id="lojaTitulo">Produtos</h2>
-      <p class="sub" id="lojaSub">Monte o pedido e mande pelo WhatsApp. O salão confirma o
+      <p class="sub" id="lojaSub">Monte o pedido e mande pelo WhatsApp. O restaurante confirma o
          que tem e combina com você o pagamento e a retirada.</p>
       <div id="lojaAviso"></div>
       <input class="busca" id="buscaProduto" placeholder="Buscar produto…"
@@ -597,7 +597,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
       <div class="campo" id="campoNasc">
         <label>Aniversário <span class="obrig" title="obrigatório">*</span></label>
         <input id="dNasc" type="date" autocomplete="bday">
-        <p class="pista">O salão costuma guardar um agrado para o seu mês.</p>
+        <p class="pista">O restaurante costuma guardar um agrado para o seu mês.</p>
       </div>
       <!-- ⚠ O CPF NAO LEVA ETIQUETA NEM LINHA DE APOIO, e isso foi pedido
            assim, duas vezes. O registro de que a decisao e' consciente fica
@@ -624,7 +624,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
         <label for="dEmail">E-mail <span class="obrig" title="obrigatório">*</span></label>
         <input id="dEmail" type="email" inputmode="email"
                placeholder="voce@exemplo.com" autocomplete="email">
-        <p class="pista">Para o recibo e os avisos do salão.</p>
+        <p class="pista">Para o recibo e os avisos do restaurante.</p>
       </div>
       <!-- A SENHA E' OPCIONAL: marcar continua sem conta, como sempre foi.
            Com senha, nasce a conta junto — e com ela os horarios em qualquer
@@ -639,7 +639,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
                   aria-label="Mostrar a senha" onclick="olhoSenha('dSenha', this)"></button>
         </div>
         <p class="pista" id="dSenhaPista">Com senha, você vê seus horários em qualquer celular e
-          usa os pacotes do salão.</p>
+          usa os pacotes do restaurante.</p>
       </div>
       <div id="avisoDados"></div>
     </section>
@@ -651,7 +651,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
     <section class="passo" id="p-conta">
       <h2 id="contaTitulo">Entrar</h2>
       <p class="sub" id="contaSub">Com a sua conta, você vê seus horários em qualquer celular
-        e usa os pacotes do salão.</p>
+        e usa os pacotes do restaurante.</p>
       <div class="conta-abas" role="tablist" aria-label="Entrar ou criar conta">
         <button type="button" role="tab" id="abaEntrar" onclick="modoConta('entrar')">Entrar</button>
         <button type="button" role="tab" id="abaCriar" onclick="modoConta('criar')">Criar conta</button>
@@ -670,13 +670,13 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
         <div class="campo"><label for="cTel">WhatsApp</label>
           <input id="cTel" type="tel" inputmode="numeric" placeholder="(11) 99999-9999"
                  autocomplete="tel" oninput="mascaraTelefone(this)">
-          <p class="pista">O mesmo número que o salão tem de você: é por ele
+          <p class="pista">O mesmo número que o restaurante tem de você: é por ele
             que achamos o seu cadastro e os seus pacotes.</p></div>
         <!-- O aniversário entra na conta: sem ele, quem se cadastra pelo link
              (sem marcar) nunca aparecia em Aniversariantes no painel. -->
         <div class="campo"><label for="cNasc">Aniversário</label>
           <input id="cNasc" type="date" autocomplete="bday">
-          <p class="pista">Só o dia — o salão usa para o agrado do seu mês.</p></div>
+          <p class="pista">Só o dia — o restaurante usa para o agrado do seu mês.</p></div>
       </div>
       <div class="campo"><label for="cEmail">E-mail</label>
         <input id="cEmail" type="email" inputmode="email" autocomplete="email"
@@ -696,14 +696,14 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
     <!-- ══════ COMPLETAR O CADASTRO (entrou com o Google) ══════ -->
     <section class="passo" id="p-completar">
       <h2>Falta pouco</h2>
-      <p class="sub" id="subCompletar">Para o salão te encontrar e mandar as confirmações, informe seu
+      <p class="sub" id="subCompletar">Para o restaurante te encontrar e mandar as confirmações, informe seu
         WhatsApp e seu aniversário. É só desta vez.</p>
       <div class="campo"><label for="cpTel">WhatsApp</label>
         <input id="cpTel" type="tel" inputmode="numeric" placeholder="(11) 99999-9999"
                autocomplete="tel" oninput="mascaraTelefone(this)"></div>
       <div class="campo" id="campoCpNasc"><label for="cpNasc">Aniversário</label>
         <input id="cpNasc" type="date" autocomplete="bday">
-        <p class="pista">Só o dia — o salão usa para o agrado do seu mês.</p></div>
+        <p class="pista">Só o dia — o restaurante usa para o agrado do seu mês.</p></div>
       <div id="avisoCompletar"></div>
     </section>
 
@@ -720,7 +720,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
     <section class="passo" id="p-fila">
       <h2>Entrar na lista de espera</h2>
       <p class="sub">Quando alguém cancelar no período que você escolher, o
-        salão te chama. Quem entrou primeiro é chamado primeiro.</p>
+        restaurante te chama. Quem entrou primeiro é chamado primeiro.</p>
       <div class="resumo" id="resumoFila"></div>
       <div class="dupla" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="campo"><label>A partir de</label><input type="date" id="filaDe"></div>
@@ -806,7 +806,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
             <small>(opcional)</small></span>
           <span class="cf-obs-seta" data-ico="baixo"></span>
         </summary>
-        <textarea id="fRecado" rows="3" maxlength="300" aria-label="Observação para o salão"
+        <textarea id="fRecado" rows="3" maxlength="300" aria-label="Observação para o restaurante"
                   placeholder="Ex.: tenho alergia a amônia"></textarea>
       </details>
       <div id="avisoConfirmar"></div>
@@ -823,7 +823,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
       <div id="bolhaConfirmacao"></div>
       <!-- O convite para instalar entra AQUI, e não na capa. Na capa a pessoa
            ainda não sabe se vai usar; aqui ela acabou de marcar, sabe que
-           volta, e o salão vira um ícone na tela dela em vez de um link
+           volta, e o restaurante vira um ícone na tela dela em vez de um link
            perdido no WhatsApp. Some sozinho quando já está instalado. -->
       <!-- Marcou sem conta: o convite para criar a senha (convidarASenha). -->
       <div id="convidarSenha"></div>
@@ -901,12 +901,12 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
    PediHub — aplicativo do cliente
    ---------------------------------------------------------------------------
    COMO SE CHEGA AQUI
-   Cada salão tem um endereço próprio, montado a partir do apelido (`slug`):
+   Cada restaurante tem um endereço próprio, montado a partir do apelido (`slug`):
 
        agendar.html?salao=studio-bella
 
-   É esse link que o salão manda no WhatsApp, põe na bio do Instagram ou
-   imprime como QR no espelho. Sem o parâmetro, aparece a lista de salões —
+   É esse link que o restaurante manda no WhatsApp, põe na bio do Instagram ou
+   imprime como QR no espelho. Sem o parâmetro, aparece a lista de restaurantes —
    que existe só para a demonstração; em produção o link sempre traz um.
 
    O `slug` mora na coluna `saloes.slug` (supabase/01_schema.sql) e é lido pela
@@ -944,7 +944,7 @@ const VOCABULARIO = {
      "barbeiro" fica: é quem atende, em qualquer serviço. */
   barbearia: { casa:'Barbearia',       quem:'barbeiro',     atende:'Quem atende',
                acao:'Agendar horário',  oferecemos:'Nossos serviços' },
-  salao:     { casa:'Salão de beleza', quem:'profissional', atende:'Quem atende',
+  salao:     { casa:'Estabelecimento', quem:'profissional', atende:'Quem atende',
                acao:'Agendar horário',  oferecemos:'Nossos serviços' },
   manicure:  { casa:'Esmalteria',      quem:'manicure',     atende:'Quem atende',
                acao:'Agendar horário',  oferecemos:'Nossos serviços' },
@@ -972,14 +972,14 @@ function voc(chave){
 const NA_NUVEM = !!(window.Dados && window.Dados.ligado);
 
 let bd = null;
-let salao = null;            // salão deste link
+let salao = null;            // restaurante deste link
 let sessao = null;           // { perfilId, nome, telefone }
 let tela = 'saloes';
 let historico = [];
 
 /* ── O que a nuvem responde sobre horários ───────────────────────────────
    `vagas` guarda a resposta de `horarios_livres_periodo()` já traduzida para
-   o jeito que esta tela pensa: minutos desde a meia-noite, no fuso do SALÃO.
+   o jeito que esta tela pensa: minutos desde a meia-noite, no fuso do RESTAURANTE.
 
      vagas['<profId>|2026-08-21'] = [540, 555, 570, …]
 
@@ -1035,9 +1035,9 @@ let escolha = { servicos: [], profissionalId: null, data: null, inicio: null,
 let otp = { codigo: null, telefone: null, enviadoEm: 0, tentativas: 0 };
 
 /* ── Tempo ───────────────────────────────────────────────────────────────
-   Na nuvem, "hoje" e "agora" são no fuso do SALÃO, não no do aparelho. Não é
+   Na nuvem, "hoje" e "agora" são no fuso do RESTAURANTE, não no do aparelho. Não é
    preciosismo de fuso horário: é a cliente que viajou, ou que está com o
-   celular em outro fuso, abrindo o link e vendo a segunda-feira do salão
+   celular em outro fuso, abrindo o link e vendo a segunda-feira do restaurante
    marcada como "ontem" — ou pior, vendo o dia de hoje sumir da faixa às 21h
    porque no relógio dela já é amanhã.
    ──────────────────────────────────────────────────────────────────────── */
@@ -1045,7 +1045,7 @@ function fusoDoSalao(){
   return (salao && salao.fuso) || 'America/Sao_Paulo';
 }
 
-// Um instante (Date ou string ISO) visto de dentro do salão.
+// Um instante (Date ou string ISO) visto de dentro do restaurante.
 function noFuso(quando){
   const d = (quando instanceof Date) ? quando : new Date(quando);
   const partes = new Intl.DateTimeFormat('en-CA', {
@@ -1083,7 +1083,7 @@ function hm(min){
 
    Sem esta função, um nome como `<img src=x onerror=...>` deixava de ser
    texto e virava código rodando na sessão do dono — com acesso à agenda, à
-   lista de clientes e ao faturamento do salão. Não é hipótese: está
+   lista de clientes e ao faturamento do restaurante. Não é hipótese: está
    reproduzido em tests/seguranca.test.mjs.
 
    A regra, então: nada que uma pessoa tenha digitado entra em `innerHTML`
@@ -1230,14 +1230,14 @@ function peneirarPasso(lista){
    ---------------------------------------------------------------------------
    São só três, e nenhuma delas passa perto de uma tabela:
 
-     vitrine(apelido)              quem é este salão, o que ele faz e com quem
+     vitrine(apelido)              quem é este restaurante, o que ele faz e com quem
      horarios_livres_periodo(...)  quando há vaga, na janela inteira
      agendar(...)                  marca
 
    `anon` — a cliente que abre o link do WhatsApp e não tem conta — pode
    executar as três e continua sem alcançar `agendamentos`, `clientes`,
    `jornadas` ou `bloqueios`. É o ponto inteiro de elas serem funções
-   `security definer`: dá para ver horário vago sem ver a agenda do salão, e
+   `security definer`: dá para ver horário vago sem ver a agenda do restaurante, e
    dá para marcar sem ver a lista de clientes dele.
    =========================================================================== */
 
@@ -1258,9 +1258,9 @@ function bdDaVitrine(v){
       // decide é o banco (vitrine, 22_cotas), que também já manda o link sem
       // a aparência personalizada nesse plano.
       selo: s.selo === true,
-      // A aparência que o salão escolheu no painel, em Meu negócio.
+      // A aparência que o restaurante escolheu no painel, em Meu negócio.
       cor: s.cor, tema: s.tema, precoNaCapa: s.precoNaCapa === true,
-      // Ausente = ligado, a mesma regra da vitrine(): salão criado antes
+      // Ausente = ligado, a mesma regra da vitrine(): restaurante criado antes
       // disto existir já nasce com o brilho, sem migração nenhuma.
       fundo: s.fundo || null, brilho: s.brilho !== false,
       letra: s.letra || null,
@@ -1268,7 +1268,7 @@ function bdDaVitrine(v){
       capaFoco: s.capaFoco, veu: s.veu,
       /* ⚠ AJUSTE NOVO PRECISA ENTRAR NESTA LISTA TAMBÉM.
 
-         O salão é remontado aqui chave por chave, de propósito — o `cfg`
+         O restaurante é remontado aqui chave por chave, de propósito — o `cfg`
          cru nunca atravessa. É a quinta parada de um ajuste de aparência:
 
              painel grava → vitrine() devolve → ESTA LISTA copia →
@@ -1287,11 +1287,11 @@ function bdDaVitrine(v){
       // De quanto em quanto tempo esta página oferece horário. Ver
       // `passoDoLink()`: é peneira de exibição, não de disponibilidade.
       passoHorarios: s.passoHorarios,
-      // O salão pede senha para marcar (Meu negócio → "Exigir senha").
+      // O restaurante pede senha para marcar (Meu negócio → "Exigir senha").
       exigeSenha: s.exigeSenha === true,
       /* ── A PERSONALIZAÇÃO POR ESTABELECIMENTO ──────────────────────────
          As cinco chaves chegam soltas, e as cinco podem vir vazias — que é o
-         estado de todo salão que nunca abriu essa parte. Vazio aqui quer
+         estado de todo restaurante que nunca abriu essa parte. Vazio aqui quer
          dizer "faça como sempre fez": o `aplicarAparencia()` calcula tudo a
          partir da cor principal, e a tela sai idêntica à de antes. */
       cores: (s.cores && typeof s.cores === 'object') ? s.cores : {},
@@ -1300,7 +1300,7 @@ function bdDaVitrine(v){
       logoBorda: s.logoBorda || 'media',
       slideForma: s.slideForma || 'panoramico',
       /* ── A FITA DO CARRINHO, EM METAL ──────────────────────────────────
-         Cinco chaves, e as cinco ausentes no salão que nunca mexeu. Ausente
+         Cinco chaves, e as cinco ausentes no restaurante que nunca mexeu. Ausente
          aqui NÃO quer dizer "desligado": quer dizer "o metal de fábrica", que
          é o mesmo desenho do botão de agendar. Foi o pedido — a barra é
          metálica; o que o dono escolhe é o quanto, de que cor, em que ritmo e
@@ -1315,19 +1315,19 @@ function bdDaVitrine(v){
 
          "Não veio serviço nenhum" tem duas causas muito diferentes: a casa
          desligou o módulo, ou a casa acabou de nascer e ainda não publicou
-         nada. A segunda é o estado de TODO salão na primeira hora — o
+         nada. A segunda é o estado de TODO restaurante na primeira hora — o
          cadastro entrega o link no fim, e a dona manda para as clientes antes
          de lançar os serviços.
 
          Tratar as duas igual tira o botão do pé de quem acabou de se
          cadastrar, e a cliente que abre o link não tem por onde entrar. A
-         página já sabia dizer "o salão ainda não publicou os serviços"; sem
+         página já sabia dizer "o restaurante ainda não publicou os serviços"; sem
          estas duas linhas, ninguém chega nessa tela para ler.
 
          (Eu as tinha tirado daqui: uma mutação sobreviveu e concluí que eram
          inúteis. Estavam mesmo, enquanto o rodapé olhava a LISTA. Quem
          mostrou foi o `cliente-nuvem.test.mjs`, que guarda exatamente a
-         primeira hora de um salão.) */
+         primeira hora de um restaurante.) */
       usaServicos: s.usaServicos !== false,
       loja: s.loja !== false,
       fundoTipo: s.fundoTipo || 'cor',
@@ -1384,7 +1384,7 @@ function bdDaVitrine(v){
        para isso (ver 25_loja.sql). Aqui a lista é remontada com o que chegou,
        e se um dia alguém acrescentar um campo lá, ele precisa entrar AQUI
        também para existir na tela. É a mesma corrente de cinco paradas que o
-       comentário do salão descreve logo acima. */
+       comentário do restaurante descreve logo acima. */
     produtos: (v.produtos || []).map(x => ({
       id: x.id, salaoId, nome: x.nome, marca: x.marca,
       descricao: x.descricao, foto: x.foto,
@@ -1408,14 +1408,14 @@ function bdDaVitrine(v){
       (p.servicos || []).map(sid => ({ profissionalId: p.id, servicoId: sid }))),
 
     // O que a cliente NÃO recebe, e não é esquecimento: agenda, fichas de
-    // cliente, folgas e fila de espera do salão. Ficam vazias aqui porque o
+    // cliente, folgas e fila de espera do restaurante. Ficam vazias aqui porque o
     // navegador dela não tem nada que ver com isso.
     agendamentos: [], bloqueios: [], clientes: [], perfis: [], listaEspera: [],
   };
 }
 
-/* Na nuvem, o passo "Qual salão?" só aparece para dar um recado (link
-   errado, salão fechado, sem internet). O título e as duas frases dele são da
+/* Na nuvem, o passo "Qual restaurante?" só aparece para dar um recado (link
+   errado, restaurante fechado, sem internet). O título e as duas frases dele são da
    DEMONSTRAÇÃO ("Esta lista existe para a demonstração") e apareciam em volta
    do erro, para a cliente de verdade. */
 function soORecadoDosSaloes(){
@@ -1425,7 +1425,7 @@ function soORecadoDosSaloes(){
 }
 async function abrirSalaoDaNuvem(slug){
   /* A roda só acende depois de 400ms. Em conexão boa a vitrine chega antes
-     disso, e aí a primeira coisa que a cliente vê já é a capa do salão —
+     disso, e aí a primeira coisa que a cliente vê já é a capa do restaurante —
      nenhum estado intermediário aparece e some. Indicador que pisca por
      200ms cansa mais do que espera nenhuma. */
   const acender = setTimeout(() => {
@@ -1467,11 +1467,11 @@ async function abrirSalaoDaNuvem(slug){
   }
   if(!v){
     // Mesma frase do modo local, e pelo mesmo motivo: apelido que não existe,
-    // ou salão desativado. Quem chegou aqui veio de um link — dizer "não
-    // encontrado" é mais honesto do que mostrar uma lista de outros salões.
+    // ou restaurante desativado. Quem chegou aqui veio de um link — dizer "não
+    // encontrado" é mais honesto do que mostrar uma lista de outros restaurantes.
     return falhar(
-      `<div class="recado erro"><b>Salão não encontrado.</b><br>
-       O endereço <code>?salao=${escapar(slug)}</code> não corresponde a nenhum salão ativo.</div>`);
+      `<div class="recado erro"><b>Restaurante não encontrado.</b><br>
+       O endereço <code>?salao=${escapar(slug)}</code> não corresponde a nenhum restaurante ativo.</div>`);
   }
   clearTimeout(acender);
   bd = bdDaVitrine(v);
@@ -1518,7 +1518,7 @@ async function abrirSalaoDaNuvem(slug){
 }
 
 /* ── A VISITA, SÓ COMO NÚMERO (60_dashboard.sql) ──────────────────────────
-   O Ranking do salão mostra quantas pessoas abriram o link e de onde vieram.
+   O Ranking do restaurante mostra quantas pessoas abriram o link e de onde vieram.
    Este aparelho guarda um código aleatório (não é nome, telefone nem conta)
    só para a mesma pessoa abrindo duas vezes no dia contar como uma; o banco
    ainda o embaralha com o dia antes de guardar. Ninguém é identificado.
@@ -1616,7 +1616,7 @@ async function pedirVagas(ids){
 
        A diferença importa porque as duas têm curas opostas: "tente de novo"
        resolve queda de rede e não resolve função que não existe. Sem separar,
-       o dono do salão fica clicando em "tentar de novo" a tarde inteira
+       o dono do restaurante fica clicando em "tentar de novo" a tarde inteira
        enquanto o conserto é colar um arquivo no SQL Editor.
 
        ⚠ O CÓDIGO PRIMEIRO, A FRASE SÓ COMO ÚLTIMO RECURSO.
@@ -1645,12 +1645,12 @@ function esquecerVagas(){
 }
 
 /* ── Janela de agenda liberada ───────────────────────────────────────────
-   O salão decide até quando aceita marcação. Serve para dois problemas reais:
+   O restaurante decide até quando aceita marcação. Serve para dois problemas reais:
    quem marca para daqui a seis meses quase sempre falta, e agenda aberta até
    o infinito tira do dono a liberdade de mudar jornada, preço ou equipe.
 
    Mostrar a data para o cliente é parte da ideia — "liberada até 15/09" faz
-   ele voltar, em vez de achar que o salão fechou.
+   ele voltar, em vez de achar que o restaurante fechou.
    ──────────────────────────────────────────────────────────────────────── */
 function diasLiberados(){
   const n = salao && salao.cfg && salao.cfg.diasLiberados;
@@ -1658,7 +1658,7 @@ function diasLiberados(){
 }
 /* Quantos dias a faixa mostra — e é o MESMO número da busca de vagas e do
    "Agenda liberada até". Eram três: a faixa parava em 27, o aviso prometia os
-   30 do salão, e os dias do meio tinham vaga que ninguém conseguia marcar.
+   30 do restaurante, e os dias do meio tinham vaga que ninguém conseguia marcar.
    62 é o teto que o banco aceita (`horarios_livres_periodo`). */
 function diasNaTela(){ return Math.min(diasLiberados(), 62); }
 function ultimoDiaLiberado(){ return somarDias(hoje(), diasNaTela()); }
@@ -1707,18 +1707,18 @@ const casaVendeProdutos = () => moduloLigado('loja');
 
    Aqui a lista simplesmente não existe, e todo o resto herda isso de graça:
    quem pergunta recebe vazio, e cada tela já sabe o que fazer com vazio
-   porque salão sem serviço cadastrado sempre existiu. */
+   porque restaurante sem serviço cadastrado sempre existiu. */
 const servicosDoSalao = () => !casaFazServicos() ? [] : bd.servicos.filter(s =>
   s.salaoId === salao.id && s.ativo);
 
 /* ── O QUE APARECE NA CAPA ────────────────────────────────────────────────
-   A capa mostrava TUDO. Num salão com vinte serviços isso é um catálogo que
+   A capa mostrava TUDO. Num restaurante com vinte serviços isso é um catálogo que
    ninguém rola até o fim — e o serviço que paga a conta fica embaixo do que
    quase ninguém pede, por acidente de ordem alfabética.
 
    ⚠ E A LISTA VAZIA NÃO QUER DIZER "NENHUM".
 
-   Quer dizer "o dono não escolheu ainda" — que é o estado de todo salão que
+   Quer dizer "o dono não escolheu ainda" — que é o estado de todo restaurante que
    já existe no dia em que isto entra no ar. Tratar vazio como "esconda tudo"
    deixaria essas casas com a capa em branco, sem ninguém ter pedido. Sem
    escolha, a capa decide sozinha: os SEIS primeiros, com quem tem foto na
@@ -1760,13 +1760,13 @@ const acharServico = i => bd.servicos.find(s => s.id === i);
    enquanto a cliente escolhe.
 
    `dias` nulo ou vazio quer dizer "todos os dias", igual ao banco e igual à
-   `vitrine()`. Salão que nunca abriu essa parte não tem a chave, esta função
+   `vitrine()`. Restaurante que nunca abriu essa parte não tem a chave, esta função
    devolve falso sempre, e nada na tela muda.
 
    Basta UM serviço do pedido estar fora: ela pediu corte + escova para o
    mesmo horário, e se a escova não é feita na segunda, o par não cabe na
    segunda. É a mesma regra do banco, escrita do mesmo jeito. */
-// O salão não abre neste dia da semana (o horário de funcionamento que o dono
+// O restaurante não abre neste dia da semana (o horário de funcionamento que o dono
 // preencheu). Sem horário preenchido, não dá para saber — e aí não afirma.
 function salaoFechadoNoDia(data){
   const func = typeof funcionamentoDoSalao === 'function' ? funcionamentoDoSalao() : null;
@@ -1775,7 +1775,7 @@ function salaoFechadoNoDia(data){
 /* "ENCERRADO", E NÃO "CHEIO". Hoje, depois do último horário de atendimento,
    o dia não tem vaga porque o expediente acabou — "cheio" mandaria a cliente
    esperar uma desistência que não vai acontecer. O fim do dia é o do horário
-   do salão; sem ele, o da jornada de quem atende. */
+   do restaurante; sem ele, o da jornada de quem atende. */
 function encerradoHoje(data){
   if(data !== hoje()) return false;
   const agora = NA_NUVEM ? noFuso(new Date()).min
@@ -1802,7 +1802,7 @@ const acharProf = i => bd.profissionais.find(p => p.id === i);
 const acharSalao = i => bd.saloes.find(s => s.id === i);
 
 // Profissionais que fazem TODOS os serviços escolhidos. Sem vínculo
-// cadastrado, considera-se que o profissional faz tudo — é como um salão
+// cadastrado, considera-se que o profissional faz tudo — é como um restaurante
 // pequeno começa, e obrigar o cadastro antes de usar afasta o cliente.
 function profsQueAtendem(idsServicos){
   const vinc = bd.servicosProfissionais || [];
@@ -1922,7 +1922,7 @@ function seguirDepoisDoQuem(){
   irPara('quando');
 }
 /* O nome que vai para o agendamento leva a relação — "Ana (filha)" — e é
-   assim que o salão lê na agenda. Sem coluna nova no banco: o nome de quem é
+   assim que o restaurante lê na agenda. Sem coluna nova no banco: o nome de quem é
    atendido sempre morou em `atendido_nome`. "Outra pessoa" vai só o nome. */
 function nomeDoAtendido(){
   const nome = (escolha.filhoNome || '').trim();
@@ -1934,7 +1934,7 @@ function nomeDoAtendido(){
 function paraQuemDoAgendamento(a){
   /* Da nuvem o nome vem como `atendido` (meus_agendamentos); do modo de
      demonstração, como `atendidoNome`. Lendo só o segundo, remarcar o horário
-     da filha passava o horário para a mãe — o salão esperava outra pessoa. */
+     da filha passava o horário para a mãe — o restaurante esperava outra pessoa. */
   const nome = (a && (a.atendido || a.atendidoNome)) || '';
   return nome ? { para: 'filho', filhoNome: nome, quem: 'outra', relacao: null, junto: false }
               : { para: 'mim', filhoNome: '', quem: 'mim', relacao: null, junto: false };
@@ -2099,7 +2099,7 @@ function diasPorExtenso(dias){
 
    Espelho de dinheiro é perigoso e vale dizer por quê: se ele divergir, a
    cliente vê R$ 50, confirma, e a linha nasce R$ 70. Ela só descobre no
-   balcão, e a culpa parece do salão.
+   balcão, e a culpa parece do restaurante.
 
    ⚠ POR ISSO A CONTA DIFÍCIL NÃO É REFEITA AQUI. Qual regra ganha quando
    várias casam é decisão de especificidade, e o servidor já mandou a lista
@@ -2158,7 +2158,7 @@ function nomesEscolhidos(){
   return escolha.servicos.map(i => acharServico(i).nome).join(' + ');
 }
 
-// Ficha da pessoa logada NESTE salão. Uma por salão, de propósito: o
+// Ficha da pessoa logada NESTE restaurante. Uma por restaurante, de propósito: o
 // histórico de um não aparece no outro.
 function minhaFicha(salaoId){
   if(!sessao) return null;
@@ -2174,8 +2174,8 @@ function meusAgendamentos(salaoId){
                    .localeCompare(a.data + String(a.inicio).padStart(4,'0')));
 }
 
-// Em quais outros salões esta pessoa já é cliente. É a prova de que a
-// identidade é global e o vínculo é por salão.
+// Em quais outros restaurantes esta pessoa já é cliente. É a prova de que a
+// identidade é global e o vínculo é por restaurante.
 function meusOutrosSaloes(){
   if(!sessao) return [];
   return bd.clientes
@@ -2227,7 +2227,7 @@ function desenhar(){
 
   const eu = document.getElementById('btEu');
   /* O botão com o nome da cliente leva a "Meus horários". Sem agendamento na
-     casa, ele levaria a uma lista que o salão desligou. */
+     casa, ele levaria a uma lista que o restaurante desligou. */
   /* ⚠ QUEM JÁ É CONHECIDA NÃO VÊ "ENTRAR". Em Meus horários (e na conta) o
      botão com o nome some — ela já está ali —, e a regra caía no ramo de
      baixo, o de quem ninguém conhece: logo depois de cadastrar e marcar, o
@@ -2277,7 +2277,7 @@ function desenhar(){
                                } }
   /* O botão diz o que falta, como nos outros passos: carrinho vazio não
      manda mensagem nenhuma, e cinza mudo faria a pessoa procurar o que não
-     fez. E quando o salão não tem WhatsApp cadastrado, ele some de vez —
+     fez. E quando o restaurante não tem WhatsApp cadastrado, ele some de vez —
      botão que abriria um `wa.me/` quebrado é pior que botão nenhum. */
   if(tela === 'loja')        { desenharLoja(); trilhaAte(0);
                                const n = itensNoCarrinho();
@@ -2345,11 +2345,11 @@ function desenhar(){
                                if(cn && window.Documento) Documento.dataDigitavel(cn); }
   if(tela === 'cadastro')    { trilhaAte(0);
                                bp.textContent = casaFazServicos() ? 'Marcar um horário' : 'Ir para o início';
-                               if(casaFazServicos()){ bs.style.display=''; bs.textContent='Ver o salão'; } }
+                               if(casaFazServicos()){ bs.style.display=''; bs.textContent='Ver o restaurante'; } }
   /* ⚠ SEM O MÓDULO DE SERVIÇOS NÃO HÁ O QUE USAR, e o botão some.
 
      O pacote é serviço pago adiantado. Com o módulo desligado, "Usar meu
-     pacote" abria a lista de serviços vazia, com a frase "este salão ainda
+     pacote" abria a lista de serviços vazia, com a frase "este restaurante ainda
      não publicou os serviços" — que é MENTIRA: ele publicou, e depois
      desligou o módulo.
 
@@ -2400,9 +2400,9 @@ function desenharCapa(){
   /* ── A FOTO DA CASA COMO FAIXA DO TOPO ──────────────────────────────────
      A marca vem primeiro e grande: o cliente chega aqui por um link no
      WhatsApp, sem saber o que vai abrir, e reconhecer a casa no primeiro
-     segundo é o que separa "é do meu salão" de "isso é golpe".
+     segundo é o que separa "é do meu restaurante" de "isso é golpe".
 
-     Quando há foto do salão, ela ocupa a faixa inteira do topo — sangrando
+     Quando há foto do restaurante, ela ocupa a faixa inteira do topo — sangrando
      pelas bordas — e a logo fica montada na beira de baixo dela. É o que
      todo aplicativo de reserva faz, e por um motivo bom: a foto é a única
      coisa da tela que diz "este lugar existe e é assim".
@@ -2417,11 +2417,11 @@ function desenharCapa(){
      onde o contraste é o mesmo sempre.
 
      Sem foto, fica exatamente a capa de antes: selo, nome e endereço no
-     fundo liso. Salão que ainda não subiu nada continua apresentável. */
+     fundo liso. Restaurante que ainda não subiu nada continua apresentável. */
   const temFoto = !!salao.capa;
   /* Qual letra o nome usa. Sem escolha, sai do TIPO do negócio: barbearia
      nasce marcante, estética e clínica nascem elegantes, o resto moderno.
-     Salão que nunca abriu a tela de Aparência já ganha uma capa com cara de
+     Restaurante que nunca abriu a tela de Aparência já ganha uma capa com cara de
      ramo, sem ninguém configurar nada. */
   const cfg = salao.cfg || {};
   /* Enquadramento da foto de capa: 0 = topo à vista, 100 = pé. Sem escolha,
@@ -2461,7 +2461,7 @@ function desenharCapa(){
 
   desenharInfoDaCasa();
 
-  // A foto do salão agora é a faixa do topo; repeti-la aqui seria a mesma
+  // A foto do restaurante agora é a faixa do topo; repeti-la aqui seria a mesma
   // imagem duas vezes na mesma rolagem.
   document.getElementById('capaFoto').innerHTML = '';
 
@@ -2476,7 +2476,7 @@ function desenharCapa(){
      produtos cadastrados dá o mesmo resultado na tela que loja desligada:
      nada para ver. Prometer "confira nossos produtos" nos dois casos manda a
      cliente procurar uma seção que não existe — e ela conclui que a página
-     está quebrada, não que o salão não vende.
+     está quebrada, não que o restaurante não vende.
 
      As duas consultas já carregam o módulo dentro delas (ver a peneira lá em
      cima): lista vazia é a resposta certa nos dois casos, e aqui embaixo
@@ -2488,11 +2488,11 @@ function desenharCapa(){
 
      SERVIÇOS seguem o MÓDULO. Agenda é o motivo de a casa existir, e o vazio
      é temporário por natureza: a dona se cadastrou hoje e lança os serviços à
-     tarde. A página tem uma tela escrita para essa hora — "o salão ainda não
+     tarde. A página tem uma tela escrita para essa hora — "o restaurante ainda não
      publicou os serviços" — e ela precisa de um caminho para ser lida.
 
      PRODUTOS seguem a LISTA. A loja nasce ligada (é o padrão do `cfg`), então
-     olhar só o módulo poria um "Ver produtos" na capa de TODO salão que
+     olhar só o módulo poria um "Ver produtos" na capa de TODO restaurante que
      existe hoje, e o botão levaria a uma prateleira vazia. Aqui o vazio não é
      "ainda não", é "não vendemos" — e não há tela nenhuma escrita para
      explicar isso, porque não há o que explicar.
@@ -2595,13 +2595,13 @@ function desenharCapa(){
      trabalho. Antes eram fitas de texto: sem foto e sem peso, uma casa com
      quatro serviços parecia uma lista de compras.
 
-     O PREÇO é escolha do salão, em Meu negócio → Aparência. Nem toda casa
+     O PREÇO é escolha do restaurante, em Meu negócio → Aparência. Nem toda casa
      quer o valor na primeira tela: quem tem preço competitivo ganha
      mostrando, e quem cobra por avaliação perde. Antes isto era uma decisão
      nossa, tomada uma vez para todo mundo.
 
      Serviço sem foto não fica de fora nem ganha um buraco cinza: o cartão
-     encolhe para uma linha com o nome. Salão que ainda não subiu foto
+     encolhe para uma linha com o nome. Restaurante que ainda não subiu foto
      nenhuma continua com uma capa apresentável. */
   const todos = servicosDoSalao();
   const svs = destaquesDaCapa(todos);
@@ -2628,17 +2628,17 @@ function desenharCapa(){
   /* ⚠ A FORMA DO CARTÃO É DECIDIDA PELO CONJUNTO, NUNCA POR CARTÃO.
 
      Havia uma regra sozinha no CSS: serviço sem foto vira uma LINHA de
-     largura inteira. Ela está certa — para o salão que ainda não subiu foto
+     largura inteira. Ela está certa — para o restaurante que ainda não subiu foto
      nenhuma, a capa fica uma lista limpa em vez de uma grade de retângulos
      cinzas.
 
-     O que ninguém tinha olhado é o meio do caminho, que é onde todo salão
+     O que ninguém tinha olhado é o meio do caminho, que é onde todo restaurante
      vive: ALGUNS serviços com foto e outros sem. Aí a mesma regra produz uma
      escada — duas colunas, uma faixa inteira, duas colunas, outra faixa —
      e a capa, que é a primeira coisa que a cliente vê, parece quebrada.
 
      Então a pergunta passa a ser feita uma vez, sobre a lista toda: se
-     EXISTE foto no salão, a grade é de fotos e quem não tem ganha uma capa
+     EXISTE foto no restaurante, a grade é de fotos e quem não tem ganha uma capa
      com a inicial do serviço; se não existe nenhuma, todo mundo é linha. Uma
      forma só por tela, dos dois jeitos. */
   const temAlgumaFoto = svs.some(s => s.foto);
@@ -2697,7 +2697,7 @@ function desenharCapa(){
      tela fazia isso. Faz: o `entrarNoSalao()`, para quem está logada, espera
      o `aposEntrar()` e chama `desenhar()` com a capa já aberta. A linha
      antiga pintava só o `#capaServicos` — e o `#capaAtalhos`, reescrito
-     logo acima, ficava com o `data-ico` cru. Visto no Salão Megatop: o
+     logo acima, ficava com o `data-ico` cru. Visto no Restaurante Megatop: o
      atalho "Meus horários" virou uma bolinha colorida sem o calendário.
 
      Por isso pinta a capa inteira. O custo continua o de varrer um elemento
@@ -2730,7 +2730,7 @@ function desenharCapa(){
 }
 
 /* ── O SLIDE DA CAPA ──────────────────────────────────────────────────────
-   As fotos que o salão cadastrou nos serviços, passando sozinhas. É o que a
+   As fotos que o restaurante cadastrou nos serviços, passando sozinhas. É o que a
    vitrine de uma loja faz: mostra o trabalho, não a tabela.
 
    Três decisões que não são estética:
@@ -2834,7 +2834,7 @@ function irSlide(n){
 
 function resumoJornada(p){
   /* Na nuvem, a vitrine NÃO entrega jornada — de propósito: escala de
-     trabalho e folga médica são assunto do salão, não de quem vai marcar.
+     trabalho e folga médica são assunto do restaurante, não de quem vai marcar.
      Sem ela, o certo é não dizer nada.
 
      A primeira versão desta linha quebrava a capa inteira aqui, porque lia
@@ -2849,7 +2849,7 @@ function resumoJornada(p){
   return dias.map(d => DIAS_CURTOS[d]).join(', ');
 }
 
-// Um serviço é "combo" quando o nome já diz que são dois — é como o salão
+// Um serviço é "combo" quando o nome já diz que são dois — é como o restaurante
 // cadastra na prática ("corte + barba"), então lemos disso em vez de exigir
 // uma coluna nova que ninguém vai preencher.
 function ehCombo(sv){
@@ -2869,12 +2869,12 @@ function semAcento(t){
    com parte dos serviços — e ela rolava procurando a escova numa lista que
    estava dividida por um detalhe de digitação.
 
-   Aconteceu de verdade: o salão tinha serviços cadastrados à mão, o passo a
+   Aconteceu de verdade: o restaurante tinha serviços cadastrados à mão, o passo a
    passo do primeiro dia foi refeito e criou os dele com a grafia do
    catálogo. A cliente viu duas vezes "Unhas" e duas vezes "Cabelo".
 
    A chave agora é o nome achatado; o RÓTULO exibido é a primeira grafia que
-   aparece, que é a do salão. Nenhuma linha do banco é mexida — o conserto
+   aparece, que é a do restaurante. Nenhuma linha do banco é mexida — o conserto
    vale também para o que já está gravado torto. */
 function agruparPorCategoria(svs, padrao){
   const grupos = new Map();
@@ -2927,11 +2927,11 @@ function cartaoDeServico(s, o){
   const elegante = o.elegante;
   /* ⚠ NA CURVADA, SERVIÇO SEM FOTO TAMBÉM GANHA A CAPA COM A INICIAL.
 
-     A curva mora na foto. Num salão sem foto nenhuma, a regra de "cada um
+     A curva mora na foto. Num restaurante sem foto nenhuma, a regra de "cada um
      vira uma linha" valia também para a Curvada — e a linha não tem onde
      desenhar a curva. O dono clicava em "Curvada", a prévia do painel
      mostrava a grade com a curva, e o link continuava praticamente igual ao
-     Clássico: "cliquei curvada e não foi". É o caso de todo salão novo, que
+     Clássico: "cliquei curvada e não foi". É o caso de todo restaurante novo, que
      ainda não subiu foto.
 
      A Clássica sem foto continua sendo a lista de linhas de sempre. */
@@ -2982,18 +2982,18 @@ function desenharServicos(){
 
   const alvo = document.getElementById('listaServicos');
 
-  /* ── SALÃO SEM SERVIÇO NENHUM NÃO É BUSCA SEM RESULTADO ────────────────
-     Este é o estado em que TODO salão passa a primeira hora: acabou de se
+  /* ── RESTAURANTE SEM SERVIÇO NENHUM NÃO É BUSCA SEM RESULTADO ────────────────
+     Este é o estado em que TODO restaurante passa a primeira hora: acabou de se
      cadastrar, ainda não lançou os serviços, e já mandou o link para as
      clientes — porque o cadastro entrega o link no fim, e a pessoa manda.
 
      Antes daqui saía "Nada com esse nome · Tente outra palavra, ou limpe a
      busca", que é a mensagem da busca vazia. A cliente lia aquilo sem ter
-     digitado busca nenhuma, e a primeira impressão do salão era a de um
+     digitado busca nenhuma, e a primeira impressão do restaurante era a de um
      sistema quebrado. */
   if(!todos.length){
     const zap = (salao.whatsapp || salao.telefone || '').replace(/\D/g,'');
-    alvo.innerHTML = '<div class="nada"><b>Este salão ainda não publicou os '
+    alvo.innerHTML = '<div class="nada"><b>Este restaurante ainda não publicou os '
       + 'serviços</b>A agenda online abre assim que ' + escapar(salao.nome) + ' terminar '
       + 'de cadastrar o que faz.'
       + (zap ? ` <a href="https://wa.me/${zap.length > 11 ? zap : '55' + zap}"
@@ -3110,7 +3110,7 @@ function desenharProfs(){
 
   /* Com um só que faz o serviço, "tanto faz" não é escolha nenhuma: some, e
      ele já vem marcado — o Continuar liga sem pedir um toque que não decide
-     nada. Conta quem faz ESTE serviço, não a equipe: num salão de duas, se
+     nada. Conta quem faz ESTE serviço, não a equipe: num restaurante de duas, se
      só a Ju faz hidratação, é só a Ju. */
   const unico = aptos.length === 1;
   if(unico && escolha.profissionalId !== aptos[0].id){
@@ -3187,14 +3187,14 @@ function desenharQuando(){
       document.getElementById('cardProximo').innerHTML = '';
       document.getElementById('listaHoras').innerHTML =
         '<div class="nada"><b>Procurando horários…</b>'
-        + 'Estamos vendo a agenda do salão agora.</div>';
+        + 'Estamos vendo a agenda do restaurante agora.</div>';
       return;
     }
     if(vagasEstado === 'erro'){
       document.getElementById('listaDias').innerHTML = '';
       document.getElementById('cardProximo').innerHTML = '';
       document.getElementById('listaHoras').innerHTML = vagasErro === 'FALTA_INSTALAR'
-        ? '<div class="nada"><b>A agenda online deste salão ainda não foi ligada.</b>'
+        ? '<div class="nada"><b>A agenda online deste restaurante ainda não foi ligada.</b>'
           + 'Fale com ' + escapar(salao.nome) + ' — em geral é coisa de minutos.'
           + '<small style="display:block;margin-top:10px;opacity:.7">Para o dono: '
           + 'falta rodar <code>supabase/00_tudo.sql</code> no SQL Editor do '
@@ -3211,7 +3211,7 @@ function desenharQuando(){
     nomesEscolhidos() + ' · ' + (escolha.profissionalId === '*'
       ? 'qualquer ' + voc('quem') : acharProf(escolha.profissionalId).nome);
 
-  // Até onde o salão liberou. Dizer isso evita o cliente achar que a casa
+  // Até onde o restaurante liberou. Dizer isso evita o cliente achar que a casa
   // fechou quando o calendário acaba.
   document.getElementById('avisoJanela').innerHTML = `
     <div class="janela"><span class="ii">${ico('calendario')}</span>
@@ -3240,10 +3240,10 @@ function desenharQuando(){
        Serviço com dia marcado (`servicos.dias`) faz o banco recusar o dia
        inteiro — a `porque_nao_agenda()` responde antes de a agenda ser
        consultada, e a lista de vagas volta vazia. Sem esta linha o dia
-       apareceria como "cheio", que é falso: o salão está livre, o serviço é
+       apareceria como "cheio", que é falso: o restaurante está livre, o serviço é
        que não é feito naquele dia.
 
-       Para todo salão que não usar dias por serviço, `foraDoDia()` devolve
+       Para todo restaurante que não usar dias por serviço, `foraDoDia()` devolve
        falso e nada aqui muda. */
     const fora = !d.qtd && foraDoDia(d.data);
     const fechado = !d.qtd && !fora && salaoFechadoNoDia(d.data);
@@ -3262,11 +3262,11 @@ function desenharQuando(){
   /* ── O DIA QUE O PACOTE DELA NÃO DEIXA ────────────────────────────────
      Só entra aqui quem TEM o pacote, com `so_nos_dias` ligado, pedindo os
      serviços que ele cobre, num dia de fora. Para todo mundo mais esta linha
-     não existe: o dia continua aberto, e a agenda do salão não encolhe por
+     não existe: o dia continua aberto, e a agenda do restaurante não encolhe por
      causa do pacote de uma pessoa.
 
      E a tela não some — ela EXPLICA. Esconder os horários daria o mesmo
-     resultado visual de um dia lotado, e ela concluiria que o salão está
+     resultado visual de um dia lotado, e ela concluiria que o restaurante está
      cheio na quinta para sempre. A saída aparece junto: os dias que valem,
      logo acima, e o WhatsApp para quem quer vir fora deles pagando. */
   const barrado = pacoteQueBloqueia(escolha.servicos, escolha.data);
@@ -3320,7 +3320,7 @@ function desenharQuando(){
          </button>`
       : '';
 
-  /* Dia em que o salão não abre, ou em que o serviço não é feito, não é dia
+  /* Dia em que o restaurante não abre, ou em que o serviço não é feito, não é dia
      CHEIO: não vai vagar nada, e a lista de espera ali só prometia. */
   const naoAbre = !horas.length && (foraDoDia(escolha.data) || salaoFechadoNoDia(escolha.data));
   desenharEspera(horas.length === 0 && !naoAbre);
@@ -3355,7 +3355,7 @@ function desenharQuando(){
    a pessoa fecha a página. Aqui ela deixa o nome, e a cadeira que vagar tem
    para quem ser oferecida.
 
-   Vale para os dois: o cliente não precisa ficar tentando, e o salão para de
+   Vale para os dois: o cliente não precisa ficar tentando, e o restaurante para de
    perder o horário que alguém cancelou em cima da hora.
    ──────────────────────────────────────────────────────────────────────── */
 function jaNaFila(){
@@ -3465,7 +3465,7 @@ async function confirmarFila(){
     if(!sessao) { sessao = { nome, telefone: tel, verificado: false }; guardarSessao(); }
     meusDaNuvem = null;
     alert('Pronto! Você está na lista.\n\nAssim que alguém cancelar nesse '
-        + 'período, o salão te chama no WhatsApp.');
+        + 'período, o restaurante te chama no WhatsApp.');
     historico = [];
     irPara('quando', true);
     return;
@@ -3486,7 +3486,7 @@ async function confirmarFila(){
   salvar();
 
   alert('Pronto! Você está na lista.\n\nAssim que alguém cancelar nesse período, '
-      + 'o salão te chama no WhatsApp.');
+      + 'o restaurante te chama no WhatsApp.');
   historico = [];
   irPara('quando', true);
 }
@@ -3494,7 +3494,7 @@ async function confirmarFila(){
 function escolherDia(d){ escolha.data = d; escolha.inicio = null; desenhar(); }
 function escolherHora(h){ escolha.inicio = h; desenhar(); }
 
-/* ── A ficha desta pessoa neste salão ────────────────────────────────────
+/* ── A ficha desta pessoa neste restaurante ────────────────────────────────────
    Um caminho só para criar ou reencontrar. Se já existe ficha com aquele
    telefone — porque a recepção cadastrou um dia — a pessoa reencontra o
    próprio histórico em vez de virar cliente nova do zero.
@@ -3510,7 +3510,7 @@ function garantirFicha(nome, tel, nascimento, email, cpf){
   } else if(!perfil.nome){ perfil.nome = nome; }
 
   // Ficha solta com esse telefone (cadastro antigo da recepção) passa a
-  // apontar para o perfil, em todos os salões.
+  // apontar para o perfil, em todos os restaurantes.
   for(const c of bd.clientes){
     if(!c.perfilId && soDigitos(c.telefone) === soDigitos(tel)) c.perfilId = perfil.id;
   }
@@ -3531,7 +3531,7 @@ function garantirFicha(nome, tel, nascimento, email, cpf){
        O motivo é o mesmo lá e aqui: a recepção pode ter corrigido um e-mail
        digitado errado, e o preenchimento automático do navegador da cliente
        mandaria o errado de volta na marcação seguinte. Quem manda na ficha é
-       o salão; a cliente completa o que falta. */
+       o restaurante; a cliente completa o que falta. */
     if(!ficha.nascimento && nascimento) ficha.nascimento = nascimento;
     if(!ficha.email && email)           ficha.email = email;
     if(!ficha.cpf && cpf)               ficha.cpf = cpf;
@@ -3645,16 +3645,16 @@ function desenharDados(){
         onclick="abrirConta('entrar')">Entrar</button> — seus dados vêm preenchidos.</div>`;
   const cs = document.getElementById('campoSenhaCadastro');
   if(cs) cs.style.display = NA_NUVEM && !logada() ? '' : 'none';
-  /* O salão que exige senha: o campo deixa de ser opcional, e diz por quê. */
+  /* O restaurante que exige senha: o campo deixa de ser opcional, e diz por quê. */
   const exige = senhaObrigatoria();
   const rotSenha = document.querySelector('label[for="dSenha"]');
   if(rotSenha) rotSenha.innerHTML = exige ? 'Crie uma senha'
     : 'Crie uma senha <span style="font-weight:400">(opcional)</span>';
   const pistaSenha = document.getElementById('dSenhaPista');
   if(pistaSenha) pistaSenha.textContent = exige
-    ? 'Este salão pede uma senha para marcar: com ela você vê seus horários e o seu pacote '
+    ? 'Este restaurante pede uma senha para marcar: com ela você vê seus horários e o seu pacote '
       + 'em qualquer celular. Já tem conta? Toque em Entrar, logo acima.'
-    : 'Com senha, você vê seus horários em qualquer celular e usa os pacotes do salão.';
+    : 'Com senha, você vê seus horários em qualquer celular e usa os pacotes do restaurante.';
   if(window.aplicarIcones && cs) aplicarIcones(cs);
 
   const resumo = `${escapar(nomesEscolhidos())} · ${dataLonga(escolha.data)} às ${hm(escolha.inicio)}`;
@@ -3693,7 +3693,7 @@ function salvarDados(){
     '<div class="recado erro">' + txt + '</div>'; };
 
   if(nome.length < 2){
-    dizer('Escreva seu nome para o salão saber quem chega.');
+    dizer('Escreva seu nome para o restaurante saber quem chega.');
     return;
   }
   if(soDigitos(tel).length < 10){
@@ -3705,7 +3705,7 @@ function salvarDados(){
     return;
   }
   if(!nasc){
-    dizer('Falta o seu aniversário. É só o dia — o salão usa para o agrado '
+    dizer('Falta o seu aniversário. É só o dia — o restaurante usa para o agrado '
         + 'do seu mês.');
     return;
   }
@@ -3725,7 +3725,7 @@ function salvarDados(){
   /* ⚠ O E-MAIL PASSOU A SER OBRIGATÓRIO — decisão do dono, e não uma
      consequência técnica. Antes ele era opcional de propósito, porque é o
      campo que mais gente inventa quando é exigido. Exigido, ele custa
-     marcação e ganha endereço falso; foi dito, e a escolha é do salão.
+     marcação e ganha endereço falso; foi dito, e a escolha é do restaurante.
 
      As DUAS mensagens existem e são diferentes: "não preencheu" e
      "preencheu torto" mandam a pessoa fazer coisas diferentes, e juntar as
@@ -3756,16 +3756,16 @@ function salvarDados(){
   /* Com senha, a conta nasce junto — e a marcação já sai como ela: o banco
      liga a ficha e o pacote vale nesta mesma vez. Sem senha, nada muda. */
   const senha = valorDe('dSenha');
-  /* O salão que EXIGE senha ("Exigir senha para marcar", Meu negócio): sem
+  /* O restaurante que EXIGE senha ("Exigir senha para marcar", Meu negócio): sem
      ela, não segue. Quem já tem conta entra pelo "Entrar" logo acima.
 
-     ⚠ É escolha de como o salão atende, e não trava de segurança — por isso
+     ⚠ É escolha de como o restaurante atende, e não trava de segurança — por isso
      mora aqui, na tela, e não no `agendar()`: com a confirmação de e-mail
      ligada no Supabase, a conta nasce SEM sessão, e o banco recusaria a
      marcação de quem acabou de criar a senha. Nada se perde: quem já marcou
      sem conta continua com a ficha e os horários como estão. */
   if(!senha && senhaObrigatoria()){
-    dizer('Crie uma senha de pelo menos 8 caracteres: este salão pede conta para marcar. '
+    dizer('Crie uma senha de pelo menos 8 caracteres: este restaurante pede conta para marcar. '
         + 'Já tem conta? Toque em <b>Entrar</b>, logo acima.');
     return;
   }
@@ -3827,7 +3827,7 @@ function desenharTelefone(){
 function mascaraTelefone(el){
   /* O celular preenche no formato internacional ("+55 51 99999-8888"). Cortar
      os 11 primeiros dígitos dava "(55) 51999-9988" — um número errado com DDD
-     válido, e a mensagem do salão indo para outra pessoa. */
+     válido, e a mensagem do restaurante indo para outra pessoa. */
   let v = el.value.replace(/\D/g,'');
   if(v.length >= 12 && v.startsWith('55')) v = v.slice(2);
   v = v.slice(0,11);
@@ -3840,7 +3840,7 @@ function mascaraTelefone(el){
 function soDigitos(t){ return String(t||'').replace(/\D/g,''); }
 
 /* URL dentro de `url('...')` num atributo `style`. ⚠ A capa entrava crua, e o
-   dono de um salão gravava pela API uma "capa" que fechava o atributo e
+   dono de um restaurante gravava pela API uma "capa" que fechava o atributo e
    rodava código no navegador de quem abrisse o link — com a sessão de quem
    estivesse logado no mesmo endereço. Achado pelo caça-bug. Aspas,
    parênteses, barra invertida e espaço viram %xx (o navegador lê igual), e o
@@ -3896,7 +3896,7 @@ function desenharNome(){
    tema, inclusive para o escuro.
 
    ⚠ O STATUS SEGUE A ESCOLHA DO DONO. "Aguardando confirmação" é verdade só
-   para o salão que confirma depois (Meu negócio → Quem confirma). Para o que
+   para o restaurante que confirma depois (Meu negócio → Quem confirma). Para o que
    confirma sozinho, dizer isso seria mentir para a cliente — ali o status é
    "confirmado na hora". É a mesma regra da tela de pronto, que já não
    mostrava confirmação que ainda não existe.
@@ -3918,14 +3918,14 @@ function profDaEscolha(){
 function resumoDoAgendamento(p, compacto){
   /* "Eu e mais alguém" são DOIS horários seguidos (o banco grava dois), e o
      resumo mostrava o tempo, a faixa e o preço de um só: R$ 50 na tela e
-     R$ 100 no salão. Achado pelo caça-bug. */
+     R$ 100 no restaurante. Achado pelo caça-bug. */
   const ambos = escolha.para === 'ambos';
   const inicio = escolha.inicio, dur = duracaoEscolhida() * (ambos ? 2 : 1);
   const quando = diaCompleto(escolha.data);
   const faixa = hm(inicio) + ' às ' + hm(inicio + dur);
   const quemAtende = escapar(p ? p.nome : '—');
   const outra = escapar(nomeDoAtendido() || 'a outra pessoa');
-  // Para quem, quando não é para ela: o salão e ela precisam ler o mesmo.
+  // Para quem, quando não é para ela: o restaurante e ela precisam ler o mesmo.
   const para = escolha.para === 'ambos'
       ? `Você às ${hm(inicio)} e ${outra} às ${hm(inicio + dur)}`
     : escolha.para === 'filho' ? outra : '';
@@ -3947,7 +3947,7 @@ function resumoDoAgendamento(p, compacto){
       ${mini('calendario', quando + ' · ' + faixa)}
       ${mini('relogio', dur + ' min')}
       ${nomeDaForma(escolha.formaPagamento) && perguntaFormaPagamento()
-        ? mini('cartao', 'Pagamento no salão: ' + escapar(nomeDaForma(escolha.formaPagamento))) : ''}
+        ? mini('cartao', 'Pagamento no restaurante: ' + escapar(nomeDaForma(escolha.formaPagamento))) : ''}
     </div>`;
   }
 
@@ -3977,7 +3977,7 @@ function resumoDoAgendamento(p, compacto){
     + (desc > 0 ? linha('cupom', levado ? 'Cupom do horário antigo (vai junto)'
                                         : 'Cupom ' + escapar(cupomAgenda.codigo), '− ' + real(desc)) : '')
     + (nomeDaForma(escolha.formaPagamento) && perguntaFormaPagamento()
-        ? linha('cartao', 'Pagamento (no salão)', escapar(nomeDaForma(escolha.formaPagamento))) : '')
+        ? linha('cartao', 'Pagamento (no restaurante)', escapar(nomeDaForma(escolha.formaPagamento))) : '')
     + `<div class="cf-linha cf-total">
         <span class="cf-ic cf-ic-cheio" aria-hidden="true">R$</span>
         <span class="cf-txt"><small>Total</small><b>${total}</b></span>
@@ -3989,15 +3989,15 @@ function resumoDoAgendamento(p, compacto){
    COMO VOCÊ VAI PAGAR
 
    Na tela de confirmar, a cliente diz como vai pagar — Pix, dinheiro,
-   débito ou crédito —, e o salão vê na agenda antes de ela chegar. O
-   pagamento continua sendo no salão: isto é a intenção dela, e o banco grava
+   débito ou crédito —, e o restaurante vê na agenda antes de ela chegar. O
+   pagamento continua sendo no restaurante: isto é a intenção dela, e o banco grava
    em `agendamentos.forma_pagamento` (09_cliente.sql, 1d).
 
-   · As formas são as que o salão marcou em "Formas de pagamento" (as mesmas
+   · As formas são as que o restaurante marcou em "Formas de pagamento" (as mesmas
      da folha "Pagamentos" da capa). Com elas marcadas, escolher é
-     OBRIGATÓRIO: o salão disse o que aceita, e a cliente diz qual vai usar.
-   · Salão que não marcou nenhuma: aparecem as quatro, e escolher é opcional
-     — obrigar a escolher entre formas que o salão talvez não aceite seria
+     OBRIGATÓRIO: o restaurante disse o que aceita, e a cliente diz qual vai usar.
+   · Restaurante que não marcou nenhuma: aparecem as quatro, e escolher é opcional
+     — obrigar a escolher entre formas que o restaurante talvez não aceite seria
      prometer em nome dele.
    · Atendimento que sai por R$ 0 (todo no pacote) não pergunta nada.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -4023,7 +4023,7 @@ function desenharFormaPagamento(){
   if(!alvo) return;
   if(!perguntaFormaPagamento()){ alvo.innerHTML = ''; return; }
   const formas = formasParaEscolher();
-  // A escolha de antes (outro salão, ou o salão mudou o que aceita) não vale.
+  // A escolha de antes (outro restaurante, ou o restaurante mudou o que aceita) não vale.
   if(escolha.formaPagamento && !formas.some(([k]) => k === escolha.formaPagamento))
     escolha.formaPagamento = null;
   const pag = pagamentosDoSalao();
@@ -4032,7 +4032,7 @@ function desenharFormaPagamento(){
       <div class="cf-pag-topo">
         <span class="cf-ic" data-ico="cartao"></span>
         <span class="cf-pag-txt"><b id="cfPagTit">Como você vai pagar?</b>
-          <small>${obrigatoria ? '' : '(opcional) '}O pagamento é feito no salão, no dia.</small></span>
+          <small>${obrigatoria ? '' : '(opcional) '}O pagamento é feito no restaurante, no dia.</small></span>
       </div>
       <div class="cf-pag-opcoes">${formas.map(([k, rot, ico]) => `
         <button type="button" class="cf-pag-op${escolha.formaPagamento === k ? ' on' : ''}"
@@ -4056,7 +4056,7 @@ function faltaFormaPagamento(){
   if(!perguntaFormaPagamento() || !formaPagamentoObrigatoria() || escolha.formaPagamento) return false;
   document.getElementById('avisoConfirmar').innerHTML =
     '<div class="recado erro" data-falta="pagamento"><b>Escolha como você vai pagar.</b> '
-    + 'É para o salão se preparar — o pagamento é feito lá, no dia.</div>';
+    + 'É para o restaurante se preparar — o pagamento é feito lá, no dia.</div>';
   const caixa = document.getElementById('cfPagamento');
   if(caixa && caixa.scrollIntoView) caixa.scrollIntoView({ block: 'center', behavior: 'smooth' });
   return true;
@@ -4072,8 +4072,8 @@ function faltaFormaPagamento(){
    que refaz a conta inteira na hora de marcar — validade, limite, 1 por
    cliente, serviços. Esta tela nunca manda valor: manda o CÓDIGO.
 
-   ⚠ SÓ APARECE QUANDO O SALÃO TEM CUPOM VALENDO (`salao_tem_cupom()`). Num
-   salão sem cupom, o campo faria a cliente procurar um código que não
+   ⚠ SÓ APARECE QUANDO O RESTAURANTE TEM CUPOM VALENDO (`salao_tem_cupom()`). Num
+   restaurante sem cupom, o campo faria a cliente procurar um código que não
    existe. E some quando o pacote já cobre o atendimento: não há o que
    descontar de R$ 0,00.
 
@@ -4091,7 +4091,7 @@ let cupomLojaConferindo = false;
    erro de quem tentou, e o "faça o cadastro antes" esperando a volta. */
 let pedidoLojaEnviando = false, pedidoLojaErro = '', pedidoLojaFeito = null, pedidoLojaEsperaConta = false;
 /* A conta logada sem WhatsApp (entrou com o Google, ou conta antiga): sem
-   ele não há ficha no salão, e o pedido não grava. `contaSemZap` vem da
+   ele não há ficha no restaurante, e o pedido não grava. `contaSemZap` vem da
    abertura (aposEntrar); `pedidoLojaFaltaZap`, de um Enviar que parou nisso. */
 let contaSemZap = false, pedidoLojaFaltaZap = false;
 // O que a CONTA tem (nome, WhatsApp, e-mail, aniversário), como o banco diz.
@@ -4241,7 +4241,7 @@ function chaveDoCupomLoja(){ return JSON.stringify(itensDoCupomLoja()); }
    desconto. Achado pelo caça-bug.
 
    Registrado uma vez, ele acompanha o pedido com o desconto que o banco deu
-   (limitado ao total novo); quem confirma o valor final é o salão, na conversa. */
+   (limitado ao total novo); quem confirma o valor final é o restaurante, na conversa. */
 function cupomLojaVale(){
   return !!(cupomLoja && (cupomLoja.usado || cupomLoja.chave === chaveDoCupomLoja()));
 }
@@ -4359,7 +4359,7 @@ function statusDoPedido(){
     : `<div class="cf-status">
         <span class="cf-ic" data-ico="relogio"></span>
         <div><b>Aguardando confirmação</b>
-          <p>Você receberá uma mensagem pelo WhatsApp assim que o salão
+          <p>Você receberá uma mensagem pelo WhatsApp assim que o restaurante
             confirmar seu horário.</p>
           <p>Enquanto isso, este horário fica reservado para você e não pode
             ser agendado por outra pessoa.</p></div>
@@ -4384,16 +4384,16 @@ function desenharConfirmar(){
 }
 
 /* A tela depois de confirmar, nos dois caminhos. Três coisas, na ordem: deu
-   certo; o resumo do que foi marcado; e o status — aguardando o salão, ou
+   certo; o resumo do que foi marcado; e o status — aguardando o restaurante, ou
    confirmado. Sem bolha de WhatsApp desenhada: mostrar uma mensagem que a
    tela não enviou seria simular um envio. */
-/* O salão pede senha para marcar, e ela ainda não está na conta. */
+/* O restaurante pede senha para marcar, e ela ainda não está na conta. */
 function senhaObrigatoria(){
   return NA_NUVEM && !logada() && !!(salao && salao.exigeSenha);
 }
 
 /* ── O CONVITE PARA CRIAR A SENHA ─────────────────────────────────────────
-   Marcou sem conta (o salão não exige): logo abaixo do "Agendamento
+   Marcou sem conta (o restaurante não exige): logo abaixo do "Agendamento
    enviado", um convite para criar a senha — com nome, WhatsApp, aniversário
    e e-mail já preenchidos, ela só digita a senha. Com a conta, vê os
    horários e o pacote em qualquer celular. A ficha dela é ligada pelo
@@ -4413,13 +4413,13 @@ function desenharPronto(pendente, prof){
     : pendente ? 'Agendamento enviado!' : 'Agendamento confirmado!';
   document.getElementById('prontoTexto').textContent = sinal
     ? 'Pague o sinal por Pix para garantir o seu horário.'
-    : pendente ? 'Seu horário foi encaminhado para o salão.'
+    : pendente ? 'Seu horário foi encaminhado para o restaurante.'
     : 'Seu horário está marcado.';
   document.getElementById('resumoPronto').innerHTML = resumoDoAgendamento(prof, true)
     + `<div class="cf-chip-linha">${sinal
         ? '<span class="cf-chip cf-chip-espera"><span data-ico="pix"></span>Aguardando o sinal</span>'
         : pendente
-        ? '<span class="cf-chip cf-chip-espera"><span data-ico="relogio"></span>Aguardando confirmação do salão</span>'
+        ? '<span class="cf-chip cf-chip-espera"><span data-ico="relogio"></span>Aguardando confirmação do restaurante</span>'
         : '<span class="cf-chip cf-chip-ok"><span data-ico="ok"></span>Confirmado</span>'}</div>`;
   document.getElementById('bolhaConfirmacao').innerHTML = sinal
     ? blocoDoSinal(sinal, diaCompleto(escolha.data) + ' às ' + hm(escolha.inicio))
@@ -4427,7 +4427,7 @@ function desenharPronto(pendente, prof){
         recebe a confirmação pelo WhatsApp. O horário fica reservado até lá.</p>`
     : pendente
     ? `<p class="cf-nota">Você receberá uma mensagem pelo WhatsApp assim que o
-        salão confirmar. Até lá, o horário fica reservado para você e não pode
+        restaurante confirmar. Até lá, o horário fica reservado para você e não pode
         ser agendado por outra pessoa.</p>`
     : '';
   if(window.aplicarIcones) aplicarIcones(document.getElementById('p-pronto'));
@@ -4442,7 +4442,7 @@ function desenharPronto(pendente, prof){
    Quem tem pacote e escolhe um dia de fora via `R$ 50,00` no total, sem uma
    palavra. O número está certo — o pacote não vale naquele dia — mas ela
    comprou um pacote justamente para não ver esse número, e o silêncio faz
-   parecer erro do sistema. A cliente reclama no balcão, e o salão não sabe
+   parecer erro do sistema. A cliente reclama no balcão, e o restaurante não sabe
    dizer por quê.
 
    Então são duas frases, nunca as duas juntas: "está no seu pacote" quando
@@ -4622,7 +4622,7 @@ function recarregarMeus(){ meusDaNuvem = null; desenhar(); }
 /* ── REMARCAR, NA NUVEM ───────────────────────────────────────────────────
    Existia só no modo de demonstração: `remarcar()` e o `agendamentoARemarcar`
    moram no caminho local, e `confirmarNaNuvem()` nunca olhou para essa
-   variável. Na nuvem — que é onde os salões de verdade estão — o cartão só
+   variável. Na nuvem — que é onde os restaurantes de verdade estão — o cartão só
    trazia "Cancelar". Quem quisesse trocar de horário tinha que desmarcar
    primeiro e sair procurando outro sem nada na mão; se o novo já tivesse
    sido pego, perdia os dois.
@@ -4657,7 +4657,7 @@ function remarcarNaNuvem(token){
      tela de horários estourava (`duracaoMin` de nada) e ficava morta. */
   if(!ids.every(i => acharServico(i)) || !acharProf(a.profissionalId)){
     alert('Este horário tem um serviço que não se marca mais pelo link.\n\n'
-        + 'Para trocar o dia, fale com o salão pelo WhatsApp — ou cancele '
+        + 'Para trocar o dia, fale com o restaurante pelo WhatsApp — ou cancele '
         + 'este horário e marque outro serviço.');
     return;
   }
@@ -4697,7 +4697,7 @@ async function sairDaFilaNaNuvem(token){
    Os pacotes existiam só como desconto invisível: o R$ 0,00 aparecia na hora
    de confirmar e nada na página dizia quantas sessões sobravam. Quem pagou
    por cinco escovas não tinha onde conferir que ainda tem duas — e quem não
-   consegue conferir o que comprou acaba ligando para o salão perguntar, ou
+   consegue conferir o que comprou acaba ligando para o restaurante perguntar, ou
    pior, deixa de usar.
 
    O que o banco devolve em `meus_pacotes` já basta: nome, quantas restam,
@@ -4710,16 +4710,16 @@ function desenharPacotes(){
 
   if(!meusPacotes.length){
     alvo.innerHTML = `<div class="recado">Você ainda não tem pacote aqui.
-      Pergunte no salão — sai mais em conta que avulso.</div>`;
+      Pergunte no restaurante — sai mais em conta que avulso.</div>`;
     return;
   }
 
   /* O aviso vem ANTES dos cartões, e não depois: quem abre esta tela com o
      módulo desligado vem para usar o pacote, e precisa saber por que não dá
-     antes de contar as sessões. As sessões não se perdem — o salão só não
+     antes de contar as sessões. As sessões não se perdem — o restaurante só não
      está marcando pelo link agora. */
   const semAgenda = !casaFazServicos()
-    ? `<div class="recado">O salão não está marcando horário por aqui no
+    ? `<div class="recado">O restaurante não está marcando horário por aqui no
          momento. Suas sessões continuam guardadas — combine pelo WhatsApp
          ou no balcão.</div>`
     : '';
@@ -4758,7 +4758,7 @@ function desenharMeus(){
      quiser — não só na abertura do link ou no Enviar da loja. */
   const falta = document.getElementById('meusFalta');
   if(falta) falta.innerHTML = logada() && contaSemZap
-    ? '<div class="recado erro" id="meusFaltaZap">Falta o seu WhatsApp no cadastro: sem ele o salão não te '
+    ? '<div class="recado erro" id="meusFaltaZap">Falta o seu WhatsApp no cadastro: sem ele o restaurante não te '
       + 'encontra nem manda as confirmações. <button class="link" id="btCompletarDados" '
       + 'onclick="pedirCompletar(false, null, \'meus\')">Completar meus dados</button></div>'
     : '';
@@ -4817,7 +4817,7 @@ function desenharMeus(){
         + antigos.map(a => cartao(a,true)).join('') : '');
   }
 
-  // A prova do modelo multi-salão, na tela do cliente.
+  // A prova do modelo multi-restaurante, na tela do cliente.
   const outros = meusOutrosSaloes();
   document.getElementById('outrosSaloes').innerHTML = outros.length ? `
     <div class="cat">Você também é cliente de</div>
@@ -4828,7 +4828,7 @@ function desenharMeus(){
         <span style="color:var(--txt3);font-size:20px">&rsaquo;</span>
       </button>`).join('')}
     <p class="rodape-nota" style="padding:4px 0 0;text-align:left">
-      Um telefone, um login. Cada salão enxerga só a ficha que é dele — nenhum
+      Um telefone, um login. Cada restaurante enxerga só a ficha que é dele — nenhum
       deles vê o que você faz no outro.</p>` : '';
 }
 
@@ -4875,14 +4875,14 @@ function gravarCarrinho(){
 
 /* ⚠ `salao` PODE SER NULO, e esta função lê `salao.id`.
 
-   Hoje não estoura por acidente: quando não há salão escolhido também não há
+   Hoje não estoura por acidente: quando não há restaurante escolhido também não há
    produto carregado, e o `filter` nunca chega a rodar a função. Quer dizer que
    a proteção é uma coincidência entre dois estados, e não uma regra.
 
    A coincidência ficou mais perigosa quando a fita do carrinho passou a ser
-   desenhada no fim de TODA tela, inclusive a lista de salões: antes esta
-   função só era chamada de dentro da loja, onde o salão existe por
-   construção. Basta um dia haver produto em memória sem salão escolhido — o
+   desenhada no fim de TODA tela, inclusive a lista de restaurantes: antes esta
+   função só era chamada de dentro da loja, onde o restaurante existe por
+   construção. Basta um dia haver produto em memória sem restaurante escolhido — o
    modo demonstração do README é exatamente isso — para a página inteira
    parar com "Cannot read properties of null".
 
@@ -4909,7 +4909,7 @@ const produtosDaLoja = () => (!salao || !casaVendeProdutos() ? []
    Com isso o botão "Enviar pedido no WhatsApp" ficava LIGADO, e a cliente
    mandava para a dona:
 
-     "Olá! Vim pela página do Salão X e quero estes produtos:
+     "Olá! Vim pela página do Restaurante X e quero estes produtos:
       (nada)
       Total estimado: R$ 0,00"
 
@@ -4940,7 +4940,7 @@ const itensNoCarrinho = () => produtosDaLoja()
      carrinho com os dois         → "2 produtos · R$ 45,00", e a conta é 245
 
    O zero lê como grátis. O 45 é pior: parece um número legítimo, e a cliente
-   chega ao salão esperando pagar um quinto do que vai pagar.
+   chega ao restaurante esperando pagar um quinto do que vai pagar.
 
    A soma continua sendo só do que tem preço — chutar o que o dono escolheu
    não mostrar seria inventar o valor dele. O que mudou é que agora existe o
@@ -4952,7 +4952,7 @@ function totalDoCarrinho(){
 }
 
 // Algum item do carrinho está sem preço? É o que obriga o total a se declarar
-// incompleto, em vez de anunciar um número que o salão nunca disse.
+// incompleto, em vez de anunciar um número que o restaurante nunca disse.
 function carrinhoTemSemPreco(){
   return produtosDaLoja().some(p => carrinho[p.id] > 0 && p.preco == null);
 }
@@ -4969,7 +4969,7 @@ function totalEscrito(){
   return t > 0 ? real(t) + ' + a combinar' : 'a combinar';
 }
 
-/* O número do salão, em dígitos, pronto para o `wa.me`. Devolve vazio quando
+/* O número do restaurante, em dígitos, pronto para o `wa.me`. Devolve vazio quando
    não dá para montar — e aí a tela esconde o caminho inteiro em vez de
    oferecer um link que abre numa conversa com ninguém. */
 function zapDoSalao(){
@@ -4998,7 +4998,7 @@ function mudarNoCarrinho(pid, delta){
 
      · carrinho com item. Fita vazia ocupando 70px no pé de toda tela é uma
        barra de propaganda;
-     · salão com WhatsApp cadastrado. Sem ele o botão abriria um `wa.me/`
+     · restaurante com WhatsApp cadastrado. Sem ele o botão abriria um `wa.me/`
        quebrado, e botão que leva a lugar nenhum é pior que botão nenhum. É a
        mesma regra que a tela da loja já aplica;
      · não estar NA loja. Lá o botão principal do rodapé já é "Enviar pedido
@@ -5045,7 +5045,7 @@ function desenharCarrinhoFita(){
 
    Era um bloco de texto — "2 produtos à venda" e um botão. Virou vitrine, com
    a mesma cara dos serviços logo acima: foto, nome, preço e uma ação redonda
-   no canto. A cliente vê o que o salão vende sem precisar entrar em lugar
+   no canto. A cliente vê o que o restaurante vende sem precisar entrar em lugar
    nenhum, que é o ponto inteiro de uma vitrine.
 
    ⚠ O BOTÃO PÕE NO CARRINHO DAQUI MESMO, e mostra QUANTO já tem. Sem o
@@ -5053,7 +5053,7 @@ function desenharCarrinhoFita(){
    um carrinho vazio — toca de novo, e agora são três. O contador não é
    enfeite: é o que impede a cliente de pedir o que não queria.
 
-   ⚠ E OS QUATRO PRIMEIROS, não a lista inteira. Salão com vinte produtos
+   ⚠ E OS QUATRO PRIMEIROS, não a lista inteira. Restaurante com vinte produtos
    empurraria "quem atende" e "meus horários" para fora de qualquer tela. O
    "Ver todos" leva ao resto, e leva junto a contagem.
 
@@ -5074,16 +5074,16 @@ function desenharCarrinhoFita(){
    horário de exemplo: "aberto até 18:00" inventado é a casa prometendo uma
    porta que ninguém combinou.
 
-   ⚠ E UM SALÃO QUE NÃO CADASTROU NADA NÃO VÊ A FILEIRA NENHUMA. O botão
+   ⚠ E UM RESTAURANTE QUE NÃO CADASTROU NADA NÃO VÊ A FILEIRA NENHUMA. O botão
    Informações sozinho repetiria o endereço que já está escrito logo acima —
    ele só entra quando há o que acrescentar (a apresentação, o Instagram) ou
    quando já existe fileira, e aí completa os outros dois com mapa e
    contatos. Assim nenhuma página que já está no ar muda sem o dono pedir.
 
    ⚠ NENHUMA COR ESCRITA AQUI. Os botões e a folha usam as variáveis da cor
-   do salão (--ac-600, --ac-soft, --ac-line), e o status usa as de estado
-   (--su-500, --er-500), que já têm a versão clara e a escura. Salão roxo vê
-   roxo; salão verde vê verde.
+   do restaurante (--ac-600, --ac-soft, --ac-line), e o status usa as de estado
+   (--su-500, --er-500), que já têm a versão clara e a escura. Restaurante roxo vê
+   roxo; restaurante verde vê verde.
    ═══════════════════════════════════════════════════════════════════════════ */
 function funcionamentoDoSalao(){
   if(!salao || !window.Funcionamento) return null;
@@ -5247,11 +5247,11 @@ const cabecaDaFolha = (ico, titulo, sub) => `
    ═══════════════════════════════════════════════════════════════════════════ */
 let FICHAS = {};
 /* As dúvidas frequentes da casa (63_duvidas_casa.sql): [{p, r}], o que o
-   dono escreveu em Meu salão → Dúvidas frequentes. */
+   dono escreveu em Meu restaurante → Dúvidas frequentes. */
 let DUVIDAS_CASA = [];
 
 /* A lista peneirada de novo aqui: no modo de demonstração ela vem do cfg do
-   salão, sem passar pelo banco. */
+   restaurante, sem passar pelo banco. */
 function duvidasDaCasa(){
   const cru = (Array.isArray(DUVIDAS_CASA) && DUVIDAS_CASA.length) ? DUVIDAS_CASA
             : ((salao && salao.cfg) || {}).duvidas;
@@ -5423,7 +5423,7 @@ function folhaFicha(id){
   const outro = parParaComparar(id);
   const blocos = [];
   blocos.push(`<div class="ficha-numeros">
-      <div><small>No salão</small><b>${Number(s.duracaoMin) || 0} min</b></div>
+      <div><small>No restaurante</small><b>${Number(s.duracaoMin) || 0} min</b></div>
       ${f.dura ? `<div><small>Dura em média</small><b>${escapar(f.dura)}</b></div>` : ''}
       ${f.manutencao ? `<div><small>Manutenção</small><b>${escapar(f.manutencao)}</b></div>` : ''}
     </div>`);
@@ -5474,7 +5474,7 @@ function folhaComparar(idA, idB){
     + `<div class="ficha-tabela-cx"><table class="ficha-tabela">
         <thead><tr><td></td><th scope="col">${escapar(a.nome)}</th><th scope="col">${escapar(b.nome)}</th></tr></thead>
         <tbody>
-          ${linha('No salão', (Number(a.duracaoMin) || 0) + ' min', (Number(b.duracaoMin) || 0) + ' min')}
+          ${linha('No restaurante', (Number(a.duracaoMin) || 0) + ' min', (Number(b.duracaoMin) || 0) + ' min')}
           ${linha('Dura em média', fa.dura, fb.dura)}
           ${linha('Manutenção', fa.manutencao, fb.manutencao)}
           ${precoA || precoB ? `<tr><th scope="row">Preço</th><td>${precoA || '—'}</td><td>${precoB || '—'}</td></tr>` : ''}
@@ -5706,7 +5706,7 @@ function desenharProduto(){
       ${p.marca ? `<div class="prod-marca">${escapar(p.marca)}</div>` : ''}
       <div class="prod-preco">${precoDoProduto(p)}</div>
       ${p.descricao ? `<p class="prod-desc">${escapar(p.descricao)}</p>`
-                    : '<p class="prod-desc prod-sem">O salão ainda não escreveu sobre este produto.</p>'}
+                    : '<p class="prod-desc prod-sem">O restaurante ainda não escreveu sobre este produto.</p>'}
       <div class="prod-qtd">${botaoDoProduto(p, carrinho[p.id] || 0)}</div>
     </div>`;
   if(window.aplicarIcones) aplicarIcones(alvo);
@@ -5721,7 +5721,7 @@ function desenharLoja(){
   if(tit) tit.textContent = pedidos ? 'Cardápio' : 'Produtos';
   if(sub) sub.textContent = pedidos
     ? 'Escolha o que vai pedir. No fim você confere tudo, escolhe entrega ou retirada e confirma.'
-    : 'Monte o pedido e mande pelo WhatsApp. O salão confirma o que tem e combina com você o pagamento e a retirada.';
+    : 'Monte o pedido e mande pelo WhatsApp. O restaurante confirma o que tem e combina com você o pagamento e a retirada.';
   const aviso = document.getElementById('lojaAviso');
   if(aviso) aviso.innerHTML = pedidos
     ? (!pedidosAbertos()
@@ -5755,14 +5755,14 @@ function desenharLoja(){
     alvo.innerHTML = `<div class="recado">${busca
       ? (filtroLoja ? 'Nenhum produto com esse nome nesta categoria.' : 'Nenhum produto com esse nome.')
       : modoPedidos() ? 'O cardápio ainda está sendo montado.'
-      : 'Este salão ainda não tem produtos à venda.'}</div>`;
+      : 'Este restaurante ainda não tem produtos à venda.'}</div>`;
     return;
   }
 
   /* ── O BOTÃO DE CADA PRODUTO, NA COR DO TEMA ───────────────────────────
      "Pintar o Adicionar na cor do tema que está ativo." Era um botão branco
-     de contorno, igual em qualquer salão. Agora é cheio, na cor do botão do
-     salão (ou na cor dos produtos, quando o dono escolheu uma — estilo.css,
+     de contorno, igual em qualquer restaurante. Agora é cheio, na cor do botão do
+     restaurante (ou na cor dos produtos, quando o dono escolheu uma — estilo.css,
      .loja-add); com o produto no carrinho vira − n +, no contorno da cor. */
   const botaoDe = botaoDoProduto, preco = precoDoProduto;
 
@@ -5822,7 +5822,7 @@ function desenharLoja(){
       <b>${itensNoCarrinho()} item(ns) · ${totalEscrito()}</b><br>
       ${modoPedidos()
         ? 'Na próxima tela você escolhe entrega ou retirada, o pagamento, e confirma o pedido.'
-        : 'Este valor é uma estimativa. Quem confirma o preço final, o que tem em estoque e a forma de pagamento é o salão, na conversa.'}
+        : 'Este valor é uma estimativa. Quem confirma o preço final, o que tem em estoque e a forma de pagamento é o restaurante, na conversa.'}
       <div style="margin-top:9px">
         <button class="link" onclick="esvaziarCarrinho()">Esvaziar o carrinho</button>
       </div>
@@ -5851,7 +5851,7 @@ function esvaziarCarrinho(){
    literal.
 
    Só que aqui NÃO É HTML: é texto puro indo para o WhatsApp. `escapar()`
-   estragaria a mensagem — um salão chamado "Ana & Cia" chegaria ao dono como
+   estragaria a mensagem — um restaurante chamado "Ana & Cia" chegaria ao dono como
    "Ana &amp; Cia". E abrir exceção no varredor seria pior: a exceção fica, e
    o próximo trecho de HTML de verdade se esconde atrás dela.
 
@@ -5897,13 +5897,13 @@ async function enviarPedido(){
      "A pessoa tem que fazer seu cadastro e depois enviar no WhatsApp do
      jeito que está, e quando clicar enviar vai aparecer no painel." Na
      nuvem, o pedido fica no banco, com número, ANTES de o WhatsApp abrir: é
-     dele que o salão vende (inclusive no crediário). Sem conta, o cadastro
+     dele que o restaurante vende (inclusive no crediário). Sem conta, o cadastro
      vem antes — e a volta traz para a loja, com o carrinho como estava. */
   const gravar = NA_NUVEM && !modoPedidos();
   if(gravar && !logada()){
     pedidoLojaEsperaConta = true;
     abrirConta('criar');
-    avisarConta('<b>Para enviar o pedido, faça seu cadastro.</b> É rápido, e o salão '
+    avisarConta('<b>Para enviar o pedido, faça seu cadastro.</b> É rápido, e o restaurante '
       + 'recebe o pedido com o seu nome. Já tem conta? Toque em Entrar.', 'ok');
     return;
   }
@@ -5918,7 +5918,7 @@ async function enviarPedido(){
     .map(p => ({ id: p.id, qtd: carrinho[p.id] }));
   /* `_blank` e não `location.href`: no computador o `wa.me` abre o WhatsApp
      Web numa aba, e trocar a página atual faria a cliente perder a página do
-     salão — junto com o carrinho que ela acabou de montar. */
+     restaurante — junto com o carrinho que ela acabou de montar. */
   const comCupom = mostraCupomLoja() && cupomLojaVale() && !cupomLoja.usado;
   if(!comCupom && !gravar){
     window.open(endereco(), '_blank', 'noopener');
@@ -5926,7 +5926,7 @@ async function enviarPedido(){
   }
   /* ── CORRIGIU E MANDOU DE NOVO ────────────────────────────────────────
      O pedido já tem número: a mensagem sai DIRETO (uma janela, no toque) e o
-     banco troca os itens do mesmo pedido em seguida. Se o salão já tinha
+     banco troca os itens do mesmo pedido em seguida. Se o restaurante já tinha
      vendido ou cancelado aquele, nasce outro — e a loja diz o número novo,
      com o WhatsApp à mão para mandar certo. */
   if(gravar && anterior && anterior.numero && !comCupom){
@@ -5949,7 +5949,7 @@ async function enviarPedido(){
     }catch(e){
       console.info('[PediHub] fazer_pedido_loja:', e.message);
       pedidoLojaFeito = null;
-      pedidoLojaErro = (e.message || 'Não consegui atualizar o pedido agora.') + ' O salão recebeu só a mensagem.';
+      pedidoLojaErro = (e.message || 'Não consegui atualizar o pedido agora.') + ' O restaurante recebeu só a mensagem.';
     }
     desenhar();
     return;
@@ -6004,7 +6004,7 @@ async function enviarPedido(){
       pedidoLojaEnviando = false;
       if(janela) janela.close();
       /* A conta não tem WhatsApp (entrou com o Google, ou a conta antiga
-         nasceu sem ele): sem ele não há ficha no salão. Em vez de só dizer,
+         nasceu sem ele): sem ele não há ficha no restaurante. Em vez de só dizer,
          leva ao "Falta pouco" — e de lá volta para a loja, com o carrinho. */
       if(/Falta o seu WhatsApp/i.test(e.message || '')) return pedirCompletarParaPedido();
       pedidoLojaErro = (e.message || 'Não consegui enviar o pedido agora.') + ' O pedido não foi enviado.';
@@ -6029,8 +6029,8 @@ async function enviarPedido(){
   }
 }
 
-/* O pedido que este aparelho mandou, por salão e por conta: mandar de novo
-   (corrigido) atualiza ESTE, enquanto o salão não vende nem cancela. */
+/* O pedido que este aparelho mandou, por restaurante e por conta: mandar de novo
+   (corrigido) atualiza ESTE, enquanto o restaurante não vende nem cancela. */
 function chaveDoPedidoLoja(){
   const s = window.Dados && Dados.sessaoAtual && Dados.sessaoAtual();
   return 'pedihub.pedidoLoja.' + (salao ? salao.id : '') + '.' + ((s && s.usuarioId) || '');
@@ -6054,9 +6054,9 @@ function avisoDoPedidoLoja(){
   if(pedidoLojaFeito){
     const n = pedidoLojaFeito.numero ? ' nº ' + pedidoLojaFeito.numero : '';
     return '<div class="recado ok" id="pedidoLojaFeito">' + (pedidoLojaFeito.novo
-      ? '<b>O pedido anterior já tinha sido atendido pelo salão: este virou o pedido' + n + '.</b> '
+      ? '<b>O pedido anterior já tinha sido atendido pelo restaurante: este virou o pedido' + n + '.</b> '
         + '<a href="' + escapar(pedidoLojaFeito.url) + '" target="_blank" rel="noopener">Mandar no WhatsApp com o número certo</a>'
-      : '<b>Pedido' + n + ' enviado.</b> O salão confere o que tem e responde pelo WhatsApp. '
+      : '<b>Pedido' + n + ' enviado.</b> O restaurante confere o que tem e responde pelo WhatsApp. '
         + 'Mudou alguma coisa? Ajuste e envie de novo: o pedido' + n + ' é atualizado. '
         + '<a href="' + escapar(pedidoLojaFeito.url) + '" target="_blank" rel="noopener">Abrir o WhatsApp de novo</a>')
       + '</div>';
@@ -6083,7 +6083,7 @@ function avisoDoPedidoLoja(){
    GRAVADO no banco (fazer_pedido, 37_pedidos.sql), o restaurante acompanha
    na tela de Pedidos dele, e a cliente acompanha aqui pelo segredo.
 
-   ⚠ A LOJA DOS OUTROS TIPOS NÃO MUDA. Salão continua com o carrinho virando
+   ⚠ A LOJA DOS OUTROS TIPOS NÃO MUDA. Restaurante continua com o carrinho virando
    mensagem no WhatsApp da cliente (o bloco de cima). Tudo aqui pergunta
    `modoPedidos()` antes de agir, e o resto da página só troca um `zapDoSalao()`
    por `lojaTemSaida()` — "a loja tem para onde mandar o pedido".
@@ -6618,7 +6618,7 @@ function conferirCodigo(){
      num pacote que já é dela — e concluiria que o pacote não funciona. */
   carregarMeusPacotes().then(() => desenhar());
 
-  // Amarra as fichas soltas deste telefone ao perfil, em todos os salões.
+  // Amarra as fichas soltas deste telefone ao perfil, em todos os restaurantes.
   for(const c of bd.clientes){
     if(!c.perfilId && soDigitos(c.telefone) === soDigitos(otp.telefone)) c.perfilId = perfil.id;
   }
@@ -6713,19 +6713,19 @@ function confirmarAgendamento(){
 /* A tela de "pronto" é a mesma nos dois modos. Ela ficava embutida no fim do
    caminho local; separada, o caminho da nuvem termina exatamente igual — e a
    cliente não tem como notar por qual dos dois ela passou, que é o objetivo. */
-/* ⚠ O SALÃO CONFIRMA SOZINHO, OU ESPERA O DONO?
+/* ⚠ O RESTAURANTE CONFIRMA SOZINHO, OU ESPERA O DONO?
 
    Sai do banco (`confirma_automatico()` no 29) e não de um palpite da tela: é
    ele que decide entre "Pronto, está confirmado" e "Você receberá uma mensagem
-   de confirmação". Dizer a frase errada aqui é prometer em nome do salão.
+   de confirmação". Dizer a frase errada aqui é prometer em nome do restaurante.
 
    Carregado na abertura, junto com os pacotes, porque a resposta precisa estar
    na mão no instante em que ela termina de marcar — não é hora de esperar rede.
 
-   O padrão é `true` porque é o padrão do banco: um salão que nunca mexeu nisso
+   O padrão é `true` porque é o padrão do banco: um restaurante que nunca mexeu nisso
    confirma sozinho, e é a leitura certa quando a chamada não responde. */
 let salaoConfirmaSozinho = true;
-/* O status que o banco DEU a esta marcação. A política do salão diz o que
+/* O status que o banco DEU a esta marcação. A política do restaurante diz o que
    costuma acontecer; a ficha pode dizer outra coisa (a cliente que o dono
    marcou como "precisa de confirmação", 09_cliente.sql). A tela de pronto
    segue o que de fato aconteceu — nunca "confirmado" para quem ficou
@@ -6761,11 +6761,11 @@ function mostrarPronto(prof, unit, filho){
    A mesma tela, com outra promessa. Ela precisa sair daqui sabendo três
    coisas, e a ordem importa:
 
-     1. deu certo — o pedido chegou ao salão
+     1. deu certo — o pedido chegou ao restaurante
      2. ainda não está confirmado
      3. o horário está guardado para ela enquanto isso
 
-   A terceira é a que evita a ligação para o salão. Sem ela, "pendente" lê-se
+   A terceira é a que evita a ligação para o restaurante. Sem ela, "pendente" lê-se
    como "talvez eu perca o horário", e a pessoa liga para garantir — que é
    exatamente o telefonema que a agenda online existe para não acontecer.
 
@@ -6787,9 +6787,9 @@ function mostrarPedidoEnviado(prof, unit, filho){
    O instante também não é calculado aqui: é devolvido exatamente como o banco
    mandou (veja `instantes`, lá em cima).
    ──────────────────────────────────────────────────────────────────────── */
-/* ── O RELÓGIO DO SALÃO MUDOU COM ESTA PÁGINA ABERTA? (58_fuso.sql) ──────
+/* ── O RELÓGIO DO RESTAURANTE MUDOU COM ESTA PÁGINA ABERTA? (58_fuso.sql) ──────
    Esta página desenha "14:00" com o fuso que veio na vitrine, e devolve ao
-   banco o instante que recebeu. Se o salão trocou o fuso depois de ela abrir,
+   banco o instante que recebeu. Se o restaurante trocou o fuso depois de ela abrir,
    o banco moveu a agenda para a mesma hora de parede no fuso novo — e o
    "14:00" daqui passou a ser 13:00 lá. A cliente marcaria uma hora errada sem
    ver nada de estranho.
@@ -6806,14 +6806,14 @@ async function relogioDoSalaoMudou(){
       Dados.vitrine(salao.slug),
       new Promise(r => setTimeout(() => r(null), 3000)),
     ]);
-  }catch(e){ console.info('[PediHub] relógio do salão:', e.message); return false; }
+  }catch(e){ console.info('[PediHub] relógio do restaurante:', e.message); return false; }
   const f = fresco && fresco.salao && fresco.salao.fuso;
   return !!(f && f !== salao.fuso);
 }
 
 async function confirmarNaNuvem(profId, prof){
   if(await relogioDoSalaoMudou()){
-    alert('O salão acabou de ajustar o relógio dele. Vou atualizar a página: '
+    alert('O restaurante acabou de ajustar o relógio dele. Vou atualizar a página: '
         + 'escolha o horário de novo, por favor.');
     location.reload();
     return;
@@ -6859,7 +6859,7 @@ async function confirmarNaNuvem(profId, prof){
          Só com login — sem conta não há pacote, e o campo não muda nada. */
       ...(acompanhante && logada() ? { p_acompanhante: true } : {}),
       /* Como ela vai pagar: só quando escolheu (o banco grava nulo de todo
-         jeito no que sai por R$ 0, e confere se o salão aceita a forma). */
+         jeito no que sai por R$ 0, e confere se o restaurante aceita a forma). */
       ...(escolha.formaPagamento && perguntaFormaPagamento()
           ? { p_forma_pagamento: escolha.formaPagamento } : {}),
       p_profissional: profId,
@@ -6939,9 +6939,9 @@ async function confirmarNaNuvem(profId, prof){
           '<div class="recado erro"><b>Marquei só o seu horário.</b><br>'
           + 'O de ' + escapar(filho || 'seu acompanhante') + ' não deu: '
           + escapar(motivo) + ' O seu ' + (esperando
-              ? 'foi enviado ao salão e aguarda confirmação, às '
+              ? 'foi enviado ao restaurante e aguarda confirmação, às '
               : 'está confirmado às ') + hm(escolha.inicio)
-          + ' — fale com o salão pelo WhatsApp para encaixar o segundo.</div>';
+          + ' — fale com o restaurante pelo WhatsApp para encaixar o segundo.</div>';
         bp.disabled = false; bp.textContent = rotulo;
         return;
       }
@@ -6966,7 +6966,7 @@ async function confirmarNaNuvem(profId, prof){
     }
     esquecerVagas();
     /* O banco recusa por motivos com nome — horário ocupado, profissional que
-       não faz aquele serviço, salão com a agenda fechada. As mensagens de
+       não faz aquele serviço, restaurante com a agenda fechada. As mensagens de
        `porque_nao_agenda()` já são escritas para serem lidas por gente, então
        elas passam inteiras em vez de virar "erro ao agendar". */
     aviso.innerHTML =
@@ -6978,7 +6978,7 @@ async function confirmarNaNuvem(profId, prof){
   }
 
   /* O novo está de pé. Agora solta o antigo — e se ISTO falhar, a pessoa
-     precisa saber que ficou com dois, não descobrir na porta do salão. */
+     precisa saber que ficou com dois, não descobrir na porta do restaurante. */
   if(escolha.remarcar){
     const velho = escolha.remarcar;
     delete escolha.remarcar;
@@ -7002,7 +7002,7 @@ async function confirmarNaNuvem(profId, prof){
         '<div class="recado atencao"><b>Seu horário novo está marcado.</b><br>'
         + 'Mas não consegui desmarcar o antigo: ' + escapar(e.message || '')
         + ' Você está com <b>dois horários</b> — desmarque o antigo em '
-        + '"Meus horários" ou fale com o salão.</div>';
+        + '"Meus horários" ou fale com o restaurante.</div>';
       meusDaNuvem = null;
       mostrarPronto(prof, unit, filho);
       return;
@@ -7030,7 +7030,7 @@ function cancelar(agId){
   if(!exigirVerificacao()) return;
   const a = bd.agendamentos.find(x => x.id === agId);
   if(!a) return;
-  if(!confirm('Cancelar este horário?\n\nSe faltar menos de 24h, o salão pode '
+  if(!confirm('Cancelar este horário?\n\nSe faltar menos de 24h, o restaurante pode '
             + 'cobrar taxa conforme a política dele.')) return;
   a.status = 'cancelado';
   a.canceladoMotivo = 'cancelado pelo cliente';
@@ -7067,12 +7067,12 @@ function entrarNoSalao(slug){
   const s = bd.saloes.find(x => x.slug === slug);
   if(!s){
     document.getElementById('listaSaloes').innerHTML =
-      `<div class="recado erro"><b>Salão não encontrado.</b><br>
-       O endereço <code>?salao=${escapar(slug)}</code> não corresponde a nenhum salão ativo.</div>`;
+      `<div class="recado erro"><b>Restaurante não encontrado.</b><br>
+       O endereço <code>?salao=${escapar(slug)}</code> não corresponde a nenhum restaurante ativo.</div>`;
     return;
   }
   salao = s;
-  /* O carrinho é por salão e é lido aqui, não na abertura da página: a chave
+  /* O carrinho é por restaurante e é lido aqui, não na abertura da página: a chave
      depende do `salao.id`, que só existe a partir desta linha. Quem montou um
      pedido e fechou a aba encontra tudo no lugar ao voltar pelo mesmo link. */
   lerCarrinho();
@@ -7082,7 +7082,7 @@ function entrarNoSalao(slug){
   url.searchParams.set('salao', slug);
   history.replaceState(null, '', url);
 
-  // O tipo do salão fica no HTML: é dele que sai o vocabulário da tela.
+  // O tipo do restaurante fica no HTML: é dele que sai o vocabulário da tela.
   document.documentElement.setAttribute('data-estilo',
     s.tipo === 'barbearia' ? 'barbearia' : 'salao');
 
@@ -7092,7 +7092,7 @@ function entrarNoSalao(slug){
   document.getElementById('tituloSalao').textContent = s.nome;
   document.getElementById('subSalao').textContent = voc('casa');
   /* ── A LOGO NO TOPO DAS TELAS DE DENTRO ───────────────────────────────
-     Aqui saía SEMPRE o monograma — a inicial do salão num quadrado. Isso foi
+     Aqui saía SEMPRE o monograma — a inicial do restaurante num quadrado. Isso foi
      escrito para o caso de não haver logo, e acabou valendo para todos: o
      dono subia a logo, via na capa, e ela sumia da tela seguinte em diante.
 
@@ -7108,13 +7108,13 @@ function entrarNoSalao(slug){
     av.classList.remove('com-logo');
     av.textContent = (s.nome || '?').trim().charAt(0).toUpperCase();
   }
-  /* Aqui saía "Link deste salão: ?salao=nome · PediHub". Para a cliente,
+  /* Aqui saía "Link deste restaurante: ?salao=nome · PediHub". Para a cliente,
      que já ESTÁ no link, isso não informa nada — é o parâmetro de URL do
-     sistema exposto no rodapé de um salão de beleza. Some, pelo mesmo motivo
+     sistema exposto no rodapé de um restaurante. Some, pelo mesmo motivo
      que saiu o "02_rls.sql" da tela do dono. */
   document.getElementById('notaRodape').innerHTML = s.selo
     ? 'Feito com <a href="index.html" target="_blank" rel="noopener">PediHub</a>'
-      + ' · agenda online para salões e barbearias'
+      + ' · agenda online para restaurantes e barbearias'
     : '';
 
   historico = [];
@@ -7197,10 +7197,10 @@ function tocarIntro(s){
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   A COR E O FUNDO QUE O SALÃO ESCOLHEU
+   A COR E O FUNDO QUE O RESTAURANTE ESCOLHEU
 
    Uma barbearia de dourado e grafite e uma esmalteria de rosa e branco não
-   podem ser a mesma página com o nome trocado. O salão escolhe em Meu negócio
+   podem ser a mesma página com o nome trocado. O restaurante escolhe em Meu negócio
    → Aparência, e é aqui que a escolha vira tela.
 
    ⚠ A LETRA DO BOTÃO NÃO PODE SER SEMPRE BRANCA.
@@ -7239,7 +7239,7 @@ function luminancia(hex){
 
    Então não há número mágico: calcula-se o contraste dos dois e escolhe-se o
    maior. É a mesma conta que a norma manda fazer, e dá de graça o resultado
-   certo para qualquer cor que o salão inventar. */
+   certo para qualquer cor que o restaurante inventar. */
 function letraSobre(hex){
   const L = luminancia(hex);
   const comBranco = 1.05 / (L + 0.05);
@@ -7257,11 +7257,11 @@ function mexer(hex, p){
 /* ── O FUNDO QUE O DONO ANEXOU ────────────────────────────────────────────
    Duas camadas presas na tela: a foto e um véu da cor de fundo da página por
    cima dela. O véu não é enfeite — sem ele, metade das fotos deixa o texto
-   ilegível, e a foto é do salão: não dá para prever se vem parede branca ou
+   ilegível, e a foto é do restaurante: não dá para prever se vem parede branca ou
    madeira escura. Com véu, o contraste do texto continua o mesmo de sempre e
    a foto vira atmosfera.
 
-   As camadas são criadas só quando há foto. Salão sem fundo não carrega nem
+   As camadas são criadas só quando há foto. Restaurante sem fundo não carrega nem
    dois `<div>` a mais. */
 /* O gradiente vive numa variável do CSS, e não num elemento novo: a página
    já tem `--bg` como papel, e trocar o valor dele é a mudança mais barata
@@ -7314,8 +7314,8 @@ function aplicarFundo(url){
 function aplicarAparencia(s){
   const raiz = document.documentElement;
 
-  /* Na nuvem a `vitrine()` entrega estas chaves soltas no salão; na
-     demonstração o salão é a linha crua, com tudo dentro de `cfg`. Ler os
+  /* Na nuvem a `vitrine()` entrega estas chaves soltas no restaurante; na
+     demonstração o restaurante é a linha crua, com tudo dentro de `cfg`. Ler os
      dois lugares aqui é o que faz a mesma tela servir aos dois modos — e é
      onde a prévia do painel e a página da cliente deixam de discordar. */
   const c = s.cfg || {};
@@ -7338,13 +7338,13 @@ function aplicarAparencia(s){
      mesmo nas duas, e quem muda a forma é o CSS. Desligar é remover isto.
 
      Lê dos DOIS lugares pelo mesmo motivo das chaves acima: na nuvem a
-     `vitrine()` entrega solto no salão, e na demonstração o salão é a linha
+     `vitrine()` entrega solto no restaurante, e na demonstração o restaurante é a linha
      crua, com tudo dentro de `cfg`. */
   const moldura = s.moldura || c.moldura || 'reta';
   if(moldura === 'elegante') raiz.setAttribute('data-moldura', 'elegante');
   else raiz.removeAttribute('data-moldura');
 
-  /* O véu: quanto da foto de fundo aparece. Vem do salão, com o mesmo piso e
+  /* O véu: quanto da foto de fundo aparece. Vem do restaurante, com o mesmo piso e
      teto da tela de Aparência — a página da cliente não confia num número que
      chegou de fora sem conferir.
 
@@ -7360,13 +7360,13 @@ function aplicarAparencia(s){
   raiz.style.setProperty('--veu', veu / 100);
 
   /* Quanto os cartões fecham sobre a foto. Era um limiar fixo de 35% aqui —
-     um palpite decidindo a aparência do salão dos outros. Foto de fundo
+     um palpite decidindo a aparência do restaurante dos outros. Foto de fundo
      varia demais para um número servir a todas: parede de tijolo escura
      pede cartão fechado mesmo com véu alto, mármore claro aguenta vidro com
      véu zero. Quem sabe qual é a foto é o dono, e ele está olhando para ela.
 
      `auto` continua sendo o padrão, e faz o que o limiar fazia — então
-     salão que nunca escolheu não vê diferença nenhuma. */
+     restaurante que nunca escolheu não vê diferença nenhuma. */
   const cartoes = salao.cartoes || c.cartoes || 'auto';
   const fechar = cartoes === 'fechado'
               || (cartoes !== 'vidro' && veu < 35);
@@ -7398,12 +7398,12 @@ function aplicarAparencia(s){
   const grad = s.gradiente || c2.gradiente || null;
   aplicarGradiente(tipo === 'gradiente' ? grad : null);
   aplicarFundo(fundo);
-  // O brilho do botão é escolha do salão. Vem ligado por padrão porque é o
+  // O brilho do botão é escolha do restaurante. Vem ligado por padrão porque é o
   // que o dono espera ao ver a prévia; quem achar demais desliga na tela de
   // Aparência, e aí a classe some junto com a animação.
   document.body.classList.toggle('sem-brilho', !brilho);
 
-  // Sem cor escolhida, fica o azul do PediHub — que é o que salão antigo,
+  // Sem cor escolhida, fica o azul do PediHub — que é o que restaurante antigo,
   // criado antes disto existir, já tinha. Nada a migrar.
   const escolhida = s.cor || c.cor;
   if(!corValida(escolhida)) return;
@@ -7432,14 +7432,14 @@ function aplicarAparencia(s){
   p('--ac-line', `rgba(${r},${g},${b},${escuro ? '.34' : '.28'})`);
   p('--marca', cor);
 
-  /* ── A SELEÇÃO TAMBÉM É DO SALÃO ────────────────────────────────────────
+  /* ── A SELEÇÃO TAMBÉM É DO RESTAURANTE ────────────────────────────────────────
      `--tinta` é a cor de "isto está selecionado": borda do serviço marcado,
      hora escolhida, dia escolhido, botão do segmento, avatar do topo. No
      sistema ela é quase preta de propósito — seleção neutra, ação colorida.
 
      Na página da CLIENTE isso ficava errado: o dono escolhia dourado, e tudo
      o que ele via de escolhido continuava preto. A cor dele aparecia só no
-     botão principal, e o resto da tela era de qualquer salão.
+     botão principal, e o resto da tela era de qualquer restaurante.
 
      Aqui ela passa a ser a cor escolhida, com a letra calculada pela mesma
      conta de contraste do botão — senão dourado com letra branca voltaria
@@ -7450,14 +7450,14 @@ function aplicarAparencia(s){
   p('--tinta-hover', mexer(cor, escuro ? 0.12 : -0.12));
 
   // A barra do navegador acompanha, no celular. É o detalhe que faz a página
-  // parecer do salão e não uma página genérica com a logo dele.
+  // parecer do restaurante e não uma página genérica com a logo dele.
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute('content', escuro ? '#141210' : cor);
 
   /* ⚠ AS CORES SOLTAS ENTRAM POR ÚLTIMO, E É DE PROPÓSITO.
 
      Tudo acima é CÁLCULO: a partir da cor principal o sistema deduz a letra
-     do botão (medindo contraste), o tom do texto, a borda com alfa. Um salão
+     do botão (medindo contraste), o tom do texto, a borda com alfa. Um restaurante
      que nunca abriu a personalização não tem nenhuma chave em `cores`, este
      bloco não faz nada, e a tela sai exatamente como saía antes.
 
@@ -7616,12 +7616,12 @@ function aplicarAtalhos(a){
 /* ═══════════════════════════════════════════════════════════════════════════
    A FITA DO CARRINHO, EM METAL
 
-   A barra que aparece no pé quando há produto no carrinho. Era a cor do salão
+   A barra que aparece no pé quando há produto no carrinho. Era a cor do restaurante
    chapada; agora é metal escovado, com cinco escolhas — o quanto de metal, o
    brilho que atravessa, a velocidade dele, a cor e o canto de cima.
 
    ⚠ TUDO SAI DE VARIÁVEL, E NENHUMA COR É ESCRITA AQUI. Quem não escolheu
-   herda `--acao`, a cor do salão, e o metal é calculado em cima dela por
+   herda `--acao`, a cor do restaurante, e o metal é calculado em cima dela por
    `color-mix` — dourado vira ouro, grafite vira aço, rosa vira metal rosado.
    Cor chapada dentro desta função seria a única coisa da página que não
    obedece à personalização.
@@ -7667,7 +7667,7 @@ function aplicarFita(s, c){
   const t = TEMPO[s.fitaTempo || c.fitaTempo || 'media'];
   if(t && t !== '5.2s') p('--fita-tempo', t); else fora('--fita-tempo');
 
-  /* A cor da fita. Vazia = herda `--acao`, e é o caso de todo salão de hoje.
+  /* A cor da fita. Vazia = herda `--acao`, e é o caso de todo restaurante de hoje.
      A LETRA ACOMPANHA: `--fita-txt` é branca ou preta, a que se lê sobre a
      cor escolhida (era a `--acao-txt`, calculada sobre a cor do BOTÃO — uma
      fita clara com letra branca sumia). É ela também o fundo do botão
@@ -7699,7 +7699,7 @@ function aplicarCoresSoltas(s, p, escuro){
      gradiente. A imagem já tinha esta regra (body.tem-fundo) desde que o
      mesmo defeito apareceu com ela; faltava para as outras duas.
 
-     Salão que nunca escolheu papel não ganha a classe, e a coluna continua
+     Restaurante que nunca escolheu papel não ganha a classe, e a coluna continua
      com o fundo de sempre. */
   document.body.classList.toggle('tem-papel',
     !!(c && typeof c === 'object' && corValida(c.papel)));
@@ -7837,19 +7837,19 @@ function aplicarCoresSoltas(s, p, escuro){
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   INSTALAR O SALÃO NA TELA DE INÍCIO
+   INSTALAR O RESTAURANTE NA TELA DE INÍCIO
 
    ── O QUE ESTAVA ERRADO ────────────────────────────────────────────────────
    Esta página apontava para o `manifest.webmanifest` do sistema, cujo
    `start_url` é `app.html` — o PAINEL DO DONO. Quem instalasse a página do
-   salão ganhava um ícone que abria a tela de login do dono. A cliente da
+   restaurante ganhava um ícone que abria a tela de login do dono. A cliente da
    Barbearia do Zé instalava "a Barbearia do Zé" e recebia "PediHub:
    entre com seu e-mail".
 
    ── O QUE PASSA A ACONTECER ────────────────────────────────────────────────
-   O manifesto é montado aqui, com os dados DESTE salão, e entregue como
-   blob: nome do salão, ícone do salão, cor do salão, e `start_url` apontando
-   para o link dele. Assim cada salão vira um app próprio na tela da cliente,
+   O manifesto é montado aqui, com os dados DESTE restaurante, e entregue como
+   blob: nome do restaurante, ícone do restaurante, cor do restaurante, e `start_url` apontando
+   para o link dele. Assim cada restaurante vira um app próprio na tela da cliente,
    e o dono não precisa publicar nada.
 
    No iPhone o Safari ignora o manifesto e usa as duas metas `apple-*`
@@ -7906,7 +7906,7 @@ function identidadeInstalada(s){
     display: 'standalone', lang: 'pt-BR',
     background_color: '#F5F8F8', theme_color: cor,
     icons: [
-      // O logo do salão vem como foi enviado (jpg, png...): sem `type`, para
+      // O logo do restaurante vem como foi enviado (jpg, png...): sem `type`, para
       // o navegador não recusá-lo por um rótulo errado.
       ...(s.logo ? [{ src: abs(s.logo), sizes: '192x192', purpose: 'any' }] : []),
       { src: abs('icones/icone-192.png'), sizes: '192x192', type: 'image/png', purpose: 'any' },
@@ -7919,8 +7919,8 @@ function identidadeInstalada(s){
   try{
     const link = document.querySelector('link[rel="manifest"]');
     if(!link) return;
-    // Revoga o anterior: trocar de salão sem isto vaza um blob por troca, e
-    // quem abre a lista e testa três salões deixa três presos na memória.
+    // Revoga o anterior: trocar de restaurante sem isto vaza um blob por troca, e
+    // quem abre a lista e testa três restaurantes deixa três presos na memória.
     if(manifestoAntigo) URL.revokeObjectURL(manifestoAntigo);
     manifestoAntigo = URL.createObjectURL(
       new Blob([JSON.stringify(manifesto)], { type:'application/manifest+json' }));
@@ -7928,7 +7928,7 @@ function identidadeInstalada(s){
   }catch(e){
     // Sem manifesto próprio a página continua inteira — só perde o ícone
     // bonito. Não é motivo para derrubar a tela de quem quer marcar horário.
-    console.info('[PediHub] Não consegui montar o manifesto do salão:', e);
+    console.info('[PediHub] Não consegui montar o manifesto do restaurante:', e);
   }
 }
 
@@ -8024,7 +8024,7 @@ async function instalarSalao(){
 
 /* Para colar no Chrome, quando o navegador de dentro do WhatsApp não deixa
    abrir fora. */
-/* A chave Pix do salão, com o botão de copiar: na janela de Pagamentos e
+/* A chave Pix do restaurante, com o botão de copiar: na janela de Pagamentos e
    quando a cliente escolhe Pix ao marcar. Sem chave cadastrada, nada. */
 function linhaDaChavePix(pag){
   if(!pag || !pag.pix || !(pag.formas || []).includes('pix')) return '';
@@ -8044,7 +8044,7 @@ async function copiarPix(bt){
 /* ═══════════════════════════════════════════════════════════════════════════
    O SINAL PARA GARANTIR O HORÁRIO (09_cliente.sql, 1e)
 
-   O salão que cobra sinal pede uma parte por Pix, para a chave dele. A
+   O restaurante que cobra sinal pede uma parte por Pix, para a chave dele. A
    cliente marca, paga, manda o comprovante pelo WhatsApp, e o dono confirma.
 
    ⚠ QUEM DECIDE O VALOR É O BANCO. A prévia daqui (antes de marcar) só
@@ -8086,7 +8086,7 @@ function zapDoNumero(cru){
   if(so.length >= 12 && so.startsWith('55')) return so;
   return '';
 }
-// "14:30", ou "29/10 às 14:30" quando o prazo não é hoje — no fuso do salão.
+// "14:30", ou "29/10 às 14:30" quando o prazo não é hoje — no fuso do restaurante.
 function prazoDoSinal(iso){
   const p = noFuso(iso), hoje = noFuso(new Date().toISOString());
   return p.data === hoje.data ? hm(p.min) : dataCurta(p.data) + ' às ' + hm(p.min);
@@ -8156,7 +8156,7 @@ function guardarSessao(){
    Três portas: o "Entrar" do topo e da capa, o "Já tem conta?" e a senha
    opcional do cadastro, e o convite em Meus horários.
 
-   Depois de entrar, `ligar_minha_ficha()` liga a ficha que o salão já tinha
+   Depois de entrar, `ligar_minha_ficha()` liga a ficha que o restaurante já tinha
    à conta — pelo telefone e pelo primeiro nome, o mesmo critério da
    marcação. E-mail e senha provam o e-mail, não o telefone: o código por
    WhatsApp é o que fecha essa porta, e está escrito no banco.
@@ -8206,11 +8206,11 @@ function desenharConta(){
     : (criar ? 'Criar conta' : 'Entrar');
   const sub = document.getElementById('contaSub');
   if(sub) sub.textContent = contaDoCadastro
-    ? (criar ? 'Seu cadastro no ' + (salao.nome || 'salão') + ', sem precisar marcar horário. '
+    ? (criar ? 'Seu cadastro no ' + (salao.nome || 'restaurante') + ', sem precisar marcar horário. '
              + 'Depois é só agendar por aqui quando quiser.'
-             : 'Já tem conta? Entre com ela e o cadastro no ' + (salao.nome || 'salão')
+             : 'Já tem conta? Entre com ela e o cadastro no ' + (salao.nome || 'restaurante')
              + ' fica feito.')
-    : 'Com a sua conta, você vê seus horários em qualquer celular e usa os pacotes do salão.';
+    : 'Com a sua conta, você vê seus horários em qualquer celular e usa os pacotes do restaurante.';
   for(const [id, on] of [['abaEntrar', !criar], ['abaCriar', criar]]){
     const b = document.getElementById(id);
     b.classList.toggle('on', on);
@@ -8308,14 +8308,14 @@ async function entrarCliente(){
 async function criarContaCliente(){
   const nome = valorDe('cNome').trim(), tel = valorDe('cTel');
   const email = valorDe('cEmail').trim(), senha = valorDe('cSenha');
-  if(nome.length < 2) return avisarConta('Escreva seu nome para o salão saber quem é.');
+  if(nome.length < 2) return avisarConta('Escreva seu nome para o restaurante saber quem é.');
   if(soDigitos(tel).length < 10) return avisarConta('Falta o WhatsApp com DDD.');
   /* O aniversário, com as mesmas regras do cadastro da marcação: é dele que
-     sai a lista de Aniversariantes do salão. */
+     sai a lista de Aniversariantes do restaurante. */
   const nasc = valorDe('cNasc');
   if(!nasc && Documento.dataIncompleta(document.getElementById('cNasc')))
     return avisarConta('Confira a data do aniversário — escreva dia, mês e ano, como 04/10/1990.');
-  if(!nasc) return avisarConta('Falta o seu aniversário. É só o dia — o salão usa para o agrado do seu mês.');
+  if(!nasc) return avisarConta('Falta o seu aniversário. É só o dia — o restaurante usa para o agrado do seu mês.');
   if(nasc > hoje()) return avisarConta('Essa data de aniversário ainda não chegou. Confira o ano.');
   if(nasc < '1900-01-01') return avisarConta('Confira o ano do seu aniversário.');
   if(!EMAIL_PLAUSIVEL.test(email)) return avisarConta('Confira o e-mail — parece incompleto.');
@@ -8338,19 +8338,19 @@ async function criarContaCliente(){
   guardarSessao();
   bp.disabled = false; bp.textContent = contaDoCadastro ? 'Fazer meu cadastro' : 'Criar conta';
   /* ⚠ PROJETO QUE EXIGE CONFIRMAR O E-MAIL: a conta nasce sem sessão. O link
-     do e-mail traz de volta para ESTE salão (`volta`), já dentro da conta. */
+     do e-mail traz de volta para ESTE restaurante (`volta`), já dentro da conta. */
   if(!r || !r.access_token){
     return avisarConta('<b>Falta só confirmar o e-mail.</b> Mandamos um link para <b>'
       + escapar(email) + '</b>. Toque nele e você volta para cá já dentro da conta.'
       + '<br><button class="link" onclick="reenviarConfirmacaoCliente()">Reenviar o e-mail</button>', 'ok');
   }
-  /* Conta criada pelo link do salão já é cadastro nele: a ficha nasce agora
+  /* Conta criada pelo link do restaurante já é cadastro nele: a ficha nasce agora
      (48_cadastro_link.sql), sem esperar o primeiro horário. */
   const f = await aposEntrar({ cadastrar: true });
   /* ⚠ WHATSAPP QUE JÁ É DE OUTRA CONTA: o banco não deixa duas contas com o
      mesmo número (08_conta.sql), e a conta nova nasce sem telefone — então
      não liga ficha nenhuma, e o pacote não aparece. O caso comum é ela já ter
-     conta, criada no link de outro salão, e não lembrar. Calada, a tela
+     conta, criada no link de outro restaurante, e não lembrar. Calada, a tela
      deixaria a cliente achando que o pacote sumiu. Entrar com a outra aqui
      mesmo troca a sessão; não precisa sair antes. */
   if(f && typeof f === 'object' && !f.telefone && !f.ficha){
@@ -8359,9 +8359,9 @@ async function criarContaCliente(){
     // Depois de desenhar: ele completa o campo vazio com o e-mail desta conta.
     document.getElementById('cEmail').value = '';
     return avisarConta('<b>Sua conta foi criada</b>, mas este WhatsApp já está em '
-      + 'outra conta — talvez você já tenha entrado pelo link de outro salão. '
+      + 'outra conta — talvez você já tenha entrado pelo link de outro restaurante. '
       + 'Pacote e horários ficam naquela: entre abaixo com o e-mail dela. Se não '
-      + 'reconhece, avise o salão.<br><button class="link" '
+      + 'reconhece, avise o restaurante.<br><button class="link" '
       + 'onclick="voltarDaConta()">Seguir com esta conta</button>');
   }
   if(contaDoCadastro) return mostrarCadastro(f);
@@ -8388,7 +8388,7 @@ async function reenviarConfirmacaoCliente(){
     + 'levar um minuto, e às vezes cai no lixo eletrônico.', 'ok');
 }
 
-/* Depois de entrar: liga a ficha do salão à conta, o aparelho passa a
+/* Depois de entrar: liga a ficha do restaurante à conta, o aparelho passa a
    lembrar dos dados da conta, e os pacotes e os horários são buscados de
    novo — agora como ela. */
 async function aposEntrar(op){
@@ -8431,9 +8431,9 @@ function voltarDaConta(){
 }
 
 /* ── O LINK DE CADASTRO ───────────────────────────────────────────────────
-   `agendar.html?salao=x&cadastro=1`, que o salão manda no WhatsApp: abre
+   `agendar.html?salao=x&cadastro=1`, que o restaurante manda no WhatsApp: abre
    direto em "Faça seu cadastro". Ela cria a conta (ou entra com a que já
-   tem) e a ficha nasce no salão, sem marcar horário — e o salão a coloca no
+   tem) e a ficha nasce no restaurante, sem marcar horário — e o restaurante a coloca no
    pacote depois.
 
    ⚠ A VOLTA DO E-MAIL. Com confirmação de e-mail ligada, a conta nasce sem
@@ -8460,7 +8460,7 @@ function tirarPedidoDoEndereco(){
     history.replaceState(null, '', u.pathname + u.search + u.hash);
   }catch(e){}
 }
-/* Chamado quando o salão abre. Devolve a promessa quando cuidou da conta
+/* Chamado quando o restaurante abre. Devolve a promessa quando cuidou da conta
    (e aí o caminho de sempre não roda), ou null. */
 function iniciarPedidoDoLink(){
   const pede = PEDIDO_DO_LINK.cadastro || PEDIDO_DO_LINK.contaNova;
@@ -8481,7 +8481,7 @@ function iniciarPedidoDoLink(){
 }
 
 /* ── ENTRAR COM O GOOGLE ──────────────────────────────────────────────────
-   Leva ao Google pelo Supabase Auth e volta para ESTE salão, já logada (o
+   Leva ao Google pelo Supabase Auth e volta para ESTE restaurante, já logada (o
    #fragmento é lido na abertura, como o do e-mail). `conta=google` faz a
    volta cuidar da ficha, como uma conta nova; no link de cadastro, volta
    para a tela de cadastro feito. */
@@ -8492,7 +8492,7 @@ function entrarComGoogle(){
 }
 
 /* ── COMPLETAR O CADASTRO ─────────────────────────────────────────────────
-   O Google entrega nome e e-mail, e só. Sem o WhatsApp o salão não acha a
+   O Google entrega nome e e-mail, e só. Sem o WhatsApp o restaurante não acha a
    ficha nem manda mensagem; sem o aniversário, ela não entra em
    Aniversariantes. Então a primeira vez pede os dois — e o banco grava no
    perfil (`completar_meu_cadastro`, 51_google.sql). Também serve à conta
@@ -8514,7 +8514,7 @@ function pedirCompletar(doCadastro, recado, volta){
   const cn = document.getElementById('campoCpNasc');
   if(cn) cn.style.display = temNasc ? 'none' : '';
   const sub = document.getElementById('subCompletar');
-  if(sub) sub.textContent = 'Para o salão te encontrar e mandar as confirmações, informe seu WhatsApp'
+  if(sub) sub.textContent = 'Para o restaurante te encontrar e mandar as confirmações, informe seu WhatsApp'
     + (temNasc ? '' : ' e seu aniversário') + '. É só desta vez.';
   historico = ['capa'];
   if(completarVolta) historico.push(completarVolta);
@@ -8553,7 +8553,7 @@ async function salvarCompletar(){
   if(pedeNasc){
     if(!nasc && Documento.dataIncompleta(document.getElementById('cpNasc')))
       return dizer('Confira a data do aniversário — escreva dia, mês e ano, como 04/10/1990.');
-    if(!nasc) return dizer('Falta o seu aniversário. É só o dia — o salão usa para o agrado do seu mês.');
+    if(!nasc) return dizer('Falta o seu aniversário. É só o dia — o restaurante usa para o agrado do seu mês.');
     if(nasc > hoje() || nasc < '1900-01-01') return dizer('Confira o ano do seu aniversário.');
   }
   const bp = document.getElementById('btPrincipal');
@@ -8576,7 +8576,7 @@ async function salvarCompletar(){
 function mostrarCadastro(f){
   contaDoCadastro = false;
   const primeiro = ((f && f.nome) || (sessao && sessao.nome) || '').trim().split(' ')[0];
-  const casa = salao.nome || 'salão';
+  const casa = salao.nome || 'restaurante';
   let titulo, frase, deu = true;
   if(f && f.ficha && f.criada === false){
     titulo = 'Você já tinha cadastro';
@@ -8590,11 +8590,11 @@ function mostrarCadastro(f){
     deu = false;
     titulo = 'Falta um detalhe';
     frase = 'Sua conta está pronta, mas este WhatsApp já está no cadastro de outra pessoa no '
-          + casa + '. Avise o salão para acertarem o seu cadastro.';
+          + casa + '. Avise o restaurante para acertarem o seu cadastro.';
   } else {
     deu = false;
     titulo = 'Falta um detalhe';
-    frase = 'Sua conta está pronta. Para terminar o seu cadastro no ' + casa + ', fale com o salão.';
+    frase = 'Sua conta está pronta. Para terminar o seu cadastro no ' + casa + ', fale com o restaurante.';
   }
   document.getElementById('cadastroTitulo').textContent = titulo;
   document.getElementById('cadastroTexto').textContent = frase;
@@ -8609,16 +8609,16 @@ async function sair(){
 }
 
 /* ── EXCLUIR A CONTA DA CLIENTE ───────────────────────────────────────────
-   Sai o login (e-mail e senha). A ficha dela é do SALÃO — nome e telefone
+   Sai o login (e-mail e senha). A ficha dela é do RESTAURANTE — nome e telefone
    que ele cadastrou — e fica, desligada da conta (`clientes.perfil_id` é
    `set null`); os horários marcados continuam na agenda dele. Quem decide e
    confere tudo é o `excluir_minha_conta()` (36_excluir_conta.sql).
 
-   ⚠ A MESMA CONTA PODE SER DE UMA DONA. Quem administra um salão e marcou
+   ⚠ A MESMA CONTA PODE SER DE UMA DONA. Quem administra um restaurante e marcou
    horário em outro entra aqui com o mesmo login — e excluir por esta tela
-   apagaria o salão dela sem mostrar qual. Então, se a conta tem vínculo com
+   apagaria o restaurante dela sem mostrar qual. Então, se a conta tem vínculo com
    algum estabelecimento, esta tela não exclui: manda para o painel, onde a
-   exclusão mostra o nome de cada salão antes de pedir a palavra. */
+   exclusão mostra o nome de cada restaurante antes de pedir a palavra. */
 async function excluirContaCliente(){
   if(!logada()) return;
   let vinculos;
@@ -8631,7 +8631,7 @@ async function excluirContaCliente(){
     return;
   }
   const p = prompt('Excluir a conta apaga o seu login (e-mail e senha), e não dá para desfazer. '
-    + 'Os horários que você já marcou continuam na agenda do salão — para desmarcar, '
+    + 'Os horários que você já marcou continuam na agenda do restaurante — para desmarcar, '
     + 'faça isso antes.\n\nPara confirmar, digite EXCLUIR:');
   if(p === null) return;
   if(p.trim().toUpperCase() !== 'EXCLUIR'){
@@ -8711,19 +8711,19 @@ function registrarServiceWorker(){
     if(t) document.documentElement.setAttribute('data-tema', t);
   }catch(e){}
 
-  /* ── DE ONDE VEM O SALÃO ───────────────────────────────────────────────
-     Na nuvem, do banco, pelo apelido do link — e só o salão daquele link.
+  /* ── DE ONDE VEM O RESTAURANTE ───────────────────────────────────────────────
+     Na nuvem, do banco, pelo apelido do link — e só o restaurante daquele link.
      Fora dela, da demonstração no navegador.
 
      A ordem importa: em modo nuvem o `bd` NÃO pode ser semeado com a
      demonstração antes, senão a cliente vê por um instante os serviços e os
-     preços de um salão fictício com o nome do salão de verdade no topo. */
+     preços de um restaurante fictício com o nome do restaurante de verdade no topo. */
   if(NA_NUVEM){
     bd = { saloes: [], servicos: [], profissionais: [], servicosProfissionais: [],
            agendamentos: [], bloqueios: [], clientes: [], perfis: [], listaEspera: [] };
   } else {
     // O link do cliente costuma ser a primeira porta que a pessoa abre — chega
-    // pelo WhatsApp, não pelo app do salão. Então a demonstração semeia aqui
+    // pelo WhatsApp, não pelo app do restaurante. Então a demonstração semeia aqui
     // também, em vez de mandar o visitante abrir outra tela antes.
     bd = carregar();
     if(!bd){
@@ -8754,24 +8754,24 @@ function registrarServiceWorker(){
       history.replaceState(null, '', location.pathname + location.search);
   }catch(e){}
 
-  // É aqui que o link vira salão.
+  // É aqui que o link vira restaurante.
   const slug = new URLSearchParams(location.search).get('salao');
   if(slug){
     if(NA_NUVEM){ abrirSalaoDaNuvem(slug); }
     else entrarNoSalao(slug);
   } else if(NA_NUVEM){
     /* Sem apelido no endereço não há o que abrir, e agora não há mesmo: a
-       lista de salões da plataforma deixou de existir para quem não fez login
+       lista de restaurantes da plataforma deixou de existir para quem não fez login
        — era por ela que qualquer um baixava a carteira de clientes inteira do
-       negócio, com nome, endereço e WhatsApp de cada salão.
+       negócio, com nome, endereço e WhatsApp de cada restaurante.
 
        Quem chega aqui sem link chegou por engano; a saída é pedir o link a
        quem devia tê-lo mandado. */
     irPara('saloes', true);
     soORecadoDosSaloes();
     document.getElementById('listaSaloes').innerHTML =
-      `<div class="recado"><b>Falta o link do salão.</b><br>
-        Cada salão tem o endereço dele, algo como
+      `<div class="recado"><b>Falta o link do restaurante.</b><br>
+        Cada restaurante tem o endereço dele, algo como
         <code>?salao=nome-do-salao</code>. Peça o link a quem te indicou —
         costuma vir no WhatsApp, na bio do Instagram ou num QR no balcão.</div>`;
   } else { irPara('saloes', true); }

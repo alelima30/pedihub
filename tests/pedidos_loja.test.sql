@@ -152,7 +152,7 @@ select t_texto('não se vende duas vezes',
 select t_como('c5300000-0000-0000-0000-00000000000c', format(
   'select public.fazer_pedido_loja(%L, %L::jsonb, null, %L)', '55300000-0000-0000-0000-00000000000a',
   '[{"id":"55310000-0000-0000-0000-0000000000b1","qtd":1}]', :'p1'::jsonb->>'pedido')) as p1b \gset
-select t_texto('mandou de novo o pedido que o salão já vendeu: nasce outro (nº 3), e o vendido não muda',
+select t_texto('mandou de novo o pedido que o restaurante já vendeu: nasce outro (nº 3), e o vendido não muda',
   (:'p1b'::jsonb->>'numero') || ' | ' || (:'p1b'::jsonb->>'atualizado') || ' | '
     || (select count(*) from public.pedido_loja_itens where pedido_id = (:'p1'::jsonb->>'pedido')::uuid),
   '3 | false | 2');
@@ -192,7 +192,7 @@ select t_texto('cancelado, com o motivo, e o estoque não mexe',
 select t_pedir('[{"id":"55310000-0000-0000-0000-0000000000b1","qtd":1}]') from generate_series(1, 5);
 select t_texto('com 5 esperando, o sexto espera a conversa do WhatsApp',
   erro_de($$select t_pedir('[{"id":"55310000-0000-0000-0000-0000000000b1","qtd":1}]')$$),
-  'Você já tem pedidos esperando o salão. Aguarde a resposta pelo WhatsApp.');
+  'Você já tem pedidos esperando o restaurante. Aguarde a resposta pelo WhatsApp.');
 select set_config('request.jwt.claim.sub', '', false);
 
 \echo ''
@@ -208,12 +208,12 @@ select t_texto('a recepção tira o recibo do nº 1: os itens da comanda, o tota
     where p.id = (:'p1'::jsonb->>'pedido')::uuid)
   || ' | ' || (select ct.total from public.comandas_totais ct join public.pedidos_loja p on p.comanda_id = ct.id
                 where p.id = (:'p1'::jsonb->>'pedido')::uuid) || ' | pix');
-select t_texto('   com o nome do salão e da cliente', (:'rc'::jsonb->'salao'->>'nome') || ' | ' || (:'rc'::jsonb->>'cliente'),
+select t_texto('   com o nome do restaurante e da cliente', (:'rc'::jsonb->'salao'->>'nome') || ' | ' || (:'rc'::jsonb->>'cliente'),
   'Loja da Ana | Maria Souza');
 select t_texto('quem atende não tira recibo',
   erro_de(format($$select t_como('d5300000-0000-0000-0000-00000000000d', 'select public.recibo_do_pedido_loja(''%s'')')$$,
     :'p1'::jsonb->>'pedido')), 'Só o balcão e a gestão veem o recibo.');
-select t_texto('   nem a cliente (o recibo vai para ela pelo salão)',
+select t_texto('   nem a cliente (o recibo vai para ela pelo restaurante)',
   erro_de(format($$select t_como('c5300000-0000-0000-0000-00000000000c', 'select public.recibo_do_pedido_loja(''%s'')')$$,
     :'p1'::jsonb->>'pedido')), 'Só o balcão e a gestão veem o recibo.');
 select t_texto('pedido cancelado não tem recibo',

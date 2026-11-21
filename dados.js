@@ -38,12 +38,12 @@ const COLUNAS = {
      evitava um erro antigo: uma versão traduzia `id` para `salaoId` aqui, e
      isso renomeava a CHAVE PRIMÁRIA. O objeto chegava na tela sem `.id`,
      `bd.saloes[0].id` virava undefined, e a agenda abria dizendo "nenhum
-     profissional" porque o filtro por salão saía vazio.
+     profissional" porque o filtro por restaurante saía vazio.
 
      `comissaoSobre` e `comissaoRegraDesde` são os primeiros campos de duas
      palavras. Sem estas duas linhas, a tela mandaria `comissaoSobre` ao
      PostgREST, que não tem essa coluna, e a gravação INTEIRA do cadastro do
-     salão cairia com 400 — nome, telefone, endereço, tudo.
+     restaurante cairia com 400 — nome, telefone, endereço, tudo.
 
      `id` continua fora do mapa, de propósito: chave primária se chama `id`
      dos dois lados. */
@@ -328,13 +328,13 @@ function listaJsonb(r){
 
    Dois estragos, um visível e um caro:
 
-     · a tela do salão mostrava "80.00" onde devia mostrar "R$ 80,00", porque
+     · a tela do restaurante mostrava "80.00" onde devia mostrar "R$ 80,00", porque
        `(('80.00')||0).toLocaleString(...)` devolve a própria string, sem
        reclamar de nada;
 
      · e somar concatena. `0 + '80.00' + '45.00'` dá '080.0045.00'. Total de
        comanda, comissão e faturamento do dia saem disso — e um sistema de
-       salão que erra a conta do caixa não tem serventia nenhuma.
+       restaurante que erra a conta do caixa não tem serventia nenhuma.
 
    Converter aqui, no ponto por onde toda leitura passa, resolve os dois de
    uma vez. A lista sai do schema e o colunas.test.js confere que continua
@@ -412,7 +412,7 @@ function lerSessao(){
 
    Sem `Authorization`, o PostgREST resolve o papel pelo `apikey` e roda como
    `anon`, que é justamente o que a vitrine pública precisa: a cliente abre o
-   link do salão sem ter conta nenhuma. Com token, vira `authenticated` e o
+   link do restaurante sem ter conta nenhuma. Com token, vira `authenticated` e o
    RLS aplica as regras daquela pessoa.
 
    Assim funciona com os dois formatos de chave, o velho e o novo.
@@ -481,7 +481,7 @@ async function conferir(resp){
      O PostgREST responde isso com PGRST202 e uma frase escrita para quem
      programa: «Could not find the function public.relatorio(p_ate, p_de,
      p_salao) in the schema cache». Foi exatamente o que apareceu na tela de
-     Relatórios de um salão de verdade. Para a dona do salão essa frase não
+     Relatórios de um restaurante de verdade. Para a dona do restaurante essa frase não
      quer dizer nada, e o pior: não diz o que fazer.
 
      PGRST204 é a mesma história com coluna em vez de função — a tela grava
@@ -532,8 +532,8 @@ async function conferir(resp){
      · toda requisição ao banco voltava 401 (`PGRST301`, "JWT expired");
      · o `baixar()` tratava 401 como "esta pessoa não alcança esta tabela —
        é o RLS funcionando" e devolvia lista vazia;
-     · o painel abria inteiro, bonito, e dizia "Nenhum salão nesta conta"
-       para quem tem salão, agenda, clientes e caixa lá dentro.
+     · o painel abria inteiro, bonito, e dizia "Nenhum restaurante nesta conta"
+       para quem tem restaurante, agenda, clientes e caixa lá dentro.
 
    Nenhum teste pegava porque na bancada o token não vencia nunca. Foi
    preciso fazê-lo vencer lá (e ganhar a porta `/_expirar`) para o defeito
@@ -651,7 +651,7 @@ const Nuvem = {
   // ── Autenticação ──
   /* `volta`: para onde o link de confirmação do e-mail devolve a pessoa.
      Sem ele, vale o "Site URL" do projeto — que é o painel. A cliente que
-     cria conta no link do salão tem que voltar para o link do salão. */
+     cria conta no link do restaurante tem que voltar para o link do restaurante. */
   async criarConta({ email, senha, nome, telefone, nascimento, volta }){
     const r = await auth('signup' + (volta ? '?redirect_to=' + encodeURIComponent(volta) : ''),
       { email, password: senha,
@@ -820,7 +820,7 @@ const Nuvem = {
      O `PUT /user { password }` do Supabase aceita a troca só com a sessão
      aberta — não pergunta a senha de antes. Numa recepção isso é um buraco
      real: basta o computador ficar destravado um minuto para alguém trocar
-     a senha da dona e trancá-la para fora do próprio salão.
+     a senha da dona e trancá-la para fora do próprio restaurante.
 
      A conferência aqui é um login de verdade (`grant_type=password`) com a
      senha digitada. Quem responde sim ou não é o Supabase, contando as
@@ -972,13 +972,13 @@ const Nuvem = {
   /* ── A vitrine, que abre sem login ────────────────────────────────────
      Antes isto lia a vista `saloes_publicos` filtrando pelo apelido. Lia bem,
      e vazava do lado que ninguém olha: quem tirasse o filtro recebia TODOS os
-     salões da plataforma, com nome, endereço e WhatsApp. Não é dado de
+     restaurantes da plataforma, com nome, endereço e WhatsApp. Não é dado de
      cliente — é a lista de clientes DO NEGÓCIO, entregue numa requisição a
      qualquer concorrente com a chave publicável, que fica à vista no código
      da página de propósito.
 
      Agora é uma função que só responde a quem já sabe o apelido. E vem tudo
-     de uma vez — salão, serviços e profissionais — em vez de três idas ao
+     de uma vez — restaurante, serviços e profissionais — em vez de três idas ao
      servidor: no 3G da cliente, é a diferença entre abrir e demorar.
      ──────────────────────────────────────────────────────────────────── */
   async vitrine(slug){
@@ -1011,7 +1011,7 @@ const Nuvem = {
     return v && Array.isArray(v.duvidas) ? v.duvidas : [];
   },
 
-  /* ── O FUSO DO SALÃO, AGORA (58_fuso.sql) ───────────────────────────────
+  /* ── O FUSO DO RESTAURANTE, AGORA (58_fuso.sql) ───────────────────────────────
      Uma coluna de uma linha. O painel pergunta a cada sincronização porque
      ele ESCREVE os horários com o fuso que tem na memória ('14:00 America/
      Sao_Paulo'): se o dono trocou o fuso em outro aparelho, a tela aberta
@@ -1063,7 +1063,7 @@ const Nuvem = {
       method: 'POST', body: JSON.stringify({ p_token: token }) });
   },
 
-  // Compatibilidade: quem só quer o salão continua chamando isto.
+  // Compatibilidade: quem só quer o restaurante continua chamando isto.
   async salaoPorSlug(slug){
     const v = await this.vitrine(slug);
     return v ? v.salao : null;
@@ -1267,7 +1267,7 @@ const TABELAS_SINCRONIZADAS = [
      apontam para ele, e a chave estrangeira exige que o pai já esteja lá.
      Mesma razão de `agendamento_servicos` vir logo depois do agendamento. */
   'pacotes','pacote_servicos','pacote_clientes',
-  /* Os cupons não apontam para nada sincronizado além do salão; quem aponta
+  /* Os cupons não apontam para nada sincronizado além do restaurante; quem aponta
      para eles é o agendamento (`cupom_id`), que só o banco preenche — na
      função `agendar`. Por isso a posição aqui não importa para a chave
      estrangeira, e sim para a leitura: ficam junto dos pacotes, que é onde o
@@ -1326,8 +1326,8 @@ async function buscarTabela(t, filtro, falhas){
     return await Dados.lista(t, filtro);
   }catch(e){
     /* ⚠ SEM REDE NÃO É "SEM ACESSO". Engolido como os outros, o celular sem
-       sinal recebia tudo vazio, e o painel abria dizendo "Nenhum salão nesta
-       conta — crie o seu" para quem tem salão, agenda e caixa lá dentro. Sobe,
+       sinal recebia tudo vazio, e o painel abria dizendo "Nenhum restaurante nesta
+       conta — crie o seu" para quem tem restaurante, agenda e caixa lá dentro. Sobe,
        e o `baixar()` inteiro falha: retrato pela metade é pior que nenhum. */
     if(semResposta(e)){
       const erro = new Error('Sem conexão com o servidor agora. Confira a internet e '
@@ -1341,7 +1341,7 @@ async function buscarTabela(t, filtro, falhas){
         + 'defeito do código, não permissão: ' + cru);
       // E agora sobe até a tela. Este ramo é defeito NOSSO, e ele passou anos
       // parecendo permissão justamente por morrer no console — que ninguém
-      // abre no celular, que é onde o salão trabalha.
+      // abre no celular, que é onde o restaurante trabalha.
       falhas.push({ tabela: t, motivo: cru });
     } else {
       console.info('[dados] sem acesso a "' + t + '": ' + cru);
@@ -1360,7 +1360,7 @@ async function buscarTabela(t, filtro, falhas){
    carrega".
 
    `perfis` e `vinculos` continuam vindo primeiro, sozinhos: é deles que sai
-   quem é a pessoa e a QUAIS salões ela pertence — e só sabendo isso dá para
+   quem é a pessoa e a QUAIS restaurantes ela pertence — e só sabendo isso dá para
    decidir, com segurança, o filtro das outras treze. Essas treze, pedidas
    juntas, levam o tempo da mais lenta, não a soma de todas.
 
@@ -1395,25 +1395,25 @@ async function baixar(salaoId){
     return v;
   }
 
-  /* ── A CONTA DA PLATAFORMA NÃO BAIXA O SALÃO DOS OUTROS ──────────────────
+  /* ── A CONTA DA PLATAFORMA NÃO BAIXA O RESTAURANTE DOS OUTROS ──────────────────
      `is_super()` está em toda policy de leitura: quem administra o PediHub
-     enxerga, pelo banco, TODO salão. É de propósito — sem isso não há como
+     enxerga, pelo banco, TODO restaurante. É de propósito — sem isso não há como
      dar suporte nem cobrar. Mas sem filtro nenhum, a primeira leitura do
      painel arrastava para dentro do navegador dele a lista de clientes de
-     todos os salões, com telefone e observação, de uma vez só. Medido numa
-     base de teste: 27 salões e 15 clientes que não são dele.
+     todos os restaurantes, com telefone e observação, de uma vez só. Medido numa
+     base de teste: 27 restaurantes e 15 clientes que não são dele.
 
      Isso não é acesso a mais — o acesso ele tem de qualquer jeito. É
      exposição à toa: dado que ninguém pediu, num aparelho, para uma tela que
      nem vai mostrá-lo (o `sohMeusSaloes()` do app.html descarta tudo logo em
      seguida, e o painel dele é o admin.html, que passa por RPC).
 
-     Então, depois de saber quem é a pessoa, as tabelas de salão só descem
-     para os salões a que ela está de fato vinculada. Se não há nenhum — o
+     Então, depois de saber quem é a pessoa, as tabelas de restaurante só descem
+     para os restaurantes a que ela está de fato vinculada. Se não há nenhum — o
      caso da conta de plataforma pura — não desce nada. */
   const eu = sessao && sessao.usuarioId;
   const souDaPlataforma = perfis.some(p => p.id === eu && p.superAdmin);
-  /* No modo suporte (o admin abriu o painel de um salão cliente), o salão a
+  /* No modo suporte (o admin abriu o painel de um restaurante cliente), o restaurante a
      baixar é aquele e só aquele — nem os da própria plataforma vêm junto. */
   const emSuporte = souDaPlataforma && suporteDe;
   const sohDe = emSuporte ? [suporteDe]
@@ -1430,7 +1430,7 @@ async function baixar(salaoId){
     return bd;
   }
 
-  /* ── QUEM PODE SER FILTRADA POR SALÃO ────────────────────────────────────
+  /* ── QUEM PODE SER FILTRADA POR RESTAURANTE ────────────────────────────────────
      Aqui havia uma lista escrita à mão — `['saloes','planos','perfis',
      'vinculos']` — com as tabelas que não têm `salao_id`. A lista estava
      incompleta, e faltavam quatro: `jornadas`, `servicos_profissionais`,
@@ -1448,7 +1448,7 @@ async function baixar(salaoId){
      colunas.test.js. Perguntando a ele, tabela nova entra certa sozinha.
 
      `vinculos` já foi buscada acima, sem filtro de propósito: é por ela que
-     se descobre a QUAIS salões a pessoa pertence — filtrar pelo salão atual
+     se descobre a QUAIS restaurantes a pessoa pertence — filtrar pelo restaurante atual
      esconderia os outros dela. */
   const alvo = emSuporte ? suporteDe : (salaoId || (sohDe.length ? sohDe[0] : null));
   const resto = TABELAS_SO_LEITURA.concat(TABELAS_SINCRONIZADAS)
@@ -1471,8 +1471,8 @@ async function baixar(salaoId){
   const bd = { perfis, vinculos };
   resto.forEach((t, i) => { bd[t] = respostas[i]; });
   if(alvo) soDoAlvo(bd);
-  /* `saloes`, `perfis` e `vinculos` descem sem filtro de salão — para a conta
-     da plataforma, isso é a plataforma inteira. No suporte, fica o salão
+  /* `saloes`, `perfis` e `vinculos` descem sem filtro de restaurante — para a conta
+     da plataforma, isso é a plataforma inteira. No suporte, fica o restaurante
      aberto, a equipe dele e a própria conta. */
   if(emSuporte){
     bd.saloes = (bd.saloes || []).filter(s => s.id === suporteDe);
@@ -1484,7 +1484,7 @@ async function baixar(salaoId){
   return bd;
 }
 
-/* O salão que a plataforma abriu em modo suporte. Quem liga é o app.html,
+/* O restaurante que a plataforma abriu em modo suporte. Quem liga é o app.html,
    e só depois de o banco aceitar `iniciar_suporte()` — que recusa quem não é
    da plataforma. Para qualquer outra conta isto não muda nada: o `baixar()`
    só olha para ele quando a conta é `super_admin`. */
@@ -1494,18 +1494,18 @@ function modoSuporte(salaoId){ suporteDe = salaoId || null; }
 /* ── A FILHA VEM PELA MÃE, OU APAGA A CASA DO LADO ──────────────────────────
    As tabelas sem `salao_id` descem SEM filtro (não há coluna por onde
    filtrar), e o RLS entrega todas as linhas que a pessoa alcança. Para quem
-   tem dois salões, isso é a jornada, o item de comanda e o pagamento dos
+   tem dois restaurantes, isso é a jornada, o item de comanda e o pagamento dos
    DOIS — com a profissional, a comanda e o agendamento de um só.
 
    E a tela reconstrói essas filhas a partir das mães (`desmontarJornadas()`,
    `desmontarAgenda()`). Na gravação seguinte, o `subir()` via as linhas do
-   outro salão no retrato e não as via na tela: "sumiram" — e mandava apagar.
+   outro restaurante no retrato e não as via na tela: "sumiram" — e mandava apagar.
    Medido na bancada: dona de Casa A e Casa B, abriu o painel na A, salvou, e
    as cinco faixas de jornada da profissional da B foram apagadas. Sem erro
    nenhum: ela é gestora das duas, o banco obedeceu.
 
    Filtrar pela mãe já carregada deixa os dois lados da comparação falando do
-   mesmo salão. Toda tabela sincronizada sem `salao_id` precisa estar aqui —
+   mesmo restaurante. Toda tabela sincronizada sem `salao_id` precisa estar aqui —
    o sincronia-saloes.test.mjs confere, para tabela nova não entrar calada. */
 const FILHAS = {
   jornadas:               ['profissionalId', 'profissionais'],
@@ -1592,15 +1592,15 @@ async function subir(antes, agora){
 
    O caminho é sempre `<salao_id>/<arquivo>`: é dele que a policy do balde tira
    de quem é o arquivo. Mudar essa convenção aqui sem mudar lá abre a porta
-   para um dono sobrescrever a logo do salão vizinho.
+   para um dono sobrescrever a logo do restaurante vizinho.
    ──────────────────────────────────────────────────────────────────────── */
 async function enviarImagem(salaoId, nomeArquivo, blob){
-  if(!salaoId) throw new Error('Sem salão: não sei em que pasta guardar.');
+  if(!salaoId) throw new Error('Sem restaurante: não sei em que pasta guardar.');
   const caminho = salaoId + '/' + nomeArquivo;
 
   // Pelo `comSessaoViva()` como todo o resto: enviar a foto é justamente o
   // tipo de coisa que se faz depois de uma hora de painel aberto, e um 401
-  // aqui apagaria a logo do salão sem explicar por quê.
+  // aqui apagaria a logo do restaurante sem explicar por quê.
   const resp = await comSessaoViva(() =>
     fetch(cfg.url + '/storage/v1/object/salao/' + caminho, {
       method: 'POST',
@@ -1638,7 +1638,7 @@ async function apagarImagem(salaoId, nomeArquivo){
   }
 }
 
-/* ── A PASTA INTEIRA DE UM SALÃO (o Excluir conta) ────────────────────
+/* ── A PASTA INTEIRA DE UM RESTAURANTE (o Excluir conta) ────────────────────
    O banco não apaga arquivo do Storage — o Supabase só deixa pela API dele.
    Então, antes de a conta sair, a tela apaga a pasta `<salao_id>/` arquivo
    por arquivo, pelo mesmo `apagarImagem` de sempre, ENQUANTO ainda é gestora
@@ -1647,10 +1647,10 @@ async function apagarImagem(salaoId, nomeArquivo){
    Os nomes vêm de dois lugares: a listagem da pasta, que acha até foto
    trocada e esquecida, e os endereços que a tela conhece (logo, capa,
    fotos). Se a listagem falhar, os conhecidos ainda saem. Um arquivo que
-   não sai é ERRO, e quem chamou não segue: foto de salão apagado no ar é
+   não sai é ERRO, e quem chamou não segue: foto de restaurante apagado no ar é
    exatamente o que excluir a conta promete que não fica. */
 async function apagarPastaDoSalao(salaoId, conhecidos){
-  if(!salaoId) throw new Error('Sem salão: não sei que pasta apagar.');
+  if(!salaoId) throw new Error('Sem restaurante: não sei que pasta apagar.');
   const nomes = new Set();
   try{
     const resp = await comSessaoViva(() =>
@@ -1668,7 +1668,7 @@ async function apagarPastaDoSalao(salaoId, conhecidos){
       // `id` nulo é subpasta, não arquivo: o caminho aqui é sempre plano.
       if(Array.isArray(lista)) for(const o of lista) if(o && o.name && o.id !== null) nomes.add(o.name);
     }
-  }catch(e){ console.warn('[PediHub] listar a pasta do salão:', e.message); }
+  }catch(e){ console.warn('[PediHub] listar a pasta do restaurante:', e.message); }
   const marca = '/storage/v1/object/public/salao/' + salaoId + '/';
   for(const u of conhecidos || []){
     const t = String(u || ''), i = t.indexOf(marca);

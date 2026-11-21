@@ -65,8 +65,8 @@ function novaAba(){
 const marca = Date.now().toString(36);
 const d = novaAba();
 await d.criarConta({ email:`plano-${marca}@teste.com`, senha:'minhasenhaboa',
-  nome:'Dona do Salão', telefone:'+5551' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Plano ' + marca,
+  nome:'Dona do Restaurante', telefone:'+5551' + (100000000 + (Date.now() % 89999999)) });
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Plano ' + marca,
   p_tipo:'salao', p_telefone:'(51) 99887-6655', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 
@@ -96,10 +96,10 @@ await p.addInitScript(([base, ses]) => {
 await p.goto(BASE + '/app.html?oferta=0');
 await p.waitForTimeout(3500);
 
-/* Este salão acabou de nascer e não tem serviço nem horário, então o passo a
+/* Este restaurante acabou de nascer e não tem serviço nem horário, então o passo a
    passo do primeiro dia abre sozinho e cobre a tela — que é o certo para ele
    e o errado para este teste, que é sobre o plano. Dispensado como "já fiz":
-   a marca fica no `cfg` do salão, no banco, e atravessa os reloads abaixo.
+   a marca fica no `cfg` do restaurante, no banco, e atravessa os reloads abaixo.
    Quem prova que ele aparece é o `funil-nuvem.test.mjs`. */
 await p.evaluate(() => { if(typeof pdFechar === 'function') pdFechar(true); });
 await p.waitForTimeout(1800);
@@ -238,7 +238,7 @@ e('com o botão de assinar', /Assinar/i.test(lt.texto), lt.texto.slice(0, 250));
 e('nos dois jeitos: Pix e cartão',
   /Assinar com Pix/.test(lt.texto) && /Assinar no cartão/.test(lt.texto),
   lt.texto.slice(0, 300));
-/* O botão do Pix abre a cobrança pela borda — com o salão e o plano, e
+/* O botão do Pix abre a cobrança pela borda — com o restaurante e o plano, e
    nada de preço (o valor é lido de `planos`, no banco). A borda é simulada:
    o que está em teste aqui é a tela chamar o caminho certo. */
 let pedidoPix = null;
@@ -273,7 +273,7 @@ await outra.close();
 /* ── EM DIA, E ATÉ QUANDO ─────────────────────────────────────────────────
    Pedido do dono depois do primeiro Pix: "quando fizer o pagamento e estiver
    em dia tem que mudar — informar que plano está com ele e falta tantos dias
-   para pagar". Salão no Essencial, pago, sem cartão e sem Pix em aberto. */
+   para pagar". Restaurante no Essencial, pago, sem cartão e sem Pix em aberto. */
 console.log('\n── EM DIA, E ATÉ QUANDO ────────────────────────────────────');
 sql(`update public.cobrancas set status='cancelada' where salao_id='${SALAO}' and status='pendente'`);
 sql(`update public.assinaturas set plano='individual', status='ativa',
@@ -320,27 +320,27 @@ const comCartao = await p.evaluate(() => ({
 e('no cartão: some o aviso de renovar pelo Pix', !comCartao.aviso && !/Renovar com Pix/.test(comCartao.texto),
   comCartao.texto.slice(0, 300));
 
-/* ── O PREÇO ESPECIAL DO SALÃO (13_cobranca, 1b) ──────────────────────────
-   O salão de teste do dono vê R$ 1 no Essencial; o preço do plano continua
-   o mesmo para os outros — e outro plano, no mesmo salão, também. */
-console.log('\n── PREÇO ESPECIAL DO SALÃO ─────────────────────────────────');
+/* ── O PREÇO ESPECIAL DO RESTAURANTE (13_cobranca, 1b) ──────────────────────────
+   O restaurante de teste do dono vê R$ 1 no Essencial; o preço do plano continua
+   o mesmo para os outros — e outro plano, no mesmo restaurante, também. */
+console.log('\n── PREÇO ESPECIAL DO RESTAURANTE ─────────────────────────────────');
 sql(`update public.assinaturas set mp_preapproval = null, cartao_desde = null,
        vence_em = (now() at time zone 'America/Sao_Paulo')::date + 20, precos_especiais = '{"individual": 1.00}'
      where salao_id='${SALAO}'`);
 await abrirPlano(p, '?oferta=1');
 let pe = await p.evaluate(() => (document.getElementById('tela-plano') || {}).innerText || '');
-e('o Essencial aparece a R$ 1,00 para este salão', /R\$\s*1,00/.test(pe), pe.slice(0, 300));
+e('o Essencial aparece a R$ 1,00 para este restaurante', /R\$\s*1,00/.test(pe), pe.slice(0, 300));
 await p.evaluate(() => { planoEscolhido = 2; pintarPlano(); });
 await p.waitForTimeout(600);
 const precoDupla = Number(sql(`select preco_mes from public.planos where codigo='duo'`));
 pe = await p.evaluate(() => (document.getElementById('cartaoPlano') || {}).innerText || '');
-e('e outro plano, no mesmo salão, pelo preço normal',
+e('e outro plano, no mesmo restaurante, pelo preço normal',
   pe.includes(precoDupla.toFixed(2).replace('.', ',')) && !/R\$\s*1,00/.test(pe), pe.slice(0, 200));
 sql(`update public.assinaturas set precos_especiais = '{}' where salao_id='${SALAO}'`);
 
 /* ── A RÉGUA ALCANÇA TODOS OS PLANOS ──────────────────────────────────────
    Era 1…6 fixo, e o "6+" valia 6: o 5 e o 6+ mostravam os dois o Equipe, e
-   o Salão (até 12) não aparecia nunca — o dono viu na tela. Cada botão tem
+   o Restaurante (até 12) não aparecia nunca — o dono viu na tela. Cada botão tem
    de levar a um plano, e cada plano pago com mensagens a um botão. */
 console.log('\n── A RÉGUA DE PROFISSIONAIS ────────────────────────────────');
 await abrirPlano(p, '?oferta=1');
@@ -361,7 +361,7 @@ e('um botão por tamanho de plano — ' + rotulos.join(', '),
 e('e cada botão leva a um plano diferente: ' + vistos.join(', '),
   JSON.stringify(vistos) === JSON.stringify(comMensagem),
   'esperava ' + JSON.stringify(comMensagem));
-e('o último é o Salão, para até 12', vistos[vistos.length - 1] === 'Salão'
+e('o último é o Restaurante, para até 12', vistos[vistos.length - 1] === 'Restaurante'
   && /12/.test(rotulos[rotulos.length - 1]), JSON.stringify([rotulos, vistos]));
 
 console.log('\n── ERROS ───────────────────────────────────────────────────');

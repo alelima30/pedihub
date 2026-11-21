@@ -113,7 +113,7 @@ for(const tela of TELAS){
          ↓
        06_vitrine.sql    vitrine() devolve a chave (o `cfg` cru nunca sai)
          ↓
-       agendar.html      bdDaVitrine() copia a chave para o salão da tela
+       agendar.html      bdDaVitrine() copia a chave para o restaurante da tela
 
    Esquecer qualquer um dos dois últimos não dá erro nenhum. O dono escolhe,
    o painel grava, a PRÉVIA do painel obedece — e a página da cliente
@@ -138,10 +138,10 @@ console.log('\nA aparência atravessa do painel até a página da cliente');
 
      ⚠ A primeira versão procurava `sl.cfg = Object.assign(...)` no arquivo
      inteiro e pegava a PRIMEIRA que achasse. Funcionou enquanto só a
-     aparência escrevia no `cfg`. Quando o cadastro do salão e as notificações
+     aparência escrevia no `cfg`. Quando o cadastro do restaurante e as notificações
      passaram a escrever também, o guarda começou a exigir que
      `notifLembreteMin` atravessasse até a página da cliente — que é
-     exatamente o contrário do certo: configuração interna do salão não tem o
+     exatamente o contrário do certo: configuração interna do restaurante não tem o
      que fazer no navegador de quem marca horário.
 
      Recortar a função pelo nome é o que faz esta verificação continuar
@@ -170,7 +170,7 @@ console.log('\nA aparência atravessa do painel até a página da cliente');
   const devolve = new Set(
     [...vitrine.matchAll(/'([A-Za-z][A-Za-z0-9_]*)'\s*,/g)].map(m => m[1]));
 
-  // 3) As chaves que a página da cliente copia para o salão dela.
+  // 3) As chaves que a página da cliente copia para o restaurante dela.
   const bloco = cliente.match(/saloes:\s*\[\{([\s\S]*?)\}\],/);
   const copia = new Set(bloco
     ? [...bloco[1].matchAll(/([A-Za-z][A-Za-z0-9_]*)\s*:/g)].map(m => m[1])
@@ -382,7 +382,7 @@ console.log('\nOs modelos do WhatsApp combinam com o que o banco preenche');
     novo:        conta(ramo(/p_tipo = 'novo' then([\s\S]*?)end if;/)),
   };
   noSql.lembrete = noSql.confirmacao;            // o mesmo ramo atende os dois
-  /* O resumo sai do variaveis_resumo(): quem recebe, o salão, quantos e o
+  /* O resumo sai do variaveis_resumo(): quem recebe, o restaurante, quantos e o
      primeiro. E as DUAS linhas do gerar_resumos (a casa e cada profissional)
      têm de usá-lo — uma ficando no formato velho mandaria o número errado de
      variáveis, e a Meta recusa a mensagem inteira. */
@@ -396,7 +396,7 @@ console.log('\nOs modelos do WhatsApp combinam com o que o banco preenche');
     'a casa e o de cada profissional têm de mandar as mesmas variáveis');
   noSql.resumo = conta(
     (corpoVR.match(/return jsonb_build_array\(([\s\S]*)\);\s*$/) || [])[1] || '');
-  // O lembrete para o salão tem função própria: o {{1}} é de QUEM RECEBE.
+  // O lembrete para o restaurante tem função própria: o {{1}} é de QUEM RECEBE.
   const corpoLE = (sql.match(
     /function public\.variaveis_lembrete_equipe\(([\s\S]*?)\nend \$\$;/) || [])[1] || '';
   noSql.lembrete_equipe = conta(
@@ -440,7 +440,7 @@ console.log('\nOs modelos do WhatsApp combinam com o que o banco preenche');
   dizer(/p_tipo = 'novo' then[\s\S]*?\|\| public\.variaveis_pagamento\(j\);[\s\S]*?end if;/.test(corpoVA),
     'o aviso à profissional acrescenta o valor e a forma de pagamento no fim');
   dizer(/\|\| public\.variaveis_pagamento\(j\);\s*$/.test(corpoLE),
-    'o lembrete para o salão acrescenta o valor e a forma de pagamento no fim');
+    'o lembrete para o restaurante acrescenta o valor e a forma de pagamento no fim');
   for(const { tipo, modelo } of nomes.filter(x =>
         ['confirmacao', 'lembrete', 'novo', 'lembrete_equipe'].includes(x.tipo))){
     // A confirmação é _valor1 (o _pagamento dela entrou como Marketing na Meta).

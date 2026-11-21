@@ -10,7 +10,7 @@
 
      1. a aba Pacotes aparece para a recepção (sem criar nem editar pacote);
      2. vincular com agenda fixa: as 4 terças, tocando nos serviços de cada
-        uma; o pagamento fica a receber; o recado pelo WhatsApp do salão leva
+        uma; o pagamento fica a receber; o recado pelo WhatsApp do restaurante leva
         as datas, o valor e a chave Pix;
      3. a semana que não cabe fica em vermelho com o porquê, e nada é gravado
         até trocar o horário;
@@ -57,10 +57,10 @@ const banco = new pg.Client({ host: process.env.PGHOST || '/tmp',
 await banco.connect();
 const linhas = async (q, v) => (await banco.query(q, v)).rows;
 
-// ── O salão: a dona, a recepção (Rita), a Ju (profissional, com login) ─────
+// ── O restaurante: a dona, a recepção (Rita), a Ju (profissional, com login) ─────
 const dDona = novaAba();
 await dDona.criarConta({ email:`pa-dona-${marca}@teste.com`, senha:'minhasenhaboa', nome:'Ju Barbosa', telefone: tel() });
-const cr = await dDona.chamar('criar_salao', { p_nome_salao:'Salão Agenda Fixa ' + marca,
+const cr = await dDona.chamar('criar_salao', { p_nome_salao:'Restaurante Agenda Fixa ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 await banco.query(`update public.assinaturas set plano='time', status='ativa' where salao_id=$1`, [SALAO]);
@@ -173,7 +173,7 @@ igual('no banco: o vínculo a receber, com as 4 terças às 14h',
   { valor:'300.00', pago:null, horas:[0, 7, 14, 21].map(n => maisDias(terca, n) + ' 14:00') });
 await p.click('#fundo button:has-text("Mandar no WhatsApp")');
 const zap = decodeURIComponent(((await p.evaluate(() => window.__abriu)) || [])[0] || '');
-verdade('o recado pelo WhatsApp do salão leva as datas, o valor e a chave Pix',
+verdade('o recado pelo WhatsApp do restaurante leva as datas, o valor e a chave Pix',
   zap.includes('Seu pacote Mão e pé mensal') && zap.includes(ddmm(terca) + ' às 14:00 — Mão')
   && zap.includes('Valor: R$') && zap.includes('300,00') && zap.includes('Para pagar no Pix: pix@agendafixa.com.br'), zap);
 

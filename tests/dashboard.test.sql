@@ -27,9 +27,9 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do update set nome = excluded.nome;
 
 insert into public.saloes (id, slug, nome, status, fuso) values
-  ('60000000-0000-0000-0000-00000000000a', 'rank-a', 'Salão do Ranking', 'ativo', 'America/Sao_Paulo'),
-  ('60000000-0000-0000-0000-00000000000b', 'rank-b', 'Salão Vizinho',    'ativo', 'America/Sao_Paulo'),
-  ('60000000-0000-0000-0000-00000000000c', 'rank-c', 'Salão Grátis',     'ativo', 'America/Sao_Paulo');
+  ('60000000-0000-0000-0000-00000000000a', 'rank-a', 'Restaurante do Ranking', 'ativo', 'America/Sao_Paulo'),
+  ('60000000-0000-0000-0000-00000000000b', 'rank-b', 'Restaurante Vizinho',    'ativo', 'America/Sao_Paulo'),
+  ('60000000-0000-0000-0000-00000000000c', 'rank-c', 'Restaurante Grátis',     'ativo', 'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('60000000-0000-0000-0000-00000000000a', 'time', 'ativa'),
   ('60000000-0000-0000-0000-00000000000b', 'time', 'ativa'),

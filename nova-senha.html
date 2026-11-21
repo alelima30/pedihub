@@ -87,7 +87,7 @@ h1{font-size:1.32rem;line-height:1.2;margin-bottom:7px}
 <body>
 
 <main class="cartao">
-  <div class="marca"><i>A</i><span>Agenda<b>Pro</b></span></div>
+  <div class="marca"><i>P</i><span>Pedi<b>Hub</b></span></div>
 
   <div id="corpo">
     <h1>Escolha uma senha nova</h1>
@@ -96,8 +96,8 @@ h1{font-size:1.32rem;line-height:1.2;margin-bottom:7px}
     <div id="aviso"></div>
 
     <!-- Pedir outro link AQUI MESMO. Antes a tela mandava para a de entrar
-         do painel — a cliente do link do salão caía numa tela que não é a
-         dela, e perdia o caminho de volta para o salão. -->
+         do painel — a cliente do link do restaurante caía numa tela que não é a
+         dela, e perdia o caminho de volta para o restaurante. -->
     <form id="repedir" class="repedir" style="display:none" novalidate
           onsubmit="event.preventDefault(); pedirOutro();">
       <div class="campo">
@@ -142,7 +142,7 @@ function mostrar(tipo, html){
 const escapar = t => String(t == null ? '' : t).replace(/[&<>"']/g,
   c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
 
-/* A cliente que pediu pelo link do salão volta para o link do salão.
+/* A cliente que pediu pelo link do restaurante volta para o link do restaurante.
    ⚠ SÓ A PÁGINA DA CLIENTE, e do próprio site: aceitar qualquer `volta`
    faria desta tela um redirecionador para fora, com a pessoa já logada. */
 const VOLTA = (() => {
@@ -151,9 +151,9 @@ const VOLTA = (() => {
 })();
 if(VOLTA){
   document.getElementById('sub').textContent =
-    'É com ela e o seu e-mail que você entra no link do salão.';
+    'É com ela e o seu e-mail que você entra no link do restaurante.';
   const a = document.getElementById('voltarLink');
-  a.href = VOLTA; a.textContent = 'Voltar para o salão';
+  a.href = VOLTA; a.textContent = 'Voltar para o restaurante';
 }
 
 /* Sem link que sirva: o formulário de senha some, e no lugar dele aparece o
@@ -327,7 +327,7 @@ async function salvar(){
   /* Trocada a senha, a pessoa JÁ ESTÁ logada — o token de recuperação virou
      sessão. Mandar de volta para a tela de entrar seria pedir que ela digite
      agora a senha que acabou de escolher. */
-  mostrar('ok', VOLTA ? '<b>Senha trocada.</b>Voltando para o salão…'
+  mostrar('ok', VOLTA ? '<b>Senha trocada.</b>Voltando para o restaurante…'
                       : '<b>Senha trocada.</b>Abrindo o painel…');
   setTimeout(() => { location.href = VOLTA || 'app.html'; }, 900);
 }

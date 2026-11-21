@@ -52,10 +52,10 @@
 -- `servicos.comissao_pct`, que é nulo para herdar. Então produto nunca herda
 -- do profissional: a comissão do produto é do produto. Não é descuido, é o
 -- que já estava valendo — mudar para nulo transformaria "0%" em "herda" em
--- todo salão que já usa, e ninguém pediu isso.
+-- todo restaurante que já usa, e ninguém pediu isso.
 --
 -- ── BRUTO OU LÍQUIDO, COM DATA DE CORTE ────────────────────────────────────
--- `comissao_sobre` é do SALÃO, mas fica CONGELADO NA COMANDA quando ela
+-- `comissao_sobre` é do RESTAURANTE, mas fica CONGELADO NA COMANDA quando ela
 -- abre. Sem isso, virar a chave hoje mudaria a comissão de toda comanda
 -- ainda aberta — e a de qualquer mês que fosse reaberto.
 --
@@ -65,7 +65,7 @@
 -- alguém mexeu no ajuste".
 --
 -- O acréscimo NÃO entra na comissão, no bruto nem no líquido: taxa de
--- domingo é do salão, não é serviço de ninguém.
+-- domingo é do restaurante, não é serviço de ninguém.
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
@@ -116,7 +116,7 @@ comment on column public.comanda_itens.comissao_pct is
 comment on column public.comanda_itens.comissao_fixa is
   'Por unidade: 2 itens a R$ 5 fixos = R$ 10. Congelada junto com a pct.';
 
--- A regra do salão, e desde quando.
+-- A regra do restaurante, e desde quando.
 alter table public.saloes
   add column if not exists comissao_sobre text not null default 'bruto'
     check (comissao_sobre in ('bruto','liquido'));
@@ -198,9 +198,9 @@ comment on function public.comissao_de(text, uuid, uuid, uuid) is
    Sem este revoke ela ficava aberta ao `anon`, e o caminho era curto: a
    vitrine pública entrega o id do serviço e o do profissional, e com os dois
    a `comissao_de` devolvia o percentual. Medido — `{"pct":"60.00"}` de um
-   salão alheio, sem login.
+   restaurante alheio, sem login.
 
-   Não é dado pessoal: é o acordo interno do salão com quem trabalha nele.
+   Não é dado pessoal: é o acordo interno do restaurante com quem trabalha nele.
    Serve para um concorrente montar proposta para o profissional, ou para o
    profissional descobrir quanto o colega ganha. */
 revoke all on function public.comissao_de(text, uuid, uuid, uuid)

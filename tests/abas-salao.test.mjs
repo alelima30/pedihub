@@ -8,7 +8,7 @@
    aparência e identidade visual.
 
    A prévia do celular gruda ao lado da APARÊNCIA. Mas a identidade visual —
-   logo, foto do salão, galeria, fundo — ficava DEPOIS dela, num cartão de
+   logo, foto do restaurante, galeria, fundo — ficava DEPOIS dela, num cartão de
    largura inteira. Ou seja: trocar a capa, que é a maior mudança visual que
    existe na página da cliente, era feito com a prévia fora da tela.
 
@@ -111,11 +111,11 @@ verdade('a identidade visual está DENTRO da coluna que rola',
 /* ══════════════════════════════════════════════════════════════════════════
    3. A PROMESSA: ROLAR ATÉ AS IMAGENS SEM PERDER A PRÉVIA
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Rolando até a foto do salão, a prévia continua na tela');
+secao('Rolando até a foto do restaurante, a prévia continua na tela');
 
 const aoRolar = await pg.evaluate(async () => {
   const alvo = [...document.querySelectorAll('#painelSalao .foto-txt b')]
-    .find(b => b.textContent.includes('Foto do salão'));
+    .find(b => b.textContent.includes('Foto do restaurante'));
   alvo.scrollIntoView({ block:'center' });
   await new Promise(r => setTimeout(r, 500));
   const p = document.querySelector('.ap-previa').getBoundingClientRect();
@@ -127,7 +127,7 @@ const aoRolar = await pg.evaluate(async () => {
   };
 });
 
-verdade('o campo da foto do salão está na tela', aoRolar.alvoNaTela,
+verdade('o campo da foto do restaurante está na tela', aoRolar.alvoNaTela,
   JSON.stringify(aoRolar));
 verdade('e a prévia continua visível ao lado', aoRolar.previaNaTela,
   'trocar a capa com a prévia fora da tela é mexer às cegas: '

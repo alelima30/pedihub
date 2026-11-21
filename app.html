@@ -10,8 +10,8 @@
      salao pode querer o agendamento dentro do proprio site. -->
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PediHub — Agenda do salão</title>
-<meta name="description" content="Agenda, clientes, comissão e relatórios para salão de beleza, barbearia e estética." />
+<title>PediHub — Agenda do restaurante</title>
+<meta name="description" content="Pedidos, cardápio, entregas, caixa e relatórios para restaurante, lanchonete, pizzaria e delivery." />
 <meta name="theme-color" content="#FFFFFF" />
 <!-- PWA: instalável no celular e no computador -->
 <link rel="manifest" href="manifest.webmanifest" />
@@ -645,7 +645,7 @@ span.ajuda{display:block;margin-top:5px}
          afirmações que ninguém consegue conciliar: o navegador pode estar
          servindo a página de ontem e nada na tela diz isso. Um clique
          recarrega passando por cima de todo cache. -->
-    <p class="lat-rodape">PediHub · <span id="mTipo">salão</span><br>
+    <p class="lat-rodape">PediHub · <span id="mTipo">restaurante</span><br>
       <button class="lat-versao" onclick="recarregarDeVerdade()"
               title="Recarregar buscando a versão mais nova">
         versão <span id="mVersao">—</span></button></p>
@@ -684,7 +684,7 @@ span.ajuda{display:block;margin-top:5px}
        de toda tela, so para quem gere o salao, so durante o teste. -->
   <div id="faixaTeste" class="faixa-teste" style="display:none"></div>
   <!-- O passo a passo adiado: "Faço depois" não reabre sozinho, e esta faixa
-       oferece continuar enquanto o salão não tem serviço e horário. -->
+       oferece continuar enquanto o restaurante não tem serviço e horário. -->
   <div id="faixaPrimeiroDia" class="faixa-teste" style="display:none"></div>
 
   <!-- ══════════ AGENDA ══════════ -->
@@ -847,11 +847,15 @@ span.ajuda{display:block;margin-top:5px}
 
   <!-- ══════════ EQUIPE ══════════ -->
   <section class="tela" id="tela-equipe">
+    <!-- PediHub: a ficha de profissional (coluna na agenda, comissao, jornada)
+         nao existe no restaurante. Fica escondida; a tela e so quem entra. -->
+    <div style="display:none" data-pedihub="profissionais">
     <div class="barra">
       <span class="espaco"></span>
       <button class="btn btn-p" onclick="abrirProf()">+ Profissional</button>
     </div>
     <div class="cards" id="listaEquipe"></div>
+    </div>
 
     <!-- ⚠ FICHA E LOGIN SÃO COISAS DIFERENTES, E A TELA PRECISA DIZER ISSO.
          Acima: quem ATENDE — a coluna na agenda, a comissão, a jornada. Uma
@@ -965,7 +969,7 @@ span.ajuda{display:block;margin-top:5px}
     </div>
   </section>
 
-  <!-- ══════════ MEU SALÃO ══════════ -->
+  <!-- ══════════ MEU RESTAURANTE ══════════ -->
   <section class="tela" id="tela-salao">
     <div id="painelSalao"></div>
   </section>
@@ -979,7 +983,7 @@ span.ajuda{display:block;margin-top:5px}
       </div>
       <div class="pub-corpo">
         <div class="aviso info">
-          <b>O link deste salão</b> — é o que você manda no WhatsApp, cola na bio
+          <b>O link deste restaurante</b> — é o que você manda no WhatsApp, cola na bio
           do Instagram ou imprime como QR no espelho.
           <div style="display:flex;gap:6px;margin-top:9px;flex-wrap:wrap">
             <input id="linkPublico" readonly onclick="this.select()"
@@ -1005,7 +1009,7 @@ span.ajuda{display:block;margin-top:5px}
           </div>
         </div>
         <!-- Aqui dizia "a regra que garante isso está no 02_rls.sql". Nome de
-             arquivo do código não quer dizer nada para quem tem salão, e o
+             arquivo do código não quer dizer nada para quem tem restaurante, e o
              efeito é o contrário do pretendido: em vez de tranquilizar, faz a
              pessoa achar que precisa entender de banco de dados para confiar
              no sistema. A garantia continua a mesma; o que muda é quem
@@ -1155,10 +1159,10 @@ let diaAtual = hoje();
 let telaAtual = 'pedidos';
 
 /* ── Utilidades de tempo ─────────────────────────────────────────────── */
-/* ⚠ "HOJE" É O DIA DO SALÃO, NÃO O DO APARELHO.
+/* ⚠ "HOJE" É O DIA DO RESTAURANTE, NÃO O DO APARELHO.
 
    Esta função devolvia `iso(new Date())` — a data do celular de quem está
-   olhando. Todo o resto da tela conta o dia pelo `fuso` do salão: `a.data` e
+   olhando. Todo o resto da tela conta o dia pelo `fuso` do restaurante: `a.data` e
    `c.data` saem do `instanteParaTela(..., fusoDoSalaoAtual())`, e as funções
    do banco (`relatorio`, `painel_hoje`) usam `saloes.fuso` também.
 
@@ -1168,13 +1172,13 @@ let telaAtual = 'pedidos';
    `c.data === diaAtual` e não acha comanda nenhuma — nem as que ele mesmo
    acabou de listar em outra aba.
 
-   Acontece de verdade em dois casos comuns: salão em Manaus ou Rio Branco
+   Acontece de verdade em dois casos comuns: restaurante em Manaus ou Rio Branco
    que nunca mexeu no `fuso` (o padrão é America/Sao_Paulo) e o proprietário
    viajando. Foi medido aqui na bancada, que roda em UTC: o Caixa mostrou
    R$ 0,00 de faturamento com uma comanda fechada de R$ 230 no banco.
 
    E conserta de lambuja o `reabrirComanda()`, que comparava `diaFecho` — já
-   no fuso do salão — com este `hoje()`, que estava no do aparelho.
+   no fuso do restaurante — com este `hoje()`, que estava no do aparelho.
 
    ── POR QUE A PERGUNTA É "TEM `fuso`?" E NÃO "ESTÁ NA NUVEM?" ─────────────
    Porque `NA_NUVEM` só nasce lá embaixo, e esta função é chamada na terceira
@@ -1183,7 +1187,7 @@ let telaAtual = 'pedidos';
 
    E `saloes.fuso` é `not null default 'America/Sao_Paulo'` no banco, então a
    pergunta separa exatamente os dois casos que precisam de respostas
-   diferentes: salão de verdade sempre tem fuso e manda nele; a demonstração
+   diferentes: restaurante de verdade sempre tem fuso e manda nele; a demonstração
    — que semeia a agenda com a data do próprio aparelho, no demo.js — não
    tem, e continua no aparelho. Sem isso a demonstração aberta no Japão
    abriria num dia sem nada. */
@@ -1263,7 +1267,7 @@ const ATRIB_HORA = 'type="text" inputmode="numeric" maxlength="5" autocomplete="
 
    Sem esta função, um nome como `<img src=x onerror=...>` deixava de ser
    texto e virava código rodando na sessão do dono — com acesso à agenda, à
-   lista de clientes e ao faturamento do salão. Não é hipótese: está
+   lista de clientes e ao faturamento do restaurante. Não é hipótese: está
    reproduzido em tests/seguranca.test.mjs.
 
    A regra, então: nada que uma pessoa tenha digitado entra em `innerHTML`
@@ -1340,7 +1344,7 @@ function jornadaDo(prof, data){
 
 /* Jornada NENHUMA cadastrada não é "não trabalha": é "ainda não configurou".
    O espelho da mesma decisão que está no `cabe_na_jornada()` do banco, e pelo
-   mesmo motivo — um salão recém-cadastrado tem profissional e não tem
+   mesmo motivo — um restaurante recém-cadastrado tem profissional e não tem
    jornada, e recusar tudo faria o primeiro dia dele ser o último. Ter jornada
    em outros dias e não neste é outra coisa: é folga, e folga se respeita. */
 function temJornadaAlguma(prof){
@@ -1460,7 +1464,7 @@ const doSalao = lista => lista.filter(x => x.salaoId === salaoAtual);
 const profsAtivos = () => doSalao(bd.profissionais).filter(p => p.ativo);
 const servsAtivos = () => doSalao(bd.servicos).filter(s => s.ativo);
 const clientesDo  = () => doSalao(bd.clientes);
-/* TODO agendamento do salão que ainda VALE — arquivado não vale.
+/* TODO agendamento do restaurante que ainda VALE — arquivado não vale.
    Um lugar só, porque a agenda, os indicadores, a checagem de choque, a
    contagem de faltas e o teto do plano têm que enxergar exatamente o mesmo
    conjunto. Foi o desencontro entre duas dessas contas que fez o topo dizer
@@ -1500,7 +1504,7 @@ const acharSalao   = i => bd.saloes.find(s => s.id === i);
       vazia, que NÃO é nula — e a trava `ux_cli_tel` é `where telefone is not
       null`. Então a segunda pessoa cadastrada sem número batia em
       "duplicate key value violates unique constraint", em inglês, na cara da
-      recepção. Cliente que passa e não deixa telefone é rotina em salão.
+      recepção. Cliente que passa e não deixa telefone é rotina em restaurante.
 
    Uma função só, usada em todo lugar onde o painel escreve telefone de
    cliente. A regra é a MESMA do banco, de propósito: se as duas discordarem,
@@ -1561,7 +1565,7 @@ function falarNoWhatsapp(agId){
   escolherRecado(num, {
     cliente: (nomeCliente(a.clienteId) || '').split(' ')[0],
     horario: porExtenso(a.data) + ' às ' + hm(a.inicio),
-    empresa: (acharSalao(salaoAtual) || {}).nome || 'salão',
+    empresa: (acharSalao(salaoAtual) || {}).nome || 'restaurante',
     valor: real(totalDe(a)),
     pagamento: pagamentoDoRecado(a),
   });
@@ -1584,7 +1588,7 @@ function pagamentoDoRecado(a){
    pagar — "falta forma de pagamento e valor" nos modelos).
 
    ── POR QUE MODELO, E NÃO TEXTO PRONTO NOSSO ──────────────────────────────
-   Porque o jeito de falar é do salão, não nosso. Uma barbearia escreve "e
+   Porque o jeito de falar é do restaurante, não nosso. Uma barbearia escreve "e
    aí, tranquilo?"; uma clínica de estética escreve "prezada". Texto pronto
    que não se parece com a casa é texto que o dono apaga — e apagar vinte
    vezes por dia é o que faz ele parar de usar o botão.
@@ -1611,7 +1615,7 @@ const MODELOS_MANUAIS = [
    'Oi ${cliente}, tudo bem? Infelizmente o horário de ${horario} não está '
    + 'mais disponível. Consegue outro dia ou outra hora?',
    'A recusa. Terminar com uma pergunta é o que mantém a conversa viva — '
-   + 'sem ela, a cliente some e procura outro salão.'],
+   + 'sem ela, a cliente some e procura outro restaurante.'],
   ['aniversario', 'Dar os parabéns',
    'Oi ${cliente}, hoje é um dia especial! Nós do ${empresa} queremos te '
    + 'desejar um feliz aniversário.',
@@ -1621,7 +1625,7 @@ const MODELOS_MANUAIS = [
 const PARAMETROS_RECADO = [
   ['cliente', 'o primeiro nome dela'],
   ['horario', 'o dia e a hora do atendimento'],
-  ['empresa', 'o nome do seu salão'],
+  ['empresa', 'o nome do seu restaurante'],
   ['valor', 'o valor do atendimento (R$)'],
   ['pagamento', 'como ela vai pagar (Pix, cartão, pacote…)'],
 ];
@@ -1634,7 +1638,7 @@ const PARAMETROS_RECADO = [
        voltar ao padrão quando o dono apaga tudo, e essa volta nunca
        acontecia porque o campo nunca ficava vazio;
 
-     · o NOSSO texto era copiado para dentro do salão na primeira gravação, e
+     · o NOSSO texto era copiado para dentro do restaurante na primeira gravação, e
        congelava ali. Melhorar a redação do padrão depois — uma vírgula, um
        "tudo bem?" — não chegaria em ninguém que já tivesse salvado a tela uma
        vez, que é todo mundo.
@@ -1729,7 +1733,7 @@ function falarComCliente(clienteId){
   escolherRecado(num, {
     cliente: (nomeCliente(clienteId) || '').split(' ')[0],
     horario: '',
-    empresa: (acharSalao(salaoAtual) || {}).nome || 'salão',
+    empresa: (acharSalao(salaoAtual) || {}).nome || 'restaurante',
     valor: '',
     pagamento: '',
   });
@@ -1790,7 +1794,7 @@ function corDoProf(p){
 
 /* QUANTAS VEZES ESTA PESSOA JÁ FALTOU AQUI
    O status 'faltou' existia e não servia para nada: ninguém somava, ninguém
-   avisava. Falta é o prejuízo mais comum de salão — a cadeira fica parada e
+   avisava. Falta é o prejuízo mais comum de restaurante — a cadeira fica parada e
    a agenda mostrou "ocupado" para quem teria vindo. Somar é o mínimo para o
    dono decidir se pede sinal, se confirma antes, ou se prefere não marcar. */
 function faltasDoCliente(cid){
@@ -1871,7 +1875,7 @@ function rotuloServicos(ag){
    que o 02_rls.sql já aplica, escrita aqui para a tela combinar com o banco.
 
      e_gestor       (dono, admin)                  → serviços, equipe,
-                                                     salão, plano
+                                                     restaurante, plano
      ve_agenda_toda (dono, admin, recepcao)        → agenda inteira, caixa
      e_equipe       (+ profissional)               → clientes, a própria agenda
 
@@ -1901,7 +1905,7 @@ const TELAS = [
 
      O quadro logo acima já dizia `ve_agenda_toda → agenda inteira, caixa`,
      e o 17_caixa.sql diz a mesma coisa em uma frase: "Quem atende NÃO
-     enxerga o caixa: é dinheiro do salão inteiro". As policies obedecem: as
+     enxerga o caixa: é dinheiro do restaurante inteiro". As policies obedecem: as
      três tabelas da gaveta (`caixas`, `caixa_movimentos`, `estornos`) pedem
      `ve_agenda_toda`, que não inclui `profissional`.
 
@@ -1910,7 +1914,7 @@ const TELAS = [
      "Abrir caixa", e apertar devolvia
 
          "O banco não autorizou esta gravação para a sua conta.
-          Se você acabou de trocar de salão, entre de novo."
+          Se você acabou de trocar de restaurante, entre de novo."
 
      — um conselho que nunca ia funcionar, porque não é sessão velha: é o RLS
      fazendo o que foi escrito para fazer. É exatamente o defeito que este
@@ -1927,7 +1931,7 @@ const TELAS = [
   /* ⚠ DASHBOARD E RELATÓRIOS SÃO COISAS DIFERENTES, e ficam lado a lado de
      propósito para a diferença ficar clara.
 
-     O Dashboard responde "como vai o salão?" de relance, sem o dono escolher
+     O Dashboard responde "como vai o restaurante?" de relance, sem o dono escolher
      nada: ele abre e os números estão lá. O Relatórios responde "quanto foi
      em março?" — pede período, dá tabela e serve para conferir.
 
@@ -1938,7 +1942,7 @@ const TELAS = [
   ['dashboard','Dashboard',       'painel',     'Dia a dia', GESTAO],
   ['relatorios','Relatórios',      'grafico',    'Dia a dia', GESTAO],
   /* O Ranking (60_dashboard.sql): quem mais marca, quem mais atende, quem é
-     nova, quem volta, quantos abrem o link. A gestão vê o salão inteiro; quem
+     nova, quem volta, quantos abrem o link. A gestão vê o restaurante inteiro; quem
      atende vê SÓ os próprios números (o banco filtra pela ficha dela). A
      recepção sem ficha de quem atende não tem o que ver ali. */
   ['ranking',  'Ranking',          'grafico',    'Dia a dia', ['dono','admin','profissional']],
@@ -1962,7 +1966,7 @@ const TELAS = [
      para acabar. */
   ['produtos', 'Produtos',         'presente',   'Cadastros', EQUIPE],
   /* Pacotes fica em Cadastros, junto de Serviços e Produtos: é catálogo do
-     que o salão vende. CRIAR e EDITAR o pacote é da gestão (preço e política
+     que o restaurante vende. CRIAR e EDITAR o pacote é da gestão (preço e política
      comercial: os botões seguem `souGestor()`). Mas é o BALCÃO que vincula a
      cliente, deixa as terças marcadas e recebe o pagamento (43_pacote_agenda:
      `montar_pacote` e `receber_pacote` pedem `ve_agenda_toda`) — então a
@@ -1977,7 +1981,7 @@ const TELAS = [
   ['plano',    'Plano',            'etiqueta',   'A conta',   GESTAO],
 ];
 
-/* O papel desta pessoa NESTE salão.
+/* O papel desta pessoa NESTE restaurante.
 
    Em demonstração não há login, e quem está mexendo é o dono do computador:
    devolver 'dono' ali não afrouxa nada (não existe conta nem servidor) e
@@ -1995,7 +1999,7 @@ function meuPapel(){
 }
 const souGestor = () => GESTAO.includes(meuPapel());
 
-/* A ficha de profissional DESTA pessoa neste salão, quando existe.
+/* A ficha de profissional DESTA pessoa neste restaurante, quando existe.
    É o espelho de `meu_profissional_id()` do 02_rls.sql — a mesma pergunta
    que o banco faz para decidir quais atendimentos ela enxerga. */
 function minhaFichaDeProf(){
@@ -2011,7 +2015,7 @@ const vejoTudo  = () => BALCAO.includes(meuPapel());
    ⚠ DUAS PENEIRAS, E ELAS SÃO DIFERENTES.
 
    O papel diz o que a pessoa PODE ver — e quem barra de verdade é o RLS, não
-   esta linha. O interruptor diz o que o salão USA: um salão que não trabalha
+   esta linha. O interruptor diz o que o restaurante USA: um restaurante que não trabalha
    com comanda não tem caixa nenhum para conferir, e a aba abriria numa gaveta
    que ninguém vai abrir.
 
@@ -2030,7 +2034,7 @@ const minhasTelas = () => {
                         && (restaurante || t[0] !== 'pedidos')
                         && (t[0] !== 'pedidosloja' || (!restaurante && lojaRecebePedidos()))
                         && (!restaurante || t[0] !== 'procedimentos')
-                        // PediHub: sem agenda, serviços e pacotes de salão.
+                        // PediHub: sem agenda, serviços e pacotes de restaurante.
                         && !TELAS_DE_SALAO.includes(t[0]));
 };
 const TELAS_DE_SALAO = ['agenda', 'servicos', 'procedimentos', 'pacotes', 'pedidosloja'];
@@ -2108,7 +2112,7 @@ function trocarVista(v){
   pintar();
 }
 
-// Segunda-feira da semana em que `dia` cai. Semana de salão começa na
+// Segunda-feira da semana em que `dia` cai. Semana de restaurante começa na
 // segunda: domingo é o fim dela, não o começo.
 function segundaDa(dia){
   const [y,m,d] = dia.split('-').map(Number);
@@ -2170,7 +2174,7 @@ function irHoje(){ diaAtual = hoje(); pintar(); }
    dono voltava ao app no dia 4 com a agenda parada no dia 30 do mês
    anterior — "já passou", e setembro na tela em outubro.
 
-   Quando o dia do salão muda desde a última olhada, a agenda vai para hoje.
+   Quando o dia do restaurante muda desde a última olhada, a agenda vai para hoje.
    Só nessa hora: andar para outro dia e sair para o WhatsApp por um minuto
    não pode jogar o dono de volta para hoje. */
 let _hojeVisto = null;
@@ -2221,18 +2225,18 @@ function recarregarDeVerdade(){
 
 async function trocarSalao(sid){
   /* ⚠ NA NUVEM, O ESTABELECIMENTO NOVO VEM DO BANCO. O `baixar()` traz só o
-     salão escolhido — agenda, equipe, clientes, caixa. Trocar só o
+     restaurante escolhido — agenda, equipe, clientes, caixa. Trocar só o
      `salaoAtual` mostrava o outro estabelecimento com os dados de nenhum:
      medido na bancada, a Casa B, com uma profissional e cinco faixas de
      jornada, aparecia com zero. Antes de ler, a gravação que estiver na fila
-     termina: ela é do salão de antes. */
+     termina: ela é do restaurante de antes. */
   if(NA_NUVEM){
     await _filaGravacao;
     const antes = salaoAtual;
     salaoAtual = sid;
     const novo = await carregarTudo();
     /* A leitura falhou (o `carregarTudo()` já avisou): fica no de antes. Seguir
-       mostrava o salão novo com os dados de nenhum, como se estivesse vazio. */
+       mostrava o restaurante novo com os dados de nenhum, como se estivesse vazio. */
     if(!novo){
       salaoAtual = antes;
       const sel = document.getElementById('selSalao');
@@ -2243,7 +2247,7 @@ async function trocarSalao(sid){
   }
   salaoAtual = sid;
   const s = acharSalao(sid);
-  document.getElementById('mTipo').textContent = (s.tipo || 'salão');
+  document.getElementById('mTipo').textContent = (s.tipo || 'restaurante');
   document.getElementById('mVersao').textContent = VERSAO_APP;
   document.getElementById('tbSalao').textContent = s.nome;
   const sel = document.getElementById('selSalao');
@@ -2264,7 +2268,7 @@ async function trocarSalao(sid){
 /* Sair encerra a sessão no banco antes de trocar de tela. Só apagar o token
    do navegador deixaria o refresh vivo no servidor. */
 async function sair(){
-  // No suporte, "Sair" é sair do salão do cliente — de volta ao admin, com a
+  // No suporte, "Sair" é sair do restaurante do cliente — de volta ao admin, com a
   // sessão de suporte encerrada no banco. A conta da plataforma continua.
   if(emSuporte()) return sairDoSuporte();
   if(!confirm('Sair do painel?')) return;
@@ -2274,11 +2278,11 @@ async function sair(){
 }
 
 /* ── PRECISA DE AJUDA? ────────────────────────────────────────────────────
-   O WhatsApp de quem atende os donos de salão. Fica no topo de toda tela (e
+   O WhatsApp de quem atende os donos de restaurante. Fica no topo de toda tela (e
    no menu), e não num botão flutuante no canto: no celular ele ficaria em
    cima do "Agendar" e do "Salvar" das janelas.
 
-   A conversa já abre dizendo de que salão e de que tela a pessoa fala —
+   A conversa já abre dizendo de que restaurante e de que tela a pessoa fala —
    "não consigo marcar" sem saber de quem nem onde é a primeira coisa que o
    suporte teria de perguntar. Montada na hora do toque, para levar a tela
    de agora. Vazio = os dois somem. Só dígitos, com 55 e DDD. */
@@ -2288,7 +2292,7 @@ function linkDeAjuda(){
               .find(x => x.id === salaoAtual);
   const tela = ((document.getElementById('tituloTela') || {}).textContent || '').trim();
   const txt = 'Olá! Preciso de ajuda com o PediHub.'
-    + (s ? '\nSalão: ' + s.nome + (s.slug ? ' (' + s.slug + ')' : '') : '')
+    + (s ? '\nRestaurante: ' + s.nome + (s.slug ? ' (' + s.slug + ')' : '') : '')
     + (tela ? '\nTela: ' + tela : '') + '\n\n';
   return 'https://wa.me/' + SUPORTE_WHATSAPP + '?text=' + encodeURIComponent(txt);
 }
@@ -2381,12 +2385,12 @@ function faixaDaGrade(dia, profs){
    palavras:
 
        "Pronto! Você está na lista. Assim que alguém cancelar nesse período,
-        o salão te chama no WhatsApp."
+        o restaurante te chama no WhatsApp."
 
    E o painel não tinha essa tela. A palavra `lista_espera` aparecia zero
    vezes neste arquivo: a fila era baixada do banco a cada carregamento,
    entrava no `bd`, era sincronizada de volta pelo `Dados.subir()` — e não era
-   desenhada em lugar nenhum. Ninguém no salão sabia que ela existia.
+   desenhada em lugar nenhum. Ninguém no restaurante sabia que ela existia.
 
    Não era um defeito que atrapalhava o trabalho. Era uma promessa quebrada
    para uma cliente que já tinha decidido comprar, que é pior.
@@ -2396,7 +2400,7 @@ function faixaDaGrade(dia, profs){
    botão de WhatsApp com o recado já começado.
 
    Não faz: avisar sozinha quando um horário vaga. Isso é o passo dois, e
-   depende do disparo automático — que depende da Meta. O passo um é o salão
+   depende do disparo automático — que depende da Meta. O passo um é o restaurante
    VER, e sem ele o passo dois não teria nem onde aparecer.
    ═══════════════════════════════════════════════════════════════════════════ */
 const NA_FILA = ['aguardando', 'avisado'];
@@ -2431,7 +2435,7 @@ function pintarFila(){
       <h3 class="secao" style="margin-top:0">${fila.length} ${
         fila.length === 1 ? 'pessoa esperando vaga' : 'pessoas esperando vaga'}</h3>
       <p class="secao-sub">Elas não acharam horário no link e pediram para ser
-        chamadas quando alguém desmarcar. É a fila que o salão prometeu
+        chamadas quando alguém desmarcar. É a fila que o restaurante prometeu
         atender.</p>
       <table class="tabela"><tbody>${fila.map(e => {
         const temZap = !!zapDoCliente(e.clienteId);
@@ -2499,7 +2503,7 @@ function chamarDaFila(id){
      que alguém acaba desligando. É a mesma convenção do `falarNoWhatsapp()`
      logo acima, escrita pelo mesmo motivo. */
   const chamarDe = (nomeCliente(e.clienteId) || '').split(' ')[0];
-  const casa = sl.nome || 'salão';
+  const casa = sl.nome || 'restaurante';
   const oQue = nomesDosServicos(e.servicos);
   const texto = `Oi ${chamarDe}! Aqui é do ${casa}. Abriu um horário para `
     + `${oQue} — ainda te interessa?`;
@@ -2569,12 +2573,12 @@ function semDesfecho(){
 /* ═══════════════════════════════════════════════════════════════════════════
    O QUE ESTÁ ESPERANDO RESPOSTA
 
-   No salão que confirma à mão, o agendamento nasce `pendente` e a cliente fica
+   No restaurante que confirma à mão, o agendamento nasce `pendente` e a cliente fica
    esperando. Sem esta faixa, o único lugar onde isso apareceria seria a
    etiqueta cinza dentro da ficha do atendimento — que só quem abre a ficha vê.
    O dono passaria o dia sem saber que tem gente esperando.
 
-   ⚠ E ela some sozinha no salão que confirma automático: lá nunca existe
+   ⚠ E ela some sozinha no restaurante que confirma automático: lá nunca existe
    pendente, e uma faixa vazia ocupando o topo da agenda todo dia seria ruído.
    ═══════════════════════════════════════════════════════════════════════════ */
 function esperandoResposta(){
@@ -2585,7 +2589,7 @@ function esperandoResposta(){
       .localeCompare(b.data + String(b.inicio).padStart(6, '0')));
 }
 
-/* O SINAL DO HORÁRIO (09_cliente.sql, 1e). Quem marcou pelo link num salão
+/* O SINAL DO HORÁRIO (09_cliente.sql, 1e). Quem marcou pelo link num restaurante
    que cobra sinal entra pendente até o Pix chegar; confirmar é dizer que
    chegou (o banco marca o sinal como pago junto). */
 function sinalDoHorario(a){
@@ -2682,7 +2686,7 @@ function recusarHorario(agId){
     + 'O horário volta a ficar livre no app, e nenhuma mensagem de '
     + 'confirmação é enviada.')) return;
   a.status = 'cancelado';
-  a.canceladoMotivo = 'não confirmado pelo salão';
+  a.canceladoMotivo = 'não confirmado pelo restaurante';
   salvar(); pintar();
 }
 
@@ -2744,7 +2748,7 @@ function desfecho(agId, status){
 }
 
 function pintarAgenda(){
-  // Antes de qualquer `return`: a vista de semana e o salão sem profissional
+  // Antes de qualquer `return`: a vista de semana e o restaurante sem profissional
   // saem cedo desta função, e nem a fila nem o fecho podem sumir com eles.
   pintarAConfirmar();
   pintarFecho();
@@ -2829,7 +2833,7 @@ function pintarAgenda(){
   const desligados = new Set(profs.filter(p => !p.ativo).map(p => p.id));
 
   /* ── UMA PESSOA SÓ NÃO PRECISA DE COLUNA COM NOME ────────────────────────
-     Num salão de uma pessoa, o cabeçalho diz o nome de quem já está olhando
+     Num restaurante de uma pessoa, o cabeçalho diz o nome de quem já está olhando
      a própria agenda. É uma faixa a menos de tela no celular, e no celular a
      agenda é a tela que mais falta espaço tem.
 
@@ -3038,7 +3042,7 @@ function pintarMes(){
        afrouxa para sempre por causa de uma variável de uma tela. */
     const doMes = dt.getMonth() === mes - 1;
     const qtd = agendaDoDia(dia).filter(a => ATIVOS.includes(a.status)).length;
-    // Dia com alguém esperando o salão confirmar: a pastilha muda de cor.
+    // Dia com alguém esperando o restaurante confirmar: a pastilha muda de cor.
     const pend = agendaDoDia(dia).some(a => a.status === 'pendente');
     const bloq = (bd.bloqueios || [])
       .filter(b => b.salaoId === salaoAtual && b.data === dia).length;
@@ -3078,7 +3082,7 @@ function pintarMes(){
 function escolherDiaDoMes(dia){ diaAtual = dia; pintar(); }
 
 /* O cartão de UM atendimento: nome, status, horário, serviços, quem atende e
-   o valor, com o Confirmar ali mesmo quando espera o salão. É o mesmo na
+   o valor, com o Confirmar ali mesmo quando espera o restaurante. É o mesmo na
    lista do dia do mês e no "Quem ainda vem" da tela Hoje — o dono pediu as
    duas iguais, e um desenho só é um lugar só para consertar. */
 /* ── COMO A CLIENTE VAI PAGAR ─────────────────────────────────────────────
@@ -3151,7 +3155,7 @@ function pintarListaDoDia(){
   }
 
   /* ⚠ O STATUS NO CARTÃO. A lista mostrava nome, hora e valor — e nada que
-     separasse o confirmado do que ainda espera o salão. No salão que
+     separasse o confirmado do que ainda espera o restaurante. No restaurante que
      confirma à mão, o dono tinha que abrir um por um para saber. Agora o
      pendente vem com a etiqueta e o Confirmar ali mesmo; o cartão continua
      abrindo a ficha (por isso é um div com papel de botão: botão dentro de
@@ -3397,8 +3401,8 @@ function pintarClientes(){
       const f = faltasDoCliente(c.id);
       return `<tr>
         <td><b>${escapar(c.nome)}</b>${c.peloLink
-          ? ' <span class="tag t-conc" title="Ela mesma fez o cadastro pelo link do salão">cadastrou pelo link</span>' : ''}${c.contaExcluidaEm
-          ? ` <span class="tag t-canc" title="Ela excluiu a conta do link. A ficha, o histórico e os horários continuam no salão.">excluiu a conta do link em ${escapar(quandoDoPedidoLoja(c.contaExcluidaEm).split(' às ')[0])}</span>` : ''}${c.exigeConfirmacao
+          ? ' <span class="tag t-conc" title="Ela mesma fez o cadastro pelo link do restaurante">cadastrou pelo link</span>' : ''}${c.contaExcluidaEm
+          ? ` <span class="tag t-canc" title="Ela excluiu a conta do link. A ficha, o histórico e os horários continuam no restaurante.">excluiu a conta do link em ${escapar(quandoDoPedidoLoja(c.contaExcluidaEm).split(' às ')[0])}</span>` : ''}${c.exigeConfirmacao
           ? ' <span class="tag t-pend" title="O que ela marcar pelo link espera sua confirmação">confirma antes</span>' : ''}${
           c.obs ? `<br><span style="font-size:12px;color:var(--txt2)">${escapar(c.obs)}</span>` : ''}${
           resumoDoLembrete(c.id) ? `<br><span class="lembrete-na-lista">${escapar(resumoDoLembrete(c.id))}</span>` : ''}</td>
@@ -3482,7 +3486,7 @@ function pintarServicos(){
        migração para isto funcionar.
 
    ⚠ LISTA VAZIA QUER DIZER "NÃO ESCOLHI", nunca "esconda tudo". É o estado
-   de todo salão que já existe, e tratá-la como "nenhum" deixaria essas casas
+   de todo restaurante que já existe, e tratá-la como "nenhum" deixaria essas casas
    com a capa em branco no dia da atualização. Sem escolha, a capa se vira —
    ver `destaquesDaCapa()` no agendar.html. */
 function destaquesDoSalao(sl){
@@ -3519,7 +3523,7 @@ async function virarDestaque(sid){
 /* ═══════════════════════════════════════════════════════════════════════════
    PACOTES
 
-   O salão cria "Unha em Dia": 4 manutenções, 90 dias, de segunda a quarta, e
+   O restaurante cria "Unha em Dia": 4 manutenções, 90 dias, de segunda a quarta, e
    vincula clientes. Quem está vinculada e LOGADA marca pelo link e paga zero.
 
    ⚠ A LISTA DE CLIENTES VINCULADAS NÃO MORA AQUI DENTRO do pacote: mora em
@@ -3621,7 +3625,7 @@ function pintarPacotes(){
             return `<tr><td><button type="button" class="pk-nome" onclick="abrirDetalheDoPacote('${v.id}')"
                   title="Ver os horários, o pagamento e tudo deste pacote">${escapar(c.nome || '—')}</button> ${c.perfilId
                 ? '<span class="tag t-ok">com conta</span>'
-                : '<span class="tag t-pend" title="Peça para ela entrar no link do salão e criar a conta com este WhatsApp">sem conta ainda</span>'}
+                : '<span class="tag t-pend" title="Peça para ela entrar no link do restaurante e criar a conta com este WhatsApp">sem conta ainda</span>'}
                 ${v.pagoEm ? `<span class="tag t-ok">pago · ${escapar(nomeFormaDoPacote(v.formaPagamento))}</span>`
                   : pacoteAReceber(v) ? `<span class="tag t-pend">a receber ${real(Number(v.valor))}</span>` : ''}
                 <br><span class="pk-fixa">vence ${porExtenso(v.venceEm)}</span>
@@ -3941,7 +3945,7 @@ function codigoDoCupom(cid){
 
 /* Quantas vezes cada um já foi usado. Vem do banco (`usos_dos_cupons`), que é
    quem conta — e conta direito: o uso de um horário desmarcado volta para o
-   cupom. Por salão; `mapa` nulo quer dizer "ainda não sei" (ou demonstração,
+   cupom. Por restaurante; `mapa` nulo quer dizer "ainda não sei" (ou demonstração,
    onde ninguém usa cupom). */
 let usosDosCupons = { salao: null, quando: 0, mapa: null };
 
@@ -4129,7 +4133,7 @@ function salvarCupom(cid){
     return;
   }
   if(cuponsDoSalao().some(x => x.codigo === codigo && x.id !== cid)){
-    alert('Já existe um cupom ' + codigo + ' neste salão.\n\n'
+    alert('Já existe um cupom ' + codigo + ' neste restaurante.\n\n'
         + 'Escolha outro código, ou edite o que já existe.');
     return;
   }
@@ -4223,7 +4227,7 @@ const vendaDoAgendamento = a => a && a.pacoteClienteId
 const pacoteAReceber = v => !!v && Number(v.valor) > 0 && !v.pagoEm && !v.canceladoEm;
 /* Sessão RESERVADA: pacote vendido a receber com agenda fixa — o horário
    fica guardado (pendente) e só é confirmado quando o pagamento é registrado
-   (43, `receber_pacote`). Não espera "sim" do salão: espera o dinheiro. */
+   (43, `receber_pacote`). Não espera "sim" do restaurante: espera o dinheiro. */
 const aguardaPagamentoDoPacote = a => !!a && a.status === 'pendente'
   && pacoteAReceber(vendaDoAgendamento(a));
 const sessoesDaVenda = vid => agendaDoSalao()
@@ -4340,7 +4344,7 @@ function abrirVenderPacote(pid, renovarDe){
     <div class="aviso" style="margin-top:12px">
       Com a agenda fixa, os horários já ficam marcados: a cliente <b>não precisa de conta</b>.
       Para ela marcar sozinha pelo link usando o pacote — e ver os horários em
-      <b>Meus horários</b> —, ela cria a conta no link do salão, em <b>Entrar → Criar conta</b>,
+      <b>Meus horários</b> —, ela cria a conta no link do restaurante, em <b>Entrar → Criar conta</b>,
       com o mesmo WhatsApp desta ficha.
     </div>`,
     semCliente ? [['Fechar', 'fecharModal()']]
@@ -4414,7 +4418,7 @@ function alternarServicoDaSemana(i, id){
 async function montarPacote(){
   if(!NA_NUVEM){
     alert('Na demonstração o pacote não é gravado: ele precisa do banco para '
-        + 'conferir a agenda de cada semana. No seu salão, funciona.');
+        + 'conferir a agenda de cada semana. No seu restaurante, funciona.');
     return;
   }
   const v = id => ((document.getElementById(id) || {}).value || '').trim();
@@ -4473,7 +4477,7 @@ async function montarPacote(){
 }
 
 /* Pronto: o que ficou marcado, e o recado para a cliente pelo WhatsApp DO
-   SALÃO — com as datas, o valor e, se falta pagar, a chave Pix. Não gasta a
+   RESTAURANTE — com as datas, o valor e, se falta pagar, a chave Pix. Não gasta a
    franquia de mensagens: quem manda é o dono, do celular dele. */
 function mostrarPacoteMontado(vid){
   const venda = (bd.pacote_clientes || []).find(x => x.id === vid);
@@ -4529,7 +4533,7 @@ function mandarPacoteNoZap(vid){
    reservada até o pagamento —, quantas restam, o vencimento e o pagamento.
    Tocar num horário abre o atendimento, de onde se remarca ou troca quem
    atendeu. Os horários são os que o painel já tem (a agenda inteira do
-   salão); nada aqui grava. */
+   restaurante); nada aqui grava. */
 function abrirDetalheDoPacote(vid){
   const v = (bd.pacote_clientes || []).find(x => x.id === vid);
   if(!v) return;
@@ -4711,10 +4715,10 @@ function pintarProdutos(){
   if(!lista.length){
     alvo.innerHTML = `<div class="vazio"><b>Nenhum produto cadastrado</b>
       ${souGestor()
-        ? 'Cadastre o que o salão vende — shampoo, pomada, esmalte. '
+        ? 'Cadastre o que o restaurante vende — shampoo, pomada, esmalte. '
           + (usaComanda() ? 'Eles aparecem na comanda na hora de fechar a conta.'
                           : 'Eles podem aparecer no seu link, para a cliente ver.')
-        : 'Peça a quem responde pelo salão para cadastrar.'}</div>`;
+        : 'Peça a quem responde pelo restaurante para cadastrar.'}</div>`;
     return;
   }
 
@@ -4962,7 +4966,7 @@ const contarTrabalho = h =>
 
    O banco já sabia lidar com `recepcao` e `profissional` — as policies estão
    escritas desde sempre, e a `vinc_gerir` até deixa o dono criar vínculo no
-   próprio salão. O que faltava era o CAMINHO: para criar o vínculo é preciso
+   próprio restaurante. O que faltava era o CAMINHO: para criar o vínculo é preciso
    o id do perfil da pessoa, e o dono não tem como descobrir esse id (nem
    deve: um campo "digite o e-mail e eu procuro" seria uma porta para
    descobrir quem tem conta na plataforma, um e-mail por vez).
@@ -4970,15 +4974,15 @@ const contarTrabalho = h =>
    No convite quem traz o id é a PRÓPRIA PESSOA, ao aceitar logada.
    ═══════════════════════════════════════════════════════════════════════════ */
 const PAPEIS_CONVITE = [
-  ['recepcao',     'Recepção',
-   'Marca, desmarca e lança comanda. Não mexe em preço, serviço nem equipe.'],
-  ['profissional', 'Quem atende',
-   'Vê a agenda do salão e lança o que atendeu.'],
+  ['recepcao',     'Caixa e balcão',
+   'Aceita pedidos, lança venda e cuida do caixa. Não mexe em preço, cardápio nem equipe.'],
+  ['profissional', 'Atendente',
+   'Vê os pedidos do restaurante e acompanha o andamento de cada um.'],
   ['admin',        'Administra',
    'Faz tudo o que você faz, menos tirar o seu acesso de dono.'],
 ];
 const NOME_PAPEL = { dono:'Proprietário', admin:'Administra',
-                     recepcao:'Recepção', profissional:'Quem atende' };
+                     recepcao:'Caixa e balcão', profissional:'Atendente' };
 
 let acessosDoSalao = null;   // cache do que o banco devolveu
 
@@ -5021,7 +5025,7 @@ async function pintarAcessos(){
 function desenharAcessos(){
   const alvo = document.getElementById('listaAcessos');
   if(!alvo) return;
-  /* Sem estado vazio de propósito: quem chama esta tela é gestor do salão, e
+  /* Sem estado vazio de propósito: quem chama esta tela é gestor do restaurante, e
      gestor tem vínculo — a lista sempre traz pelo menos ele. Um "ninguém
      entra aqui" seria um ramo que nunca roda prometendo algo falso. */
   const lista = acessosDoSalao || [];
@@ -5045,7 +5049,7 @@ function abrirConvite(){
   abrirModal('Convidar alguém', `
     <p style="color:var(--txt2);font-size:14px;margin-bottom:14px">
       Você gera um link e manda pela pessoa no WhatsApp. Ela abre, cria a
-      conta dela e já entra no salão.</p>
+      conta dela e já entra no restaurante.</p>
     <div class="campo"><label for="vNome">Para quem é (opcional)</label>
       <input id="vNome" placeholder="Rita, da recepção">
       <span style="font-size:12px;color:var(--txt2)">Só para você saber de
@@ -5155,7 +5159,7 @@ async function tirarAcesso(perfilId, papel, botao){
                                              && a.papel === papel);
   if(!confirm('Tirar o acesso de ' + ((quem && quem.nome) || 'esta pessoa') + '?\n\n'
     + 'Ela para de entrar no sistema agora. A ficha dela e os atendimentos '
-    + 'que ela fez continuam no salão — isto mexe só no login.')) return;
+    + 'que ela fez continuam no restaurante — isto mexe só no login.')) return;
 
   botao.disabled = true;
   try{
@@ -5238,14 +5242,14 @@ function desenharHoje(p){
      sistema, cada uma com a sua conta, e o dono somando de cabeça para
      entender por que não batiam.
 
-     Só que a aba Caixa SOME DO MENU quando o salão desliga a comanda (ver
-     `minhasTelas()`). Nesse salão, tirar o dinheiro daqui o deixaria sem
+     Só que a aba Caixa SOME DO MENU quando o restaurante desliga a comanda (ver
+     `minhasTelas()`). Nesse restaurante, tirar o dinheiro daqui o deixaria sem
      faturamento em lugar nenhum — e ele existe: o gatilho
      `tg_agend_sem_comanda` faz o atendimento concluído virar dinheiro sem
      comanda nenhuma.
 
      Então a regra não é "tirar", é "um lugar só" — e qual lugar depende de o
-     salão usar comanda. Com comanda, o Caixa; sem, aqui.
+     restaurante usar comanda. Com comanda, o Caixa; sem, aqui.
 
      O "na agenda" fica nos dois casos: é contagem de gente, não de dinheiro,
      e é o que responde a pergunta que abre esta tela. */
@@ -5296,7 +5300,7 @@ function desenharHoje(p){
      status, sem serviço e sem valor, enquanto a lista do dia no mês mostrava
      tudo isso. "Tem que deixar igual o mensal": agora é o mesmo cartão
      (`cartaoDoDia`), dos atendimentos de hoje que ainda não terminaram, na
-     hora do salão. Tocar abre a ficha; o pendente tem o Confirmar ali. */
+     hora do restaurante. Tocar abre a ficha; o pendente tem o Confirmar ali. */
   const sl = acharSalao(salaoAtual);
   const agora = sl && sl.fuso
     ? instanteParaTela(new Date().toISOString(), sl.fuso)
@@ -5315,7 +5319,7 @@ function desenharHoje(p){
   if(window.aplicarIcones) aplicarIcones(alvoHoje);
 }
 
-/* A hora no fuso do SALÃO, e é por isso que o `painel_hoje()` devolve o
+/* A hora no fuso do RESTAURANTE, e é por isso que o `painel_hoje()` devolve o
    `fuso` junto — não é enfeite do jsonb.
 
    Sem passar o `timeZone`, o `toLocaleTimeString` usa o do NAVEGADOR: um
@@ -5529,12 +5533,12 @@ async function confirmarFecharGavetaAgora(){
 
    "Como lembrar os parabéns das clientes?" — a data já era guardada (o link
    pede, a ficha tem o campo) e o recado "Dar os parabéns" já existia em Meu
-   salão. Faltava o principal: nenhuma tela dizia QUEM faz aniversário. O
+   restaurante. Faltava o principal: nenhuma tela dizia QUEM faz aniversário. O
    recado só aparecia ao tocar no WhatsApp de um horário marcado, e ninguém
    marca horário no dia do próprio aniversário para ganhar parabéns.
 
    ⚠ SÓ AVISA, NÃO MANDA. Decisão do dono do produto: "que apareça somente no
-   app por enquanto". O botão abre o WhatsApp DO SALÃO com o recado escrito,
+   app por enquanto". O botão abre o WhatsApp DO RESTAURANTE com o recado escrito,
    pelo `wa.me` — o mesmo caminho dos outros recados manuais. Nada sai pela
    API da Meta, nada custa, nada gasta a cota do plano.
 
@@ -5544,7 +5548,7 @@ async function confirmarFecharGavetaAgora(){
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* Quem faz aniversário de hoje até daqui a `dias` dias, no calendário DO
-   SALÃO (`hoje()` usa o fuso dele: às 22h em São Paulo ainda é hoje lá, mesmo
+   RESTAURANTE (`hoje()` usa o fuso dele: às 22h em São Paulo ainda é hoje lá, mesmo
    que o relógio do mundo já tenha virado).
 
    ⚠ 29 DE FEVEREIRO. Quem nasceu nele faz aniversário só de quatro em quatro
@@ -5647,7 +5651,7 @@ function darParabens(clienteId){
   mandarRecado(num, 'aniversario', JSON.stringify({
     cliente: (nomeCliente(clienteId) || '').split(' ')[0],
     horario: '',
-    empresa: (acharSalao(salaoAtual) || {}).nome || 'salão',
+    empresa: (acharSalao(salaoAtual) || {}).nome || 'restaurante',
   }));
 }
 
@@ -5766,7 +5770,7 @@ function pintarAniversarios(){
    Cartões que o dono liga, desliga e põe na ordem que quiser.
 
    ── POR QUE CONFIGURÁVEL, E NÃO UMA TELA FIXA ──────────────────────────────
-   Porque não existe "o dono do salão". Existe a manicure sozinha, que quer
+   Porque não existe "o dono do restaurante". Existe a manicure sozinha, que quer
    saber quantas vêm hoje; existe a dona de uma casa com seis cadeiras, que
    quer o faturamento do ano e o ranking da equipe; e existe o barbeiro que
    abriu semana passada, para quem todo gráfico está vazio e um painel cheio
@@ -5774,7 +5778,7 @@ function pintarAniversarios(){
 
    Uma tela fixa serve bem a um desses três e mal aos outros dois. E o custo
    de deixar escolher é pequeno: a lista dos cartões é um array aqui embaixo,
-   e a escolha é uma lista de ids no `cfg` do salão.
+   e a escolha é uma lista de ids no `cfg` do restaurante.
 
    ── ⚠ A ESCOLHA É UMA LISTA, E A ORDEM DELA É A ORDEM DA TELA ─────────────
    Não é `{id: true/false}`. Num objeto, "ligado" e "posição" seriam duas
@@ -5782,7 +5786,7 @@ function pintarAniversarios(){
    remendo que uma lista dispensa.
 
    ⚠ E LISTA VAZIA QUER DIZER "NUNCA MEXI", não "não quero nada". É o estado
-   de todo salão que já existe no dia em que isto entra no ar; lido como
+   de todo restaurante que já existe no dia em que isto entra no ar; lido como
    "nenhum", o dashboard nasceria em branco para todo mundo. Sem escolha,
    vale o `PADRAO_DASHBOARD`. É a mesma armadilha dos destaques da capa, e
    pela mesma razão.
@@ -5802,7 +5806,7 @@ const CARTOES_DASH = [
   ['aniversarios','Aniversariantes',        () => dashAniversarios()],
 ];
 
-/* O que um salão vê sem ter escolhido nada: os dois gráficos, porque são o
+/* O que um restaurante vê sem ter escolhido nada: os dois gráficos, porque são o
    que o dono reconhece como "dashboard", e os pendentes, porque é o único
    cartão que pede AÇÃO — os outros informam, este cobra. */
 const PADRAO_DASHBOARD = ['pendentes', 'fatAno', 'fatSemana'];
@@ -5810,7 +5814,7 @@ const PADRAO_DASHBOARD = ['pendentes', 'fatAno', 'fatSemana'];
 /* ⚠ AUSENTE E VAZIO SÃO COISAS DIFERENTES, e confundi-las custou uma
    correção aqui.
 
-     · chave AUSENTE  = o dono nunca mexeu. É o estado de todo salão que já
+     · chave AUSENTE  = o dono nunca mexeu. É o estado de todo restaurante que já
        existe, e aí vale o padrão — senão a atualização deixaria o dashboard
        em branco para todo mundo, sem ninguém ter pedido;
 
@@ -5833,7 +5837,7 @@ function dashEscolhidos(sl){
 
    O projeto não tem passo de build e funciona sem rede depois de instalado.
    Uma biblioteca custaria de 50 a 200 KB no primeiro acesso — numa rede de
-   salão é a diferença entre abrir e desistir — e traria um segundo jeito de
+   restaurante é a diferença entre abrir e desistir — e traria um segundo jeito de
    pensar cor e tipografia, brigando com o CSS que já existe. Dois gráficos
    simples cabem em trinta linhas cada.
    ───────────────────────────────────────────────────────────────────────── */
@@ -5844,7 +5848,7 @@ function dashFatAno(d){
   const serie = d.ano || [];
   if(!serie.length) return '<div class="vazio">Sem movimento ainda.</div>';
 
-  /* ⚠ O TETO NUNCA É ZERO. Num salão que ainda não faturou, todo valor é 0 e
+  /* ⚠ O TETO NUNCA É ZERO. Num restaurante que ainda não faturou, todo valor é 0 e
      a divisão pelo máximo daria NaN — o caminho do SVG sairia com "NaN" no
      meio e o gráfico não desenharia nada, sem erro nenhum no console. */
   const teto = Math.max(1, ...serie.map(x => Number(x.valor) || 0));
@@ -5971,9 +5975,9 @@ function dashRanque(lista, campo, unidade){
    ───────────────────────────────────────────────────────────────────────── */
 let dashDados = null;
 let dashPedido = 0;
-/* De QUAL salão é o `dashDados`. Sem isto, quem tem duas unidades abria o
+/* De QUAL restaurante é o `dashDados`. Sem isto, quem tem duas unidades abria o
    Dashboard numa, trocava no seletor, e via os números da primeira — "2
-   clientes esperando resposta" de um salão que não tinha nenhum. Achado
+   clientes esperando resposta" de um restaurante que não tinha nenhum. Achado
    pelo caça-bug. */
 let dashSalao = null;
 
@@ -5998,13 +6002,13 @@ async function carregarDash(forcar){
     d = await Dados.chamar('painel_grafico', { p_salao: deQuem });
   }catch(e){
     if(meu !== dashPedido) return;
-    /* ⚠ A FUNÇÃO PODE NÃO EXISTIR NO BANCO DESTE SALÃO. Quem instalou antes
+    /* ⚠ A FUNÇÃO PODE NÃO EXISTIR NO BANCO DESTE RESTAURANTE. Quem instalou antes
        desta versão e ainda não colou o `98_modulos.sql` recebe 404 do
        PostgREST, e "Not Found" na cara do dono não diz o que fazer. */
     const msg = e.message || '';
     alvo.innerHTML = '<div class="vazio"><b>Não consegui montar o dashboard</b>'
       + (/PGRST202|not found/i.test(msg)
-          ? 'O banco deste salão ainda não tem esta parte. Cole o '
+          ? 'O banco deste restaurante ainda não tem esta parte. Cole o '
             + '<b>supabase/98_modulos.sql</b> no Supabase e recarregue a página.'
           : escapar(msg))
       + '</div>';
@@ -6377,8 +6381,8 @@ function pintarCaixa(){
    celular no dia 30: QUANTO EU DEVO PARA CADA UMA.
 
    ── POR QUE A CONTA É FEITA NO BANCO ──────────────────────────────────────
-   Somar aqui exigiria baixar TODO o histórico de comandas do salão — que
-   cresce para sempre — só para mostrar quatro números. Um salão com dois anos
+   Somar aqui exigiria baixar TODO o histórico de comandas do restaurante — que
+   cresce para sempre — só para mostrar quatro números. Um restaurante com dois anos
    de casa passaria minutos carregando para ver o fechamento de um mês. No
    banco a conta acontece onde o dado mora e volta um jsonb pequeno.
 
@@ -6411,7 +6415,7 @@ const PERIODOS = [
    Terminando no fim do mês, o período em curso ficava sempre com dias vazios
    no fim — e como a comparação é contra uma janela do MESMO TAMANHO, o mês
    corrido de 26 dias apanhava de um mês anterior de 31. O dono via seta
-   vermelha todo mês, até o dia 31, num salão que não tinha piorado nada.
+   vermelha todo mês, até o dia 31, num restaurante que não tinha piorado nada.
 
    Faturamento não existe no futuro: o período que interessa é o que já
    aconteceu. */
@@ -6778,7 +6782,7 @@ function relatorioLocal(de, ate){
 }
 
 /* A variação contra o período anterior. É o que transforma "R$ 8.400" em
-   "R$ 8.400, 12% acima do mês passado" — o número sozinho não diz se o salão
+   "R$ 8.400, 12% acima do mês passado" — o número sozinho não diz se o restaurante
    está melhorando. Sem período anterior não se inventa porcentagem: dizer
    "+100%" contra zero é ruído.
 
@@ -6802,7 +6806,7 @@ function variacao(agora, antes, r){
 }
 
 /* A dona não recebe comissão dela mesma: o que ela atende já é dela. A ficha
-   de quem atende que é da própria dona (vínculo "dono" no salão) sai da
+   de quem atende que é da própria dona (vínculo "dono" no restaurante) sai da
    comissão A PAGAR — continua aparecendo no que vendeu. */
 function eDaDona(p){
   if(!p || !p.perfilId) return false;
@@ -6891,7 +6895,7 @@ function desenharRelatorio(r){
     <div class="rel-grupo" id="relGDinheiro" role="heading" aria-level="2"><span>2</span> O dinheiro
       <small>Por onde o dinheiro entrou, e o que ficou para receber.</small></div>
     <h2 class="rel-secao">Como o dinheiro entrou
-      <small>A taxa da maquininha vem junto: o salão recebe menos do que a
+      <small>A taxa da maquininha vem junto: o restaurante recebe menos do que a
              cliente pagou, e sem isso o faturamento mente sobre o que cai na
              conta.</small></h2>
     ${formas.length ? `<div class="tabela-rola"><table class="tabela"><thead><tr>
@@ -6986,12 +6990,12 @@ function prepararPublico(){
   document.getElementById('pubEnd').textContent =
     Endereco.linha(s.endereco) || (restaurantePainel() ? 'Faça seu pedido' : 'Agende seu horário');
 
-  // O endereço do salão sai do `slug`. É a mesma coluna `saloes.slug` do banco,
-  // e é o que separa um salão do outro na porta de entrada do cliente.
+  // O endereço do restaurante sai do `slug`. É a mesma coluna `saloes.slug` do banco,
+  // e é o que separa um restaurante do outro na porta de entrada do cliente.
   /* Na demonstração o link leva `&demo=1`: sem ele, "Abrir o app do cliente"
      e o QR abriam a página ligada no banco de VERDADE — e, se existisse lá um
-     salão com o mesmo apelido, quem só estava conhecendo o sistema marcava
-     horário num salão real. Achado pelo caça-bug. */
+     restaurante com o mesmo apelido, quem só estava conhecendo o sistema marcava
+     horário num restaurante real. Achado pelo caça-bug. */
   const base = location.href.replace(/\/[^\/]*$/, '/') + 'agendar.html?salao=' + s.slug + sufixoDemo();
   document.getElementById('linkPublico').value = base;
   document.getElementById('abrirComoCliente').href = 'agendar.html?salao=' + s.slug + sufixoDemo();
@@ -7001,7 +7005,7 @@ function prepararPublico(){
      O texto diz "imprime como QR no espelho" desde sempre, e não havia QR
      nenhum: o dono lia a frase, procurava o quadradinho e não achava.
 
-     Desenhado aqui, no navegador, sem serviço de fora — o endereço do salão
+     Desenhado aqui, no navegador, sem serviço de fora — o endereço do restaurante
      não sai desta máquina para virar figura. Ver `qr.js`. */
   const caixaQr = document.getElementById('qrDoLink');
   if(caixaQr && window.QR){
@@ -7042,7 +7046,7 @@ function prepararPublico(){
    E o arquivo sai do navegador, montado aqui: nada sobe para lugar nenhum. */
 /* `qual` existe porque o QR é desenhado em dois lugares: no cartão de "Ver
    como cliente" e no último passo do primeiro dia. Sem o parâmetro, o botão
-   do assistente baixaria o quadradinho do OUTRO lugar — que num salão recém
+   do assistente baixaria o quadradinho do OUTRO lugar — que num restaurante recém
    aberto nem foi desenhado ainda, e o dono levaria "recarregue a página" sem
    nada de errado com a página. */
 function baixarQr(qual){
@@ -7155,7 +7159,7 @@ function confirmarPublico(profId, servId, data, min){
   /* A mesma conferência que a recepção faz — pelo mesmo motor. No banco quem
      decide é o gatilho; aqui é só para não deixar a tela mentir.
 
-     ⚠ E aqui NÃO existe encaixe. Encaixe é decisão de quem trabalha no salão,
+     ⚠ E aqui NÃO existe encaixe. Encaixe é decisão de quem trabalha no restaurante,
      tomada com a pessoa na frente; a cliente marcando sozinha pelo link nunca
      pode furar a jornada de ninguém. Por isso este caminho só recusa. */
   const motivo = porqueNaoCabe(profId, data, min, min + dur, null);
@@ -7363,7 +7367,7 @@ function refazerFormDeHorario(){
 }
 /* Os horários livres de quem atende, no dia escolhido, para a duração dos
    serviços marcados — a mesma conta da agenda (`horariosLivres`). Hoje, só
-   o que ainda não passou, na hora do salão. Dia sem vaga mostra os próximos
+   o que ainda não passou, na hora do restaurante. Dia sem vaga mostra os próximos
    dias que têm. */
 function pintarLivresDoForm(profId, data, dur, ini, ignorar){
   const alvo = document.getElementById('fLivres');
@@ -7504,7 +7508,7 @@ function salvarAgendamento(){
       alert(r.motivo + '\n\nEscolha outro horário.');
       return;
     }
-    /* O encaixe é legítimo — é o que salva o dia num salão. O que não pode é
+    /* O encaixe é legítimo — é o que salva o dia num restaurante. O que não pode é
        ele acontecer por descuido, sem ninguém saber que aconteceu. Por isso
        pergunta, e por isso fica registrado com quem confirmou. */
     if(!confirm(r.motivo + '\n\n'
@@ -7522,7 +7526,7 @@ function salvarAgendamento(){
     if(nome.length < 2){ alert('Informe o nome da cliente.'); return; }
     const tel = telefoneParaBanco(document.getElementById('fTel').value);
 
-    // Telefone que já tem dono no salão: reaproveita a ficha em vez de criar
+    // Telefone que já tem dono no restaurante: reaproveita a ficha em vez de criar
     // a segunda. Criar era o que derrubava a gravação inteira no `ux_cli_tel`.
     const ja = fichaPeloTelefone(tel);
     if(ja){
@@ -7612,7 +7616,7 @@ function abrirDetalhe(agId){
     ${a.encaixe ? `<div class="aviso info">
       <b>Este horário foi um encaixe.</b> Está fora da jornada de
       ${escapar(acharProf(a.profissionalId)?.nome || 'quem atende')}, e alguém
-      do salão confirmou isso na hora de marcar.</div>` : ''}
+      do restaurante confirmou isso na hora de marcar.</div>` : ''}
     ${avisoDeFaltas(a.clienteId)}
     ${avisoDeLembrete(a.clienteId)}
     <table class="tabela" style="box-shadow:none"><tbody>
@@ -7689,7 +7693,7 @@ function abrirDetalhe(agId){
        Pior que a aba do Caixa, porque é na agenda, que é a tela onde quem
        atende passa o dia. O `vejoTudo()` já existia para isto e não estava
        ligado em lugar nenhum. */
-    /* E some também no salão que não usa comanda. Lá o atendimento concluído
+    /* E some também no restaurante que não usa comanda. Lá o atendimento concluído
        já vira dinheiro sozinho (28_sem_comanda.sql): oferecer o botão seria
        oferecer uma segunda contagem do mesmo atendimento. */
     ...(vejoTudo() && usaComanda()
@@ -7701,7 +7705,7 @@ function abrirDetalhe(agId){
        escolhas para uma decisão que é sim ou não. O seletor continua lá para
        tudo o mais; isto aqui é o caminho de um clique.
 
-       Só aparece quando há o que confirmar: num salão que confirma
+       Só aparece quando há o que confirmar: num restaurante que confirma
        automático, nenhum atendimento chega em `pendente`. */
     ...(aguardaPagamentoDoPacote(a)
         ? (vejoTudo() ? [['Recebi o pacote', `fecharModal();abrirReceberPacote('${vendaDoAgendamento(a).id}')`, 'btn-p']] : [])
@@ -7920,7 +7924,7 @@ function cancelarHorario(agId){
     + '. Ela vê "Cancelado" no link, mas não recebe mensagem: se quiser, '
     + 'avise pelo WhatsApp.')) return;
   a.status = 'cancelado';
-  a.canceladoMotivo = 'cancelado pelo salão';
+  a.canceladoMotivo = 'cancelado pelo restaurante';
   salvar(); fecharModal(); pintar();
 }
 
@@ -7941,7 +7945,7 @@ function salvarStatus(agId){
      Excluir   → a linha some. Some o histórico, somem os serviços dela
                  (o banco apaga em cascata) e — o pior — o cartão SOME DA
                  TELA DA CLIENTE, sem aviso nenhum. Ela pode aparecer no
-                 salão achando que continua marcada.
+                 restaurante achando que continua marcada.
 
    O aviso antigo era só "Excluir este atendimento?", que não distingue os
    dois. Quem quer desmarcar uma cliente lê isso e clica. */
@@ -7951,7 +7955,7 @@ function excluirAgendamento(agId){
   const quem = nomeCliente(a.clienteId);
   if(!confirm(
       'Arquivar tira este atendimento da agenda e da tela de ' + quem
-    + ' — ela pode vir ao salão achando que está marcada.\n\n'
+    + ' — ela pode vir ao restaurante achando que está marcada.\n\n'
     + 'Para desmarcar alguém, use o botão "Cancelar horário": aí ela vê o '
     + 'cancelamento no aplicativo.\n\n'
     + 'Arquivar mesmo assim? (use para lançamento errado, teste ou duplicata)\n\n'
@@ -7960,7 +7964,7 @@ function excluirAgendamento(agId){
   /* ⚠ ARQUIVAR, NÃO APAGAR
      Apagar a linha levava junto os serviços e a comanda (o banco apaga em
      cascata), sem lixeira e sem desfazer: um clique errado custava o
-     histórico, e é o histórico que diz quanto o salão faturou.
+     histórico, e é o histórico que diz quanto o restaurante faturou.
 
      `arquivado_em` sai da trava anti-choque no banco, então o horário volta
      a ficar livre na hora — que é o que o dono quer ao apagar um lançamento
@@ -8071,7 +8075,7 @@ async function comandaDoAgendamento(agId){
   abrirComanda(c.id);
 }
 
-// Numeração por salão. No banco isso é um contador com UPDATE atômico; aqui,
+// Numeração por restaurante. No banco isso é um contador com UPDATE atômico; aqui,
 // que roda numa aba só, o máximo + 1 basta.
 function proximoNumero(){
   const nums = doSalao(bd.comandas).map(c => c.numero);
@@ -8084,7 +8088,7 @@ function proximoNumero(){
    nesta tela a fechava: `receber()` empilhava o pagamento e pronto. Vista de
    dentro do Caixa parecia funcionar — a tela somava tudo do dia, aberta ou
    não — e o defeito só apareceu do outro lado, no relatório: ele conta
-   `status = 'fechada'` por `fechada_em`, então o mês de QUALQUER salão de
+   `status = 'fechada'` por `fechada_em`, então o mês de QUALQUER restaurante de
    verdade voltava zerado, com o dinheiro todo lá dentro.
 
    Dava para consertar pelo lado errado — fazer o relatório somar comanda
@@ -8230,7 +8234,7 @@ function comissaoDaEscada(tipo, servicoId, produtoId, profId){
    desconto da comanda quando a regra congelada na comanda é 'liquido'.
 
    O acréscimo NÃO entra, no bruto nem no líquido: taxa de domingo é do
-   salão, não é serviço de ninguém. */
+   restaurante, não é serviço de ninguém. */
 function baseDaComissao(c, i){
   const t = i.qtd * i.precoUnit;
   const sub = subtotalDaComanda(c);
@@ -8851,7 +8855,7 @@ function pintarProcedimentos(){
   if(!todos.length){
     alvo.innerHTML = `<div class="vazio"><b>Nenhum procedimento ainda</b>${souGestor()
       ? 'Crie o passo a passo de cada técnica — Morena iluminada, Loiro perolado, Progressiva — com os produtos e cada etapa na ordem. A equipe vê aqui e no horário da cliente; a cliente não vê.'
-      : 'Quando a gestão do salão criar os procedimentos, eles aparecem aqui.'}</div>`;
+      : 'Quando a gestão do restaurante criar os procedimentos, eles aparecem aqui.'}</div>`;
     return;
   }
   const busca = nomeAchatado((document.getElementById('buscaProc') || {}).value);
@@ -9079,7 +9083,7 @@ function abrirServico(sid){
 /* ═══════════════════════════════════════════════════════════════════════════
    PREÇO POR VIGÊNCIA, DIA DA SEMANA E FAIXA DE HORÁRIO
 
-   Três recortes, combináveis, para a pergunta que todo salão faz: sábado à
+   Três recortes, combináveis, para a pergunta que todo restaurante faz: sábado à
    tarde lota e terça de manhã fica vazia.
 
        "escova R$ 50 de terça a quinta"
@@ -9533,7 +9537,7 @@ const MODELOS_FICHA = [
     dura:'3 a 4 semanas', manutencao:'a cada 21 dias, em média',
     cuidadosAntes:'Se puder, venha sem esmalte.',
     cuidadosDepois:'Use luvas para lavar louça e produtos de limpeza, e evite usar as unhas como ferramenta.',
-    duvidas:[{p:'Estraga a unha natural?', r:'Feito e retirado do jeito certo, não. Por isso a retirada é sempre feita no salão.'},
+    duvidas:[{p:'Estraga a unha natural?', r:'Feito e retirado do jeito certo, não. Por isso a retirada é sempre feita no restaurante.'},
              {p:'Posso tirar em casa?', r:'Não é indicado: arrancar o gel leva junto camadas da unha natural.'}] } },
   { nome:'Fibra de vidro', grupo:'Unhas', palavras:['fibra'], ficha:{
     explicacao:'Fios de fibra de vidro aplicados sobre a unha e cobertos com gel. É a técnica que deixa a unha alongada com aparência mais fina e natural.',
@@ -9547,7 +9551,7 @@ const MODELOS_FICHA = [
     inclui:['Remoção do esmalte anterior','Cutilagem e preparo da unha','Alongamento em acrílico','Esmaltação'],
     naoInclui:'Decoração e pedrarias, cobradas à parte.',
     dura:'3 a 4 semanas', manutencao:'a cada 15 a 21 dias',
-    cuidadosDepois:'Evite usar as unhas como ferramenta e procure o salão se alguma descolar.' } },
+    cuidadosDepois:'Evite usar as unhas como ferramenta e procure o restaurante se alguma descolar.' } },
   { nome:'Banho de gel', grupo:'Unhas', palavras:['banho'], ficha:{
     explicacao:'Camada de gel aplicada sobre a sua unha natural, sem alongar. Deixa a unha mais forte e o esmalte dura bem mais.',
     inclui:['Cutilagem e preparo da unha','Camada de gel sobre a unha natural','Esmaltação em gel'],
@@ -9591,7 +9595,7 @@ const MODELOS_FICHA = [
     explicacao:'Tratamento que reduz o volume e o frizz e deixa o cabelo liso ou mais alinhado.',
     inclui:['Avaliação dos fios','Lavagem','Aplicação do produto','Escova e prancha'],
     dura:'3 a 4 meses, em média',
-    cuidadosDepois:'Siga as orientações do salão sobre quando lavar e use shampoo sem sal.',
+    cuidadosDepois:'Siga as orientações do restaurante sobre quando lavar e use shampoo sem sal.',
     duvidas:[{p:'Posso fazer se tenho química no cabelo?', r:'Depende da química. A profissional avalia os fios antes de começar.'}] } },
   { nome:'Botox capilar', grupo:'Cabelo', palavras:['botox'], ficha:{
     explicacao:'Tratamento de reposição que ajuda a reduzir o frizz e devolve brilho e maciez aos fios.',
@@ -9951,7 +9955,7 @@ function limparFotoServico(){
    navegador, `data:` no campo escondido, e só vira arquivo no Storage quando
    o produto é salvo e já tem id.
 
-   A chave do arquivo é `produto-<id>`, dentro da pasta do salão. Não precisa
+   A chave do arquivo é `produto-<id>`, dentro da pasta do restaurante. Não precisa
    de policy nova: a do 04_imagens confere só a PRIMEIRA pasta do caminho. */
 let fotoProdutoPendente = null;
 
@@ -10051,7 +10055,7 @@ function abrirProduto(pid){
         <span class="d">Aparece na comanda, na hora de fechar a conta</span></span></label>
     <label class="serv-op" style="border:1px solid var(--borda);border-radius:9px;margin-top:8px">
       <input type="checkbox" id="pOnline" ${p ? (p.vendaOnline ? 'checked' : '') : (restaurantePainel() ? 'checked' : '')}>
-      <span class="i"><span class="n">${restaurantePainel() ? 'Aparece no cardápio do link' : 'Vender na página do salão'}</span>
+      <span class="i"><span class="n">${restaurantePainel() ? 'Aparece no cardápio do link' : 'Vender na página do restaurante'}</span>
         <span class="d">${restaurantePainel()
           ? 'A cliente vê e pede. No restaurante o item novo já nasce no cardápio.'
           : 'A cliente vê e põe no carrinho. Nasce desligado — quem publica é você.'}</span></span></label>
@@ -10198,13 +10202,13 @@ async function verHistoricoEstoque(produtoId){
     linhas = await Dados.chamar('estoque_historico',
       { p_produto: produtoId, p_limite: 50 });
   }catch(e){
-    /* ⚠ A FUNÇÃO PODE NÃO EXISTIR NO BANCO DESTE SALÃO. Quem instalou antes
+    /* ⚠ A FUNÇÃO PODE NÃO EXISTIR NO BANCO DESTE RESTAURANTE. Quem instalou antes
        desta versão recebe 404 do PostgREST, e "Not Found" na cara do dono não
        diz o que fazer. Mesma cortesia do dashboard. */
     const msg = e.message || '';
     alvo.innerHTML = `<p style="font-size:13px;color:var(--alerta)">${
       /PGRST202|not found/i.test(msg)
-        ? 'O banco deste salão ainda não tem esta parte. Cole o '
+        ? 'O banco deste restaurante ainda não tem esta parte. Cole o '
           + '<b>supabase/98_modulos.sql</b> no Supabase e recarregue a página.'
         : escapar(msg)}</p>`;
     return;
@@ -10275,7 +10279,7 @@ async function salvarProduto(pid){
        `produtos.comissao_pct` é `not null default 0`, e `servicos.comissao_pct`
        é anulável. A diferença está escrita no 16_comissao.sql e é deliberada:
        produto NUNCA herda do profissional, porque tornar a coluna anulável
-       transformaria "0%" em "herda" em todo salão que já usa.
+       transformaria "0%" em "herda" em todo restaurante que já usa.
 
        Eu copiei o padrão de serviço sem conferir a coluna, e o resultado foi
        o pior possível: deixar a comissão em branco — que é o estado normal —
@@ -10368,7 +10372,7 @@ function abrirProf(pid){
       <label class="check"><input type="checkbox" id="qNotifLembrete"
              ${!p || p.notifLembrete !== false ? 'checked' : ''}>
         <span>Lembrar antes de cada atendimento (quando o lembrete para o
-          salão estiver ligado em Mensagens da agenda)</span></label>
+          restaurante estiver ligado em Mensagens da agenda)</span></label>
     </div>
     <div class="campo" style="margin-bottom:12px">
       <label class="check"><input type="checkbox" id="qNotifResumo"
@@ -10659,7 +10663,7 @@ function pintar(){
 }
 
 /* ── Meu negócio: identidade visual ────────────────────────────────────────
-   A logo e a foto do salão não são enfeite. O cliente abre o link vindo do
+   A logo e a foto do restaurante não são enfeite. O cliente abre o link vindo do
    WhatsApp, e o que decide se ele confia naquela página é reconhecer a casa.
    Uma vitrine sem imagem parece link suspeito.
 
@@ -10672,15 +10676,15 @@ function pintar(){
    fariam o assistente oferecer um tipo que o cadastro não aceita. */
 /* No PediHub toda casa é restaurante (64_so_restaurante.sql trava isso no
    banco): o link é cardápio com entrega e retirada, e o painel tem a tela de
-   Pedidos (37_pedidos). Os tipos de salão do AgendaPro saíram. */
+   Pedidos (37_pedidos). Os tipos de restaurante do AgendaPro saíram. */
 const TIPOS_NEGOCIO = [
   ['restaurante', 'Restaurante, lanchonete, pizzaria ou delivery'],
 ];
 
-/* ── O HORÁRIO DA CIDADE DO SALÃO (58_fuso.sql) ───────────────────────────
+/* ── O HORÁRIO DA CIDADE DO RESTAURANTE (58_fuso.sql) ───────────────────────────
    `saloes.fuso` manda em tudo — o "agora" da agenda, o "hoje" do caixa, a
    hora de cada lembrete, os horários que o link oferece — e não havia onde
-   escolher: todo salão nascia no horário de Brasília e ficava. Em Manaus,
+   escolher: todo restaurante nascia no horário de Brasília e ficava. Em Manaus,
    Cuiabá, Campo Grande, Porto Velho, Boa Vista e Rio Branco a agenda parece
    certa (14:00 é 14:00), mas o relógio por baixo está uma ou duas horas
    adiantado: o lembrete de "2 horas antes" sai 3 horas antes, e o link para
@@ -10692,7 +10696,7 @@ const TIPOS_NEGOCIO = [
 
    ⚠ TROCAR NÃO MEXE EM HORÁRIO MARCADO. O banco move os instantes guardados
    junto com o fuso (quem marcou às 14:00 continua às 14:00) e trava a agenda
-   por 90 segundos, para os outros aparelhos do salão — que ainda pensam no
+   por 90 segundos, para os outros aparelhos do restaurante — que ainda pensam no
    relógio antigo — se atualizarem antes de alguém gravar. Por isso a troca é
    uma ação à parte, com confirmação, e NÃO um campo do "Salvar dados": salvar
    o cadastro nunca escreve `fuso`. */
@@ -10726,7 +10730,7 @@ function horaDoAparelho(quando){
   const d = quando || new Date();
   return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
-// Quantos minutos o relógio do salão está à frente (+) ou atrás (−) do aparelho.
+// Quantos minutos o relógio do restaurante está à frente (+) ou atrás (−) do aparelho.
 function minutosEntreSalaoEAparelho(fuso, quando){
   const d = quando || new Date();
   let p;
@@ -10738,20 +10742,20 @@ function minutosEntreSalaoEAparelho(fuso, quando){
   return Math.round(noSalao - aqui);
 }
 
-/* O relógio do aparelho discorda do do salão: é exatamente o salão que
+/* O relógio do aparelho discorda do do restaurante: é exatamente o restaurante que
    precisa desta tela — ou o dono viajando. A frase serve aos dois, porque
-   pergunta a única coisa que os separa: o aparelho está NO salão? */
+   pergunta a única coisa que os separa: o aparelho está NO restaurante? */
 function dicaDoFuso(sl){
   const dif = minutosEntreSalaoEAparelho(sl.fuso);
   if(Math.abs(dif) < 30) return '';
   return `<div class="aviso atencao" id="fusoDica" style="margin-top:10px">
-      <b>O relógio deste aparelho marca ${horaDoAparelho()}</b>, e o do salão
-      ${horaNoFuso(sl.fuso)}. Se este aparelho está no salão, escolha acima a
+      <b>O relógio deste aparelho marca ${horaDoAparelho()}</b>, e o do restaurante
+      ${horaNoFuso(sl.fuso)}. Se este aparelho está no restaurante, escolha acima a
       linha que mostra <b>${horaDoAparelho()}</b>.</div>`;
 }
 
 function campoDoFuso(sl){
-  // A demonstração vive no relógio do aparelho, e o salão dela não tem fuso.
+  // A demonstração vive no relógio do aparelho, e o restaurante dela não tem fuso.
   if(!NA_NUVEM || !sl || !sl.fuso) return '';
   const lista = FUSOS_DO_BRASIL.slice();
   if(!lista.some(x => x[0] === sl.fuso)) lista.push([sl.fuso, sl.fuso]);
@@ -10780,12 +10784,12 @@ function pedirTrocaDeFuso(novo){
   const sel = document.getElementById('cFuso');
   /* A lista volta para o fuso de agora na mesma hora: ela só muda de verdade
      quando o banco confirmar. Cancelar a janela não pode deixar a tela
-     dizendo "Manaus" num salão que continua em Brasília. */
+     dizendo "Manaus" num restaurante que continua em Brasília. */
   if(sel && sl) sel.value = sl.fuso;
   if(!sl || !novo || novo === sl.fuso || !FUSO_BEM_ESCRITO.test(novo)) return;
   if(!souGestor()) return;
   const de = horaNoFuso(sl.fuso), para = horaNoFuso(novo);
-  abrirModal('Trocar o horário do salão', `
+  abrirModal('Trocar o horário do restaurante', `
     <p style="font-size:14px">Trocar de <b>${escapar(nomeDoFuso(sl.fuso))}</b>
       (agora ${de}) para <b>${escapar(nomeDoFuso(novo))}</b> (agora ${para})?</p>
     <div class="aviso ok" style="margin-top:12px">
@@ -10796,7 +10800,7 @@ function pedirTrocaDeFuso(novo){
       lembretes passam a seguir <b>${para}</b>.</p>
     <p style="font-size:13.5px;color:var(--txt2);margin-top:8px">Por
       <b>1 minuto</b> ninguém consegue marcar nem remarcar: é o tempo de os
-      outros aparelhos do salão se atualizarem sozinhos.</p>`,
+      outros aparelhos do restaurante se atualizarem sozinhos.</p>`,
     [['Cancelar', 'fecharModal()'],
      ['Trocar o horário', `confirmarTrocaDeFuso('${novo}')`, 'btn-p']]);
 }
@@ -10811,7 +10815,7 @@ function confirmarTrocaDeFuso(novo){
       r = await Dados.chamar('mudar_fuso', { p_salao: salaoAtual, p_fuso: novo });
       if(Array.isArray(r)) r = r[0];
     }catch(e){
-      alert('Não consegui trocar o horário do salão. Nada foi alterado.\n\n' + (e.message || e));
+      alert('Não consegui trocar o horário do restaurante. Nada foi alterado.\n\n' + (e.message || e));
       return;
     }
     // A agenda inteira de novo: os instantes mudaram no banco junto com o fuso.
@@ -10823,8 +10827,8 @@ function confirmarTrocaDeFuso(novo){
     const partes = [];
     if(n) partes.push(n === 1 ? '1 horário marcado' : n + ' horários marcados');
     if(b) partes.push(b === 1 ? '1 bloqueio' : b + ' bloqueios');
-    abrirModal('Horário do salão trocado', `
-      <p style="font-size:14px">Pronto: o salão agora segue
+    abrirModal('Horário do restaurante trocado', `
+      <p style="font-size:14px">Pronto: o restaurante agora segue
         <b>${escapar(nomeDoFuso(novo))}</b> — agora são <b>${horaNoFuso(novo)}</b>.</p>
       ${partes.length ? `<div class="aviso ok" style="margin-top:12px"><b>${partes.join(' e ')}</b>
         ${n + b === 1 ? 'continua' : 'continuam'} exatamente na mesma hora.</div>` : ''}
@@ -10902,8 +10906,8 @@ function pintarSalao(){
          unidade e quer percorrer a mesma ordem. -->
     <div class="card" style="margin-bottom:16px">
       <h3 class="secao">Dados do estabelecimento</h3>
-      <p class="secao-sub">É o que aparece para o cliente na página de
-        agendamento, e o que vai na cobrança.</p>
+      <p class="secao-sub">É o que aparece para o cliente no cardápio do
+        link, e o que vai na cobrança.</p>
 
       <p style="margin:0 0 16px">
         <button type="button" class="btn btn-peq" onclick="abrirPrimeiroDia(1)"
@@ -10912,8 +10916,8 @@ function pintarSalao(){
 
       <div class="dupla">
         <div class="campo"><label for="cNome">Nome</label>
-          <input id="cNome" value="${escapar(sl.nome || '')}" placeholder="Studio Bella"></div>
-        <div class="campo"><label for="cTipo">Tipo de negócio</label>
+          <input id="cNome" value="${escapar(sl.nome || '')}" placeholder="Pizzaria do Bairro"></div>
+        <div class="campo" style="display:none"><label for="cTipo">Tipo de negócio</label>
           <select id="cTipo">
             ${TIPOS_NEGOCIO.map(([t, rotulo]) =>
                `<option value="${t}" ${sl.tipo === t ? 'selected' : ''}
@@ -10930,16 +10934,16 @@ function pintarSalao(){
         <div class="campo"><label for="cZap">WhatsApp</label>
           <input id="cZap" value="${escapar(sl.whatsapp || '')}" placeholder="(11) 99999-8888"
                  oninput="explicarModulos()">
-          <span class="ajuda">É por onde sai a confirmação do cliente e por
-            onde chegam os pedidos dos produtos. Sem ele, a loja não aparece
+          <span class="ajuda">É por onde sai a confirmação do pedido e por
+            onde o cliente fala com você. Sem ele, o cardápio não aparece
             no link.</span></div>
       </div>
 
       <!-- ── A REGRA DA COMISSÃO ──────────────────────────────────────
-           Fica aqui, e não em Serviços, porque vale para o salão inteiro e
+           Fica aqui, e não em Serviços, porque vale para o restaurante inteiro e
            é uma decisão de contrato com quem atende — não um detalhe de
            cadastro de serviço. -->
-      <div class="dupla">
+      <div class="dupla" style="display:none">
         <div class="campo"><label for="cComSobre">Comissão calculada sobre</label>
           <select id="cComSobre">
             <option value="bruto"${(sl.comissaoSobre||'bruto')==='bruto'?' selected':''}
@@ -11151,9 +11155,9 @@ function pintarSalao(){
       <div id="blocoComanda">
       <div class="linha-fina" style="margin:18px 0"></div>
       <h3 class="secao">Como você trabalha</h3>
-      <p class="secao-sub">Salão grande costuma abrir comanda e conferir o
-        caixa no fim do dia. Quem atende sozinho quase sempre não quer nada
-        disso — marca, atende, e pronto.</p>
+      <p class="secao-sub">Restaurante maior costuma abrir comanda e conferir o
+        caixa no fim do dia. Quem trabalha sozinho quase sempre não quer nada
+        disso — recebe o pedido, entrega, e pronto.</p>
       <!-- REGUA, e nao caixinha de marcar. A caixinha reprovou na suite do
            celular: 13px de alvo num aparelho de 375px, quando a regra da casa
            e 40. E a regua ja e a linguagem desta tela — a janela da agenda e a
@@ -11163,6 +11167,10 @@ function pintarSalao(){
       <p class="secao-sub" id="explicaComanda" style="margin-top:9px"></p>
       </div>
 
+      <!-- PEDIHUB: as regras da agenda (confirmar horario, senha, janela,
+           intervalo, recados, antecedencia e teto do link) ficam escondidas.
+           Os campos continuam existindo porque o salvar le todos eles. -->
+      <div style="display:none" data-pedihub="regras-da-agenda">
       <!-- QUEM CONFIRMA O QUE VEM PELO LINK. Fica nesta secao e nao junto das
            regras da agenda porque nao e uma regra de QUANDO: e uma decisao
            sobre como o salao trabalha, igual a de cima.
@@ -11273,7 +11281,7 @@ function pintarSalao(){
       <p class="secao-sub">Quem tem o link não precisa de conta nem de senha —
         é assim que ele funciona. Estes dois números impedem que alguém tome a
         agenda inteira, e não atrapalham quem marca de verdade: o segundo só
-        conta gente que o salão nunca atendeu, então cliente conhecida nunca
+        conta gente que o restaurante nunca atendeu, então cliente conhecida nunca
         esbarra nele. A recepção nunca é limitada por nenhum dos dois.</p>
 
       <div class="dupla">
@@ -11297,6 +11305,7 @@ function pintarSalao(){
         </div>
       </div>
       <p class="secao-sub" id="explicaTeto" style="margin-top:9px"></p>
+      </div>
 
       <div class="card-acoes">
         <button class="btn btn-p" onclick="salvarCadastroSalao()">Salvar dados</button>
@@ -11316,7 +11325,7 @@ function pintarSalao(){
     <div class="card" id="cartaoConta">
       <h3 class="secao">Sua conta</h3>
       <p class="secao-sub">O endereço com que você entra no painel, e a senha.
-        Isto é seu, não do salão: vale em qualquer estabelecimento que você
+        Isto é seu, não do restaurante: vale em qualquer estabelecimento que você
         administre.</p>
       <div id="contaCorpo">
         <p class="secao-sub" style="margin:0">Carregando…</p>
@@ -11329,7 +11338,7 @@ function pintarSalao(){
     <div class="card">
       <h3 class="secao">Aparência do link do cliente</h3>
       <p class="secao-sub">Deixe a página que a cliente abre com a cara do seu
-        salão, em <b>3 passos</b>. Tudo o que você mudar aparece na prévia — ao
+        restaurante, em <b>3 passos</b>. Tudo o que você mudar aparece na prévia — ao
         lado, no computador; no celular, no botão <b>Ver prévia</b>. No fim,
         toque em <b>Salvar</b>.</p>
       <!-- O AVISO DE LEITURA, NO TOPO. O de sempre mora em Cores das letras,
@@ -11357,10 +11366,10 @@ function pintarSalao(){
       <p class="ap-sec-sub">As imagens da página. Cada troca aparece na prévia
         ao lado, sem precisar salvar antes.</p>
       ${cartao('logo', 'Logo',
-        'Aparece no topo da página do cliente e na lista de salões dele.',
+        'Aparece no topo da página do cliente e na lista de restaurantes dele.',
         'Quadrada. JPG, PNG ou WEBP.')}
       <div class="linha-fina"></div>
-      ${cartao('capa', 'Foto do salão',
+      ${cartao('capa', 'Foto do restaurante',
         'A foto grande da vitrine. A da equipe funciona melhor que a da '
       + 'fachada vazia — o cliente quer ver quem vai atender.',
         'Deitada, tipo 3 por 2. JPG, PNG ou WEBP.')}
@@ -11403,7 +11412,7 @@ function pintarSalao(){
            com dezenas de cores finas. (Sem crase: template literal.) -->
       <section class="ap-sec ap-passo" id="apBasico">
         <h4 class="ap-sec-t"><span class="ap-passo-n" aria-hidden="true">3</span>Estilo, cor e letra</h4>
-        <p class="ap-sec-sub">Como fica o topo, a cor do salão, página clara ou escura
+        <p class="ap-sec-sub">Como fica o topo, a cor do restaurante, página clara ou escura
           e o tipo de letra do nome.</p>
 <!-- ══════════ MODO DE EXIBICAO ══════════
            Vem PRIMEIRO porque decide se o resto vale. O modo Atual e' o
@@ -11415,7 +11424,7 @@ function pintarSalao(){
       <p class="secao-sub" id="explicaModo" style="margin-top:9px"></p>
 
       <div class="rot" style="margin:18px 0 2px">Cor da marca</div>
-      <p class="secao-sub" style="margin:0 0 9px">A cor principal do salão: botões e destaques.</p>
+      <p class="secao-sub" style="margin:0 0 9px">A cor principal do restaurante: botões e destaques.</p>
       <div class="cores" id="paletaCores"></div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
         <input type="color" id="corLivre" class="cor-livre"
@@ -11470,7 +11479,7 @@ function pintarSalao(){
       <input type="range" id="fxFoco" class="desliza" min="0" max="100" step="1"
              oninput="escolherAparencia('capaFoco', Number(this.value))">
       <p class="secao-sub" style="margin-top:6px">Arraste para escolher que
-        parte da foto do salão aparece na faixa do topo. Foto em pé recortada
+        parte da foto do restaurante aparece na faixa do topo. Foto em pé recortada
         no meio corta a cabeça de quem está nela — puxe para a esquerda para
         mostrar mais de cima.</p>
 
@@ -11940,7 +11949,7 @@ function pintarSalao(){
     <div class="card">
       <h3 class="secao" style="margin-top:0">Mensagens da agenda</h3>
       <p class="secao-sub">Para o cliente: a confirmação e o lembrete antes
-        do horário. Para o salão: o aviso de horário novo, o lembrete antes do
+        do horário. Para o restaurante: o aviso de horário novo, o lembrete antes do
         atendimento e o resumo do dia. Nada de promoção.</p>
 
       <div id="avisoWhats"></div>
@@ -12010,7 +12019,7 @@ function pintarSalao(){
       <div class="campo">
         <label class="check"><input type="checkbox" id="nLembEquipe"
                  onchange="pintarNotificacoes(true)">
-          <span><b>Lembrete para o salão</b> — antes de cada atendimento,
+          <span><b>Lembrete para o restaurante</b> — antes de cada atendimento,
           avisa com quem, o quê e a que horas. Vai para o WhatsApp cadastrado
           em Equipe.</span></label>
       </div>
@@ -12029,7 +12038,7 @@ function pintarSalao(){
           <div class="campo"><label>Quem recebe</label>
             <select id="nLembEquipePara">
               <option value="atende">Quem vai atender</option>
-              <option value="dono">O dono do salão</option>
+              <option value="dono">O dono do restaurante</option>
               <option value="ambos">Os dois</option>
             </select></div>
         </div>
@@ -12121,7 +12130,7 @@ function pintarSalao(){
      notifProfNovo      true    quem atende recebe o horário novo
      notifLembrete      true    existe lembrete (o da CLIENTE)
      notifLembreteMin   120     quantos minutos antes
-     notifLembreteEquipe     false   o lembrete para o SALÃO (7c), desligado
+     notifLembreteEquipe     false   o lembrete para o RESTAURANTE (7c), desligado
      notifLembreteEquipeMin  60      o tempo dele, separado do da cliente
      notifLembreteEquipePara 'atende'  'atende', 'dono' ou 'ambos'
      notifResumo        false   o resumo do dia começa DESLIGADO
@@ -12206,7 +12215,7 @@ function pintarNotificacoes(soVisibilidade){
    ligou a caixa aqui achava que estava funcionando.
 
    Por isso o aviso só aparece quando ALGUMA mensagem da equipe está ligada,
-   e diz o nome de quem está sem número. O lembrete com "O dono do salão" não
+   e diz o nome de quem está sem número. O lembrete com "O dono do restaurante" não
    conta: esse vai para o dono, não para a equipe. */
 function profsSemWhatsapp(){
   return doSalao(bd.profissionais || []).filter(p => p.ativo !== false
@@ -12238,7 +12247,7 @@ function pintarAvisoTelEquipe(){
 /* ⚠ E TAMBÉM NÃO PODE NEGAR O QUE JÁ ACONTECE. Este aviso dizia, fixo, "o
    WhatsApp ainda não está conectado" — e continuou dizendo depois que a conta
    foi aprovada e as mensagens começaram a sair. Agora quem fala é a própria
-   fila deste salão: houve mensagem enviada, entregue ou lida, está saindo.
+   fila deste restaurante: houve mensagem enviada, entregue ou lida, está saindo.
    Sem nenhuma ainda, o aviso não afirma nem uma coisa nem outra — explica o
    que cada estado quer dizer, que é a verdade nos dois casos. */
 function pintarAvisoWhats(saindo){
@@ -12298,7 +12307,7 @@ function salvarNotificacoes(){
    tem. Vinte linhas bastam para responder "a cliente recebeu?". */
 const ROTULO_NOTIF = { confirmacao:'Confirmação', lembrete:'Lembrete para o cliente',
                        resumo:'Resumo do dia', novo:'Aviso de horário novo',
-                       lembrete_equipe:'Lembrete para o salão',
+                       lembrete_equipe:'Lembrete para o restaurante',
                        // As do modo Pedidos (37_pedidos).
                        pedido_novo:'Aviso de pedido novo', pedido_confirmado:'Pedido confirmado',
                        pedido_a_caminho:'Pedido saiu para entrega', pedido_pronto:'Pedido pronto para retirar',
@@ -12398,7 +12407,7 @@ async function pintarHistoricoNotif(){
         : 'na fila para sair');
       return `<tr>
         <td>${escapar(n.clienteId ? nomeCliente(n.clienteId)
-              : (acharProf(n.profissionalId) || {}).nome || 'o salão')}</td>
+              : (acharProf(n.profissionalId) || {}).nome || 'o restaurante')}</td>
         <td>${escapar(ROTULO_NOTIF[n.tipo] || n.tipo)}</td>
         <td style="white-space:nowrap">${escapar(quandoSai(n.quando))}</td>
         <td><span class="tag ${e[1]}">${e[0]}</span>${
@@ -12409,7 +12418,7 @@ async function pintarHistoricoNotif(){
   rotularTabelas(alvo);   // chega do banco depois da pintura da tela
 }
 
-// No fuso do SALÃO, como todo o resto — e é o mesmo cuidado que decide a hora
+// No fuso do RESTAURANTE, como todo o resto — e é o mesmo cuidado que decide a hora
 // que vai escrita dentro da mensagem.
 function quandoSai(iso){
   if(!iso) return '—';
@@ -12458,7 +12467,7 @@ function trocarAbaSalao(qual){
    `saloes.cfg`, o mesmo jsonb da janela da agenda. A `vitrine()` devolve
    essas três chaves nomeadas uma a uma para a página da cliente.
 
-   Cores prontas antes do seletor livre porque quem tem salão não quer
+   Cores prontas antes do seletor livre porque quem tem restaurante não quer
    escolher hexadecimal: quer uma cor que combine com a fachada. As sete
    cobrem o que aparece de verdade — barbearia puxa dourado ou grafite,
    estética puxa rosa ou lilás. O seletor livre fica para quem tem cor de
@@ -12471,12 +12480,12 @@ const CORES = [
 ];
 /* As três letras do nome na capa. Nenhuma vem de CDN: são famílias que já
    estão no aparelho, com lista de reserva que cobre Android, iPhone, Windows
-   e Mac. Fonte de fora seria mais vistosa e traria o risco de o nome do salão
+   e Mac. Fonte de fora seria mais vistosa e traria o risco de o nome do restaurante
    piscar — ou aparecer em Times — quando o servidor de fontes demora. */
 /* ── OS CARTÕES SOBRE A FOTO DE FUNDO ─────────────────────────────────────
    Isto existia como um limiar fixo no CSS: abaixo de 35% de véu os cartões
    engrossavam sozinhos. Funcionava, e mesmo assim estava errado — era um
-   palpite meu decidindo a aparência do salão dos outros.
+   palpite meu decidindo a aparência do restaurante dos outros.
 
    Foto de fundo varia demais para um número servir a todas: uma parede de
    tijolo escura pede cartão fechado com véu alto; um mármore claro aguenta
@@ -12502,17 +12511,17 @@ const CARTOES = [
    `cartoes` decide o quanto o cartão fecha sobre a foto de capa; `moldura`
    decide a FORMA do cartão de serviço. Como valor de `cartoes`, "elegante"
    tornaria impossível pedir moldura elegante COM fundo de vidro — e mexeria
-   num ajuste que já está em uso nos salões.
+   num ajuste que já está em uso nos restaurantes.
 
-   Ausente vale `reta`, que é o cartão de sempre: salão criado antes disto
+   Ausente vale `reta`, que é o cartão de sempre: restaurante criado antes disto
    existir não muda de aparência e não precisa de migração nenhuma.
 
    ⚠ E REPARE QUE O RÓTULO NÃO É O VALOR: guarda-se `elegante`, e na tela lê-se
    "Curvada". Logo abaixo, o `LETRAS` já tem um `elegante` que se chama
-   "Elegante" — é a letra serifada, e está em uso nos salões há tempo. Dois
+   "Elegante" — é a letra serifada, e está em uso nos restaurantes há tempo. Dois
    controles com o mesmo nome na MESMA aba fariam o dono escolher um e ver o
    outro mudar de lugar. O valor guardado não pode ser renomeado sem mexer na
-   `vitrine()`, no CSS e nos salões; o rótulo pode, e é ele que resolve. */
+   `vitrine()`, no CSS e nos restaurantes; o rótulo pode, e é ele que resolve. */
 const MOLDURAS = [
   ['reta',     'Clássica', 'O cartão de sempre: foto em cima, nome e preço '
                          + 'embaixo, com o recorte reto. É o mais discreto e '
@@ -12526,7 +12535,7 @@ const MOLDURAS = [
 const LETRAS = [
   ['moderno',  'Moderno',  'Limpa e neutra, a mesma do resto do sistema. '
                          + 'Combina com quase tudo e nunca briga com a foto.'],
-  ['elegante', 'Elegante', 'Serifada, com ar de convite. É a letra de salão de '
+  ['elegante', 'Elegante', 'Serifada, com ar de convite. É a letra de restaurante de '
                          + 'beleza e de clínica: passa cuidado e passa preço.'],
   ['marcante', 'Marcante', 'Maiúscula e condensada, como placa de barbearia. '
                          + 'Funciona melhor com nome curto.'],
@@ -12562,7 +12571,7 @@ let aparenciaDoSalao = null;
    moldura da logo, moldura dos serviços, letra do nome, divisão da foto,
    estilo dos atalhos, botão Ver produtos, fita e brilho.
 
-   O que NÃO entra, de propósito, é o que é do salão e não do estilo: fotos,
+   O que NÃO entra, de propósito, é o que é do restaurante e não do estilo: fotos,
    serviços, produtos, o enquadramento da foto, o véu e os cartões sobre a
    imagem, o slide e os preços na capa.
 
@@ -12763,7 +12772,7 @@ function lerAparencia(cfg){
     cor:  c.cor || CORES[1][0],
     tema: c.tema === 'escuro' ? 'escuro' : 'claro',
     precoNaCapa: c.precoNaCapa === true,
-    // Ausente quer dizer LIGADO — o mesmo que a `vitrine()` faz. Salão criado
+    // Ausente quer dizer LIGADO — o mesmo que a `vitrine()` faz. Restaurante criado
     // antes disto existir já nasce com o brilho, sem migração nenhuma.
     brilho: c.brilho !== false,
     // Sem escolha, a letra sai do TIPO do negócio — a mesma regra da página
@@ -12780,11 +12789,11 @@ function lerAparencia(cfg){
     // O botão "Ver produtos": `discreto` (o de sempre) ou `metal`.
     botaoProdutos: c.botaoProdutos === 'metal' ? 'metal' : 'discreto',
     veu:Number.isFinite(Number(c.veu)) ? Number(c.veu) : 84,
-    /* `auto` para quem nunca escolheu — inclusive para todo salão criado
+    /* `auto` para quem nunca escolheu — inclusive para todo restaurante criado
        antes disto existir. Não há o que migrar: o automático faz o que o
        limiar fixo fazia. */
     cartoes: ['vidro','fechado'].includes(c.cartoes) ? c.cartoes : 'auto',
-    /* Ausente vale `reta`, o cartão de sempre: salão criado antes disto
+    /* Ausente vale `reta`, o cartão de sempre: restaurante criado antes disto
        existir não muda de aparência nem precisa de migração. */
     moldura: c.moldura === 'elegante' ? 'elegante' : 'reta',
 
@@ -12798,7 +12807,7 @@ function lerAparencia(cfg){
     logoForma: ['arredondado','quadrado'].includes(c.logoForma)
       ? c.logoForma : 'circular',
     /* A espessura do anel em volta da logo. Ausente vale `media`, que são os
-       5px de antes desta escolha existir — nenhum salão muda de aparência. */
+       5px de antes desta escolha existir — nenhum restaurante muda de aparência. */
     logoBorda: ['sem','fina','grossa'].includes(c.logoBorda)
       ? c.logoBorda : 'media',
     /* A forma da caixa do carrossel. Ausente vale `panoramico`, que é o
@@ -12822,7 +12831,7 @@ function lerAparencia(cfg){
     fitaBorda: ['suave','redonda'].includes(c.fitaBorda) ? c.fitaBorda : 'reta',
     /* ⚠ SEM ESCOLHA, E COM FOTO ANEXADA, É "IMAGEM". A página da cliente
        sempre mostrou essa foto — é a regra dela para quem nunca viu este
-       seletor. O painel mostrava "Cor sólida" aceso para esse mesmo salão,
+       seletor. O painel mostrava "Cor sólida" aceso para esse mesmo restaurante,
        e salvar qualquer outra coisa gravava "cor" por cima: a próxima vez que
        a página passasse a levar "cor" a sério, a foto sumiria sem ninguém
        ter pedido. O painel agora diz o que a página faz. */
@@ -12842,14 +12851,14 @@ function lerAparencia(cfg){
    Este é o ponto que faz o sistema inteiro continuar compatível: hoje TODA
    cor da tela sai de uma conta em cima da cor principal — a letra do botão é
    escolhida medindo contraste, o texto é uma versão puxada da cor, a borda é
-   a cor com alfa. Um salão que nunca abrir esta parte continua com
+   a cor com alfa. Um restaurante que nunca abrir esta parte continua com
    exatamente a mesma tela de antes, porque nenhuma chave existe e nenhuma
    conta muda.
 
    Só o que o dono trocar DE PROPÓSITO vira valor fixo.
 
    ── E POR QUE ISSO EXIGIU UMA REDE ────────────────────────────────────────
-   A conta de contraste existe porque dono de salão escolhe cor bonita, não
+   A conta de contraste existe porque dono de restaurante escolhe cor bonita, não
    cor legível: "texto branco" com "card branco" é uma tela que ninguém
    percebe até a cliente não conseguir ler o preço. Abrindo as cores uma a
    uma, esse acidente passa a ser possível.
@@ -12884,11 +12893,11 @@ const CORES_SOLTAS = [
   ['discreto',   'Texto secundário','O bairro, os títulos "NOSSOS SERVIÇOS" e "PRODUTOS EM DESTAQUE", e a duração do serviço.'],
   /* ⚠ "SEÇÃO" SAIU DAQUI. O título de seção é o `.cat`, que pinta com
      `--txt3` — o DISCRETO, logo acima. Esta linha dizia "serviço, seção,
-     salão", e quem queria mudar a cor do "NOSSOS SERVIÇOS" mexia aqui, via o
-     nome do salão mudar e o título continuar igual. Foi a reclamação: "não
+     restaurante", e quem queria mudar a cor do "NOSSOS SERVIÇOS" mexia aqui, via o
+     nome do restaurante mudar e o título continuar igual. Foi a reclamação: "não
      consigo mudar a cor das letras: nossos serviços, ...". Medido no
      navegador antes de trocar o texto. */
-  ['titulo',     'Títulos',         'O nome do salão e o nome de cada serviço e produto.'],
+  ['titulo',     'Títulos',         'O nome do restaurante e o nome de cada serviço e produto.'],
   ['card',       'Cartões',         'O fundo dos cartões de serviço e de produto, que ficam sobre a página — e o de Pagamentos, Horários e Informações, enquanto não tiverem cor de dentro própria.'],
   /* A cor de dentro de cada cartão, só dele. Sem escolha, a dos Cartões. */
   ['fundoServico', 'Cor de dentro dos serviços', 'O fundo de cada cartão de serviço, na moldura Clássica e na Curvada.'],
@@ -12911,7 +12920,7 @@ const CORES_SOLTAS = [
      a tela em seções existe para acabar. */
   ['produtos',   'Cor dos produtos','O botão Ver produtos, o carrinho de cada produto e o Ver todos os produtos.'],
   /* ── CADA FRASE DO TOPO, COM A SUA COR ──────────────────────────────────
-     "Salão Megatop uma cor, a rua outra, bairro com cidade outra, o
+     "Restaurante Megatop uma cor, a rua outra, bairro com cidade outra, o
      Bem-vindo outra, a frase do convite outra." Cada uma, sem escolha,
      ACOMPANHA a cor que a pintava até aqui (ver `FRASE_HERDA_DE`): quem nunca
      mexer vê a mesma página, e "Títulos" continua mudando o nome junto com
@@ -12935,7 +12944,7 @@ const CORES_SOLTAS = [
   /* ── O BOTÃO DE BAIXO ──────────────────────────────────────────────────
      "Na prévia não aparece lá no final o Agendar corte que aparece no link,
      e não achei para mudar a cor." É o botão fixo no pé da página — o
-     "Agendar corte" da barbearia, o "Agendar horário" do salão, e o
+     "Agendar corte" da barbearia, o "Agendar horário" do restaurante, e o
      "Continuar" dos passos. Pintava com a Cor dos botões, junto com o
      Agendar do Bem-vindo, sem aparecer na prévia nem ter linha própria.
      Sem escolha, continua assim: acompanha a Cor dos botões. */
@@ -12989,7 +12998,7 @@ function pintarAparencia(){
   const paleta = document.getElementById('paletaCores');
   if(!paleta) return;
   // Trocar de estabelecimento no seletor tem que trocar a aparência editada
-  // junto — senão salvar gravaria a cor de um salão no outro.
+  // junto — senão salvar gravaria a cor de um restaurante no outro.
   if(!aparencia || aparenciaDoSalao !== salaoAtual){
     aparencia = lerAparencia();
     modeloAntes = null; modeloAtual = null;
@@ -13003,7 +13012,7 @@ function pintarAparencia(){
   document.getElementById('corLivre').value = aparencia.cor;
 
   /* ⚠ O VALOR GRAVADO CONTINUA `claro`/`escuro`, e só o RÓTULO mudou. A
-     página da cliente, os temas prontos e todo salão já salvo falam essa
+     página da cliente, os temas prontos e todo restaurante já salvo falam essa
      língua; trocar a chave seria migrar dados para mudar uma palavra. */
   document.getElementById('reguaTema').innerHTML =
     [['claro','Clara'],['escuro','Escura']].map(([v, rot]) =>
@@ -13029,11 +13038,11 @@ function pintarAparencia(){
      gravou `personalizado` continua igual: aparece aceso o Simples. */
   const MODOS = [
     ['atual', 'Só logo e nome',
-     'O topo mostra a sua logo e o nome do salão. Bom para quem ainda não tem '
-     + 'uma foto bonita do salão.'],
+     'O topo mostra a sua logo e o nome do restaurante. Bom para quem ainda não tem '
+     + 'uma foto bonita do restaurante.'],
     ['premium', 'Com foto grande',
-     'O topo mostra uma foto grande do salão, com a logo por cima. Fica mais '
-     + 'bonito — use a Foto do salão, no passo 1.'],
+     'O topo mostra uma foto grande do restaurante, com a logo por cima. Fica mais '
+     + 'bonito — use a Foto do restaurante, no passo 1.'],
   ];
   const modoNaTela = aparencia.modo === 'premium' ? 'premium' : 'atual';
   // Tocar no Simples já aceso não troca o personalizado gravado: seria uma
@@ -13615,7 +13624,7 @@ async function experimentarCoresDaLogo(){
     lendoLogo = false;
     pintarCorDaLogo();
     alert('Não consegui ler as cores da sua logo.\n\nEscolha um modelo pronto aqui embaixo, '
-      + 'ou a cor do salão no passo 3.');
+      + 'ou a cor do restaurante no passo 3.');
     return;
   }
   lendoLogo = false;
@@ -13777,7 +13786,7 @@ function contrasteEntre(a, b){
    OS TEMAS PRONTOS
 
    ⚠ UM TEMA NÃO É UM ESTADO. Aplicar um PREENCHE os campos de cor e acaba
-   ali: nada fica gravado dizendo "este salão é o tema Premium".
+   ali: nada fica gravado dizendo "este restaurante é o tema Premium".
 
    Se guardássemos o nome do tema, passariam a existir duas verdades sobre a
    mesma tela — a do tema e a das cores — e elas discordariam no primeiro
@@ -13835,7 +13844,7 @@ function limparCoresSoltas(){
    Avisa, e não impede.
 
    O sistema escolhe sozinho a letra de cada botão medindo contraste, e é por
-   isso que hoje não existe tela ilegível: dono de salão escolhe cor bonita,
+   isso que hoje não existe tela ilegível: dono de restaurante escolhe cor bonita,
    não cor legível. Abrindo as nove cores, "texto branco em card branco" passa
    a ser possível — e é o tipo de defeito que ninguém percebe até a cliente
    não conseguir ler o preço.
@@ -14117,7 +14126,7 @@ function tirarCorDoMeio(){
    O FUNDO QUE ELE ESCOLHE, E AS LETRAS QUE ACOMPANHAM
 
    ── AS CORES DE FÁBRICA, MEDIDAS NA PÁGINA ────────────────────────────────
-   Lidas do `getComputedStyle` da página da cliente, num salão sem nenhuma
+   Lidas do `getComputedStyle` da página da cliente, num restaurante sem nenhuma
    cor escolhida, nos dois tons e nos dois modos (os modos não mudam nada
    aqui). São o que a cliente vê quando o dono não mexeu — e portanto o que o
    quadrado de cada cor tem que mostrar enquanto ele não mexer.
@@ -14308,7 +14317,7 @@ function escolherRodapeMetal(v){
 /* ── A ABERTURA ───────────────────────────────────────────────────────────
    O logo por um instante quando alguém abre o link (tocarIntro, na página
    da cliente). Mora em `cfg.intro` = { efeito, tempo, fundo, nome }; nulo é
-   "sem abertura", que é o que todo salão tem até escolher. A peneira é a
+   "sem abertura", que é o que todo restaurante tem até escolher. A peneira é a
    mesma da página: só o que as réguas oferecem entra. */
 const INTRO_EFEITOS = [
   ['sem', 'Sem abertura', 'O link abre direto na página, como sempre abriu.'],
@@ -14335,7 +14344,7 @@ function lerIntroDoCfg(i){
   };
 }
 /* "Sem abertura" grava nulo, e não um objeto com efeito 'sem': nulo é o que
-   o salão que nunca mexeu já tem, e os dois têm que ser o mesmo. */
+   o restaurante que nunca mexeu já tem, e os dois têm que ser o mesmo. */
 function introParaGravar(){
   const i = aparencia.intro;
   return i.efeito === 'sem' ? null
@@ -14368,7 +14377,7 @@ function pintarIntro(){
 
 /* A abertura tocada dentro do celular da prévia, com as escolhas de agora
    (salvas ou não). As cores vão escritas no elemento: aqui `--acao` é a cor
-   do PAINEL, e a abertura tem que sair na do salão — a mesma conta que a
+   do PAINEL, e a abertura tem que sair na do restaurante — a mesma conta que a
    prévia inteira já faz. */
 function verIntroNaPrevia(){
   const i = aparencia.intro;
@@ -14632,7 +14641,7 @@ function previaDosServicos(svs){
 }
 
 /* ── ⚠ AS ONZE CORES, DENTRO DA PRÉVIA ───────────────────────────────────
-   A prévia mostrava o tema do PAINEL, e não as cores do salão. Medido: seis
+   A prévia mostrava o tema do PAINEL, e não as cores do restaurante. Medido: seis
    elementos de seis divergindo da página de verdade — fundo, nome, endereço,
    título de seção, cartão e botão.
 
@@ -14643,7 +14652,7 @@ function previaDosServicos(svs){
 
    Só entra aqui a cor que o dono ESCOLHEU. A que ele não escolheu não vira
    variável, e o CSS fica com o valor de reserva — que é exatamente o que a
-   prévia mostrava antes. Salão que nunca abriu esta tela vê a prévia de
+   prévia mostrava antes. Restaurante que nunca abriu esta tela vê a prévia de
    sempre.
 
    ⚠ E O NOME DA VARIÁVEL É `--fone-<chave>`, igual à chave da cor. Um mapa de
@@ -14697,8 +14706,8 @@ function coresDaPrevia(){
 
 /* ── A COR ESCRITA DA MARCA, NA PRÉVIA ────────────────────────────────────
    O `--ac-600` da página, com a mesma conta do `aplicarAparencia()`: a cor
-   do salão puxada para ler bem sobre o papel. A prévia usava o `--ac-600` do
-   PAINEL, que é a cor do sistema: salão dourado via "Bem-vindo!" azul na
+   do restaurante puxada para ler bem sobre o papel. A prévia usava o `--ac-600` do
+   PAINEL, que é a cor do sistema: restaurante dourado via "Bem-vindo!" azul na
    prévia e dourado no link. Pinta o título do Bem-vindo, os ícones da
    fileira e o botão Horários. */
 function corEscritaDaMarca(){
@@ -14914,7 +14923,7 @@ function pintarPreviaFone(){
        <div class="fone-topo" data-letra="${aparencia.letra}">
          ${sl.logo ? `<img src="${escapar(sl.logo)}" alt="" data-cfg="logo">`
                    : `<div class="fone-selo" data-cfg="logo">${escapar((sl.nome || 'A').charAt(0))}</div>`}
-         <b data-cfg="nome">${escapar(sl.nome || 'Seu salão')}</b>
+         <b data-cfg="nome">${escapar(sl.nome || 'Seu restaurante')}</b>
          ${(() => {
             const e = Endereco.completo(sl.endereco);
             return e.length
@@ -15001,7 +15010,7 @@ function pintarPreviaFone(){
    controles que mudam aquele pedaço e acende eles por um instante. O dono
    não precisa saber em que seção mora cada coisa: aponta para ela.
 
-   O toque pega o pedaço MAIS DE DENTRO: tocar no nome do salão leva aos
+   O toque pega o pedaço MAIS DE DENTRO: tocar no nome do restaurante leva aos
    títulos, e não ao fundo do celular que está atrás dele. */
 const CONFIG_DA_PREVIA = {
   fundo:    ['#reguaFundoTipo', '#corDoPapel .cor-linha'],
@@ -15094,7 +15103,7 @@ function cfgDaAparencia(){
     cartoes: aparencia.cartoes,
     moldura: aparencia.moldura,
     /* ⚠ SÓ O QUE ELE TROCOU. Chave ausente quer dizer "calcule a partir da
-       principal" — gravar as nove sempre congelaria dentro do salão as
+       principal" — gravar as nove sempre congelaria dentro do restaurante as
        contas de hoje, e melhorar o cálculo depois não chegaria em ninguém.
        É a mesma lição dos recados do WhatsApp. */
     cores: soAsEscolhidas(aparencia.cores),
@@ -15122,7 +15131,7 @@ function cfgDaAparencia(){
        continuava por cima do rosa que ele acabou de escolher.
 
        Um valor novo, e não uma mudança no SQL: o banco repassa o texto como
-       vem, e nenhum salão precisa colar arquivo nenhum para isto valer. */
+       vem, e nenhum restaurante precisa colar arquivo nenhum para isto valer. */
     fundoTipo: aparencia.fundoTipo === 'cor' ? 'solida' : aparencia.fundoTipo,
     gradiente: aparencia.gradiente,
     intro: introParaGravar(),
@@ -15184,9 +15193,9 @@ const JANELAS = [
   [60, 'dois meses',  'Para quem tem agenda concorrida e cliente fiel.'],
 ];
 let diasEscolhidos = null;
-// De qual salão é o valor em cache. Sem isto, trocar de estabelecimento no
-// seletor manteria na tela a janela do salão anterior — e salvar gravaria o
-// número errado no salão errado.
+// De qual restaurante é o valor em cache. Sem isto, trocar de estabelecimento no
+// seletor manteria na tela a janela do restaurante anterior — e salvar gravaria o
+// número errado no restaurante errado.
 let diasDoSalao = null;
 
 function pintarJanelaAgenda(){
@@ -15242,8 +15251,8 @@ const PASSOS_LINK = [
                         + 'boa, e o dia pode parecer mais cheio do que está.'],
 ];
 let passoEscolhido = null;
-// De qual salão é o valor em cache — mesmo cuidado da janela acima: trocar de
-// estabelecimento não pode gravar o número de um salão no outro.
+// De qual restaurante é o valor em cache — mesmo cuidado da janela acima: trocar de
+// estabelecimento não pode gravar o número de um restaurante no outro.
 let passoDoSalao = null;
 
 function pintarPassoLink(){
@@ -15282,7 +15291,7 @@ const COM_QUEM = [
 ];
 let pularComQuemEscolhido = null;
 // Mesmo cuidado da janela e do passo: trocar de estabelecimento não pode
-// gravar a escolha de um salão no outro.
+// gravar a escolha de um restaurante no outro.
 let comQuemDoSalao = null;
 
 function pintarComQuem(){
@@ -15392,8 +15401,8 @@ const ANTECEDENCIAS = [
                     + 'outro". Confira se não está fechando demais.'],
 ];
 let antecEscolhida = null;
-// De qual salão é o valor em cache — a mesma trava da janela acima. Sem ela,
-// trocar de estabelecimento no seletor deixaria na tela o número do salão
+// De qual restaurante é o valor em cache — a mesma trava da janela acima. Sem ela,
+// trocar de estabelecimento no seletor deixaria na tela o número do restaurante
 // anterior, e salvar gravaria no errado.
 let antecDoSalao = null;
 
@@ -15405,7 +15414,7 @@ function pintarAntecedencia(){
     const n = sl.cfg && Number(sl.cfg.antecedenciaMin);
     /* `>= 0` e não `> 0`: zero é uma escolha legítima — "aceito marcação para
        daqui a pouco" — e com `> 0` ela voltaria a virar 30 toda vez que a
-       tela relesse o salão. O dono desligaria e veria religar sozinho. */
+       tela relesse o restaurante. O dono desligaria e veria religar sozinho. */
     antecEscolhida = Number.isFinite(n) && n >= 0 ? n : 30;
     antecDoSalao = salaoAtual;
   }
@@ -15486,7 +15495,7 @@ function usaComanda(sl){
    Pedido do dono: "não vou trabalhar com comanda no momento — esconder por
    enquanto, só com agenda". Uma chave só (`COMANDA_LIGADA`): desligada, a
    tela esconde a aba Caixa, o "Abrir comanda" e a escolha "Com comanda e
-   caixa", e o salão passa a ser gravado como "Só a agenda" (cfg.usaComanda
+   caixa", e o restaurante passa a ser gravado como "Só a agenda" (cfg.usaComanda
    = false). É isso que faz o BANCO transformar o atendimento concluído em
    faturamento sozinho (28_sem_comanda) — esconder só a tela deixaria o mês
    zerado. Nada é apagado: religar é `true` na linha abaixo.
@@ -15509,8 +15518,8 @@ function comandaNestaAba(padrao){
 function comandaParaGravar(escolha){
   return COMANDA_NA_PLATAFORMA ? (escolha ?? true) : false;
 }
-/* O salão que ainda está gravado "com comanda" passa a "Só a agenda" na
-   primeira vez que o dono abre o painel. Só quem gere o salão grava `cfg`. */
+/* O restaurante que ainda está gravado "com comanda" passa a "Só a agenda" na
+   primeira vez que o dono abre o painel. Só quem gere o restaurante grava `cfg`. */
 function gravarSoAgendaSeDesligada(){
   if(COMANDA_NA_PLATAFORMA || !NA_NUVEM) return;
   if(typeof souGestor === 'function' && !souGestor()) return;
@@ -15522,8 +15531,8 @@ function gravarSoAgendaSeDesligada(){
 
 /* A escolha fica numa variável enquanto a tela está aberta, e só vira `cfg` no
    Salvar — igual à régua da antecedência. `null` quer dizer "ainda não abri
-   esta tela neste salão": aí o valor vem do banco. Sem o `comandaDoSalao`, a
-   escolha de um salão vazaria para o outro na troca. */
+   esta tela neste restaurante": aí o valor vem do banco. Sem o `comandaDoSalao`, a
+   escolha de um restaurante vazaria para o outro na troca. */
 let comandaEscolhida = null, comandaDoSalao = null;
 
 function pintarComanda(){
@@ -15649,7 +15658,7 @@ async function pintarConta(){
    nunca discordam — "sou a única dona?" tem uma resposta só, a do banco.
 
    ⚠ A ORDEM DOS PASSOS NÃO É ENFEITE:
-     1. o cartão, primeiro. Assinatura ligada no Mercado Pago com o salão
+     1. o cartão, primeiro. Assinatura ligada no Mercado Pago com o restaurante
         apagado aqui seria cobrança todo mês sem tela para desligar. Se a
         borda não confirmar, PARA — o banco também recusaria;
      2. as fotos, enquanto ainda é gestora: a policy do Storage exige, e
@@ -15710,7 +15719,7 @@ function conferirPalavraExcluir(){
   const b = botaoDeExcluir();
   if(b) b.disabled = v !== 'EXCLUIR';
 }
-/* Endereços de foto que a tela conhece de um salão: logo, capa, fundo,
+/* Endereços de foto que a tela conhece de um restaurante: logo, capa, fundo,
    galeria e as fotos de serviço, produto e equipe. A listagem da pasta acha
    o resto (ver `apagarPastaDoSalao` no dados.js). */
 function imagensDoSalao(id){
@@ -15762,7 +15771,7 @@ async function confirmarExcluirConta(){
    ⚠ A SENHA ATUAL NÃO É ENFEITE. O `PUT /user` do Supabase troca a senha só
    com a sessão aberta — não pergunta a de antes. Numa recepção isso é um
    buraco real: o computador fica destravado um minuto e alguém tranca a dona
-   para fora do próprio salão. Quem confere é o servidor, com um login de
+   para fora do próprio restaurante. Quem confere é o servidor, com um login de
    verdade (ver `trocarMinhaSenha` no dados.js); daqui nada passa por
    validação de tela só.
 
@@ -15895,7 +15904,7 @@ async function salvarSenhaNova(){
    discordando sobre o que a página mostra faria o dono desligar a loja aqui e
    continuar vendo produtos no link dele.
 
-   ⚠ O QUE ISTO LIGA E DESLIGA É A PÁGINA DA CLIENTE, não o painel. Um salão
+   ⚠ O QUE ISTO LIGA E DESLIGA É A PÁGINA DA CLIENTE, não o painel. Um restaurante
    pode vender shampoo no balcão — pela comanda — e não querer loja nenhuma no
    link. São duas perguntas diferentes, e juntá-las tiraria uma venda de quem
    só queria arrumar a página.
@@ -15942,9 +15951,9 @@ function zapDaCasa(sl, cru){
    dizia nenhum deles:
 
      1. a loja está desligada em "O que a sua página oferece";
-     2. o salão não tem número de WhatsApp que dê para abrir — o carrinho
+     2. o restaurante não tem número de WhatsApp que dê para abrir — o carrinho
         manda o pedido por lá, e sem número não há para onde mandar;
-     3. nenhum produto ativo está marcado "Vender na página do salão", que
+     3. nenhum produto ativo está marcado "Vender na página do restaurante", que
         nasce desligado de propósito.
 
    Esconder está certo nos três: um carrinho que não tem para onde ir é pior
@@ -15965,19 +15974,19 @@ function porqueALojaNaoAparece(sl, opc){
          + '<b>Meu negócio → Dados → Produtos à venda → Sim</b>.';
   // No restaurante o pedido é gravado no sistema, e não vai pelo WhatsApp.
   if(s.tipo !== 'restaurante' && !zapDaCasa(s, o.zap))
-    return 'Os produtos <b>não aparecem</b> na sua página porque o salão está '
+    return 'Os produtos <b>não aparecem</b> na sua página porque o restaurante está '
          + 'sem WhatsApp — é por ele que o pedido do carrinho chega. Preencha '
          + 'em <b>Meu negócio → Dados → WhatsApp</b> e salve.';
   const aVenda = (bd.produtos || []).filter(p => p.salaoId === s.id
     && p.ativo !== false && p.vendaOnline);
   if(!aVenda.length)
     return 'Nenhum produto está marcado para aparecer na sua página. Abra o '
-         + 'produto e marque <b>Vender na página do salão</b>.';
+         + 'produto e marque <b>Vender na página do restaurante</b>.';
   return '';
 }
 
 /* Mesma dupla de variáveis da comanda, e pelo mesmo motivo: a escolha vive na
-   tela até o Salvar, e `modulosDoSalao` impede que a escolha de um salão vaze
+   tela até o Salvar, e `modulosDoSalao` impede que a escolha de um restaurante vaze
    para o outro quando o dono troca de casa no seletor. */
 let modServicoEscolhido = null, modLojaEscolhida = null, modulosDoSalao = null;
 
@@ -16183,7 +16192,7 @@ function escolherJanelaOutro(){
    HORÁRIOS DE FUNCIONAMENTO — O EDITOR
 
    O mesmo par de variáveis das outras escolhas desta aba: o que está na tela
-   vive aqui até o Salvar, e `funcDoSalao` impede que a semana de um salão
+   vive aqui até o Salvar, e `funcDoSalao` impede que a semana de um restaurante
    vaze para o outro quando o dono troca de casa no seletor.
 
    O formato é o do banco ("HH:MM", dia "0" = domingo) — ver funcionamento.js.
@@ -16276,7 +16285,7 @@ function explicarFuncionamento(){
   alvo.innerHTML = queixas.length
     ? '<b style="color:var(--alerta)">Falta acertar:</b> ' + queixas.map(escapar).join(' ')
     : !algum ? 'Nenhum dia aberto: a sua página não mostra horário nem o "Aberto/Fechado".'
-    : 'A página mostra "Aberto" ou "Fechado" sozinha, pelo relógio, no fuso do salão.';
+    : 'A página mostra "Aberto" ou "Fechado" sozinha, pelo relógio, no fuso do restaurante.';
 }
 
 function funcAbrir(d){
@@ -16612,7 +16621,7 @@ function salvarCadastroSalao(){
    capa quando ele marca "Minhas fotos e vídeos" em Aparência.
 
    Mora em `saloes.cfg.galeria`, como lista de {url, tipo, legenda} — jsonb
-   que já existe, então nenhum salão precisa de alteração de tabela.
+   que já existe, então nenhum restaurante precisa de alteração de tabela.
 
    A ORDEM É EDITÁVEL porque ela é a mensagem: a primeira mídia é a que quase
    todo mundo vê, já que boa parte fecha a página antes do segundo slide. Sem
@@ -16733,11 +16742,11 @@ function tirarDaGaleria(i){
 /* ── ONDE CADA IMAGEM MORA ────────────────────────────────────────────────
    `logo` e `capa` são colunas da tabela. O `fundo` mora em `saloes.cfg`, o
    mesmo jsonb da cor e da janela da agenda — de propósito: `cfg` já existe,
-   então nenhum salão precisa de alteração de tabela para ganhar fundo.
+   então nenhum restaurante precisa de alteração de tabela para ganhar fundo.
 
    Sem estas duas funções, cada tela teria que lembrar de onde vem qual, e a
    que esquecesse gravaria uma coluna que não existe. */
-/* ⚠ SUBIR UMA IMAGEM REDESENHA MEU SALÃO — e o redesenho vem do que está
+/* ⚠ SUBIR UMA IMAGEM REDESENHA MEU RESTAURANTE — e o redesenho vem do que está
    SALVO. O dono digitava o "Sobre", subia o logo, e o texto voltava ao de
    antes. Aqui o que foi mexido e não salvo (o campo diferente do valor com
    que a tela nasceu) é guardado antes e devolvido depois. Achado pelo
@@ -16842,7 +16851,7 @@ function assinaturaAtual(){
    ── O LINK QUE FORÇA NUMA ABA ─────────────────────────────────────────────
    `app.html?oferta=1` mostra a oferta e `?oferta=0` esconde, SÓ na aba que
    abriu pelo link, até ela fechar. Com a venda desligada, foi por onde o dono
-   da plataforma fez o primeiro Pix sem mostrar preço a salão nenhum; com ela
+   da plataforma fez o primeiro Pix sem mostrar preço a restaurante nenhum; com ela
    ligada, é por onde se vê (e se testa) a tela sem oferta. Não abre nada que
    o console já não abrisse — ver o parágrafo de cima: a trava, se um dia
    houver, mora no banco. */
@@ -16868,7 +16877,7 @@ const COMO_CRESCER = OFERTA_DE_PLANO
 function planoDe(codigo){
   return (bd.planos || []).find(p => p.codigo === codigo) || null;
 }
-/* O preço do plano PARA ESTE SALÃO: o especial dele, se a plataforma deu um
+/* O preço do plano PARA ESTE RESTAURANTE: o especial dele, se a plataforma deu um
    (13_cobranca, 1b), ou o normal. Só para mostrar — quem cobra é o banco,
    pela mesma regra (`preco_do_plano`), e a tela não manda valor nenhum. */
 function precoDoPlano(codigo){
@@ -16882,8 +16891,8 @@ function precoDoPlano(codigo){
    espelhar mesmo: se a tela disser um limite e o banco outro, o dono clica em
    cadastrar e leva um erro que não bate com o que está escrito na frente dele.
 
-   Assinatura fora de vigor não deixa o salão sem nada: cai no Grátis. Nem todo
-   salão vai assinar, e quem não assina continua usando com teto. */
+   Assinatura fora de vigor não deixa o restaurante sem nada: cai no Grátis. Nem todo
+   restaurante vai assinar, e quem não assina continua usando com teto. */
 let planoDaEquipe = {};     // ver carregarTudo(): o plano para quem não lê a assinatura
 function planoEfetivo(){
   const a = assinaturaAtual();
@@ -17047,7 +17056,7 @@ function diasDeTeste(){
 }
 /* Quantos dias faltam para a assinatura PAGA vencer — negativo se já venceu.
    `null` quando não é assinatura paga com data: teste, Grátis, ou plano posto
-   à mão sem vencimento. Mesmo relógio do salão que o `diasDeTeste()`. */
+   à mão sem vencimento. Mesmo relógio do restaurante que o `diasDeTeste()`. */
 function diasParaVencer(){
   const a = assinaturaAtual();
   if(!a || a.status !== 'ativa' || !a.venceEm) return null;
@@ -17072,7 +17081,7 @@ function avisoDeVencimento(a, p, faltam){
   const prazo = faltam === 0 ? 'hoje' : faltam === 1 ? 'amanhã' : `em ${faltam} dias`;
   return `<div class="aviso atencao" id="avisoRenovacao" style="margin-top:13px;margin-bottom:0">
     <b>Sua assinatura vence ${prazo} (${quando}).</b><br>
-    Renove para continuar no ${escapar(p ? p.nome : '')}. Sem renovar, o salão passa para o plano
+    Renove para continuar no ${escapar(p ? p.nome : '')}. Sem renovar, o restaurante passa para o plano
     Grátis — a agenda não fecha, mas volta aos limites dele.
     ${OFERTA_DE_PLANO && NA_NUVEM && p
       ? `<div style="margin-top:9px"><button class="btn btn-p btn-peq"
@@ -17189,10 +17198,10 @@ function pintarMedidoresDoPlano(){
    que o servidor ainda não faz. */
 /* A 90% DO LIMITE, A SAÍDA: "se atingir 90% ele vai mostrar para comprar mais
    mensagens". Enquanto a compra avulsa não está no painel, o pedido vai pelo
-   WhatsApp do suporte, já dizendo o salão; e quem pode assinar vê os planos. */
+   WhatsApp do suporte, já dizendo o restaurante; e quem pode assinar vê os planos. */
 function botoesMaisMensagens(){
   const s = acharSalao(salaoAtual) || {};
-  const txt = 'Olá! Quero comprar mensagens extras para o PediHub.\nSalão: '
+  const txt = 'Olá! Quero comprar mensagens extras para o PediHub.\nRestaurante: '
     + (s.nome || '') + (s.slug ? ' (' + s.slug + ')' : '');
   return `<div style="margin-top:9px;display:flex;gap:8px;flex-wrap:wrap" id="maisMensagens">
     ${SUPORTE_WHATSAPP ? `<a class="btn btn-peq btn-p" target="_blank" rel="noopener"
@@ -17218,8 +17227,8 @@ function avisoDeMensagens(m){
     Nenhuma mensagem automática sai ${quando ? 'até ' + quando + ', quando a franquia renova' : 'até virar o mês'}, nem para o cliente. A
     agenda continua funcionando normalmente.${botoesMaisMensagens()}</div>`;
   if(reserva != null && usado >= reserva) return `<div class="aviso atencao" style="margin-top:13px;margin-bottom:0">
-    <b>As mensagens para o salão pararam.</b><br>
-    Aviso de horário novo, lembrete para o salão e resumo do dia voltam ${quando
+    <b>As mensagens para o restaurante pararam.</b><br>
+    Aviso de horário novo, lembrete para o restaurante e resumo do dia voltam ${quando
       ? 'em ' + quando + ', quando a franquia renova' : 'quando virar o mês'}. As ${teto - usado} que faltam ficam para a confirmação e o
     lembrete do cliente.${botoesMaisMensagens()}</div>`;
   if(pct >= 0.9) return `<div class="aviso atencao" style="margin-top:13px;margin-bottom:0">
@@ -17228,12 +17237,12 @@ function avisoDeMensagens(m){
   if(pct >= 0.8) return `<div class="aviso info" style="margin-top:13px;margin-bottom:0">
     Você está próximo do limite de mensagens do seu plano —
     ${usado} de ${teto} neste mês.${reserva != null ? ` Ao chegar a ${reserva},
-    as mensagens para o salão param e o resto fica para o cliente.` : ''}</div>`;
+    as mensagens para o restaurante param e o resto fica para o cliente.` : ''}</div>`;
   return '';
 }
 
 /* O MESMO CONTADOR, NA TELA ONDE O DONO LIGA AS MENSAGENS.
-   É ali que ele decide ligar o lembrete para o salão ou o resumo — e é ali
+   É ali que ele decide ligar o lembrete para o restaurante ou o resumo — e é ali
    que precisa ver quanto já gastou. O número é o do `uso_do_plano()`, o
    mesmo que o worker usa para recusar; a tela não conta nada sozinha. */
 function pintarConsumoMensagens(){
@@ -17246,7 +17255,7 @@ function pintarConsumoMensagens(){
     alvo.innerHTML = `<div class="aviso info" style="margin-top:13px;margin-bottom:0">
       <b>Seu plano não inclui mensagens automáticas.</b><br>
       Nada desta lista sai pelo WhatsApp do PediHub. Mandar mensagem pelo
-      WhatsApp do salão continua funcionando normalmente.</div>`;
+      WhatsApp do restaurante continua funcionando normalmente.</div>`;
     return;
   }
   const reserva = m.tetoSalao != null ? Number(m.tetoSalao) : null;
@@ -17257,7 +17266,7 @@ function pintarConsumoMensagens(){
              <b>${diaQueRenova(m)}</b>.</div>` : '')
     + (reserva != null && reserva < teto
         ? `<div style="font-size:12px;color:var(--txt2);margin-top:6px">
-             As mensagens para o salão usam até ${reserva}; as últimas
+             As mensagens para o restaurante usam até ${reserva}; as últimas
              ${teto - reserva} ficam guardadas para o cliente.</div>` : '')
     + avisoDeMensagens(m);
 }
@@ -17266,7 +17275,7 @@ function pintarConsumoMensagens(){
    mensagens automáticas. Mesmas regras do cartão principal — se é o plano
    que ele já paga e está em dia, vira "seu plano atual" e só oferece renovar
    perto do vencimento. Os botões ficam num `.botoes-assinar`, que o
-   `mostrarCartao()` também esvazia quando o salão está no cartão. */
+   `mostrarCartao()` também esvazia quando o restaurante está no cartão. */
 function cartaoAlternativo(alt, p, a, emDia, faltam){
   const atual = emDia && p && alt.codigo === p.codigo;
   const pagoAte = atual ? porExtenso(String(a.venceEm).slice(0, 10)) : '';
@@ -17417,7 +17426,7 @@ function pintarPlano(){
 
   /* Um botão por TAMANHO de plano, lido dos planos: 1, 2, 3, "4 a 6",
      "7 a 12". Era 1…6 fixo, com o "6+" valendo 6 — o 5 e o 6+ caíam os dois
-     no Equipe (até 6), e o Salão (até 12) nunca aparecia. Aceso fica o
+     no Equipe (até 6), e o Restaurante (até 12) nunca aparecia. Aceso fica o
      menor tamanho que comporta quem o dono escolheu (ou já tem na equipe). */
   const passos = [...new Set(planos.map(x => x.maxProfissionais))];
   const aceso = passos.find(n => n >= planoEscolhido) || passos[passos.length-1];
@@ -17621,7 +17630,7 @@ function avisoDoCrediario(){
       planosCred.length > 1 ? ' Planos com ' + planosCred.map(p => Number(p.mensagens || 0).toLocaleString('pt-BR')).join(', ').replace(/, ([^,]*)$/, ' e $1') + ' mensagens por mês.' : ''}</p>` : ''}
     ${souGestor() && x && OFERTA_DE_PLANO
       ? `<button class="btn btn-p" onclick="fecharModal();irPara('plano')">Contratar em Meu plano</button>`
-      : '<p style="font-size:13px">Fale com o proprietário do salão para contratar.</p>'}
+      : '<p style="font-size:13px">Fale com o proprietário do restaurante para contratar.</p>'}
   </div>`;
 }
 
@@ -17660,7 +17669,7 @@ function trocarAbaCrediario(qual){
 }
 
 /* ── A ABA MENSAGENS ──────────────────────────────────────────────────────
-   As quatro chaves moram no `cfg` do salão, como as de Notificações; quem
+   As quatro chaves moram no `cfg` do restaurante, como as de Notificações; quem
    diz se já estão saindo e quanto da franquia foi usado é o banco
    (`crediario_mensagens`). Só a gestão muda; o balcão vê. */
 const MENSAGENS_DO_CREDIARIO = [
@@ -17913,7 +17922,7 @@ async function desfazerRecebimentoCrediarioAgora(recId){
   }
 }
 
-/* A cobrança pelo WhatsApp DO SALÃO (o número dele, não o do PediHub): não
+/* A cobrança pelo WhatsApp DO RESTAURANTE (o número dele, não o do PediHub): não
    gasta franquia e funciona sem modelo aprovado. Sem `escapar()`: o texto vai
    para dentro do endereço, e de lá para a caixa do WhatsApp. */
 function cobrarParcela(vendaId, parcelaId){
@@ -18319,7 +18328,7 @@ function relatorioDoCrediario(cr){
 
 /* A LOJA PELO LINK no Relatórios (55): os pedidos do período e o que
    rendeu. O valor já está no faturamento — a venda da loja é uma comanda —,
-   e o texto diz isso para ninguém somar duas vezes. Salão que não usa a loja
+   e o texto diz isso para ninguém somar duas vezes. Restaurante que não usa a loja
    não vê o bloco. */
 function relatorioDaLoja(l){
   if(!l) return '';
@@ -18864,7 +18873,7 @@ var SINO_INTERVALO = 10000;
 function sinoLigado(){ return NA_NUVEM && !!salaoAtual; }
 function pedirSino(forcar){
   if(!sinoLigado()) return desenharSino();
-  // Trocou de salão: o sino de antes não vale, pergunta já.
+  // Trocou de restaurante: o sino de antes não vale, pergunta já.
   if(sinoDados && sinoDados.salao !== salaoAtual) forcar = true;
   clearTimeout(sinoTimer);
   const espera = forcar ? 0 : Math.max(800, SINO_INTERVALO - (Date.now() - sinoUltima));
@@ -18932,7 +18941,7 @@ function linhasDoSino(d){
         s: (q > 1 && nomes.length ? nomes.join(', ') + (q > nomes.length ? ' e mais ' + (q - nomes.length) : '') + '. ' : '')
           + (hor ? (q === 1 ? 'Ainda tem horário marcado: a ficha e os lembretes continuam. Vale confirmar com ela.'
                             : sinoPlural(hor, 'ainda tem', 'ainda têm') + ' horário marcado. As fichas continuam em Clientes.')
-            : pac ? (q === 1 ? 'Tem pacote ativo, que continua no salão. A ficha fica em Clientes.'
+            : pac ? (q === 1 ? 'Tem pacote ativo, que continua no restaurante. A ficha fica em Clientes.'
                              : sinoPlural(pac, 'tem', 'têm') + ' pacote ativo. As fichas continuam em Clientes.')
             : (q === 1 ? 'A ficha e o histórico dela continuam em Clientes.' : 'As fichas e o histórico continuam em Clientes.')) });
     }
@@ -18945,7 +18954,7 @@ function linhasDoSino(d){
       const s = { inadimplente: 'Regularize em Plano para continuar com tudo liberado.',
                   teste: 'Veja em Plano como continuar com tudo liberado.',
                   vence: 'Renove em Plano para não voltar aos limites do plano Grátis.',
-                  venceu: 'O salão voltou aos limites do plano Grátis. Renove em Plano.' }[i.situacao];
+                  venceu: 'O restaurante voltou aos limites do plano Grátis. Renove em Plano.' }[i.situacao];
       if(t) L.push({ ic: 'etiqueta', tela: 'plano', urgente: i.situacao !== 'teste' && i.situacao !== 'vence', t, s });
     }
   }
@@ -18973,7 +18982,7 @@ function contaDoSino(d){
      2. a chave pública do correio, do banco (o worker a cria na 1ª volta);
      3. a inscrição no serviço de push do navegador (Google/Apple/Mozilla);
      4. o endereço e as chaves do aparelho, gravados no banco para ESTA
-        pessoa e ESTE salão.
+        pessoa e ESTE restaurante.
    Quem envia é o servidor. A tela nunca manda aviso nenhum. */
 const AvisosCelular = {
   suportado(){
@@ -19008,7 +19017,7 @@ const AvisosCelular = {
     try{ return await (await this.registro()).pushManager.getSubscription(); }
     catch(e){ return null; }
   },
-  // Ligado = este navegador inscrito E gravado para esta pessoa neste salão.
+  // Ligado = este navegador inscrito E gravado para esta pessoa neste restaurante.
   async ligadoAqui(){
     if(!this.suportado() || Notification.permission !== 'granted') return false;
     const sub = await this.inscricao();
@@ -19047,8 +19056,8 @@ const AvisosCelular = {
     const sub = await this.inscricao();
     if(!sub) return;
     await Dados.chamar('push_remover', { p_endpoint: sub.endpoint });
-    /* A inscrição do navegador vale para TODOS os salões desta pessoa. Só sai
-       de vez quando não sobrou salão nenhum usando: o `push_remover` tira
+    /* A inscrição do navegador vale para TODOS os restaurantes desta pessoa. Só sai
+       de vez quando não sobrou restaurante nenhum usando: o `push_remover` tira
        deste aparelho em todos, então pode sair. */
     try{ await sub.unsubscribe(); }catch(e){}
   },
@@ -19100,7 +19109,7 @@ async function abrirAvisosCelular(){
   const negado = Notification.permission === 'denied';
   const meus = lista.length ? `
     <div class="linha-fina" style="margin:14px 0"></div>
-    <p style="font-size:13px;color:var(--txt2);margin-bottom:6px">Seus aparelhos com aviso ligado neste salão:</p>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:6px">Seus aparelhos com aviso ligado neste restaurante:</p>
     ${lista.map(x => `<div class="avc-ap" style="display:flex;align-items:center;gap:10px;padding:6px 0">
         <span style="flex:1;font-size:14px">${escapar(x.rotulo || 'Aparelho')}</span>
         <button type="button" class="btn btn-peq" onclick="tirarAparelhoAviso('${escapar(x.id)}')">Remover</button>
@@ -19266,7 +19275,7 @@ async function marcarAvisoLido(id){
    que acontece é o banco: a tela pergunta antes (`simular_adicional`) para
    mostrar "sua mensalidade passa de… para…", e quem muda é a borda
    `adicional` — que muda também o valor do cartão no Mercado Pago, quando o
-   salão paga no cartão. O valor nunca sai daqui.
+   restaurante paga no cartão. O valor nunca sai daqui.
    ═══════════════════════════════════════════════════════════════════════════ */
 let meusAdicionais = null;
 const RECURSOS_DE_ADICIONAL = ['crediario'];
@@ -19466,7 +19475,7 @@ async function mostrarCartao(){
     if(!c.ligado) return;
 
     /* Está no cartão: o botão de assinar sai da tela. Deixá-lo ali é convidar
-       para uma segunda pré-aprovação — e duas ativas no mesmo salão é
+       para uma segunda pré-aprovação — e duas ativas no mesmo restaurante é
        cobrança dobrada todo mês, descoberta só na fatura. A borda também
        recusa, mas botão que só serve para levar recusa não deve existir. */
     document.querySelectorAll('#cartaoPlano .botoes-assinar').forEach(botoes => {
@@ -19505,7 +19514,7 @@ async function assinarCartao(codigo){
   if(emSuporte()) return avisoDoSuporte('assinar ou pagar plano');
   if(!souGestor()){
     alert('Só o proprietário ou um administrador pode assinar o plano.\n\n'
-        + 'Peça para quem responde pelo salão entrar e fazer a assinatura.');
+        + 'Peça para quem responde pelo restaurante entrar e fazer a assinatura.');
     return;
   }
   const p = planoDe(codigo);
@@ -19514,7 +19523,7 @@ async function assinarCartao(codigo){
   `, [['Fechar','fecharModal();pintar()','btn-p']]);
 
   try{
-    // Só o salão e o plano. O preço é lido de `planos` dentro do banco: o
+    // Só o restaurante e o plano. O preço é lido de `planos` dentro do banco: o
     // valor daqui viraria a mensalidade debitada todo mês, para sempre.
     const r = await Dados.borda('assinar-cartao', {
       salaoId: salaoAtual, plano: codigo });
@@ -19581,7 +19590,7 @@ async function cancelarCartao(){
    ASSINAR — Pix, pelo Mercado Pago
    ---------------------------------------------------------------------------
    O boleto saiu da venda: tarifa fixa por emissão pesava mais de 6% num plano
-   de entrada, e compensava em até 3 dias úteis com o salão sem plano
+   de entrada, e compensava em até 3 dias úteis com o restaurante sem plano
    esperando. O `abrir_cobranca()` recusa `boleto` NO BANCO — tirar o botão
    daqui é arrumação de tela, não a trava.
 
@@ -19612,7 +19621,7 @@ function assinar(codigo, metodo){
      travou. */
   if(NA_NUVEM && !souGestor()){
     alert('Só o proprietário ou um administrador pode assinar o plano.\n\n'
-        + 'Peça para quem responde pelo salão entrar e fazer a assinatura.');
+        + 'Peça para quem responde pelo restaurante entrar e fazer a assinatura.');
     return;
   }
 
@@ -19636,7 +19645,7 @@ async function abrirPagamento(codigo, metodo){
   `, [['Fechar','fecharModal();pintar()','btn-p']]);
 
   try{
-    // Só o salão e o plano. Nem o preço, nem o CPF: os dois já estão no
+    // Só o restaurante e o plano. Nem o preço, nem o CPF: os dois já estão no
     // banco, e a borda lê de lá.
     const pedir = () => Dados.borda('criar-cobranca', {
       salaoId: salaoAtual, plano: codigo, metodo });
@@ -19782,7 +19791,7 @@ function copiarPix(){
    assinatura por ter sido clicado seria o produto de graça para quem clica.
 
    ⚠ E A PERGUNTA É SE ESTA COBRANÇA FOI PAGA — não se a assinatura está
-   ativa. Olhando a assinatura, o salão que JÁ estava ativo (renovando antes
+   ativa. Olhando a assinatura, o restaurante que JÁ estava ativo (renovando antes
    de vencer, ou com o plano posto à mão pela plataforma) lia "Pagamento
    confirmado" sem pagamento nenhum ter caído. Foi o que aconteceu no
    primeiro Pix de verdade: confirmou na tela, e a cobrança seguia em aberto.
@@ -19829,20 +19838,20 @@ const NA_NUVEM = !!(window.Dados && window.Dados.ligado);
 let _baixado = null;                                  // retrato do banco
 const _copia = o => JSON.parse(JSON.stringify(o));
 
-/* ── SALÃO MEU É AQUELE EM QUE EU TENHO VÍNCULO ───────────────────────────
+/* ── RESTAURANTE MEU É AQUELE EM QUE EU TENHO VÍNCULO ───────────────────────────
    `bd.saloes` traz o que o RLS deixa esta conta LER — e para a conta de
    plataforma isso é a plataforma inteira. O painel pegava `bd.saloes[0]`, e o
-   administrador entrava direto na agenda, na clientela e no caixa de um salão
+   administrador entrava direto na agenda, na clientela e no caixa de um restaurante
    CLIENTE, escolhido por ordem de cadastro, com permissão de editar tudo
    achando que era a casa dele.
 
    Ler é o poder que essa conta precisa ter, e o painel da plataforma é onde
-   ela lê. "O meu salão" é outra pergunta, e quem responde é `vinculos`: onde
+   ela lê. "O meu restaurante" é outra pergunta, e quem responde é `vinculos`: onde
    EU sou dono ou funcionário. Sem vínculo não é meu, por mais que eu consiga
    enxergar.
 
    O filtro mora aqui, e não na partida, porque a partida carrega DUAS vezes —
-   uma para descobrir o salão e outra já com ele escolhido. Na primeira versão
+   uma para descobrir o restaurante e outra já com ele escolhido. Na primeira versão
    eu filtrei só na partida, e a segunda carga trazia a plataforma inteira de
    volta para o seletor de estabelecimento.
    ──────────────────────────────────────────────────────────────────────── */
@@ -19852,25 +19861,25 @@ function sohMeusSaloes(d){
   if(!eu) return d;
   const meus = (d.vinculos || []).filter(v => v.perfilId === eu).map(v => v.salaoId);
   const souDaPlataforma = (d.perfis || []).some(p => p.id === eu && p.superAdmin);
-  // No modo suporte o salão é o que o admin abriu, e mais nenhum.
+  // No modo suporte o restaurante é o que o admin abriu, e mais nenhum.
   if(souDaPlataforma && emSuporte()){
     d.saloes = (d.saloes || []).filter(s => s.id === modoSuporte.salao);
     return d;
   }
   // Sem vínculo nenhum: só zera se for conta de plataforma, que é quem
-  // enxerga salão dos outros. Dono comum sem vínculo já não veria nada.
+  // enxerga restaurante dos outros. Dono comum sem vínculo já não veria nada.
   if(meus.length) d.saloes = (d.saloes || []).filter(s => meus.includes(s.id));
   else if(souDaPlataforma) d.saloes = [];
   return d;
 }
 
 /* ── O MODO SUPORTE ───────────────────────────────────────────────────────
-   O admin.html abre `app.html?suporte=<salão>` para ver o painel de um
+   O admin.html abre `app.html?suporte=<restaurante>` para ver o painel de um
    cliente do jeito que o cliente vê — e responder "não acho onde muda o
    horário" olhando a mesma tela.
 
    Quem decide é o banco (38_suporte.sql): `iniciar_suporte()` recusa quem não
-   é da plataforma, e um gatilho recusa QUALQUER gravação nesse salão até a
+   é da plataforma, e um gatilho recusa QUALQUER gravação nesse restaurante até a
    pessoa tocar em "Liberar edição" — que vale duas horas e registra o antes e
    o depois de tudo. Esta parte só abre a porta certa, deixa a faixa no topo
    de toda tela dizendo onde se está, e tira do caminho o que, aqui, seria da
@@ -19911,7 +19920,7 @@ function pintarFaixaSuporte(){
   f.innerHTML = editando
     ? `<span>${quem} — edição liberada até ${new Date(modoSuporte.ate)
           .toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}.
-         Tudo o que você mudar fica registrado, e o dono do salão pode ver.</span>
+         Tudo o que você mudar fica registrado, e o dono do restaurante pode ver.</span>
        <span class="espaco"></span>
        <button class="btn" onclick="sairDoSuporte()">Sair do suporte</button>`
     : `<span>${quem} — só leitura. Nada do que você mexer aqui é gravado.</span>
@@ -19923,8 +19932,8 @@ function pintarFaixaSuporte(){
 async function liberarEdicaoSuporte(){
   if(!confirm('Liberar edição em ' + modoSuporte.nome + '?\n\n'
       + 'Por duas horas você poderá mudar a agenda, os cadastros e o caixa deste '
-      + 'salão. Tudo o que mudar fica registrado, com o antes e o depois, e o '
-      + 'dono do salão pode ver.')) return;
+      + 'restaurante. Tudo o que mudar fica registrado, com o antes e o depois, e o '
+      + 'dono do restaurante pode ver.')) return;
   try{
     const r = await Dados.chamar('liberar_edicao_suporte', { p_acesso: modoSuporte.acesso });
     const v = (Array.isArray(r) ? r[0] : r) || {};
@@ -19946,8 +19955,8 @@ async function sairDoSuporte(){
 
 function avisoDoSuporte(oQue){
   alert('No modo suporte não dá para ' + oQue + ': a conta logada é a da '
-      + 'plataforma, não a do dono do salão.\n\nPara mudar o plano ou a '
-      + 'situação do salão, use o painel da plataforma (admin).');
+      + 'plataforma, não a do dono do restaurante.\n\nPara mudar o plano ou a '
+      + 'situação do restaurante, use o painel da plataforma (admin).');
 }
 
 /* ── A JORNADA VAI E VOLTA EM DOIS FORMATOS ───────────────────────────────
@@ -20030,7 +20039,7 @@ function desmontarJornadas(d){
 
    Quer dizer: a recepção não conseguia anotar ninguém no balcão, e o dono não
    conseguia bloquear a própria folga. O uso diário do produto, do lado do
-   salão, não chegava ao banco. Só o link da cliente marcava, porque ele passa
+   restaurante, não chegava ao banco. Só o link da cliente marcava, porque ele passa
    por `agendar()`, que recebe timestamptz de verdade.
 
    ── POR QUE O FUSO VAI NO TEXTO, E NÃO NUMA CONTA AQUI ────────────────────
@@ -20050,7 +20059,7 @@ function fusoDoSalaoAtual(){
   return s.fuso || 'America/Sao_Paulo';
 }
 
-// timestamptz do banco → { data, min } no fuso do salão.
+// timestamptz do banco → { data, min } no fuso do restaurante.
 function instanteParaTela(iso, fuso){
   const partes = new Intl.DateTimeFormat('en-CA', {
     timeZone: fuso, year:'numeric', month:'2-digit', day:'2-digit',
@@ -20119,7 +20128,7 @@ function montarAgenda(d){
      traduzia, então o Caixa na nuvem abria sempre zerado.
 
      E a tela filtra o dia por `c.data`, uma coluna que não existe: a comanda
-     tem `aberta_em`, que é um instante. O dia sai dele, no fuso do salão. */
+     tem `aberta_em`, que é um instante. O dia sai dele, no fuso do restaurante. */
   const porCom = {}, pagPorCom = {};
   for(const i of (d.comanda_itens || [])) (porCom[i.comandaId] = porCom[i.comandaId] || []).push(i);
   for(const g of (d.pagamentos || [])) (pagPorCom[g.comandaId] = pagPorCom[g.comandaId] || []).push(g);
@@ -20284,7 +20293,7 @@ function _montarSoAgenda(agsCrus, itensCrus){
   return d.agendamentos;
 }
 
-/* ── O FUSO DO SALÃO MUDOU EM OUTRO APARELHO ──────────────────────────────
+/* ── O FUSO DO RESTAURANTE MUDOU EM OUTRO APARELHO ──────────────────────────────
    Esta tela ESCREVE o horário junto com o fuso que tem na memória ('14:00
    America/Sao_Paulo') e LÊ os instantes do banco com o mesmo fuso. Se o dono
    trocou o fuso no celular dele, o banco moveu os instantes para a mesma
@@ -20297,7 +20306,7 @@ function _montarSoAgenda(agsCrus, itensCrus){
    no relógio errado. Avisa e recarrega.
 
    O banco cobre o intervalo: por 90 segundos depois da troca ele recusa
-   gravar horário neste salão (o `aa_fuso_recente`, 58_fuso.sql). */
+   gravar horário neste restaurante (o `aa_fuso_recente`, 58_fuso.sql). */
 let _fusoTrocado = false;
 async function conferirFuso(){
   if(_fusoTrocado) return true;
@@ -20307,13 +20316,13 @@ async function conferirFuso(){
   if(!sl || !sl.fuso || typeof Dados.fusoDoSalao !== 'function') return false;
   let noBanco = null;
   try{ noBanco = await Dados.fusoDoSalao(deQuem); }
-  catch(e){ console.info('[PediHub] fuso do salão:', e.message); return false; }
+  catch(e){ console.info('[PediHub] fuso do restaurante:', e.message); return false; }
   // Trocou de estabelecimento enquanto a pergunta voltava: a resposta é do outro.
   if(deQuem !== salaoAtual) return false;
   if(!noBanco || noBanco === sl.fuso) return false;
   _fusoTrocado = true;
-  abrirModal('O horário do salão foi ajustado', `
-    <p style="font-size:14px">O salão agora segue <b>${escapar(nomeDoFuso(noBanco))}</b>
+  abrirModal('O horário do restaurante foi ajustado', `
+    <p style="font-size:14px">O restaurante agora segue <b>${escapar(nomeDoFuso(noBanco))}</b>
       — lá são <b>${horaNoFuso(noBanco)}</b>.</p>
     <div class="aviso ok" style="margin-top:12px"><b>Os horários marcados continuam os
       mesmos.</b> Esta tela vai se atualizar para acompanhar o relógio novo.</div>`,
@@ -20428,7 +20437,7 @@ async function sincronizarAgenda(){
 
   _bancoAgenda = { ags: _copia(ags), itens: _copia(itens) };
 
-  /* ⚠ MEU SALÃO NÃO SE REDESENHA SOZINHO. A tela é um formulário refeito a
+  /* ⚠ MEU RESTAURANTE NÃO SE REDESENHA SOZINHO. A tela é um formulário refeito a
      partir do que está salvo: um horário chegando pelo link (ou a volta para
      a aba) apagava o "Sobre" e o endereço que o dono estava digitando e ainda
      não tinha salvo. Achado pelo caça-bug. A agenda não aparece nessa tela;
@@ -20454,7 +20463,7 @@ function avisarNovosHorarios(n){
   }
   const esperam = esperandoResposta().length;
   el.innerHTML = '<b>' + n + (n > 1 ? ' horários novos' : ' horário novo')
-    + '</b><br>Marcado agora pelo link do salão.'
+    + '</b><br>Marcado agora pelo link do restaurante.'
     + (esperam ? '<br><b>' + (esperam === 1 ? '1 espera' : esperam + ' esperam')
       + ' sua confirmação</b> — toque para ver.' : '');
   el.onclick = () => {
@@ -20497,7 +20506,7 @@ async function carregarTudo(){
        vai ao banco o que a pessoa mexeu de verdade.
 
        A cópia é tirada DEPOIS do `sohMeusSaloes()` de propósito: se o
-       retrato tivesse salão que o `bd` não tem, a gravação leria isso como
+       retrato tivesse restaurante que o `bd` não tem, a gravação leria isso como
        "sumiu" e mandaria apagar. */
     _baixado = _copia(cru);
     _bancoAgenda = { ags:   _copia(cru.agendamentos || []),
@@ -20505,18 +20514,18 @@ async function carregarTudo(){
     /* A assinatura só o gestor lê. Para a recepção e a profissional, o banco
        diz só o código do plano em vigor (`plano_do_salao`) — sem ele, a tela
        achava que era o Grátis e trancava o caixa de quem paga. */
-    /* Pergunta salão por salão porque, na primeira carga, o `salaoAtual`
+    /* Pergunta restaurante por restaurante porque, na primeira carga, o `salaoAtual`
        ainda não foi escolhido — ele sai justamente deste retrato. */
     planoDaEquipe = {};
     for(const s of (cru.saloes || [])){
       if((cru.assinaturas || []).some(a => a.salaoId === s.id)) continue;
       try{ planoDaEquipe[s.id] = await Dados.chamar('plano_do_salao', { p_salao: s.id }); }
-      catch(e){ console.info('[PediHub] plano do salão:', e.message); }
+      catch(e){ console.info('[PediHub] plano do restaurante:', e.message); }
     }
     return montarAgenda(montarJornadas(cru));
   }catch(e){
     console.error('[PediHub] não consegui ler o banco:', e);
-    /* Sem rede é o caso comum — celular sem sinal, wi-fi do salão caindo — e
+    /* Sem rede é o caso comum — celular sem sinal, wi-fi do restaurante caindo — e
        não tem nada a ver com config.js. Na abertura, quem avisa é a tela (ver
        a partida, lá embaixo); com o painel já aberto, o que está nele fica. */
     if(e && e.semRede){
@@ -20561,7 +20570,7 @@ function limparRecusa(msg){
 
   const mostrar = explicadas.length ? explicadas : unicas.map(() =>
     'O banco não autorizou esta gravação para a sua conta. Se você acabou de '
-    + 'trocar de salão, entre de novo.');
+    + 'trocar de restaurante, entre de novo.');
 
   return mostrar.slice(0, 3).join('\n\n')
        + (mostrar.length > 3 ? '\n\n(e mais ' + (mostrar.length - 3) + ')' : '');
@@ -20599,7 +20608,7 @@ function traduzirChaveEstrangeira(p){
 
 /* ── TABELA QUE NÃO CARREGOU TEM QUE APARECER ─────────────────────────────
    Falha de leitura era só uma linha no console, e console ninguém abre no
-   celular — que é onde o salão trabalha. Na tela, tabela que não veio e
+   celular — que é onde o restaurante trabalha. Na tela, tabela que não veio e
    tabela vazia são idênticas: sem `jornadas` a agenda não tem horário livre
    nenhum, sem `comanda_itens` o Caixa abre zerado. Parece dia parado.
 
@@ -20687,7 +20696,7 @@ function salvar(){
         // No suporte só leitura a recusa é a trava funcionando, não um defeito.
         if(emSuporte() && /Modo suporte: só leitura/.test(e.message || ''))
           alert('Modo suporte: só leitura. Nada foi gravado.\n\nPara mexer neste '
-              + 'salão, toque em "Liberar edição" na faixa do topo.');
+              + 'restaurante, toque em "Liberar edição" na faixa do topo.');
         else
         alert('NÃO consegui salvar no banco:\n\n' + limparRecusa(e.message)
             + '\n\nO que está na tela ainda não foi gravado.');
@@ -20745,7 +20754,7 @@ function recomecar(){
   bd = semear();
   salaoAtual = bd.saloes[0].id;
   salvar();
-  /* Recarregar, e não só redesenhar: a tela guarda escolhas por salão (os
+  /* Recarregar, e não só redesenhar: a tela guarda escolhas por restaurante (os
      dias liberados, "só a agenda", a cor da aparência) em variáveis, e a
      semente usa os mesmos ids — Meu negócio continuava mostrando o que foi
      mexido, e um Salvar sem querer gravava tudo de volta. Achado pelo
@@ -20826,7 +20835,7 @@ async function instalarApp(){
    teve e a Apple já disse que não vai ter: no iPhone instalar é
    Compartilhar → Adicionar à Tela de Início, e ponto.
 
-   Resultado: no aparelho de metade dos donos de salão do Brasil, o único
+   Resultado: no aparelho de metade dos donos de restaurante do Brasil, o único
    caminho para instalar era um botão que nunca aparecia — e a tela de
    instruções que existia aqui embaixo não tinha como ser aberta por
    ninguém. Código pronto, inalcançável.
@@ -20894,7 +20903,7 @@ function explicarInstalacaoManual(){
    O PASSO A PASSO DO PRIMEIRO DIA
 
    ── O PROBLEMA ────────────────────────────────────────────────────────────
-   Um salão recém-cadastrado abre o painel e encontra uma agenda vazia. Não
+   Um restaurante recém-cadastrado abre o painel e encontra uma agenda vazia. Não
    vazia de clientes — vazia de tudo: nenhum serviço, nenhum horário, ninguém
    na equipe. O link da cliente já existe e já funciona, e não oferece nada.
 
@@ -20916,7 +20925,7 @@ function explicarInstalacaoManual(){
    ── POR QUE ELE NÃO É UMA ABA ─────────────────────────────────────────────
    Aba é lugar de coisa que se volta. Isto se faz uma vez, e uma aba
    "Primeiro dia" morando no menu para sempre seria um lembrete permanente de
-   uma tarefa que acabou. Ele abre sozinho no salão vazio, e depois só por
+   uma tarefa que acabou. Ele abre sozinho no restaurante vazio, e depois só por
    quem procurar em Meu negócio.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -20964,7 +20973,7 @@ const PD_POR_TIPO = {
 
    Por isso o preço aparece escrito no próprio botão ANTES do toque, e não
    depois: quem discorda vê o número antes de aceitá-lo, e corrige em
-   Serviços em dois cliques. O que não pode acontecer é o salão descobrir o
+   Serviços em dois cliques. O que não pode acontecer é o restaurante descobrir o
    preço de fantasia no dia em que a cliente chega com o valor na mão.
    Formato: [nome, minutos, reais]. */
 const PD_SERVICOS = {
@@ -21044,7 +21053,7 @@ const PD_PRODUTOS = {
   infantil:    [['Shampoo infantil', 35], ['Condicionador infantil', 35]],
 };
 
-/* Segunda primeiro, domingo por último — a semana como o salão pensa nela,
+/* Segunda primeiro, domingo por último — a semana como o restaurante pensa nela,
    e não como o `getDay()` numera. */
 const PD_ORDEM_DIAS = [1, 2, 3, 4, 5, 6, 0];
 const PD_PADRAO_HORARIO = { 1:[[540,1140]], 2:[[540,1140]], 3:[[540,1140]],
@@ -21055,7 +21064,7 @@ let pdHorario = null;        // { dia: [[ini,fim], …] } em minutos
 let pdCategorias = null;     // Set de chaves
 let pdProdutosSim = null;    // true / false / null (ainda não perguntado)
 let pdPagamentos = null;     // as formas marcadas no passo "Como a cliente paga"
-let pdDoSalao = null;        // de qual salão é o rascunho acima
+let pdDoSalao = null;        // de qual restaurante é o rascunho acima
 const pdOferecido = new Set();
 
 const PD_PASSOS = [
@@ -21064,11 +21073,11 @@ const PD_PASSOS = [
       + 'agendamento.',
     desenhar: pdDesenhar1, guardar: pdGuardar1 },
   { titulo:'Horário de atendimento',
-    sub:'Os dias e as horas em que o salão está aberto. É o que forma a grade '
+    sub:'Os dias e as horas em que o restaurante está aberto. É o que forma a grade '
       + 'da agenda e os horários que o link oferece.',
     desenhar: pdDesenhar2, guardar: pdGuardar2 },
   { titulo:'O que você faz?',
-    sub:'Marque tudo o que o salão atende. Serve só para eu sugerir os '
+    sub:'Marque tudo o que o restaurante atende. Serve só para eu sugerir os '
       + 'serviços certos no próximo passo.',
     desenhar: pdDesenhar3, guardar: pdGuardar3 },
   { titulo:'Seus serviços',
@@ -21076,7 +21085,7 @@ const PD_PASSOS = [
       + 'mudar agora em Serviços, ou daqui a um mês.',
     desenhar: pdDesenhar4 },
   { titulo:'Sua equipe',
-    sub:'Quem atende no salão. Cada pessoa ganha uma coluna na agenda, e '
+    sub:'Quem atende no restaurante. Cada pessoa ganha uma coluna na agenda, e '
       + 'começa com o horário que você acabou de definir.',
     desenhar: pdDesenhar5, guardar: pdGuardar5 },
   { titulo:'Você vende produtos?',
@@ -21091,7 +21100,7 @@ const PD_PASSOS = [
         + 'sempre: ela fica em Meu negócio.',
     desenhar: pdDesenhar7, depois: pdPintar7, guardar: pdGuardar7 },
   { titulo:'Como a cliente paga',
-    sub:'Marque o que o salão aceita. Na hora de marcar pelo link, a cliente '
+    sub:'Marque o que o restaurante aceita. Na hora de marcar pelo link, a cliente '
       + 'escolhe uma destas — e você vê na agenda como ela vai pagar.',
     desenhar: pdDesenharPagamento, guardar: pdGuardarPagamento },
   { titulo:'A cara do seu link',
@@ -21112,7 +21121,7 @@ function abrirPrimeiroDia(n){
   const painel = document.getElementById('primeiroDia');
   if(!painel) return;
   pdOferecido.add(salaoAtual);
-  /* Rascunho de outro salão não atravessa a troca: o horário da unidade do
+  /* Rascunho de outro restaurante não atravessa a troca: o horário da unidade do
      centro não pode virar o da unidade do bairro por descuido. */
   if(pdDoSalao !== salaoAtual){
     pdHorario = null; pdCategorias = null; pdProdutosSim = null; pdPagamentos = null;
@@ -21225,26 +21234,26 @@ function pdFechar(terminou){
      da página, no passo em que a pessoa parou — e no celular, onde o rodapé
      estava escondido, o X era a única saída: recarregar dava sempre no
      assistente. O caminho de volta é a faixa "Continuar o passo a passo"
-     (enquanto o salão não tem serviço e horário) e o botão em Meu negócio. */
+     (enquanto o restaurante não tem serviço e horário) e o botão em Meu negócio. */
   pdMarcar(terminou ? { passo: PD_PASSOS.length, feito: true }
                     : { passo: pdPasso, adiado: true });
   document.getElementById('primeiroDia').hidden = true;
   /* `iniciar()` e não `pintar()`: o assistente pode ter mudado o nome e o
-     tipo do salão, e os dois vivem na moldura — seletor, topo, vocabulário —
+     tipo do restaurante, e os dois vivem na moldura — seletor, topo, vocabulário —
      que só o `iniciar()` redesenha. */
   iniciar();
 }
 
 /* ── O PASSO A PASSO OBEDECE O PLANO ─────────────────────────────────────────
    Relatado com print: no passo 6, tocar em "Shampoo" deu "NÃO consegui
-   salvar no banco: o seu plano cobre 0 produtos, e o salão já tem 0" — e a
-   pergunta seguinte foi "mas eu não tenho uma semana?". O salão tinha nascido
+   salvar no banco: o seu plano cobre 0 produtos, e o restaurante já tem 0" — e a
+   pergunta seguinte foi "mas eu não tenho uma semana?". O restaurante tinha nascido
    no Grátis: o teste de 7 dias é UM por pessoa (39_teste_unico), e aquele
    WhatsApp já tinha usado o dele. Nada dizia isso, e o assistente oferecia o
    que o Grátis não tem (produtos, mais de 5 serviços, cor do link,
    mensagens) para o banco recusar no meio.
 
-   Agora o passo 1 diz em que plano o salão está e por quê, e cada passo só
+   Agora o passo 1 diz em que plano o restaurante está e por quê, e cada passo só
    oferece o que o plano cobre — o resto ele explica, sem erro. Quem recusa
    continua sendo o banco; a tela só não oferece o que vai ser negado. */
 function tetoDoPlano(chave){
@@ -21265,21 +21274,21 @@ function pdAvisoDoPlano(){
   if(cl != null) partes.push(n(cl, 'cliente', 'clientes'));
   if(ag != null) partes.push(n(ag, 'agendamento', 'agendamentos') + ' por mês');
   return `<div class="aviso info" id="pdAvisoGratis" style="margin-bottom:14px">
-      <b>Este salão está no plano Grátis</b>, que é para conhecer o sistema:
+      <b>Este restaurante está no plano Grátis</b>, que é para conhecer o sistema:
       ${escapar(partes.join(', '))} — sem produtos, pacotes nem mensagens no WhatsApp.<br>
       O teste grátis de 30 dias, com tudo liberado, é <b>um por pessoa</b>: se este WhatsApp
-      ou e-mail já usou o teste, o salão novo começa no Grátis. Para liberar tudo, escolha
+      ou e-mail já usou o teste, o restaurante novo começa no Grátis. Para liberar tudo, escolha
       um plano em <b>Plano</b>, no menu.
       ${OFERTA_DE_PLANO ? `<div class="pd-faixa" style="margin-top:8px"><button type="button" class="btn btn-peq"
         onclick="pdFechar(); irPara('plano')">Ver os planos</button></div>` : ''}
     </div>`;
 }
-/* O teto de serviços: o banco conta todos os do salão, ativos ou não. */
+/* O teto de serviços: o banco conta todos os do restaurante, ativos ou não. */
 function pdCabeServico(){
   const teto = tetoDoPlano('max_servicos');
   if(teto == null || doSalao(bd.servicos).length < teto) return true;
   alert('O seu plano cobre até ' + teto + (teto === 1 ? ' serviço' : ' serviços')
-      + ', e o salão já tem ' + doSalao(bd.servicos).length + '.\n\n'
+      + ', e o restaurante já tem ' + doSalao(bd.servicos).length + '.\n\n'
       + 'Tire um para pôr outro no lugar, ou escolha um plano maior em Plano.');
   return false;
 }
@@ -21301,7 +21310,7 @@ function pdDesenhar1(){
         "barbeiro", esmalteria diz "manicure" — e as sugestões dos próximos
         passos.</span>
     </div>
-    <div class="campo"><label for="pdZap">WhatsApp do salão</label>
+    <div class="campo"><label for="pdZap">WhatsApp do restaurante</label>
       <input id="pdZap" value="${escapar(sl.whatsapp || '')}"
              placeholder="(11) 99999-8888">
       <span class="ajuda">É por onde sai a confirmação da cliente. Pode ficar
@@ -21379,7 +21388,7 @@ function pdHorarioAtual(){
     }
     if(Object.keys(pdHorario).length) return pdHorario;
   }
-  /* Sem horário guardado, a melhor resposta é a de quem já atende: um salão
+  /* Sem horário guardado, a melhor resposta é a de quem já atende: um restaurante
      que chegou aqui pelo botão de Meu negócio pode ter uma semana inteira
      montada na ficha da equipe, e oferecer o padrão de fábrica por cima
      disso seria pedir para digitar de novo o que já está certo. */
@@ -21430,7 +21439,7 @@ function pdDesenhar2(){
           neste dia.</p>`}
       </div>`;
   }).join('') + `
-    <p class="ajuda" style="margin-top:10px">Este é o horário do salão. Ele vai
+    <p class="ajuda" style="margin-top:10px">Este é o horário do restaurante. Ele vai
       para a ficha de quem ainda não tem horário próprio — quem já tem, como a
       pessoa que sai mais cedo às sextas, não é mexida.</p>`;
 }
@@ -21526,10 +21535,10 @@ function pdMesmaJornada(a, b){
   return chapar(a) === chapar(b);
 }
 
-/* ⚠ HORÁRIO DE SALÃO NÃO EXISTE NO BANCO — QUEM TEM JORNADA É PESSOA.
+/* ⚠ HORÁRIO DE RESTAURANTE NÃO EXISTE NO BANCO — QUEM TEM JORNADA É PESSOA.
    A tabela `jornadas` tem `profissional_id`, e a agenda desenha a coluna de
    cada um a partir dela. Então o horário escolhido aqui precisa POUSAR em
-   alguém para virar grade; guardado só no `cfg` do salão, ele seria um
+   alguém para virar grade; guardado só no `cfg` do restaurante, ele seria um
    ajuste bonito que não abre um único horário.
 
    A cópia no `cfg` continua existindo, e por outro motivo: é dela que sai o
@@ -21571,7 +21580,7 @@ function pdCategoriasAtuais(){
     pdCategorias = new Set(guardadas.filter(c => PD_SERVICOS[c]));
     if(pdCategorias.size) return pdCategorias;
   }
-  // Nunca escolhidas: o que os serviços do salão já dizem, e só então o
+  // Nunca escolhidas: o que os serviços do restaurante já dizem, e só então o
   // palpite do tipo de negócio.
   const jaUsadas = new Set(doSalao(bd.servicos)
     .map(s => PD_CHAVE[nomeAchatado(s.categoria)]).filter(Boolean));
@@ -21637,7 +21646,7 @@ async function pdVirarServico(k, i){
   } else {
     if(!pdCabeServico()) return;
     bd.servicos.push({ id:id(), salaoId:salaoAtual, nome,
-      // A grafia que o salão já usa vence a do catálogo — senão a página da
+      // A grafia que o restaurante já usa vence a do catálogo — senão a página da
       // cliente ganha uma segunda seção com o mesmo nome.
       categoria: pdGrafiaDaCategoria(PD_ROTULO[k] || ''),
       duracaoMin: dur, intervaloMin: 0,
@@ -21663,7 +21672,7 @@ async function pdServicoAMao(){
 }
 
 /* As categorias que o seletor oferece: as marcadas no passo 3, mais qualquer
-   grafia que o salão JÁ use e que não esteja entre elas. Um salão com "Barba
+   grafia que o restaurante JÁ use e que não esteja entre elas. Um restaurante com "Barba
    masculina" cadastrada à mão continua podendo pôr o próximo serviço lá, em
    vez de ser empurrado para o vocabulário do catálogo. */
 function pdCategoriasParaEscolher(){
@@ -21679,12 +21688,12 @@ function pdCategoriasParaEscolher(){
   return [...vistos.values()];
 }
 
-/* ⚠ A GRAFIA QUE O SALÃO JÁ USA VENCE A DO CATÁLOGO.
+/* ⚠ A GRAFIA QUE O RESTAURANTE JÁ USA VENCE A DO CATÁLOGO.
 
-   O catálogo daqui diz "Cabelo". Se o salão já tem serviços com "cabelo" ou
+   O catálogo daqui diz "Cabelo". Se o restaurante já tem serviços com "cabelo" ou
    "Cabelos", criar mais um com "Cabelo" abriria uma SEGUNDA seção na página
    da cliente — ela rolaria procurando a escova numa lista partida ao meio
-   por um detalhe de digitação. Aconteceu: refazer o passo a passo num salão
+   por um detalhe de digitação. Aconteceu: refazer o passo a passo num restaurante
    que já tinha serviços deixou a página com duas vezes "Unhas" e duas
    "Cabelo".
 
@@ -21722,7 +21731,7 @@ function pdDesenhar4(){
   const tetoSv = tetoDoPlano('max_servicos'), nSv = doSalao(bd.servicos).length;
   if(tetoSv != null && (tetoSv <= 10 || nSv >= tetoSv)){
     html += `<div class="aviso ${nSv >= tetoSv ? 'atencao' : 'info'}" id="pdTetoServicos" style="margin-bottom:10px">
-      O seu plano cobre até <b>${tetoSv} ${tetoSv === 1 ? 'serviço' : 'serviços'}</b> — o salão tem ${nSv}.${
+      O seu plano cobre até <b>${tetoSv} ${tetoSv === 1 ? 'serviço' : 'serviços'}</b> — o restaurante tem ${nSv}.${
       nSv >= tetoSv ? ' Para pôr outro, tire um, ou escolha um plano maior em <b>Plano</b>.' : ''}</div>`;
   }
   for(const k of esc){
@@ -21741,19 +21750,19 @@ function pdDesenhar4(){
   if(!esc.length){
     html += `<p class="pd-vazio">Nenhuma categoria marcada no passo anterior —
       então não tenho o que sugerir. Cadastre à mão aqui embaixo, ou volte e
-      marque o que o salão faz.</p>`;
+      marque o que o restaurante faz.</p>`;
   }
 
-  /* ⚠ OS SERVIÇOS DO SALÃO QUE NÃO ESTÃO NO CATÁLOGO APARECEM AQUI.
+  /* ⚠ OS SERVIÇOS DO RESTAURANTE QUE NÃO ESTÃO NO CATÁLOGO APARECEM AQUI.
 
      Faltava esta lista, e o efeito era o pior possível: cadastrar em "Não
      está na lista?" não mudava NADA na tela. O serviço ia para o banco e
      sumia de vista — só o contador lá embaixo mexia, e ninguém olha
      contador. A pessoa cadastra de novo, achando que não funcionou.
 
-     Ela também mostra o que o salão já tinha ANTES do assistente, que é o
+     Ela também mostra o que o restaurante já tinha ANTES do assistente, que é o
      caso de quem refaz o passo a passo: sem isso, o passo dava a entender
-     que o salão não tem serviço nenhum. */
+     que o restaurante não tem serviço nenhum. */
   const nosCatalogos = new Set();
   for(const lista of Object.values(PD_SERVICOS))
     for(const [nome] of lista) nosCatalogos.add(nomeAchatado(nome));
@@ -21830,7 +21839,7 @@ async function pdEquipeAMao(){
     telefone: (document.getElementById('pdEqZap') || {}).value
       ? document.getElementById('pdEqZap').value.trim() : null,
     foto: null,
-    // Nasce com o horário do salão, do passo 2. Profissional sem jornada não
+    // Nasce com o horário do restaurante, do passo 2. Profissional sem jornada não
     // tem coluna na agenda — seria um cadastro que não atende ninguém.
     jornada: _copia(pdHorarioAtual()),
   });
@@ -21856,8 +21865,8 @@ function pdDesenhar5(){
   const eq = doSalao(bd.profissionais);
   const quantos = d => (d ? d.length : 0);
   /* ⚠ O WHATSAPP DE CADA UM. Sem número, a pessoa não recebe o aviso de
-     horário novo nem o lembrete do salão — e o passo pedia só o nome: num
-     salão recém-criado, essas mensagens não saíam para ninguém. O do dono
+     horário novo nem o lembrete do restaurante — e o passo pedia só o nome: num
+     restaurante recém-criado, essas mensagens não saíam para ninguém. O do dono
      já vem com o número do cadastro dele; os outros, em branco. Opcional. */
   const linhas = eq.map(p => {
     const dias = PD_ORDEM_DIAS.filter(d => quantos((p.jornada || {})[d]));
@@ -21998,7 +22007,7 @@ function pdDesenhar6(){
     const p = planoEfetivo();
     return `<div class="aviso info" id="pdSemProdutos">
         <b>Produtos não estão no seu plano${p && p.nome ? ' (' + escapar(p.nome) + ')' : ''}.</b>
-        Nele o salão trabalha com a agenda e os serviços. Nos planos pagos você cadastra
+        Nele o restaurante trabalha com a agenda e os serviços. Nos planos pagos você cadastra
         produtos, vende na comanda e mostra no seu link.</div>
       <p class="ajuda" style="margin-top:10px">Pode seguir para o próximo passo — este fica
         para quando você assinar, na aba <b>Produtos</b>.</p>`;
@@ -22053,7 +22062,7 @@ function pdDesenhar6(){
       aba Produtos. Aqui vai só o nome e o preço de venda.</p>`;
 }
 
-/* ── Passo 7 · como o salão trabalha ─────────────────────────────────────── */
+/* ── Passo 7 · como o restaurante trabalha ─────────────────────────────────────── */
 function pdDesenhar7(){
   if(comandaEscolhida === null || comandaDoSalao !== salaoAtual){
     comandaEscolhida = prefereComanda(); comandaDoSalao = salaoAtual;
@@ -22142,7 +22151,7 @@ function pdDesenharPagamento(){
       <span class="ajuda">A cliente vê e copia no link. Prefira o CNPJ, o e-mail
         ou a chave aleatória, e não o seu CPF.</span>
     </div>
-    <p class="ajuda">O pagamento continua sendo no salão, no dia — isto é só
+    <p class="ajuda">O pagamento continua sendo no restaurante, no dia — isto é só
       para a cliente dizer como vai pagar, e você se preparar. Sem nenhuma
       marcada, o link mostra as quatro e a escolha fica opcional.</p>`;
 }
@@ -22170,7 +22179,7 @@ function pdGuardarPagamento(){
     pagamentos: Funcionamento.pagamentos({ formas: pdFormasAtuais(), obs, pix,
                                            sinal: ((sl.cfg || {}).pagamentos || {}).sinal }),
   });
-  // Meu negócio relê do salão na próxima vez, em vez de mostrar o rascunho dele.
+  // Meu negócio relê do restaurante na próxima vez, em vez de mostrar o rascunho dele.
   pagEscolhidas = null;
   salvar();
   return true;
@@ -22210,7 +22219,7 @@ function pdDesenharCara(){
       </div>
     </div>`;
   return cartao('logo', 'Logo', 'Aparece no alto da página e no ícone de quem instalar o app.', logo)
-    + cartao('capa', 'Foto de capa', 'A foto grande do topo — o salão, a fachada, um trabalho seu.', capa)
+    + cartao('capa', 'Foto de capa', 'A foto grande do topo — o restaurante, a fachada, um trabalho seu.', capa)
     + `<div class="pd-cat">Cor da sua marca</div>
     <div class="pd-cores" id="pdCores">
       ${CORES.map(([hex, nome]) => `
@@ -22258,7 +22267,7 @@ function pdLinkDoSalao(){
 function sufixoDemo(){ return NA_NUVEM ? '' : '&demo=1'; }
 
 /* ── O LINK DE CADASTRO ───────────────────────────────────────────────────
-   O mesmo link do salão, com `&cadastro=1`: abre direto em "Faça seu
+   O mesmo link do restaurante, com `&cadastro=1`: abre direto em "Faça seu
    cadastro". A cliente cria a conta e a ficha nasce aqui em Clientes, marcada
    "cadastrou pelo link", sem ela marcar horário — e o dono a coloca no
    pacote depois. Quem decide e cria a ficha é o banco
@@ -22276,14 +22285,14 @@ function abrirLinkDeCadastro(){
     <p style="margin:0;font-size:13px;color:var(--txt2)">Se o WhatsApp dela já estiver numa ficha daqui,
       com o mesmo nome, o cadastro é ligado a essa ficha, sem duplicar. Cada cadastro conta
       como cliente no limite do seu plano.${NA_NUVEM ? ''
-        : ' Na demonstração o link abre o salão de exemplo, sem criar conta.'}</p>`,
+        : ' Na demonstração o link abre o restaurante de exemplo, sem criar conta.'}</p>`,
     [['Fechar', 'fecharModal()'],
      ['Copiar o link', "pdCopiarLink(this, 'linkCadastro')"],
      ['Mandar no WhatsApp', 'mandarLinkDeCadastro()', 'btn-p']]);
 }
 function mandarLinkDeCadastro(){
   const sl = acharSalao(salaoAtual) || {};
-  const texto = 'Oi! Faça seu cadastro no ' + (sl.nome || 'salão') + ' por este link, '
+  const texto = 'Oi! Faça seu cadastro no ' + (sl.nome || 'restaurante') + ' por este link, '
               + 'é rapidinho: ' + linkDeCadastro();
   window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank', 'noopener');
 }
@@ -22680,7 +22689,7 @@ function pdDesenhar8(){
     <div class="pd-fim">
       ${qr ? `<div class="pd-qr" id="pdQrCaixa">${qr}</div>` : ''}
       <div class="pd-lado">
-        <b>${escapar(sl.nome || 'Seu salão')}</b>
+        <b>${escapar(sl.nome || 'Seu restaurante')}</b>
         <input id="pdLink" readonly value="${escapar(base)}"
                aria-label="Link da sua agenda" style="width:100%;margin:8px 0">
         <div class="pd-faixa" style="margin-top:0">
@@ -22718,7 +22727,7 @@ function pdDesenhar8(){
 }
 
 /* ── Quando ele aparece sozinho ──────────────────────────────────────────── */
-/* Uma vez por salão, por sessão, e só para quem manda no cadastro. Quem
+/* Uma vez por restaurante, por sessão, e só para quem manda no cadastro. Quem
    trabalha na recepção não decide serviço nem preço, e receber um assistente
    de oito passos ao abrir o painel seria oferecer a ela um trabalho que não
    é dela — e que o RLS ia recusar no meio. */
@@ -22737,7 +22746,7 @@ function talvezOferecerPrimeiroDia(){
      atende e o horário de cada um — nada disso é o começo de uma pizzaria.
      O começo dela está no cartão "Primeiros passos" da tela de Pedidos. */
   if(sl.tipo === 'restaurante') return;
-  /* Salão com serviço E gente com horário não é salão novo, mesmo que nunca
+  /* Restaurante com serviço E gente com horário não é restaurante novo, mesmo que nunca
      tenha visto este assistente — é o caso de quem já usava o sistema antes
      de ele existir, e abrir um passo a passo de cadastro para essa pessoa
      seria sugerir que algo está faltando quando não está. */
@@ -22752,7 +22761,7 @@ function salaoPronto(){
             && doSalao(bd.profissionais).some(temJornadaAlguma));
 }
 
-/* O assistente adiado não some do mapa: enquanto o salão não tem serviço e
+/* O assistente adiado não some do mapa: enquanto o restaurante não tem serviço e
    horário — o link da cliente ainda não marca nada —, uma faixa no alto
    oferece continuar de onde parou. Toque, e não uma janela por cima de tudo:
    quem fechou já disse que agora não. */
@@ -23138,14 +23147,14 @@ function iniciar(){
   sel.innerHTML = bd.saloes.map(s => `<option value="${s.id}">${escapar(s.nome)}</option>`).join('');
   sel.value = salaoAtual;
   const s = acharSalao(salaoAtual);
-  document.getElementById('mTipo').textContent = (s.tipo || 'salão');
+  document.getElementById('mTipo').textContent = (s.tipo || 'restaurante');
   document.getElementById('mVersao').textContent = VERSAO_APP;
   document.getElementById('tbSalao').textContent = s.nome;
   const t = TELAS.find(x => x[0] === telaAtual);
   document.getElementById('tituloTela').textContent = t ? rotuloDaTela(telaAtual, t[1]) : '';
   /* O `diaAtual` nasceu lá em cima, na primeira linha do script, quando
-     ainda não havia salão nenhum — então o `hoje()` de lá caiu no fuso
-     padrão. Aqui o salão já chegou, e é o primeiro instante em que dá para
+     ainda não havia restaurante nenhum — então o `hoje()` de lá caiu no fuso
+     padrão. Aqui o restaurante já chegou, e é o primeiro instante em que dá para
      saber que dia é hoje NELE. */
   diaAtual = hoje();
   _hojeVisto = diaAtual;
@@ -23171,7 +23180,7 @@ function iniciar(){
   /* Por último, e depois do `pintar()`: o assistente cobre a tela, e cobrir
      uma tela em branco faria a pessoa fechá-lo para descobrir o que tem
      atrás. Fechado, ele já revela o painel montado. No suporte, nunca: o
-     assistente é para o dono, e preenchê-lo gravaria no salão dele. */
+     assistente é para o dono, e preenchê-lo gravaria no restaurante dele. */
   if(!emSuporte()) talvezOferecerPrimeiroDia();
 }
 
@@ -23201,8 +23210,8 @@ function mostrarQuemEstaLogado(){
      é o que `papel_no_salao()` compara em toda policy de RLS. Trocar a chave
      por "proprietario" derrubaria a permissão de todo mundo que já tem
      vínculo. O que a pessoa lê é outra coisa, e é só isto aqui. */
-  const PAPEL = { dono:'Proprietário', admin:'Administra', recepcao:'Recepção',
-                  profissional:'Atende', cliente:'Cliente' };
+  const PAPEL = { dono:'Proprietário', admin:'Administra', recepcao:'Caixa e balcão',
+                  profissional:'Atendente', cliente:'Cliente' };
 
   const nome = perfil.nome || (perfil.email || '').split('@')[0];
   caixa.style.display = '';
@@ -23229,14 +23238,14 @@ function mostrarQuemEstaLogado(){
        acaba (o `finally` garante que some até se der erro). */
     if(NA_NUVEM) mostrarCarregando(true);
     try{
-    // Antes da primeira leitura: no suporte, ela já desce só o salão aberto.
+    // Antes da primeira leitura: no suporte, ela já desce só o restaurante aberto.
     await entrarNoSuporte();
     bd = await carregarTudo();
     // Só o modo nuvem desiste quando não vem nada: ali o null significa
     // "o banco não respondeu". No modo demonstração, null é o esperado na
     // primeira visita — e é a deixa para semear.
     /* O banco não respondeu. Sem esta frase a tela ficava em branco — e,
-       antes de o `baixar()` distinguir rede de permissão, dizia "Nenhum salão
+       antes de o `baixar()` distinguir rede de permissão, dizia "Nenhum restaurante
        nesta conta" para quem só estava sem sinal. */
     const semConexao = () => {
       semSalao('<b>Não consegui falar com o servidor</b>'
@@ -23253,7 +23262,7 @@ function mostrarQuemEstaLogado(){
          ter entrado: ela estava trabalhando aqui há um minuto.
 
          Isto merecia — e não tinha — uma frase própria. O painel abria
-         inteiro e dizia "Nenhum salão nesta conta" para quem tem salão,
+         inteiro e dizia "Nenhum restaurante nesta conta" para quem tem restaurante,
          agenda e caixa lá dentro. Quem lê isso não entende "faça login de
          novo"; entende "meus dados sumiram". */
       if(bd.sessaoExpirou){
@@ -23283,19 +23292,19 @@ function mostrarQuemEstaLogado(){
       }
       if(!bd.saloes || !bd.saloes.length){
         /* ── A CONTA DA PLATAFORMA CAI AQUI ─────────────────────────────
-           Quem administra o PediHub não tem salão — não deve mesmo ter.
+           Quem administra o PediHub não tem restaurante — não deve mesmo ter.
            Só que esta tela dizia a ele "crie o seu em criar.html", sem uma
            palavra sobre o painel da plataforma, que é justamente o lugar
-           dessa conta. Mandar o administrador criar um salão é mandá-lo
+           dessa conta. Mandar o administrador criar um restaurante é mandá-lo
            para o lugar errado com instrução clara, que é a pior
            combinação. */
         const meu = (bd.perfis || []).find(p => p.superAdmin);
         semSalao(meu
           ? '<b>Esta é a sua conta de plataforma</b>'
-            + 'Ela administra o PediHub e não tem salão próprio — está certo '
+            + 'Ela administra o PediHub e não tem restaurante próprio — está certo '
             + 'assim. O painel dela é o <a class="link" href="admin.html">'
             + 'admin.html</a>.'
-          : '<b>Nenhum salão nesta conta</b>'
+          : '<b>Nenhum restaurante nesta conta</b>'
             + 'Crie o seu em <a class="link" href="criar.html">dois minutos</a>.');
         return;
       }
@@ -23303,11 +23312,11 @@ function mostrarQuemEstaLogado(){
       if(!salaoAtual || !acharSalao(salaoAtual)) salaoAtual = bd.saloes[0].id;
       /* ── A SEGUNDA LEITURA SÓ VALE SE ELA FOR DIFERENTE ────────────────
          Aqui `carregarTudo()` era chamado SEMPRE de novo, dobrando o tempo
-         de abertura. E para quem tem um salão só — que é quase todo mundo
+         de abertura. E para quem tem um restaurante só — que é quase todo mundo
          — a segunda leitura devolve exatamente o mesmo: a primeira já veio
-         sem filtro, e sem filtro o RLS entrega justamente o salão dela.
+         sem filtro, e sem filtro o RLS entrega justamente o restaurante dela.
 
-         Com dois salões a releitura é necessária de verdade: a primeira
+         Com dois restaurantes a releitura é necessária de verdade: a primeira
          trouxe as linhas dos dois misturadas, e a tela precisa das de um. */
       const precisaRecarregar = bd.saloes.length > 1 && salaoAtual !== antes;
       if(precisaRecarregar){
@@ -23325,7 +23334,7 @@ function mostrarQuemEstaLogado(){
       if(!salaoAtual || !acharSalao(salaoAtual)) salaoAtual = bd.saloes[0].id;
     }
     iniciar();
-    // Comanda desligada na plataforma: o salão passa a "Só a agenda" no banco.
+    // Comanda desligada na plataforma: o restaurante passa a "Só a agenda" no banco.
     // No suporte, não: abrir o painel de um cliente não grava nada nele.
     if(!emSuporte()) gravarSoAgendaSeDesligada();
     ligarSincronizacao();
@@ -23356,7 +23365,7 @@ function mostrarQuemEstaLogado(){
      qualquer coisa.
 
      Ligado ao banco, dizia "PediHub · ligado ao banco (produção)". Isso
-     não é aviso, é recado de programador: quem tem salão não precisa saber
+     não é aviso, é recado de programador: quem tem restaurante não precisa saber
      em que ambiente está, e ler "produção" no rodapé do próprio negócio
      passa a impressão de estar dentro de uma ferramenta de teste. Some. */
   function arrumarRodape(){
@@ -23369,7 +23378,7 @@ function mostrarQuemEstaLogado(){
     if(bt && NA_NUVEM) bt.style.display = 'none';
   }
 
-  // Tela sem salão: mostra o recado e ainda assim deixa o rodapé honesto.
+  // Tela sem restaurante: mostra o recado e ainda assim deixa o rodapé honesto.
   function semSalao(html){
     document.querySelector('.corpo').innerHTML = '<div class="vazio">' + html + '</div>';
     arrumarRodape();

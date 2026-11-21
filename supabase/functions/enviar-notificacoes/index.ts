@@ -10,10 +10,10 @@
    ── POR QUE ESTE ARQUIVO NÃO PODE VIRAR JAVASCRIPT DO PAINEL ──────────────
    Ele é um dos dois lugares do projeto que enxergam duas credenciais:
 
-     WHATSAPP_TOKEN            manda mensagem em nome do salão
+     WHATSAPP_TOKEN            manda mensagem em nome do restaurante
      SUPABASE_SERVICE_ROLE_KEY passa por cima de TODO o RLS
 
-   Qualquer uma delas no painel é o fim do isolamento entre salões — o painel
+   Qualquer uma delas no painel é o fim do isolamento entre restaurantes — o painel
    é HTML servido do GitHub Pages, e tudo o que chega nele é público por
    construção. As duas vivem em variáveis de ambiente da função.
 
@@ -31,7 +31,7 @@
    meio e leva a fila junto.
 
    Cada chamada faz duas coisas: põe os resumos do dia na fila (para os
-   salões cuja hora chegou) e despacha o que está vencendo.
+   restaurantes cuja hora chegou) e despacha o que está vencendo.
    =========================================================================== */
 
 /* Os avisos no celular (59_push.sql). Não dependem do WhatsApp: rodam antes
@@ -90,7 +90,7 @@ function paraMeta(digitos: string): string {
    O WhatsApp só aceita texto livre dentro de 24 horas contadas da última
    mensagem que a PESSOA mandou para o número. Nossas quatro mensagens são
    todas fora dessa janela — a cliente marcou pelo link do site e nunca
-   escreveu para o salão. Texto livre aqui volta com o erro 131047, sempre.
+   escreveu para o restaurante. Texto livre aqui volta com o erro 131047, sempre.
 
    Então o que viaja é o nome do modelo aprovado na Meta e as variáveis na
    ordem. O `corpo`, com emoji e quebra de linha, continua sendo gravado no
@@ -227,7 +227,7 @@ Deno.serve(async (req) => {
   }
 
   /* ── OS AVISOS NO CELULAR, PRIMEIRO ────────────────────────────────────
-     Antes do WhatsApp, e sem depender dele: o salão sem a Meta configurada
+     Antes do WhatsApp, e sem depender dele: o restaurante sem a Meta configurada
      continua recebendo o aviso de horário novo no celular. Erro aqui não
      derruba a volta do WhatsApp — é registrado e a vida segue. */
   let avisos = { enviados: 0, falhas: 0 };
@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
   /* ⚠ SEM CREDENCIAL, NÃO SE INVENTA ENVIO.
 
      A tentação aqui seria "marcar como enviado para o painel ficar bonito".
-     O resultado disso é o salão parar de ligar para a cliente confiando num
+     O resultado disso é o restaurante parar de ligar para a cliente confiando num
      aviso que ninguém recebeu. Devolve 503, a fila fica intacta, e o painel
      continua dizendo pendente — que é a verdade. */
   if (!WA_TOKEN || !WA_PHONE_ID) {

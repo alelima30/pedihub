@@ -7,7 +7,7 @@
 -- `abrir_cobranca()` só roda quando alguém clica, e ninguém clica no mês 2.
 --
 -- Se `registrar_recorrencia()` não criasse a linha do mês, o mês 1 renovaria
--- e o mês 2 falharia em silêncio. O salão acharia que está em dia por trinta
+-- e o mês 2 falharia em silêncio. O restaurante acharia que está em dia por trinta
 -- dias, e aí perderia o plano sem ter feito nada errado.
 --
 -- É o pior formato de defeito que existe: só aparece depois, e parece culpa
@@ -16,7 +16,7 @@
 
 \set ON_ERROR_STOP on
 
--- ── Cenário: um salão pagante, no plano Dupla ─────────────────────────────
+-- ── Cenário: um restaurante pagante, no plano Dupla ─────────────────────────────
 insert into auth.users (id) values
   ('e0000000-0000-0000-0000-00000000000a') on conflict do nothing;
 /* ⚠ `do update`, e não `do nothing`.
@@ -30,7 +30,7 @@ insert into public.perfis (id, nome, email) values
   on conflict (id) do update
     set nome = excluded.nome, email = excluded.email;
 insert into public.saloes (id, slug, nome) values
-  ('e0000000-1111-0000-0000-00000000000b', 'salao-cartao', 'Salão do Cartão');
+  ('e0000000-1111-0000-0000-00000000000b', 'salao-cartao', 'Restaurante do Cartão');
 insert into public.vinculos (perfil_id, salao_id, papel, status) values
   ('e0000000-0000-0000-0000-00000000000a',
    'e0000000-1111-0000-0000-00000000000b', 'dono', 'ativo');
@@ -48,13 +48,13 @@ select t_verdade('e a assinatura passa a saber que está no cartão',
      from public.assinaturas
     where salao_id = 'e0000000-1111-0000-0000-00000000000b'));
 
-/* ⚠ A mesma pré-aprovação em dois salões seria id trocado no caminho, não
-   renovação — e mover o plano do salão errado é o pior desfecho possível. */
+/* ⚠ A mesma pré-aprovação em dois restaurantes seria id trocado no caminho, não
+   renovação — e mover o plano do restaurante errado é o pior desfecho possível. */
 insert into public.saloes (id, slug, nome) values
-  ('e0000000-2222-0000-0000-00000000000c', 'outro-cartao', 'Outro Salão');
+  ('e0000000-2222-0000-0000-00000000000c', 'outro-cartao', 'Outro Restaurante');
 insert into public.assinaturas (salao_id, plano, status) values
   ('e0000000-2222-0000-0000-00000000000c', 'duo', 'ativa');
-select t_falso('a mesma pré-aprovação NÃO é aceita noutro salão',
+select t_falso('a mesma pré-aprovação NÃO é aceita noutro restaurante',
   (public.ligar_cartao('e0000000-2222-0000-0000-00000000000c', 'PREAPP-1')->>'ok')::boolean);
 
 \echo ''
@@ -124,7 +124,7 @@ select t_texto('pagamento recusado pelo cartão não ativa',
 
    Este bloco existe por causa de um defeito que este arquivo pegou antes de
    ir para produção: as duas cobranças acima ficaram `pendente`, e o
-   `ux_cobranca_aberta` — que garante uma pendente por salão — recusava a
+   `ux_cobranca_aberta` — que garante uma pendente por restaurante — recusava a
    terceira. Na prática: uma recorrência recusada travava a do mês seguinte,
    o webhook devolvia 500, e a assinatura nunca mais renovava.
 
@@ -158,7 +158,7 @@ select set_config('request.jwt.claim.sub', '', false);
 update public.assinaturas set vence_em = current_date + 2
  where salao_id = 'e0000000-1111-0000-0000-00000000000b';
 
-select t_igual('o salão no cartão fica FORA da lista de cobrança',
+select t_igual('o restaurante no cartão fica FORA da lista de cobrança',
   (select count(*) from public.assinaturas_a_vencer(5)
     where salao_id = 'e0000000-1111-0000-0000-00000000000b'), 0::bigint);
 
@@ -206,8 +206,8 @@ select t_falso('com o cartão desligado, jaLigado é falso',
   (public.preparar_cartao('e0000000-1111-0000-0000-00000000000b', 'duo',
      'e0000000-0000-0000-0000-00000000000a')->>'jaLigado')::boolean);
 
-/* Quem não tem vínculo não pergunta preço nem e-mail de salão alheio. Sem
-   isto, um `p_quem` inventado seria uma consulta de e-mail por id de salão. */
+/* Quem não tem vínculo não pergunta preço nem e-mail de restaurante alheio. Sem
+   isto, um `p_quem` inventado seria uma consulta de e-mail por id de restaurante. */
 insert into auth.users (id) values
   ('e0000000-0000-0000-0000-00000000000d') on conflict do nothing;
 insert into public.perfis (id, nome, email) values
@@ -241,7 +241,7 @@ select t_verdade('agora jaLigado é verdadeiro',
    o identificador da primeira — que é justamente o que a borda precisa para
    cancelá-la. O dono descobre na fatura, e ninguém consegue desligar a
    cobrança que sobrou. */
-select t_texto('a segunda pré-aprovação do mesmo salão é recusada',
+select t_texto('a segunda pré-aprovação do mesmo restaurante é recusada',
   public.ligar_cartao('e0000000-1111-0000-0000-00000000000b', 'PREAPP-3')
     ->>'motivo', 'ja_tem_outro');
 select t_texto('e a primeira continua sendo a que vale',
@@ -289,15 +289,15 @@ select set_config('request.jwt.claim.sub', '', false);
    cancela sozinho depois de tentativas demais num cartão que não passa. Nos
    dois casos o débito para e ninguém nos avisa por dentro.
 
-   Se o `mp_preapproval` ficasse preenchido, o salão continuaria marcado como
+   Se o `mp_preapproval` ficasse preenchido, o restaurante continuaria marcado como
    "renova sozinho" e venceria em silêncio — sem cobrança, sem lembrete, e sem
    nada no sistema explicando. Não há pessoa nenhuma neste caminho: quem
-   identifica o salão é o id que veio da API deles. */
-select t_texto('desligar_cartao acha o salão pelo id da pré-aprovação',
+   identifica o restaurante é o id que veio da API deles. */
+select t_texto('desligar_cartao acha o restaurante pelo id da pré-aprovação',
   public.desligar_cartao('PREAPP-2')->>'salao',
   'e0000000-1111-0000-0000-00000000000b');
 
-select t_igual('e o salão volta na hora para a lista de renovação',
+select t_igual('e o restaurante volta na hora para a lista de renovação',
   (select count(*) from public.assinaturas_a_vencer(5)
     where salao_id = 'e0000000-1111-0000-0000-00000000000b'), 1::bigint);
 
@@ -311,7 +311,7 @@ select t_texto('nem um id que nunca foi nosso',
 
 /* ⚠ O QUARTO LUGAR QUE PRECISA DA MESMA DISTINÇÃO.
 
-   `abrir_cobranca()` procura "a pendente do salão" para reaproveitar ou
+   `abrir_cobranca()` procura "a pendente do restaurante" para reaproveitar ou
    cancelar. As tentativas recusadas do cartão também ficam `pendente`, e sem
    o filtro elas entravam nessa busca: o dono que saiu do cartão e clicava em
    Pix via a linha do cartão ser marcada como cancelada — apagando o registro
@@ -331,15 +331,15 @@ select t_igual('e o Pix novo nasceu do lado delas',
       and metodo = 'pix' and status = 'pendente'), 1::bigint);
 
 \echo ''
-\echo 'UM SALÃO SEM ASSINATURA NÃO É "DEU CERTO"'
+\echo 'UM RESTAURANTE SEM ASSINATURA NÃO É "DEU CERTO"'
 
 /* ⚠ O DEFEITO QUE ESTA SEÇÃO EXISTE PARA PEGAR, MEDIDO ANTES DE CONSERTAR:
 
    `ligar_cartao` respondia {"ok": true} depois de atualizar ZERO linhas. Num
-   salão sem linha em `assinaturas`, o UPDATE não achava nada e a função jurava
+   restaurante sem linha em `assinaturas`, o UPDATE não achava nada e a função jurava
    ter ligado. O webhook gravava sucesso no log, o Mercado Pago passava a
    debitar o cartão todo mês, e o `registrar_recorrencia` nunca achava esse
-   salão — respondia `preapproval_desconhecida` para sempre.
+   restaurante — respondia `preapproval_desconhecida` para sempre.
 
    O dono pagava e o plano vencia assim mesmo. Nada no log dizia o contrário:
    estava escrito ok:true.
@@ -353,12 +353,12 @@ insert into public.perfis (id, nome, email) values
   on conflict (id) do update
     set nome = excluded.nome, email = excluded.email;
 insert into public.saloes (id, slug, nome) values
-  ('e0000000-3333-0000-0000-00000000000f', 'sem-assinatura', 'Salão Sem Assinatura');
+  ('e0000000-3333-0000-0000-00000000000f', 'sem-assinatura', 'Restaurante Sem Assinatura');
 insert into public.vinculos (perfil_id, salao_id, papel, status) values
   ('e0000000-0000-0000-0000-00000000000e',
    'e0000000-3333-0000-0000-00000000000f', 'dono', 'ativo');
 
-select t_igual('o cenário é um salão realmente sem assinatura',
+select t_igual('o cenário é um restaurante realmente sem assinatura',
   (select count(*) from public.assinaturas
     where salao_id = 'e0000000-3333-0000-0000-00000000000f'), 0::bigint);
 

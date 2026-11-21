@@ -152,11 +152,11 @@ troca supabase/24_produtos.sql \
   "update public.planos set recursos = recursos || jsonb_build_object('max_produtos', 10)
   where codigo = 'gratuito';" && rodar "catálogo de produtos de graça"
 
-echo "16. qualquer um descobre o plano de qualquer salão"
+echo "16. qualquer um descobre o plano de qualquer restaurante"
 SQLS="supabase/22_cotas.sql supabase/24_produtos.sql"
 troca supabase/22_cotas.sql \
   "  select case when public.e_equipe(p_salao) then public.plano_efetivo(p_salao) end" \
-  "  select public.plano_efetivo(p_salao)" && rodar "plano do salão para quem é de fora"
+  "  select public.plano_efetivo(p_salao)" && rodar "plano do restaurante para quem é de fora"
 
 echo "15. a tela não trava nada"
 SQLS=""

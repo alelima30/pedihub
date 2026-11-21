@@ -7,7 +7,7 @@
    um texto só resolve a primeira e inviabiliza as outras duas.
 
    O que este arquivo faz é a ponte: monta a linha para a tela e aceita, sem
-   quebrar, o formato antigo — quando `endereco` era uma string solta. Salão
+   quebrar, o formato antigo — quando `endereco` era uma string solta. Restaurante
    já cadastrado não pode virar tela em branco por causa de uma mudança
    nossa de formato.
    =========================================================================== */
@@ -45,7 +45,7 @@ function linha(e){
 
 /* ── O ENDEREÇO NA CAPA, EM DUAS LINHAS ───────────────────────────────────
    A `linha()` acima junta tudo com travessões e serve para lista compacta.
-   Na capa do salão ela vira uma tira comprida que quebra em qualquer lugar
+   Na capa do restaurante ela vira uma tira comprida que quebra em qualquer lugar
    no celular — e é o endereço que a cliente vai usar para chegar lá.
 
    Aqui saem duas linhas, na ordem em que se lê um endereço:

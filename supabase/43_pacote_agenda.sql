@@ -37,7 +37,7 @@
 --
 -- ── QUEM ──────────────────────────────────────────────────────────────────
 -- O balcão e a gestão (`ve_agenda_toda`): quem marca horário e recebe
--- dinheiro no salão. Criar e editar o pacote (preço, sessões) continua sendo
+-- dinheiro no restaurante. Criar e editar o pacote (preço, sessões) continua sendo
 -- da gestão; tirar a cliente do pacote também (27).
 -- ===========================================================================
 
@@ -65,7 +65,7 @@ exception when duplicate_object then null; end $$;
 /* Os lembretes que ainda vão sair (da cliente e da equipe) são reescritos
    quando o pacote é pago, ou o pagamento é desfeito: a mensagem leva o valor
    e o pagamento do pacote (21, `pecas_agendamento`), e o lembrete da véspera
-   não pode dizer "a pagar no salão" de um pacote que já foi pago. O que já
+   não pode dizer "a pagar no restaurante" de um pacote que já foi pago. O que já
    saiu não se mexe. */
 create or replace function public.refazer_textos_do_pacote(p_pacote_cliente uuid)
 returns void language plpgsql security definer set search_path = public as $$
@@ -313,7 +313,7 @@ begin
   perform public.exigir_recurso(v_pac.salao_id, 'pacotes', 'Vender pacote');
   if not exists (select 1 from public.clientes c
                   where c.id = p_cliente and c.salao_id = v_pac.salao_id) then
-    raise exception 'Esta cliente não é deste salão.' using errcode = 'check_violation';
+    raise exception 'Esta cliente não é deste restaurante.' using errcode = 'check_violation';
   end if;
   if p_valor is not null and p_valor < 0 then
     raise exception 'O valor do pacote não pode ser negativo.' using errcode = 'check_violation';
@@ -397,7 +397,7 @@ begin
 
   /* A receber (valor combinado, sem forma): as semanas nascem RESERVADAS —
      pendentes, guardando o horário, sem confirmação para a cliente. Viram
-     confirmadas quando o salão registra o pagamento (`receber_pacote`). */
+     confirmadas quando o restaurante registra o pagamento (`receber_pacote`). */
   v_reserva := p_forma is null and coalesce(p_valor, 0) > 0;
 
   insert into public.pacote_clientes (pacote_id, cliente_id, sessoes, vence_em, valor)

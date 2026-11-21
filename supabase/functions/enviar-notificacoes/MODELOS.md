@@ -55,10 +55,10 @@ Até breve!
 | `{{3}}` | horário | 14:30 |
 | `{{4}}` | serviço | Corte + Escova |
 | `{{5}}` | profissional | Ana |
-| `{{6}}` | nome do salão | Salão da Ana |
+| `{{6}}` | nome do restaurante | Restaurante da Ana |
 
-> **Por que o nome do salão.** O número que manda é do PediHub, um só para
-> todos os salões — a cliente vê "Pedihub" no topo da conversa. Sem o nome
+> **Por que o nome do restaurante.** O número que manda é do PediHub, um só para
+> todos os restaurantes — a cliente vê "Pedihub" no topo da conversa. Sem o nome
 > da casa no texto, ela não sabe onde é o horário.
 
 ---
@@ -111,7 +111,7 @@ Aviso automático do sistema de agendamento.
 | `{{3}}` | serviço | Corte + Escova |
 | `{{4}}` | data | 15/10/2026 |
 | `{{5}}` | horário | 14:30 |
-| `{{6}}` | nome do salão | Salão da Ana |
+| `{{6}}` | nome do restaurante | Restaurante da Ana |
 
 > Aqui é o nome **completo** da cliente, e não só o primeiro: é ele que a
 > profissional vai procurar na agenda.
@@ -143,7 +143,7 @@ Aviso automático do sistema de agendamento.
 | variável | conteúdo | exemplo |
 |---|---|---|
 | `{{1}}` | primeiro nome de quem recebe | Ana |
-| `{{2}}` | nome do salão | Salão da Ana |
+| `{{2}}` | nome do restaurante | Restaurante da Ana |
 | `{{3}}` | quantos atendimentos | 5 |
 | `{{4}}` | o primeiro horário | 09:00 com Maria (Corte) |
 
@@ -157,7 +157,7 @@ Aviso automático do sistema de agendamento.
 
 > **Por que não vai a lista inteira.** Variável de modelo **não aceita quebra
 > de linha**. A lista achatada saía como uma linha só, enorme, e ainda
-> repetia o "Bom dia" e o nome do salão. Agora vão só quantos e o primeiro, e
+> repetia o "Bom dia" e o nome do restaurante. Agora vão só quantos e o primeiro, e
 > a lista bonita, uma por linha, fica no painel — que é para onde o botão
 > leva. O histórico do painel continua guardando a lista inteira.
 
@@ -174,8 +174,8 @@ Aviso automático do sistema de agendamento.
 
 ## 5. `pedihub_lembrete_equipe`
 
-O **lembrete para o salão**: antes do atendimento, para quem vai atender, para
-o dono, ou para os dois — o salão escolhe em **Mensagens da agenda**. Vem
+O **lembrete para o restaurante**: antes do atendimento, para quem vai atender, para
+o dono, ou para os dois — o restaurante escolhe em **Mensagens da agenda**. Vem
 desligado; o tempo é separado do lembrete da cliente.
 
 ```
@@ -199,7 +199,7 @@ Aviso automático do sistema de agendamento.
 | `{{4}}` | quem vai atender | Bia |
 | `{{5}}` | data | 15/10/2026 |
 | `{{6}}` | horário | 14:30 |
-| `{{7}}` | nome do salão | Salão da Ana |
+| `{{7}}` | nome do restaurante | Restaurante da Ana |
 
 > **Por que o {{4}}.** Quem recebe pode não ser quem atende: o dono recebendo o
 > lembrete do horário da Bia precisa ler "Profissional: Bia".
@@ -238,8 +238,8 @@ duas linhas a mais no fim: **💰 Valor** e **💳 Pagamento** — sempre as **d
 - **Pagamento**: **Pix**, **Dinheiro**, **Cartão de débito**, **Cartão de
   crédito** (o que a cliente escolheu no link ou a recepção anotou),
   **Pacote já pago (Pix)** (com a forma em que foi pago), **Pacote a pagar
-  no salão**, **Pacote (já pago)** (pacote sem valor informado), **Sem
-  custo**, ou **A combinar no salão** quando ninguém informou.
+  no restaurante**, **Pacote (já pago)** (pacote sem valor informado), **Sem
+  custo**, ou **A combinar no restaurante** quando ninguém informou.
 
 > **⚠ A ordem para ligar.** Enquanto estes quatro não estiverem
 > **aprovados**, o sistema continua mandando os de cima — nada muda. Depois
@@ -323,7 +323,7 @@ Olá, {{1}}. Lembrete de um horário agendado.
 Aviso automático do sistema de agendamento.
 ```
 
-As sete do lembrete para o salão, na mesma ordem; `{{8}}` o valor e `{{9}}` a
+As sete do lembrete para o restaurante, na mesma ordem; `{{8}}` o valor e `{{9}}` a
 forma de pagamento.
 
 ---
@@ -449,23 +449,23 @@ sistema de agendamento."
 > ligue — me avise, que o texto é ajustado e vai com outro nome.
 
 > **⚠ A ordem para ligar.** Enquanto os dois não estiverem **aprovados**,
-> nada do pacote vai para a fila — o painel do salão mostra "ainda não estão
+> nada do pacote vai para a fila — o painel do restaurante mostra "ainda não estão
 > saindo" (e a cliente continua recebendo a confirmação de sempre, com as
 > datas juntas). Depois da aprovação, ligue em **admin → Mensagens do
 > WhatsApp → Ligar as mensagens do pacote**.
 
 > **Os que saíram.** O `pedihub_pacote_renovacao` a Meta aprovou como
-> **Marketing** — o "combine a renovação com o salão" foi lido como convite
+> **Marketing** — o "combine a renovação com o restaurante" foi lido como convite
 > para comprar — e categoria não se troca: o aviso agora é o
 > `pedihub_pacote_ultima_sessao`, só com a informação. O
 > `pedihub_pacote_pagamento` (lembrete de pagar o pacote "a receber") saiu:
-> o pacote a receber fica reservado até o salão tocar em "Recebi", e aí a
+> o pacote a receber fica reservado até o restaurante tocar em "Recebi", e aí a
 > cliente recebe a lista de horários — não há o que lembrar antes. Os dois
 > podem ser apagados na Meta.
 
 ## 10b. `pedihub_pacote_agenda`
 
-Vai para a cliente quando o salão monta o pacote com agenda fixa já pago, ou
+Vai para a cliente quando o restaurante monta o pacote com agenda fixa já pago, ou
 quando registra o pagamento do pacote a receber: cada data, a hora e o que ela
 faz naquele dia. Sai **no lugar da confirmação** (com a chave da confirmação
 ligada em Notificações).
@@ -484,16 +484,16 @@ Você recebe um lembrete antes de cada sessão. Aviso automático do sistema de 
 | `{{1}}` | primeiro nome da cliente | Maria |
 | `{{2}}` | nome do pacote | Mão e pé mensal |
 | `{{3}}` | as sessões, numa linha só | ter 04/11 às 14:00 (Mão); ter 11/11 às 14:00 (Mão + Pé) |
-| `{{4}}` | nome do salão | Salão Megatop |
+| `{{4}}` | nome do restaurante | Restaurante Megatop |
 
 > **Por que sem a profissional.** "Vai que no pacote muda o profissional": a
 > lista vale para o pacote inteiro, e o nome de quem atende pode mudar no
-> meio. O salão não muda.
+> meio. O restaurante não muda.
 
 ## 11. `pedihub_pacote_ultima_sessao`
 
 Vai para a cliente **seis dias antes da última sessão do pacote**, às 10h
-(hora do salão) — só quando todas as sessões do pacote estão na agenda. Se ela
+(hora do restaurante) — só quando todas as sessões do pacote estão na agenda. Se ela
 renovar antes, não sai.
 
 ```
@@ -510,7 +510,7 @@ Depois dessa sessão, o pacote se encerra. Aviso automático do sistema de agend
 | `{{1}}` | primeiro nome da cliente | Maria |
 | `{{2}}` | nome do pacote | Mão e pé mensal |
 | `{{3}}` | dia da semana, data e hora da última sessão | terça, 01/12 às 14:00 |
-| `{{4}}` | nome do salão | Salão Megatop |
+| `{{4}}` | nome do restaurante | Restaurante Megatop |
 
 ---
 
@@ -542,13 +542,13 @@ Olá, {{1}}. Resumo da sua compra no crediário em {{2}}.
 💰 Valor no crediário: {{3}}
 🗓️ Parcelas: {{4}}
 
-Guarde esta mensagem. Mensagem automática do sistema do salão.
+Guarde esta mensagem. Mensagem automática do sistema do restaurante.
 ```
 
 | variável | conteúdo | exemplo |
 |---|---|---|
 | `{{1}}` | primeiro nome da cliente | Maria |
-| `{{2}}` | nome do salão | Lingerie da Ana |
+| `{{2}}` | nome do restaurante | Lingerie da Ana |
 | `{{3}}` | valor que ficou no crediário | R$ 200,00 |
 | `{{4}}` | as parcelas, numa linha só | 1ª R$ 100,00 em 05/12; 2ª R$ 100,00 em 05/01 |
 
@@ -563,17 +563,17 @@ Olá, {{1}}. Lembrete da parcela {{2}} do seu crediário em {{3}}.
 📅 Vencimento: {{5}}
 💳 Pagamento: {{6}}
 
-Se você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do salão.
+Se você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do restaurante.
 ```
 
 | variável | conteúdo | exemplo |
 |---|---|---|
 | `{{1}}` | primeiro nome da cliente | Maria |
 | `{{2}}` | qual parcela | 2 de 3 |
-| `{{3}}` | nome do salão | Lingerie da Ana |
+| `{{3}}` | nome do restaurante | Lingerie da Ana |
 | `{{4}}` | o que falta pagar da parcela | R$ 100,00 |
 | `{{5}}` | a data do vencimento | 05/12 |
-| `{{6}}` | a chave Pix do salão, ou "combine com o salão" | Pix (chave: ana@salao.com) |
+| `{{6}}` | a chave Pix do restaurante, ou "combine com o restaurante" | Pix (chave: ana@salao.com) |
 
 ## 15. `pedihub_crediario_vence_hoje`
 
@@ -586,16 +586,16 @@ Olá, {{1}}. A parcela {{2}} do seu crediário em {{3}} vence hoje.
 💰 Valor: {{4}}
 💳 Pagamento: {{5}}
 
-Se você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do salão.
+Se você já pagou, desconsidere esta mensagem. Mensagem automática do sistema do restaurante.
 ```
 
 | variável | conteúdo | exemplo |
 |---|---|---|
 | `{{1}}` | primeiro nome da cliente | Maria |
 | `{{2}}` | qual parcela | 2 de 3 |
-| `{{3}}` | nome do salão | Lingerie da Ana |
+| `{{3}}` | nome do restaurante | Lingerie da Ana |
 | `{{4}}` | o que falta pagar da parcela | R$ 100,00 |
-| `{{5}}` | a chave Pix do salão, ou "combine com o salão" | Pix (chave: ana@salao.com) |
+| `{{5}}` | a chave Pix do restaurante, ou "combine com o restaurante" | Pix (chave: ana@salao.com) |
 
 ## 16. `pedihub_crediario_atraso`
 
@@ -608,17 +608,17 @@ Olá, {{1}}. A parcela {{2}} do seu crediário em {{3}} venceu em {{4}} e ainda 
 💰 Valor: {{5}}
 💳 Pagamento: {{6}}
 
-Se você já pagou, desconsidere esta mensagem. Em caso de dúvida, fale com o salão. Mensagem automática do sistema do salão.
+Se você já pagou, desconsidere esta mensagem. Em caso de dúvida, fale com o restaurante. Mensagem automática do sistema do restaurante.
 ```
 
 | variável | conteúdo | exemplo |
 |---|---|---|
 | `{{1}}` | primeiro nome da cliente | Maria |
 | `{{2}}` | qual parcela | 2 de 3 |
-| `{{3}}` | nome do salão | Lingerie da Ana |
+| `{{3}}` | nome do restaurante | Lingerie da Ana |
 | `{{4}}` | a data do vencimento | 05/12 |
 | `{{5}}` | o que falta pagar da parcela | R$ 100,00 |
-| `{{6}}` | a chave Pix do salão, ou "combine com o salão" | Pix (chave: ana@salao.com) |
+| `{{6}}` | a chave Pix do restaurante, ou "combine com o restaurante" | Pix (chave: ana@salao.com) |
 
 ---
 
@@ -626,7 +626,7 @@ Se você já pagou, desconsidere esta mensagem. Em caso de dúvida, fale com o s
 
 ## 17. `pedihub_remarcado`
 
-Vai para a cliente quando o salão **remarca pelo painel** o dia ou a hora
+Vai para a cliente quando o restaurante **remarca pelo painel** o dia ou a hora
 (trocar só a profissional não manda mensagem). Remarcou de novo antes de sair,
 só a última vai. Mesmas regras:
 **Utilidade**, **Português (BR)**, sem cabeçalho e sem botão. Depois de
@@ -642,13 +642,13 @@ Olá, {{1}}. Seu horário no {{2}} foi remarcado.
 ✂️ Serviço: {{6}}
 👤 Profissional: {{7}}
 
-Se o novo horário não for bom para você, fale com o salão. Aviso automático do sistema de agendamento.
+Se o novo horário não for bom para você, fale com o restaurante. Aviso automático do sistema de agendamento.
 ```
 
 | variável | conteúdo | exemplo |
 |---|---|---|
 | `{{1}}` | primeiro nome da cliente | Maria |
-| `{{2}}` | nome do salão | Salão da Ana |
+| `{{2}}` | nome do restaurante | Restaurante da Ana |
 | `{{3}}` | dia e hora de antes | terça, 04/11 às 14:00 |
 | `{{4}}` | nova data | 06/11/2026 |
 | `{{5}}` | novo horário | 15:30 |
@@ -688,7 +688,7 @@ select tipo, modelo, variaveis, corpo
 ```
 
 `variaveis` tem que ter 6 itens na confirmação, no lembrete e no aviso à
-profissional, 4 no resumo e 7 no lembrete para o salão — na ordem das tabelas acima.
+profissional, 4 no resumo e 7 no lembrete para o restaurante — na ordem das tabelas acima.
 Nos do pedido: 5 no pedido novo e no confirmado, 3 no "a caminho" e no
 "pronto", e 4 no cancelado. Os nomes deles estão no `modelo_de()` do
 `37_pedidos.sql`. Nos do pacote: 4 na lista de horários e 4 no aviso da última sessão.

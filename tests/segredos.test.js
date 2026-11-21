@@ -11,9 +11,9 @@
    protege o dado é o RLS. As outras não podem, e cada uma tem um estrago
    próprio:
 
-     service_role / sb_secret_  → passa por cima de TODO o RLS. Um salão lê a
+     service_role / sb_secret_  → passa por cima de TODO o RLS. Um restaurante lê a
                                   clientela de todos os outros.
-     WHATSAPP_TOKEN             → manda mensagem em nome do salão até alguém
+     WHATSAPP_TOKEN             → manda mensagem em nome do restaurante até alguém
                                   revogar, e a conta paga.
 
    O módulo de campanhas foi o primeiro a ter credencial de verdade neste
@@ -123,7 +123,7 @@ console.log('\nAs funções de borda leem os segredos do ambiente, nunca de arqu
    porque ele estava passando naquilo que sabia existir.
 
    É o mesmo defeito de lista envelhecida que já apareceu três vezes neste
-   projeto (nas abas do salão, no conferidor de aparência, aqui). A diferença é
+   projeto (nas abas do restaurante, no conferidor de aparência, aqui). A diferença é
    que estas conferências são as que separam um token de pagamento de uma
    requisição HTTP de qualquer pessoa.
 

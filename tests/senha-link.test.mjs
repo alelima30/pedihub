@@ -6,14 +6,14 @@
 
    A foto do dono: "Este link já venceu", com o título, a frase e o link em
    três colunas espremidas — e nenhum jeito de sair dali que não fosse a tela
-   de entrar do PAINEL, mesmo para a cliente que pediu pelo link do salão.
+   de entrar do PAINEL, mesmo para a cliente que pediu pelo link do restaurante.
 
    ── O QUE ESTE ARQUIVO MEDE ────────────────────────────────────────────────
      1. o aviso se lê de cima para baixo, a 360 e a 390px;
      2. o texto que vem na barra de endereço não vira HTML;
-     3. a cliente vê textos dela e volta para o salão; `volta` de fora é
+     3. a cliente vê textos dela e volta para o restaurante; `volta` de fora é
         recusado;
-     4. pedir outro link na própria tela, com a volta para o salão junto, e
+     4. pedir outro link na própria tela, com a volta para o restaurante junto, e
         o limite de envio dito como "espere";
      5. o link com código (modelo de e-mail com {{ .TokenHash }}): abrir não
         gasta — só o Salvar; o segundo Salvar com o mesmo link é recusado; e
@@ -54,7 +54,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`sl-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SLUG = cr[0].slug;
 const EMAIL = `cliente-${m}@t.com`, VELHA = 'senhavelha12', NOVA = 'senhanova123';
@@ -116,14 +116,14 @@ secao('2. O texto da barra de endereço não vira HTML');
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('3. A cliente do link do salão');
+secao('3. A cliente do link do restaurante');
 {
   const { p, ctx } = await abrir(COM_VOLTA);
   const t = await p.evaluate(() => ({ sub: document.getElementById('sub').textContent,
     volta: document.getElementById('voltarLink').getAttribute('href'),
     rotulo: document.getElementById('voltarLink').textContent }));
-  igual('textos dela, e o caminho de volta é o salão', [/link do salão/.test(t.sub), t.volta, t.rotulo],
-    [true, VOLTA, 'Voltar para o salão']);
+  igual('textos dela, e o caminho de volta é o restaurante', [/link do restaurante/.test(t.sub), t.volta, t.rotulo],
+    [true, VOLTA, 'Voltar para o restaurante']);
   verdade('sem o link do e-mail: "Falta o link", e o pedido ali mesmo', /Falta o link do e-mail/.test(await aviso(p))
     && await visivel(p, 'repedir'));
   await ctx.close();
@@ -146,7 +146,7 @@ secao('4. Pedir outro link na própria tela');
   verdade('e-mail incompleto: avisa, e não pede nada', /Confira o e-mail/.test(await aviso(p)) && !pedidos.length);
   await p.fill('#emailNovo', EMAIL);
   await p.click('#btRepedir'); await p.waitForTimeout(900);
-  verdade('o link novo também volta para o salão', pedidos.length === 1
+  verdade('o link novo também volta para o restaurante', pedidos.length === 1
     && pedidos[0].includes('nova-senha.html?volta=' + encodeURIComponent(VOLTA)), pedidos.join(' | '));
   const t = await aviso(p);
   verdade('e a resposta não diz se o e-mail existe, e manda usar o mais recente',
@@ -199,7 +199,7 @@ secao('5. O link com código: abrir não gasta');
   await A.p.click('#btSalvar');
   await A.p.waitForURL(u => /agendar\.html\?salao=/.test(String(u)), { timeout: 8000 }).catch(() => {});
   await A.p.waitForTimeout(1500);
-  igual('salvar gasta o código, troca a senha e volta para o salão, já dentro',
+  igual('salvar gasta o código, troca a senha e volta para o restaurante, já dentro',
     [A.verifica.length, new URL(A.p.url()).pathname + new URL(A.p.url()).search,
      await A.p.evaluate(() => !!(window.Dados && Dados.sessaoAtual && Dados.sessaoAtual()))],
     [1, '/' + VOLTA, true]);

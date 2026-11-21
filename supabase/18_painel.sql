@@ -16,15 +16,15 @@
 -- UMA tela, e seis chances de mostrar um pedaço de hoje e outro de ontem se
 -- a virada do dia acontecer no meio. Vai tudo num jsonb.
 --
--- ── O DIA É O DO SALÃO ────────────────────────────────────────────────────
--- Pelo `fuso` do salão, como no relatório. Um dono olhando o painel de outro
+-- ── O DIA É O DO RESTAURANTE ────────────────────────────────────────────────────
+-- Pelo `fuso` do restaurante, como no relatório. Um dono olhando o painel de outro
 -- fuso veria o dia começar na hora errada, e a agenda "de hoje" traria os
 -- atendimentos de ontem à noite.
 --
 -- ── QUEM VÊ ───────────────────────────────────────────────────────────────
 -- `e_gestor`. Faturamento do dia e o que falta receber são da casa, não da
 -- recepção nem de quem atende — a Fase 2 pede isso em uma linha, e é a mesma
--- trava que impede ler o dia do salão do vizinho trocando o uuid.
+-- trava que impede ler o dia do restaurante do vizinho trocando o uuid.
 -- ===========================================================================
 
 create or replace function public.painel_hoje(
@@ -41,18 +41,18 @@ declare
   v_caixa uuid;
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
   select fuso into v_fuso from public.saloes where id = p_salao;
   if not found then
-    raise exception 'Salão não encontrado.' using errcode = 'no_data_found';
+    raise exception 'Restaurante não encontrado.' using errcode = 'no_data_found';
   end if;
   v_fuso := coalesce(v_fuso, 'America/Sao_Paulo');
 
   -- `p_dia` existe para o teste poder fixar o dia, e para o dono conseguir
-  -- olhar ontem sem abrir o relatório. Sem ele, hoje NO FUSO DO SALÃO.
+  -- olhar ontem sem abrir o relatório. Sem ele, hoje NO FUSO DO RESTAURANTE.
   v_hoje := coalesce(p_dia, (now() at time zone v_fuso)::date);
 
   v_ini   := (v_hoje::timestamp) at time zone v_fuso;
@@ -174,7 +174,7 @@ begin
 end $$;
 
 comment on function public.painel_hoje(uuid, date) is
-  'O dia do salão num jsonb só: agenda, dinheiro, gaveta e quem ainda vem.';
+  'O dia do restaurante num jsonb só: agenda, dinheiro, gaveta e quem ainda vem.';
 
 revoke all on function public.painel_hoje(uuid, date) from public, anon;
 grant execute on function public.painel_hoje(uuid, date) to authenticated;

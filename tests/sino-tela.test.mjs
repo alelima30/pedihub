@@ -4,10 +4,10 @@
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/sino-tela.test.mjs
 
-   O pedido: "dentro do painel do dono do salão, um ícone de sino para as
+   O pedido: "dentro do painel do dono do restaurante, um ícone de sino para as
    notificações do sistema".
 
-     1. o admin publica um aviso para os salões (e a lista diz que está no ar);
+     1. o admin publica um aviso para os restaurantes (e a lista diz que está no ar);
      2. no painel da dona, o sino aparece com o número: o horário a confirmar,
         o pedido da loja e o aviso do PediHub;
      3. aberto, cada item diz o que é e leva à tela dele; o aviso se marca
@@ -57,7 +57,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random() * 1000);
 const tel = () => String(900000000 + Math.floor(Math.random() * 89999999));
 const dona = novaAba();
 await dona.criarConta({ email:`sino-${m}@teste.com`, senha:'minhasenhaboa', nome:'Ana Sino', telefone:'+5511' + tel() });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão do Sino ' + m,
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante do Sino ' + m,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:'11222333000181', p_origem:null });
 const SALAO = cr[0].salao_id;
 const plat = novaAba();
@@ -102,7 +102,7 @@ async function abrirPainel(largura, rotas){
 const numeroDoSino = p => p.evaluate(() => { const n = document.getElementById('sinoNum'); return n && !n.hidden ? n.textContent : ''; });
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('1. O admin publica um aviso para os salões');
+secao('1. O admin publica um aviso para os restaurantes');
 {
   const { ctx, p } = await abrir(plat.sessao(), 'admin.html', 1100);
   await p.waitForSelector('#ajusteAvisos', { timeout: 15000 });
@@ -116,18 +116,18 @@ secao('1. O admin publica um aviso para os salões');
     lista.includes('Novidade: o sino ' + m) && /donos e gerentes/.test(lista) && /no ar/.test(lista), lista);
   igual('   e está no banco', (await linha(`select para, arquivado_em is null as vivo from public.avisos_plataforma
     where titulo = $1`, ['Novidade: o sino ' + m])), { para: 'gestao', vivo: true });
-  // "Como envio somente para um usuário?": o aviso para um salão só.
-  await p.fill('#avTitulo', 'Só para o seu salão ' + m);
+  // "Como envio somente para um usuário?": o aviso para um restaurante só.
+  await p.fill('#avTitulo', 'Só para o seu restaurante ' + m);
   await p.fill('#avTexto', 'Sua cortesia do plano Essencial foi prorrogada por mais 15 dias.');
   await p.selectOption('#avSalao', SALAO);
   await p.click('#btPublicarAviso');
-  await p.waitForFunction(t => (document.getElementById('ajusteAvisos') || {}).innerText?.includes(t), 'Só para o seu salão ' + m,
+  await p.waitForFunction(t => (document.getElementById('ajusteAvisos') || {}).innerText?.includes(t), 'Só para o seu restaurante ' + m,
     { timeout: 15000 }).catch(() => {});
   const linhaAv = await p.evaluate(t => { const tr = [...document.querySelectorAll('#ajusteAvisos tr')].find(x => x.innerText.includes(t));
-    return tr ? tr.children[1].textContent.trim() : null; }, 'Só para o seu salão ' + m);
-  igual('o aviso para um salão só: a lista diz para qual salão, e o banco guarda o salão',
-    [linhaAv, (await linha(`select salao_id from public.avisos_plataforma where titulo = $1`, ['Só para o seu salão ' + m])).salao_id],
-    ['Salão do Sino ' + m, SALAO]);
+    return tr ? tr.children[1].textContent.trim() : null; }, 'Só para o seu restaurante ' + m);
+  igual('o aviso para um restaurante só: a lista diz para qual restaurante, e o banco guarda o restaurante',
+    [linhaAv, (await linha(`select salao_id from public.avisos_plataforma where titulo = $1`, ['Só para o seu restaurante ' + m])).salao_id],
+    ['Restaurante do Sino ' + m, SALAO]);
   await ctx.close();
 }
 
@@ -139,7 +139,7 @@ verdade('o sino aparece no topo, ao lado da Ajuda', await pc.evaluate(() => {
   const s = document.getElementById('btSino').getBoundingClientRect(), a = document.getElementById('btAjuda').getBoundingClientRect();
   return s.width > 0 && s.right <= a.left + 1 && Math.abs((s.top + s.bottom) / 2 - (a.top + a.bottom) / 2) < 6;
 }));
-// Pode haver avisos de outros testes na mesma bancada: conta os deste salão.
+// Pode haver avisos de outros testes na mesma bancada: conta os deste restaurante.
 const avisosVivos = Number((await linha(`select count(*) n from public.avisos_plataforma
   where arquivado_em is null and para = 'gestao' and (ate is null or ate >= current_date)
     and (salao_id is null or salao_id = $1)`, [SALAO])).n);
@@ -154,7 +154,7 @@ const painel = await texto(pc, '#sinoPainel');
 verdade('a lista diz: "1 horário espera sua confirmação", "1 pedido novo da loja" e o aviso, com "Marcar como lido"',
   /1 horário espera sua confirmação/.test(painel) && /1 pedido novo da loja/.test(painel)
   && painel.includes('Novidade: o sino ' + m) && /AVISO DO PEDIHUB/.test(painel) && /Marcar como lido/.test(painel), painel);
-verdade('   e o aviso que foi só para este salão também está lá', painel.includes('Só para o seu salão ' + m), painel);
+verdade('   e o aviso que foi só para este restaurante também está lá', painel.includes('Só para o seu restaurante ' + m), painel);
 verdade('   a 390px a lista cabe na tela', await pc.evaluate(() => {
   const r = document.getElementById('sinoPainel').getBoundingClientRect();
   return r.left >= 0 && r.right <= innerWidth + 1 && document.documentElement.scrollWidth <= innerWidth + 1;
@@ -167,7 +167,7 @@ verdade('marcou como lido: sai da lista, o número desce, e fica gravado',
   && await numeroDoSino(pc) === String(esperado - 1 > 9 ? '9+' : esperado - 1)
   && !!(await linha(`select 1 from public.avisos_lidos al join public.perfis pf on pf.id = al.perfil_id
       where al.aviso_id = $1 and pf.email = $2`, [idAviso, `sino-${m}@teste.com`])));
-const idAvisoSalao = (await linha(`select id from public.avisos_plataforma where titulo = $1`, ['Só para o seu salão ' + m])).id;
+const idAvisoSalao = (await linha(`select id from public.avisos_plataforma where titulo = $1`, ['Só para o seu restaurante ' + m])).id;
 await pc.click(`#sinoAviso-${idAvisoSalao} button:has-text("Marcar como lido")`);
 await pc.waitForTimeout(800);
 await pc.click('#sinoPainel .sino-item:has-text("pedido novo da loja")');
@@ -280,7 +280,7 @@ secao('8. A cliente excluiu a conta: o sino avisa, e a ficha mostra');
 
 // Os avisos deste teste saem do ar: a bancada é dividida com os outros testes.
 await banco.query(`update public.avisos_plataforma set arquivado_em = now()
-  where titulo like 'Novidade: o sino %' or titulo like 'Só para o seu salão %'`);
+  where titulo like 'Novidade: o sino %' or titulo like 'Só para o seu restaurante %'`);
 
 verdade('sem erro de JavaScript', erros.length === 0, erros.join(' | '));
 await nav.close();

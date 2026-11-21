@@ -16,7 +16,7 @@
 
 -- ── Cenário ────────────────────────────────────────────────────────────────
 -- Uma segunda-feira bem no futuro, escolhida na mão. `dias_liberados` padrão
--- é 30, então o salão precisa liberar mais para ela caber na janela.
+-- é 30, então o restaurante precisa liberar mais para ela caber na janela.
 -- A data do cenário é a PRÓXIMA SEGUNDA a pelo menos uma semana daqui.
 --
 -- A primeira versão usava 05/01/2099, fixa, para a semana não escorregar. Não
@@ -36,10 +36,10 @@ insert into auth.users (id, email) values
   ('11111111-1111-1111-1111-111111111111', 'ana@salao.com');
 
 insert into public.saloes (id, slug, nome, tipo, fuso, cfg) values
-  ('aaaaaaaa-0000-0000-0000-000000000001', 'salao-da-ana', 'Salão da Ana', 'salao',
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'salao-da-ana', 'Restaurante da Ana', 'salao',
    'America/Sao_Paulo', '{"diasLiberados": 120}'),
-  -- Um salão suspenso, para provar que ele some da vitrine e recusa marcação.
-  ('aaaaaaaa-0000-0000-0000-000000000002', 'salao-parado', 'Salão Parado', 'salao',
+  -- Um restaurante suspenso, para provar que ele some da vitrine e recusa marcação.
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'salao-parado', 'Restaurante Parado', 'salao',
    'America/Sao_Paulo', '{"diasLiberados": 120}');
 
 update public.saloes set status = 'suspenso'
@@ -75,7 +75,7 @@ insert into public.servicos (id, salao_id, nome, duracao_min, intervalo_min, pre
    'aaaaaaaa-0000-0000-0000-000000000001', 'Corte',  30, 10,  60.00),
   ('cccccccc-0000-0000-0000-000000000002',
    'aaaaaaaa-0000-0000-0000-000000000001', 'Escova', 60,  0,  80.00),
-  -- Serviço de outro salão, para o teste de id colado na chamada.
+  -- Serviço de outro restaurante, para o teste de id colado na chamada.
   ('cccccccc-0000-0000-0000-000000000009',
    'aaaaaaaa-0000-0000-0000-000000000002', 'Corte de lá', 30, 0, 999.00);
 
@@ -139,7 +139,7 @@ select t_igual('a manhã e a tarde somam 28 vagas de 40 min',
      'bbbbbbbb-0000-0000-0000-000000000001'::uuid, dia_teste(),
      array['cccccccc-0000-0000-0000-000000000001'::uuid]::uuid[])), 28);
 
-select t_verdade('a primeira vaga é 09:00 no fuso do salão',
+select t_verdade('a primeira vaga é 09:00 no fuso do restaurante',
   (select min(h) from public.horarios_livres(
      'bbbbbbbb-0000-0000-0000-000000000001'::uuid, dia_teste(),
      array['cccccccc-0000-0000-0000-000000000001'::uuid]::uuid[]) h)
@@ -205,14 +205,14 @@ select t_igual('e o próprio 10:00 não aparece mais',
      array['cccccccc-0000-0000-0000-000000000001'::uuid]::uuid[]) h
     where h = (dia_teste() + time '10:00') at time zone 'America/Sao_Paulo'), 0);
 
--- Bloqueio do SALÃO INTEIRO (profissional_id nulo) na tarde toda.
+-- Bloqueio do RESTAURANTE INTEIRO (profissional_id nulo) na tarde toda.
 insert into public.bloqueios (salao_id, profissional_id, inicio, fim, motivo) values
   ('aaaaaaaa-0000-0000-0000-000000000001', null,
    (dia_teste() + time '13:00') at time zone 'America/Sao_Paulo',
    (dia_teste() + time '18:00') at time zone 'America/Sao_Paulo',
    'Feriado municipal');
 
-select t_igual('bloqueio do salão inteiro apaga a tarde: sobram as 5 da manhã',
+select t_igual('bloqueio do restaurante inteiro apaga a tarde: sobram as 5 da manhã',
   (select count(*) from public.horarios_livres(
      'bbbbbbbb-0000-0000-0000-000000000001'::uuid, dia_teste(),
      array['cccccccc-0000-0000-0000-000000000001'::uuid]::uuid[])), 5);
@@ -249,7 +249,7 @@ select t_texto('sem serviço nenhum, recusa',
     array[]::uuid[]),
   'Escolha pelo menos um serviço.');
 
-select t_texto('serviço de OUTRO salão colado na chamada é recusado',
+select t_texto('serviço de OUTRO restaurante colado na chamada é recusado',
   public.porque_nao_agenda('bbbbbbbb-0000-0000-0000-000000000001'::uuid, dia_teste(),
     array['cccccccc-0000-0000-0000-000000000009'::uuid]::uuid[]),
   'Um dos serviços escolhidos não está disponível.');
@@ -396,7 +396,7 @@ select t_igual('depois de cancelar uma, cabe outra',
      array['cccccccc-0000-0000-0000-000000000001'::uuid]::uuid[],
      'Joana Ribeiro', '51998876655')), 1);
 
--- O que o SALÃO marcou para ela não é spam: as sessões do pacote com agenda
+-- O que o RESTAURANTE marcou para ela não é spam: as sessões do pacote com agenda
 -- fixa, marcadas pela recepção, travavam a cliente no link ("Você já tem 3
 -- horários marcados aqui" — visto pelo dono no teste).
 insert into public.agendamentos (salao_id, cliente_id, profissional_id, inicio, fim, status, origem)
@@ -406,7 +406,7 @@ select 'aaaaaaaa-0000-0000-0000-000000000001', c.id, 'bbbbbbbb-0000-0000-0000-00
   from public.clientes c where c.nome = 'Joana Ribeiro';
 update public.agendamentos set status = 'cancelado'
  where inicio = (dia_teste() + time '16:00') at time zone 'America/Sao_Paulo' and origem = 'online';
-select t_igual('o que o salão marcou para ela não conta no freio',
+select t_igual('o que o restaurante marcou para ela não conta no freio',
   (select count(*) from public.agendar(
      'bbbbbbbb-0000-0000-0000-000000000001'::uuid,
      (dia_teste() + time '16:00') at time zone 'America/Sao_Paulo',
@@ -414,11 +414,11 @@ select t_igual('o que o salão marcou para ela não conta no freio',
      'Joana Ribeiro', '51998876655')), 1);
 
 -- ---------------------------------------------------------------------------
--- 10) Salão suspenso
+-- 10) Restaurante suspenso
 --
 -- Deixou de pagar, ou foi desligado. A vitrine e a marcação fecham juntas —
 -- se só a vitrine fechasse, o link antigo que a cliente salvou continuaria
--- marcando horário num salão que não atende mais.
+-- marcando horário num restaurante que não atende mais.
 -- ---------------------------------------------------------------------------
 insert into public.profissionais (id, salao_id, nome) values
   ('bbbbbbbb-0000-0000-0000-000000000009',
@@ -426,7 +426,7 @@ insert into public.profissionais (id, salao_id, nome) values
 insert into public.jornadas (profissional_id, dia_semana, inicio, fim) values
   ('bbbbbbbb-0000-0000-0000-000000000009', 1, '09:00', '18:00');
 
-select t_texto('salão suspenso recusa marcação',
+select t_texto('restaurante suspenso recusa marcação',
   public.porque_nao_agenda('bbbbbbbb-0000-0000-0000-000000000009'::uuid, dia_teste(),
     array['cccccccc-0000-0000-0000-000000000009'::uuid]::uuid[]),
   'Este profissional não está atendendo pela agenda online.');
@@ -438,7 +438,7 @@ select t_igual('e não aparece na vitrine pública',
 -- ---------------------------------------------------------------------------
 -- 11) A cota do plano na vitrine
 --
--- O salão cai do plano de 5 para o gratuito, que comporta 1. A partir daí a
+-- O restaurante cai do plano de 5 para o gratuito, que comporta 1. A partir daí a
 -- vitrine só pode mostrar 1 — senão a cliente escolhe a Bia e leva um erro do
 -- gatilho de cota na cara.
 -- ---------------------------------------------------------------------------
@@ -594,7 +594,7 @@ select t_falso('nem a de bloqueios',
 -- é o que importa: depois de tudo instalado, ninguém enxerga as três. Quem
 -- adicionar um grant novo em qualquer arquivo reprova aqui.
 -- ---------------------------------------------------------------------------
-select t_falso('anon não folheia o catálogo de salões',
+select t_falso('anon não folheia o catálogo de restaurantes',
   has_table_privilege('anon', 'public.saloes_publicos', 'select'));
 select t_falso('nem o de serviços',
   has_table_privilege('anon', 'public.servicos_publicos', 'select'));
@@ -622,10 +622,10 @@ select t_verdade('mas quem sabe o apelido entra pela vitrine',
 --
 -- ⚠ E A REGRA INTEIRA É "SÓ PREENCHE O QUE ESTÁ VAZIO".
 --
--- Não é detalhe de implementação, é de quem manda na ficha. O salão corrige
+-- Não é detalhe de implementação, é de quem manda na ficha. O restaurante corrige
 -- um e-mail digitado errado; o preenchimento automático do navegador da
 -- cliente manda o errado de volta na marcação seguinte. Se o `agendar()`
--- sobrescrevesse, a correção do salão duraria até o próximo corte — e
+-- sobrescrevesse, a correção do restaurante duraria até o próximo corte — e
 -- ninguém entenderia por que o e-mail "volta sozinho".
 --
 -- A agenda é limpa aqui de propósito: esta seção precisa de horários livres
@@ -664,7 +664,7 @@ select t_igual('ela marca de novo, e o navegador repete o e-mail velho',
      'Marta Prado', '(51) 98888-1111', null, null,
      'marta@exemplo.com', date '1980-01-01')), 1);
 
-select t_texto('a correção do salão fica de pé',
+select t_texto('a correção do restaurante fica de pé',
   (select email from public.clientes where nome = 'Marta Prado'),
   'marta.prado@certo.com');
 
@@ -697,9 +697,9 @@ select t_texto('campo em branco não apaga o que já estava lá',
    `where`, e a do `coalesce` seguia sem ninguém olhando.
 
    O estado misto é que separa as duas — e não é hipótese de laboratório: é
-   a ficha em que o salão digitou o e-mail e nunca perguntou o aniversário,
+   a ficha em que o restaurante digitou o e-mail e nunca perguntou o aniversário,
    que é a ficha mais comum que existe. Aqui o `where` deixa passar, e a
-   única coisa entre o navegador da cliente e o e-mail do salão é a ordem
+   única coisa entre o navegador da cliente e o e-mail do restaurante é a ordem
    dos argumentos do `coalesce`. */
 insert into public.clientes (salao_id, nome, telefone, email) values
   ('aaaaaaaa-0000-0000-0000-000000000001', 'Sônia Vieira', '51966663333',
@@ -717,11 +717,11 @@ select t_texto('o aniversário que faltava é preenchido',
   (select nascimento::text from public.clientes where nome = 'Sônia Vieira'),
   '1979-12-05');
 
-select t_texto('e o e-mail que o salão tinha anotado NÃO é trocado no caminho',
+select t_texto('e o e-mail que o restaurante tinha anotado NÃO é trocado no caminho',
   (select email from public.clientes where nome = 'Sônia Vieira'),
   'sonia@salao-anotou.com');
 
-/* O caso mais comum de todos num salão que já roda: a ficha existe porque a
+/* O caso mais comum de todos num restaurante que já roda: a ficha existe porque a
    recepção anotou a pessoa no balcão um dia, com nome e telefone e mais
    nada. A primeira marcação pelo link é o que completa o que falta — sem
    isso, o cadastro só valeria para quem chegou depois da funcionalidade. */

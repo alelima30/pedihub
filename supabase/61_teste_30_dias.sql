@@ -4,7 +4,7 @@
 --
 -- Pedido do dono: "a partir de agora todos os negócios que cadastrar têm 30
 -- dias para usar no plano de 2 profissionais". E, perguntado, as mensagens
--- do teste continuam 100 no mês: o salão ainda não paga, e a Meta cobra.
+-- do teste continuam 100 no mês: o restaurante ainda não paga, e a Meta cobra.
 --
 -- ── O QUE MUDA ────────────────────────────────────────────────────────────
 --   · cadastro NOVO nasce com 30 dias de teste (eram 7);
@@ -16,7 +16,7 @@
 --   · quem já está no teste continua com a data que tinha — "a partir de
 --     agora" é para os cadastros novos. Ganha, sim, a vaga da 2ª pessoa
 --     enquanto o teste durar: o limite é do plano, e não faria sentido o
---     mesmo plano valer 1 para um salão e 2 para o outro;
+--     mesmo plano valer 1 para um restaurante e 2 para o outro;
 --   · o teste continua UM por pessoa (39_teste_unico): quem já usou nasce no
 --     Grátis, com ou sem os 30 dias.
 --
@@ -53,12 +53,12 @@ declare
   v_dias   int := 30;                     -- duração do teste grátis (era 7)
 begin
   if v_perfil is null then
-    raise exception 'Faça login antes de criar o salão.'
+    raise exception 'Faça login antes de criar o restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
   if not exists (select 1 from public.perfis where id = v_perfil) then
-    raise exception 'Complete seu cadastro antes de criar o salão.'
+    raise exception 'Complete seu cadastro antes de criar o restaurante.'
       using errcode = 'foreign_key_violation';
   end if;
 
@@ -67,7 +67,7 @@ begin
       using errcode = 'check_violation';
   end if;
 
-  -- Uma pessoa dona de muitos salões é possível (rede de barbearias), mas
+  -- Uma pessoa dona de muitos restaurantes é possível (rede de barbearias), mas
   -- dezenas viram fábrica de teste grátis. O limite é folgado de propósito.
   if (select count(*) from public.vinculos
        where perfil_id = v_perfil and papel = 'dono') >= 10 then
@@ -91,7 +91,7 @@ begin
 
   insert into public.assinaturas
     (salao_id, plano, status, trial_ate, origem, indicado_por)
-  /* O "hoje" do teste é o do SALÃO, e não o do servidor (UTC). Depois das
+  /* O "hoje" do teste é o do RESTAURANTE, e não o do servidor (UTC). Depois das
      21h em Brasília o servidor já está no dia seguinte, e o teste de 7 dias
      nascia com 8 — a tela dizia "faltam 8 dias" logo depois de prometer 7. */
   values (v_salao, 'trial', 'trial',
@@ -107,7 +107,7 @@ begin
   insert into public.profissionais (salao_id, perfil_id, nome, comissao_pct)
   select v_salao, v_perfil, p.nome, 100 from public.perfis p where p.id = v_perfil;
 
-  -- O documento é da COBRANÇA, não do salão: guardar CPF junto do cadastro
+  -- O documento é da COBRANÇA, não do restaurante: guardar CPF junto do cadastro
   -- público seria expor documento em tabela que o cliente final lê.
   --
   -- ⚠ Repare no `documentos_cobranca.salao_id` escrito por extenso. Esta
@@ -116,7 +116,7 @@ begin
   -- dentro para o Postgres com "column reference is ambiguous" — foi
   -- exatamente o que aconteceu na primeira versão. Dentro de plpgsql com
   -- OUT params, qualifique sempre.
-  -- Insert simples, sem `on conflict`: o salão nasceu duas linhas acima,
+  -- Insert simples, sem `on conflict`: o restaurante nasceu duas linhas acima,
   -- então não existe documento para conflitar. E o alvo do `on conflict` é
   -- um dos poucos lugares do SQL que NÃO aceita qualificação por tabela,
   -- então ali a ambiguidade não teria conserto.

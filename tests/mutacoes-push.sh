@@ -60,7 +60,7 @@ troca supabase/59_push.sql \
   "  if true or new.status not in ('pendente', 'confirmado')" \
   && rodar "a cliente marca e o celular fica mudo"
 
-echo "2. o aviso vai para o salão inteiro, e não para quem o ligou"
+echo "2. o aviso vai para o restaurante inteiro, e não para quem o ligou"
 troca supabase/59_push.sql \
   "   where a.salao_id = p_salao and a.perfil_id = any(p_perfis)" \
   "   where a.salao_id = p_salao" \

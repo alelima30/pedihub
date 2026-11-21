@@ -2,9 +2,9 @@
 -- PediHub — 10: Campanhas de WhatsApp
 --
 -- Mandar mensagem para a clientela é o pedido mais repetido de quem tem
--- salão, e é também o mais fácil de fazer errado de um jeito que custa o
+-- restaurante, e é também o mais fácil de fazer errado de um jeito que custa o
 -- número do dono. Este arquivo é a metade que mora no banco: as tabelas, o
--- isolamento por salão e a FILA.
+-- isolamento por restaurante e a FILA.
 --
 -- A outra metade é a função de borda (supabase/functions/enviar-campanha),
 -- que roda no servidor do Supabase e é a única que enxerga o token da Meta.
@@ -13,7 +13,7 @@
 -- Nenhuma credencial. Nem token, nem id de número, nem segredo de webhook.
 -- Eles vivem nas variáveis de ambiente da função de borda. O painel do dono é
 -- HTML servido do GitHub Pages: tudo o que chega nele é público por
--- construção, e um token da Cloud API vazado manda mensagem em nome do salão
+-- construção, e um token da Cloud API vazado manda mensagem em nome do restaurante
 -- até alguém revogar.
 --
 -- ── A REGRA DA META QUE MUDA O DESENHO ─────────────────────────────────────
@@ -33,9 +33,9 @@
 --
 -- Antes de qualquer tabela de campanha: o direito de não receber. Sem isto o
 -- módulo nasce ilegal — LGPD, art. 18 — e, pior no dia a dia, queima o
--- número do salão em denúncia de spam.
+-- número do restaurante em denúncia de spam.
 --
--- `default true` é decisão consciente: quem já é cliente do salão e deu o
+-- `default true` é decisão consciente: quem já é cliente do restaurante e deu o
 -- telefone no balcão tem relação com a casa. O que não pode é não haver saída
 -- — e a saída existe, na ficha e pelo pedido da própria pessoa.
 -- ---------------------------------------------------------------------------
@@ -143,13 +143,13 @@ create index if not exists ix_dest_fila
   where status = 'pendente';
 
 -- ---------------------------------------------------------------------------
--- 4) RLS — O SALÃO A NÃO ENXERGA O SALÃO B
+-- 4) RLS — O RESTAURANTE A NÃO ENXERGA O RESTAURANTE B
 --
 -- Este é o requisito que não admite engano. As duas tabelas ligam RLS, e a
 -- policy usa os mesmos auxiliares do resto do sistema: `e_gestor()` para
 -- escrever, `e_equipe()` para ler.
 --
--- Campanha é assunto de quem manda no salão — quem atende não precisa ver a
+-- Campanha é assunto de quem manda no restaurante — quem atende não precisa ver a
 -- lista de telefone da casa inteira para trabalhar.
 -- ---------------------------------------------------------------------------
 alter table public.campanhas               enable row level security;
@@ -192,7 +192,7 @@ grant select, insert, update, delete on public.campanha_destinatarios to authent
 -- da regra é como o resumo passa a prometer 127 e a fila mandar 119.
 --
 -- `security definer` com `search_path` fixo, e a PRIMEIRA linha confere se
--- quem chamou manda neste salão. Sem essa linha, `security definer` seria uma
+-- quem chamou manda neste restaurante. Sem essa linha, `security definer` seria uma
 -- porta para ler a clientela alheia trocando o uuid na chamada — que é o
 -- IDOR que o pedido manda procurar.
 -- ---------------------------------------------------------------------------
@@ -206,7 +206,7 @@ returns table (cliente_id uuid, nome text, telefone text)
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
 
   return query
@@ -397,13 +397,13 @@ grant execute on function public.placar_campanha(uuid) to authenticated;
 --
 -- ⚠ TUDO NESTA SEÇÃO É SÓ PARA `service_role`.
 --
--- Estas funções contornam o RLS de propósito: o worker não é dono de salão
+-- Estas funções contornam o RLS de propósito: o worker não é dono de restaurante
 -- nenhum e precisa atender todos. É por isso que elas NÃO são concedidas a
 -- `authenticated` nem a `anon` — quem as chama é a função de borda, com a
 -- chave secreta que só existe no servidor.
 --
 -- Se alguma delas aparecer concedida a `authenticated`, é falha grave: dá
--- para varrer telefone de qualquer salão da plataforma.
+-- para varrer telefone de qualquer restaurante da plataforma.
 -- ===========================================================================
 
 /* Pega o próximo da fila e marca como 'processando' NA MESMA transação.

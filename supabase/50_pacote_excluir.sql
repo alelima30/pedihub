@@ -1,5 +1,5 @@
 -- ===========================================================================
--- 50_pacote_excluir.sql — excluir um pacote que o salão não quer mais
+-- 50_pacote_excluir.sql — excluir um pacote que o restaurante não quer mais
 --
 -- O pedido: "no pacote não tem como excluir caso eu não queira mais; se
 -- tiver pessoas agendadas no pacote, não consigo excluir — só excluir quando
@@ -75,9 +75,9 @@ create or replace function public.tg_pacote_nao_apaga()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare v_quem text;
 begin
-  /* ⚠ EM CASCATA, DEIXA. Excluir a conta (36) apaga o salão, e o salão leva
+  /* ⚠ EM CASCATA, DEIXA. Excluir a conta (36) apaga o restaurante, e o restaurante leva
      os pacotes junto — aí a trava não pode segurar, ou ninguém conseguiria
-     mais excluir o próprio salão. A cascata chega aqui de dentro do gatilho
+     mais excluir o próprio restaurante. A cascata chega aqui de dentro do gatilho
      da chave estrangeira (profundidade > 1); o apagar direto, com 1. */
   if pg_trigger_depth() > 1 then return old; end if;
   v_quem := public.clientes_no_pacote(old.id);

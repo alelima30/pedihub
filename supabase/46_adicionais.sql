@@ -2,7 +2,7 @@
 -- 46_adicionais.sql — os módulos adicionais, que se pagam à parte
 --
 -- O pedido: o Crediário (venda parcelada, o "fiado") é um módulo a mais —
--- "preciso amarrar para cobrar do dono do salão". R$ 49,90 por mês, do
+-- "preciso amarrar para cobrar do dono do restaurante". R$ 49,90 por mês, do
 -- Essencial para cima (no Básico não), liberado no teste grátis.
 --
 -- Até aqui cada plano liberava os seus módulos e a mensalidade era o preço do
@@ -97,7 +97,7 @@ revoke all on public.adicionais from anon, authenticated;
 grant select on public.adicionais to authenticated;
 
 -- ---------------------------------------------------------------------------
--- 2) O QUE CADA SALÃO CONTRATOU
+-- 2) O QUE CADA RESTAURANTE CONTRATOU
 --
 --   ativo       valendo (e entra na mensalidade, se não for cortesia)
 --   aguardando  pedido, mas só vale quando a mensalidade com ele for paga
@@ -113,7 +113,7 @@ create table if not exists public.salao_adicionais (
   vale_ate       date,
   -- A plataforma deu: vale sem entrar na mensalidade.
   cortesia       boolean not null default false,
-  -- O preço deste salão (a plataforma decide). Nulo: o do catálogo.
+  -- O preço deste restaurante (a plataforma decide). Nulo: o do catálogo.
   preco_especial numeric(10,2) check (preco_especial is null or preco_especial >= 0),
   -- Já teve e cancelou: recontratar só libera depois de pagar.
   ja_teve        boolean not null default false,
@@ -193,7 +193,7 @@ end $$;
 -- 4) A MENSALIDADE: O PLANO E OS ADICIONAIS
 --
 -- Os itens que uma mensalidade daquele plano cobra: o plano (com o preço
--- especial do salão, 13) e cada adicional ativo ou aguardando que o plano
+-- especial do restaurante, 13) e cada adicional ativo ou aguardando que o plano
 -- aceita, sem cortesia. É daqui que o Pix, o cartão e o lembrete de
 -- renovação tiram o valor — e a cobrança guarda os itens, para o histórico
 -- dizer o que foi pago.
@@ -235,7 +235,7 @@ $$;
    dono vencer em silêncio, com o cartão debitado.
 
    Então o mês do cartão aceita três composições, nesta ordem: a mensalidade
-   de agora; só o plano; o plano com todos os adicionais que o salão tem. A
+   de agora; só o plano; o plano com todos os adicionais que o restaurante tem. A
    que bater é a que vale — e o que foi PAGO passa a valer (`adicionais_pagos`):
    pagou o Crediário, tem o Crediário. Valor que não bate com nenhuma continua
    recusado, como sempre (é a trava contra pagar R$ 57 e levar R$ 497). */
@@ -312,7 +312,7 @@ $$;
 --
 -- `conta_do_adicional` decide o que acontece e quanto a mensalidade passa a
 -- ser, sem gravar nada. As ações:
---   contratar | cancelar           o dono ou o administrador do salão
+--   contratar | cancelar           o dono ou o administrador do restaurante
 --   cortesia | sem_cortesia | preco   a plataforma
 -- `p_quem` é quem pediu, conferido aqui (a borda roda sem sessão: o mesmo
 -- motivo do `abrir_cobranca`, 13).
@@ -353,7 +353,7 @@ begin
   end if;
   select * into a from public.assinaturas where salao_id = p_salao;
   if a.salao_id is null then
-    raise exception 'Este salão não tem assinatura.' using errcode = 'check_violation';
+    raise exception 'Este restaurante não tem assinatura.' using errcode = 'check_violation';
   end if;
   select * into r from public.salao_adicionais where salao_id = p_salao and adicional = p_adicional;
 
@@ -493,7 +493,7 @@ create or replace function public.aplicar_adicional(
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare c jsonb; n jsonb;
 begin
-  -- Um salão por vez: duas abas contratando ao mesmo tempo esperam a fila.
+  -- Um restaurante por vez: duas abas contratando ao mesmo tempo esperam a fila.
   perform 1 from public.assinaturas where salao_id = p_salao for update;
   c := public.conta_do_adicional(p_salao, p_adicional, p_acao, p_quem, p_preco);
   if p_esperado is not null and (c->>'depois')::numeric is distinct from p_esperado then
@@ -558,7 +558,7 @@ returns jsonb language plpgsql stable security definer set search_path = public 
 declare a public.assinaturas%rowtype; v_ativos jsonb; v_recursos jsonb;
 begin
   if not public.e_equipe(p_salao) and not public.is_super() then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   select coalesce(jsonb_agg(ad.codigo order by ad.ordem), '[]'::jsonb)
     into v_ativos

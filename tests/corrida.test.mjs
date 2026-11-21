@@ -33,7 +33,7 @@
    gravou — nos dois sentidos, porque inverter a ordem seria outro caminho e
    dava para furar por ele.
 
-   E que a trava seja só do salão: dois salões diferentes escrevendo ao mesmo
+   E que a trava seja só do restaurante: dois restaurantes diferentes escrevendo ao mesmo
    tempo não podem se esperar, senão o conserto vira gargalo.
    =========================================================================== */
 import pg from './pg.mjs';
@@ -73,13 +73,13 @@ async function montarSalao(nome){
   return { salao: s, prof: p, cliente: c };
 }
 
-/* ⚠ HORA FIXA NO FUSO DO SALÃO, E NÃO `date_trunc('hour', now())`.
+/* ⚠ HORA FIXA NO FUSO DO RESTAURANTE, E NÃO `date_trunc('hour', now())`.
 
    Isto era `date_trunc('hour', now() + interval '3 days')`, e reprovava numa
    janela de UMA HORA POR DIA — sempre, em qualquer máquina.
 
    A jornada do fixture vai das 00:00 às 23:59. Quando a hora corrente cai em
-   23:00 no fuso do salão (02:00–03:00 UTC, para UTC−3), o atendimento de uma
+   23:00 no fuso do restaurante (02:00–03:00 UTC, para UTC−3), o atendimento de uma
    hora TERMINA à meia-noite do dia seguinte, e o `checar_cabe_agendamento()`
    recusa com "Fora da jornada de trabalho deste profissional" — corretamente.
 
@@ -87,7 +87,7 @@ async function montarSalao(nome){
    quem topasse com isso procuraria o defeito no lugar errado, num teste que
    passa nas outras vinte e três horas. Foi o que aconteceu.
 
-   Fixando as 10:00 do fuso do salão, o teste deixa de depender do relógio da
+   Fixando as 10:00 do fuso do restaurante, o teste deixa de depender do relógio da
    máquina — e continua medindo o que veio medir, que é a corrida. */
 const LOCAL = "(now() at time zone 'America/Sao_Paulo')";
 const INI = `((date_trunc('day', ${LOCAL} + interval '3 days')`
@@ -239,12 +239,12 @@ secao('3) Serializar não é recusar');
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   4. SALÕES DIFERENTES NÃO SE ESPERAM
+   4. RESTAURANTES DIFERENTES NÃO SE ESPERAM
 
-   A trava é chaveada pelo salão. Se fosse global, o conserto de um defeito
+   A trava é chaveada pelo restaurante. Se fosse global, o conserto de um defeito
    raro viraria uma fila para o sistema inteiro — e o remédio seria pior.
    ══════════════════════════════════════════════════════════════════════════ */
-secao('4) Um salão não segura o outro');
+secao('4) Um restaurante não segura o outro');
 
 {
   const e1 = await montarSalao('Corrida D1');
@@ -256,11 +256,11 @@ secao('4) Um salão não segura o outro');
   await b.query('begin');
   await marcar(a, e1);
 
-  /* `b` escreve no OUTRO salão com `a` ainda aberta. Se as duas dividissem
+  /* `b` escreve no OUTRO restaurante com `a` ainda aberta. Se as duas dividissem
      trava, esta linha ficaria pendurada até o commit de `a` — e o teste
      morreria no tempo limite em vez de reprovar. Daí o relógio. */
   const relogio = new Promise((_, x) =>
-    setTimeout(() => x(new Error('o outro salão ficou esperando')), 5000));
+    setTimeout(() => x(new Error('o outro restaurante ficou esperando')), 5000));
   let livre = true;
   try{ await Promise.race([marcar(b, e2), relogio]); }
   catch(err){ livre = false; }
@@ -269,7 +269,7 @@ secao('4) Um salão não segura o outro');
   await b.query('commit').catch(() => {});
   await a.end(); await b.end();
 
-  verdade('o segundo salão escreve sem esperar o primeiro', livre,
+  verdade('o segundo restaurante escreve sem esperar o primeiro', livre,
     'a trava não pode ser global');
   const n2 = await contar(e2.salao);
   verdade('e a marcação dele entrou', n2.atendimentos === 1, JSON.stringify(n2));

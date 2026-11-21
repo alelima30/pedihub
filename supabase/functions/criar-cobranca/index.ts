@@ -94,10 +94,10 @@ Deno.serve(async (req) => {
     const salaoId = String(corpo.salaoId ?? '');
     const plano   = String(corpo.plano ?? '');
     const metodo  = corpo.metodo === 'boleto' ? 'boleto' : 'pix';
-    if(!salaoId || !plano) return responder({ erro: 'Faltou o salão ou o plano.' }, 400);
+    if(!salaoId || !plano) return responder({ erro: 'Faltou o restaurante ou o plano.' }, 400);
 
     /* A cobrança nasce no banco, com o preço lido lá. Se esta pessoa não for
-       gestão deste salão, `abrir_cobranca` recusa e a gente para aqui — a
+       gestão deste restaurante, `abrir_cobranca` recusa e a gente para aqui — a
        autorização é do banco, não deste arquivo. */
     let cobranca;
     try{
@@ -118,8 +118,8 @@ Deno.serve(async (req) => {
 
     /* ── O pedido ao Mercado Pago ────────────────────────────────────────────
        `external_reference` é o id da NOSSA cobrança. É por ele que o webhook
-       reencontra a linha — e é por isso que ele não pode ser o id do salão:
-       dois meses do mesmo salão precisam ser dois pagamentos distintos.
+       reencontra a linha — e é por isso que ele não pode ser o id do restaurante:
+       dois meses do mesmo restaurante precisam ser dois pagamentos distintos.
 
        `X-Idempotency-Key` também é o id da cobrança: se esta função for
        chamada duas vezes (o dono clicou duas vezes, a rede repetiu), o

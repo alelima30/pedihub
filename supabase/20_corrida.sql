@@ -29,7 +29,7 @@
 -- em que as duas coisas competem.
 --
 -- ── O CONSERTO, E POR QUE ESTE E NÃO OUTRO ────────────────────────────────
--- `pg_advisory_xact_lock`, chaveado pelo salão, tomado no COMEÇO dos dois
+-- `pg_advisory_xact_lock`, chaveado pelo restaurante, tomado no COMEÇO dos dois
 -- caminhos — antes de qualquer consulta. Quem chega em segundo espera o
 -- primeiro comitar, e aí enxerga o que ele gravou. A trava morre sozinha no
 -- fim da transação; não há o que esquecer de soltar.
@@ -37,8 +37,8 @@
 -- Foram consideradas duas alternativas:
 --
 --   · `select … from saloes … for update` — funciona, e prende a linha do
---     salão. Aí toda marcação passa a brigar com quem estiver salvando os
---     dados do salão em "Meu salão", por um motivo que não tem nada a ver.
+--     restaurante. Aí toda marcação passa a brigar com quem estiver salvando os
+--     dados do restaurante em "Meu restaurante", por um motivo que não tem nada a ver.
 --     Trava consultiva não toca em linha nenhuma.
 --
 --   · SERIALIZABLE — correto e caro: exigiria a aplicação inteira saber
@@ -49,10 +49,10 @@
 -- cobrir os dois casos e a regra deixar de ter duas metades.
 --
 -- ── O CUSTO ───────────────────────────────────────────────────────────────
--- Uma trava por salão, mantida por alguns milissegundos, e só enquanto se
--- escreve na agenda daquele salão. Dois salões diferentes nunca se esperam.
--- Dentro de um salão, duas marcações simultâneas passam a ser sequenciais —
--- que é exatamente o que se quer, e num volume de salão nem se mede.
+-- Uma trava por restaurante, mantida por alguns milissegundos, e só enquanto se
+-- escreve na agenda daquele restaurante. Dois restaurantes diferentes nunca se esperam.
+-- Dentro de um restaurante, duas marcações simultâneas passam a ser sequenciais —
+-- que é exatamente o que se quer, e num volume de restaurante nem se mede.
 -- ===========================================================================
 
 -- ---------------------------------------------------------------------------
@@ -60,7 +60,7 @@
 --
 -- `hashtext` do uuid: `pg_advisory_xact_lock` quer um bigint. Duas chaves
 -- diferentes podem colidir no mesmo número — e colisão aqui não causa erro
--- nenhum, só faz dois salões esperarem um ao outro por alguns milissegundos.
+-- nenhum, só faz dois restaurantes esperarem um ao outro por alguns milissegundos.
 -- Trocar correção por raridade seria o contrário do que este arquivo faz.
 -- ---------------------------------------------------------------------------
 create or replace function public.travar_agenda(p_salao uuid)
@@ -114,7 +114,7 @@ end $$;
 -- 2) BLOQUEANDO: a mesma trava, do outro lado
 --
 -- Tem que ser a MESMA chave, senão as duas transações pegam travas diferentes
--- e continuam sem se ver. Por isso a chave é o salão, e não o profissional:
+-- e continuam sem se ver. Por isso a chave é o restaurante, e não o profissional:
 -- bloqueio com `profissional_id` nulo vale para a casa inteira, e precisa
 -- brigar com a marcação de qualquer pessoa dela.
 -- ---------------------------------------------------------------------------
@@ -188,7 +188,7 @@ begin
   end if;
 
   -- O motivo do bloqueio fica de fora: "médico", "terapia" e "advogado" são
-  -- assunto de quem trabalha no salão, não de quem está marcando.
+  -- assunto de quem trabalha no restaurante, não de quem está marcando.
   if public.ha_bloqueio(new.profissional_id, new.inicio, new.fim)
      is not null then
     raise exception 'Esse horário está bloqueado na agenda.'
@@ -204,4 +204,4 @@ begin
 end $$;
 
 comment on function public.travar_agenda(uuid) is
-  'Trava consultiva por salão, até o fim da transação. Bloqueio e atendimento não se cruzam.';
+  'Trava consultiva por restaurante, até o fim da transação. Bloqueio e atendimento não se cruzam.';

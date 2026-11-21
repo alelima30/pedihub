@@ -39,14 +39,14 @@ function profsNaCotaTela(ativos, limite){
 const salao = '99990000-0000-0000-0000-000000000001';
 await cliente.query(`delete from public.saloes where id = $1`, [salao]);
 await cliente.query(
-  `insert into public.saloes (id, slug, nome) values ($1,'salao-cota','Salão Cota')`, [salao]);
+  `insert into public.saloes (id, slug, nome) values ($1,'salao-cota','Restaurante Cota')`, [salao]);
 
 console.log('\nA tela e o banco concordam sobre quem está na cota');
 
 /* ⚠ AS VAGAS VÊM DA TABELA, NÃO ESCRITAS AQUI.
 
    Estava `[['salao',20],['time',3],...]` na mão. No dia em que a escada de
-   planos foi recalculada e o Salão passou de 20 para 12 vagas, este teste
+   planos foi recalculada e o Restaurante passou de 20 para 12 vagas, este teste
    reprovou com "esperava 20, devolveu 12" — culpando a mudança certa, pela
    terceira vez na mesma tarde.
 

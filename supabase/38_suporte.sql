@@ -1,19 +1,19 @@
 -- ===========================================================================
--- 38_suporte.sql — o modo suporte: a plataforma abre o painel de um salão
+-- 38_suporte.sql — o modo suporte: a plataforma abre o painel de um restaurante
 --
--- O pedido: "se o dono do salão precisa de suporte, como faço?" — e, entre
+-- O pedido: "se o dono do restaurante precisa de suporte, como faço?" — e, entre
 -- abrir já editando ou abrir só olhando, "só leitura com liberar edição".
 --
 -- ── POR QUE ISTO MORA NO BANCO, E NÃO SÓ NA TELA ──────────────────────────
 -- A conta da plataforma (`perfis.super_admin`) já podia ler e escrever em
--- qualquer salão: `e_gestor()`, `e_equipe()` e companhia respondem sim para
--- ela. O painel escondia os salões dos outros (o `sohMeusSaloes()` do
+-- qualquer restaurante: `e_gestor()`, `e_equipe()` e companhia respondem sim para
+-- ela. O painel escondia os restaurantes dos outros (o `sohMeusSaloes()` do
 -- app.html) justamente para ela não mexer na agenda de um cliente achando
 -- que era a dela. Abrir o painel de um cliente sem trava nenhuma seria
 -- devolver exatamente esse risco.
 --
--- Então a trava é um gatilho nas tabelas do salão: quando quem grava é a
--- conta da plataforma, num salão em que ela NÃO trabalha, a gravação só
+-- Então a trava é um gatilho nas tabelas do restaurante: quando quem grava é a
+-- conta da plataforma, num restaurante em que ela NÃO trabalha, a gravação só
 -- passa com uma sessão de suporte aberta e a edição liberada nas últimas
 -- duas horas. Sem isso, o banco recusa com uma frase que a tela mostra.
 -- E o que passa fica registrado (antes e depois), por sessão.
@@ -58,7 +58,7 @@ alter table public.suporte_acessos force row level security;
 alter table public.suporte_alteracoes enable row level security;
 alter table public.suporte_alteracoes force row level security;
 
-/* Quem LÊ: a plataforma, e a GESTÃO do próprio salão — o dono tem direito de
+/* Quem LÊ: a plataforma, e a GESTÃO do próprio restaurante — o dono tem direito de
    saber quando o suporte entrou na casa dele e o que mudou. Quem ESCREVE:
    ninguém direto; só as funções abaixo e o gatilho. */
 drop policy if exists suporte_acessos_ler on public.suporte_acessos;
@@ -78,13 +78,13 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare v_id uuid; v_nome text;
 begin
   if not public.is_super() then
-    raise exception 'Só a plataforma abre o painel de outro salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Só a plataforma abre o painel de outro restaurante.' using errcode = 'insufficient_privilege';
   end if;
   select nome into v_nome from public.saloes where id = p_salao;
   if v_nome is null then
-    raise exception 'Salão não encontrado.' using errcode = 'check_violation';
+    raise exception 'Restaurante não encontrado.' using errcode = 'check_violation';
   end if;
-  -- Uma sessão por vez, por salão: a anterior que ficou aberta (aba fechada
+  -- Uma sessão por vez, por restaurante: a anterior que ficou aberta (aba fechada
   -- sem "Sair") é encerrada aqui, e a edição dela não vale mais.
   update public.suporte_acessos set encerrado_em = now()
    where perfil_id = auth.uid() and salao_id = p_salao and encerrado_em is null;
@@ -137,7 +137,7 @@ begin
        limit greatest(1, least(coalesce(p_limite, 30), 200))) t), '[]'::jsonb);
 end $$;
 
-/* O contato de quem é DONO do salão — o WhatsApp do salão (que o admin já
+/* O contato de quem é DONO do restaurante — o WhatsApp do restaurante (que o admin já
    vê) muitas vezes é o da recepção. Para o "Falar com o dono" do admin. */
 create or replace function public.contato_do_dono(p_salao uuid)
 returns jsonb language plpgsql stable security definer set search_path = public as $$
@@ -154,7 +154,7 @@ begin
      where v.salao_id = p_salao and v.papel = 'dono' and v.status = 'ativo'), '[]'::jsonb);
 end $$;
 
-/* Estender o teste de um salão até uma data. Volta a ser teste mesmo que já
+/* Estender o teste de um restaurante até uma data. Volta a ser teste mesmo que já
    tenha vencido (a casa estava no Grátis e ganha mais dias). */
 create or replace function public.estender_teste(p_salao uuid, p_ate date)
 returns jsonb language plpgsql security definer set search_path = public as $$
@@ -180,7 +180,7 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- 3) A TRAVA, E O REGISTRO DO QUE MUDOU
 -- ---------------------------------------------------------------------------
-/* O salão de uma linha qualquer: pela coluna `salao_id`, ou pela mãe — a
+/* O restaurante de uma linha qualquer: pela coluna `salao_id`, ou pela mãe — a
    jornada é da profissional, o item é da comanda, a sessão é do pacote. */
 create or replace function public.salao_da_linha(p_tabela text, p_linha jsonb)
 returns uuid language plpgsql stable security definer set search_path = public as $$
@@ -214,7 +214,7 @@ begin
   v_linha := to_jsonb(case when tg_op = 'DELETE' then old else new end);
   v_salao := public.salao_da_linha(tg_table_name, v_linha);
   if v_salao is null then return null; end if;
-  -- A conta da plataforma que também trabalha num salão (o dela) mexe nele
+  -- A conta da plataforma que também trabalha num restaurante (o dela) mexe nele
   -- como qualquer dono. Vínculo de cliente não conta.
   if public.papel_no_salao(v_salao) in ('dono','admin','recepcao','profissional') then return null; end if;
 
@@ -223,7 +223,7 @@ begin
      and edicao_desde is not null and edicao_desde > now() - interval '2 hours'
    order by edicao_desde desc limit 1;
   if v_acesso is null then
-    raise exception 'Modo suporte: só leitura. Toque em "Liberar edição" para mexer neste salão.'
+    raise exception 'Modo suporte: só leitura. Toque em "Liberar edição" para mexer neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -234,7 +234,7 @@ begin
   return null;
 end $$;
 
-/* As tabelas do salão. De fora, de propósito: assinaturas, cobranças e o
+/* As tabelas do restaurante. De fora, de propósito: assinaturas, cobranças e o
    documento do dono (da plataforma e do faturamento), a fila de mensagens
    (é o sistema que escreve, e ela já vem atrás de um agendamento que passou
    pela trava) e os próprios registros. */
@@ -257,7 +257,7 @@ begin
   end loop;
 end $$;
 
--- As funções da plataforma que gravam em tabela do salão passam pela trava
+-- As funções da plataforma que gravam em tabela do restaurante passam pela trava
 -- marcadas como da plataforma. Suspender é a única hoje.
 create or replace function public.definir_status_salao(p_salao uuid, p_status text)
 returns jsonb
@@ -265,7 +265,7 @@ language plpgsql security definer set search_path = public as $$
 declare v_antes text;
 begin
   if not public.is_super() then
-    raise exception 'Só a plataforma suspende salão.'
+    raise exception 'Só a plataforma suspende restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -275,7 +275,7 @@ begin
 
   select status into v_antes from public.saloes where id = p_salao;
   if v_antes is null then
-    raise exception 'Salão não encontrado.' using errcode = 'check_violation';
+    raise exception 'Restaurante não encontrado.' using errcode = 'check_violation';
   end if;
 
   perform set_config('pedihub.plataforma', 'sim', true);

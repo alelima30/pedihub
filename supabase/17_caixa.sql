@@ -63,7 +63,7 @@ create table if not exists public.caixas (
 create index if not exists ix_caixa_salao
   on public.caixas(salao_id, aberto_em desc);
 
-/* ⚠ UM CAIXA ABERTO POR SALÃO, e o índice é quem garante.
+/* ⚠ UM CAIXA ABERTO POR RESTAURANTE, e o índice é quem garante.
 
    Conferir com `select ... where fechado_em is null` antes de inserir não
    garante nada: duas recepções abrindo ao mesmo tempo passam as duas pela
@@ -88,7 +88,7 @@ create policy caixa_gerir on public.caixas for all to authenticated
   using ( public.ve_agenda_toda(salao_id) )
   with check ( public.ve_agenda_toda(salao_id) );
 
--- Quem atende NÃO enxerga o caixa: é dinheiro do salão inteiro, e a Fase 2
+-- Quem atende NÃO enxerga o caixa: é dinheiro do restaurante inteiro, e a Fase 2
 -- pede que profissional não veja informação financeira global.
 revoke all on public.caixas from anon;
 grant select, insert, update on public.caixas to authenticated;
@@ -262,7 +262,7 @@ begin
     raise exception 'Pagamento não encontrado.' using errcode = 'no_data_found';
   end if;
 
-  -- 1) o salão do estorno é o da comanda, e não o que a tela disser
+  -- 1) o restaurante do estorno é o da comanda, e não o que a tela disser
   new.salao_id := v_salao;
 
   -- 1b) a gaveta de onde o dinheiro sai é a ABERTA agora; sem caixa aberto,
@@ -428,7 +428,7 @@ begin
     raise exception 'Caixa não encontrado.' using errcode = 'no_data_found';
   end if;
   if not public.ve_agenda_toda(k.salao_id) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
 
   -- Só dinheiro entra na conta da gaveta, e já descontado o que foi
@@ -518,7 +518,7 @@ begin
     raise exception 'Caixa não encontrado.' using errcode = 'no_data_found';
   end if;
   if not public.ve_agenda_toda(k.salao_id) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   if k.fechado_em is not null then
     raise exception 'Este caixa já foi fechado.' using errcode = 'check_violation';

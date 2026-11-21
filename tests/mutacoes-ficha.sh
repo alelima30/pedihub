@@ -63,7 +63,7 @@ PY
   return $r
 }
 
-echo "1. comparar com o serviço de outro salão"
+echo "1. comparar com o serviço de outro restaurante"
 troca supabase/62_ficha_servico.sql \
   "                         and s.salao_id = new.salao_id)) then" \
   "                         )) then" \
@@ -75,11 +75,11 @@ troca supabase/62_ficha_servico.sql \
   "     and v.ativo and v.ficha is not null" \
   && rodar "serviço escondido aparece no link"
 
-echo "3. o link entrega a ficha de salão suspenso"
+echo "3. o link entrega a ficha de restaurante suspenso"
 troca supabase/62_ficha_servico.sql \
   "   where s.slug = p_slug and s.status = 'ativo'" \
   "   where s.slug = p_slug" \
-  && rodar "salão fora do ar continua publicando"
+  && rodar "restaurante fora do ar continua publicando"
 
 echo "4. o incluso sem teto"
 troca supabase/62_ficha_servico.sql \
@@ -131,11 +131,11 @@ troca app.html \
     .map(s => [s, modeloQueCombina(s.nome)]).filter(([, m]) => m);" \
   && rodar "o texto da dona some trocado pelo modelo"
 
-echo "12. as dúvidas de salão suspenso continuam no ar"
+echo "12. as dúvidas de restaurante suspenso continuam no ar"
 troca supabase/63_duvidas_casa.sql \
   "               where s.slug = p_slug and s.status = 'ativo'), '[]'::jsonb))" \
   "               where s.slug = p_slug), '[]'::jsonb))" \
-  && rodar "salão fora do ar continua publicando as dúvidas"
+  && rodar "restaurante fora do ar continua publicando as dúvidas"
 
 echo "13. a dúvida sem resposta vai para o link"
 troca supabase/63_duvidas_casa.sql \

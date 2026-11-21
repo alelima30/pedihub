@@ -4,7 +4,7 @@
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/frases.test.mjs
 
-   O pedido: "Quero que cada frase tenha configuração para mudar a cor: Salão
+   O pedido: "Quero que cada frase tenha configuração para mudar a cor: Restaurante
    Megatop uma cor, endereço rua outra cor, bairro com cidade outra cor.
    Bem-vindo outra cor, a frase 'Escolha o serviço...' até a palavra
    produtos de outra cor."
@@ -58,7 +58,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`fr-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -85,7 +85,7 @@ const SEMANA = [0,1,2,3,4,5,6].reduce((o, d) => (o[d] = [['00:00','00:00']], o),
    conhecida, e dá para ver se ela o segue ou se separou dele. */
 const PAIS = { titulo:'#3A2A2E', texto:'#5E4A4F', discreto:'#8A7278', destaque:'#9B4F5D' };
 const BASE_CFG = { diasLiberados:30, cor:'#B76E79', precoNaCapa:true, moldura:'elegante', funcionamento: SEMANA,
-  pagamentos:{ formas:['pix'] }, sobre:'Salão de beleza' };
+  pagamentos:{ formas:['pix'] }, sobre:'Restaurante de beleza' };
 const porCores = (cores, extra) => dona.atualizar('saloes', SALAO,
   { cfg: Object.assign({}, BASE_CFG, extra || {}, { cores: Object.assign({}, PAIS, cores) }) });
 await dona.atualizar('saloes', SALAO, {
@@ -154,8 +154,8 @@ async function lerPagina(){
 }
 const DO_TOPO = ['nomeSalao', 'rua', 'lugar', 'horario', 'bemVindo', 'convite'];
 /* Na tela entra mais uma: o "Agende seu horário", que só existe na página
-   quando o salão NÃO tem endereço — e este salão tem. A cor dele na página é
-   cobrada no `aparencia-link.test.mjs`, num salão sem endereço. */
+   quando o restaurante NÃO tem endereço — e este restaurante tem. A cor dele na página é
+   cobrada no `aparencia-link.test.mjs`, num restaurante sem endereço. */
 const NA_TELA = ['nomeSalao', 'rua', 'lugar', 'subtitulo', 'horario', 'bemVindo', 'convite'];
 const DE_BAIXO = ['legenda', 'tituloServicos', 'nomeServico', 'descServico', 'precoServico', 'duracao',
   'verTodosServicos', 'tituloProdutos', 'nomeProduto', 'precoProduto', 'verTodosProdutos', 'tituloEquipe', 'nomeEquipe'];

@@ -32,7 +32,7 @@ insert into public.perfis (id, nome, telefone) values
 on conflict (id) do update set nome = excluded.nome;
 
 insert into public.saloes (id, slug, nome, status, fuso) values
-  ('54300000-0000-0000-0000-00000000000a', 'pacote-fixo', 'Salão Pacote Fixo', 'ativo', 'America/Sao_Paulo');
+  ('54300000-0000-0000-0000-00000000000a', 'pacote-fixo', 'Restaurante Pacote Fixo', 'ativo', 'America/Sao_Paulo');
 insert into public.assinaturas (salao_id, plano, status) values
   ('54300000-0000-0000-0000-00000000000a', 'time', 'ativa');
 insert into public.vinculos (perfil_id, salao_id, papel) values
@@ -175,11 +175,11 @@ end $f$;
 \echo ''
 \echo '3. A receber: a mensagem não diz "já pago"'
 do $$ begin
-  perform t_texto('o pagamento do horário diz que é a pagar no salão',
+  perform t_texto('o pagamento do horário diz que é a pagar no restaurante',
     (select public.pecas_agendamento(a.id)->>'pagamento' from public.agendamentos a
        join public.pacote_clientes pc on pc.id = a.pacote_cliente_id
       where pc.cliente_id = 'c4310000-0000-0000-0000-00000000000a' limit 1),
-    'Pacote a pagar no salão');
+    'Pacote a pagar no restaurante');
   -- O dono testou: "chega sem valor e pagamento". O valor é o do pacote.
   perform t_texto('e o valor é o do pacote, não o R$ 0,00 da sessão',
     (select public.pecas_agendamento(a.id)->>'valor' from public.agendamentos a

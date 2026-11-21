@@ -12,7 +12,7 @@
 
    É a suíte que pega o defeito que ninguém procurou: o que aparece quando se
    abre a comanda depois de mudar de dia, quando se apaga o serviço que está
-   dentro de um agendamento, quando o salão não tem nada cadastrado ainda.
+   dentro de um agendamento, quando o restaurante não tem nada cadastrado ainda.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -48,7 +48,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`var-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Varredura ' + marca,
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Varredura ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const PROF = (await d.lista('profissionais', { salaoId: SALAO }))[0];
@@ -91,13 +91,13 @@ const fechar = async () => { await pg.evaluate(() => fecharModal()); await pg.wa
 const salvouSemErro = async () => { await pg.waitForTimeout(2200); };
 
 /* ══════════════════════════════════════════════════════════════════════════
-   ÁREA DO SALÃO — cada tela, com o salão ainda VAZIO
+   ÁREA DO RESTAURANTE — cada tela, com o restaurante ainda VAZIO
 
-   O salão recém-criado não tem serviço, não tem cliente, não tem jornada. É
+   O restaurante recém-criado não tem serviço, não tem cliente, não tem jornada. É
    o estado em que todo dono vê o sistema pela primeira vez, e é onde a tela
    costuma quebrar por assumir que alguma lista tem pelo menos um item.
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Salão vazio: todas as telas abrem');
+secao('Restaurante vazio: todas as telas abrem');
 
 for(const [chave, rotulo] of [['agenda','Agenda'], ['caixa','Caixa'],
     ['clientes','Clientes'], ['servicos','Serviços'], ['equipe','Equipe'],
@@ -109,7 +109,7 @@ for(const [chave, rotulo] of [['agenda','Agenda'], ['caixa','Caixa'],
   }, chave);
   verdade(rotulo + ' abre sem quebrar', viva);
 }
-semErro('salão vazio');
+semErro('restaurante vazio');
 
 /* ══════════════════════════════════════════════════════════════════════════
    CADASTROS — criar, editar, desativar, pelo caminho da tela
@@ -178,7 +178,7 @@ secao('Cliente sem telefone, e a mesma pessoa em dois caminhos');
    Campo vazio virava string vazia, que NÃO é nula — e a trava do banco é
    `where telefone is not null`. A recepção levava "duplicate key value
    violates unique constraint ux_cli_tel" na cara, em inglês, ao cadastrar a
-   segunda pessoa que passou sem deixar número. Em salão isso é rotina. */
+   segunda pessoa que passou sem deixar número. Em restaurante isso é rotina. */
 for(const quem of ['Passante Um', 'Passante Dois']){
   await pg.evaluate(() => abrirCliente());
   await pg.waitForTimeout(500);
@@ -220,7 +220,7 @@ await fechar();
 semErro('equipe');
 
 /* ══════════════════════════════════════════════════════════════════════════
-   A AGENDA — marcar pela recepção, com o salão já povoado
+   A AGENDA — marcar pela recepção, com o restaurante já povoado
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Marcar pela recepção');
 
@@ -297,12 +297,12 @@ igual('depois de abrir a comanda e trocar de dia, a agenda continua desenhada',
 semErro('caixa');
 
 /* ══════════════════════════════════════════════════════════════════════════
-   MEU SALÃO — os campos que a cliente vê
+   MEU RESTAURANTE — os campos que a cliente vê
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Meu negócio: endereço e identidade');
 
 await ir('salao');
-await pg.fill('#cNome', 'Salão Varredura Editado');
+await pg.fill('#cNome', 'Restaurante Varredura Editado');
 await pg.fill('#cRua', 'Rua Avanhandava');
 await pg.fill('#cNum', '10');
 await pg.fill('#cBairro', 'Cidade Nova');
@@ -311,17 +311,17 @@ await pg.evaluate(() => salvarCadastroSalao());
 await salvouSemErro();
 
 const sl = (await d.lista('saloes', { id: SALAO }))[0];
-igual('o nome do salão gravou', sl.nome, 'Salão Varredura Editado');
+igual('o nome do restaurante gravou', sl.nome, 'Restaurante Varredura Editado');
 const end = sl.endereco || {};
 igual('a rua gravou', end.logradouro, 'Rua Avanhandava');
 igual('o número gravou', end.numero, '10');
 igual('a cidade gravou', end.cidade, 'Itu');
-semErro('meu salão');
+semErro('meu restaurante');
 
 /* ══════════════════════════════════════════════════════════════════════════
    ÁREA DA CLIENTE
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Área da cliente: o link do salão');
+secao('Área da cliente: o link do restaurante');
 
 const cel = await nav.newContext({ viewport:{ width:390, height:844 },
                                    isMobile:true, hasTouch:true });
@@ -335,7 +335,7 @@ await cli.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'ba
 await cli.goto(BASE + '/agendar.html?salao=' + SLUG);
 await cli.waitForTimeout(2800);
 
-verdade('a capa abre com o nome novo do salão',
+verdade('a capa abre com o nome novo do restaurante',
   await cli.evaluate(() => /Varredura Editado/.test(document.body.textContent)));
 verdade('e mostra o endereço que o dono acabou de cadastrar',
   await cli.evaluate(() => /Avanhandava/.test(document.body.textContent)));
@@ -351,7 +351,7 @@ verdade('com o preço que ele definiu',
 igual('sem erro de JavaScript na área da cliente',
   errosCli.length ? errosCli.join(' | ') : 0, 0);
 
-secao('Área da cliente: salão que não existe');
+secao('Área da cliente: restaurante que não existe');
 {
   const p = await cel.newPage();
   const e2 = [];
@@ -365,12 +365,12 @@ secao('Área da cliente: salão que não existe');
   await p.close();
 }
 
-secao('Área da cliente: salão sem serviço nenhum');
+secao('Área da cliente: restaurante sem serviço nenhum');
 {
   const outra = novaAba();
   await outra.criarConta({ email:`vaz-${marca}@teste.com`, senha:'minhasenhaboa',
     nome:'Dono Vazio', telefone:'+5521' + (100000000 + (Date.now() % 89999999)) });
-  const c2 = await outra.chamar('criar_salao', { p_nome_salao:'Salão Sem Nada ' + marca,
+  const c2 = await outra.chamar('criar_salao', { p_nome_salao:'Restaurante Sem Nada ' + marca,
     p_tipo:'salao', p_telefone:'(21) 4444-5555', p_documento:null, p_origem:null });
 
   const p = await cel.newPage();

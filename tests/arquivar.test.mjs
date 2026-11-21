@@ -7,7 +7,7 @@
    ── O QUE MUDOU, E POR QUÊ ─────────────────────────────────────────────────
    "Excluir" apagava a linha. Sumia o atendimento, sumiam os serviços dele (o
    banco apaga em cascata) e sumia a comanda — sem lixeira e sem desfazer. Um
-   clique errado custava o histórico, e é o histórico que diz quanto o salão
+   clique errado custava o histórico, e é o histórico que diz quanto o restaurante
    faturou no mês.
 
    Agora arquiva: a linha fica, `arquivado_em` recebe a hora, e a tela deixa
@@ -56,7 +56,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`arq-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Arquivo ' + marca,
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Arquivo ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 const PROF = (await d.lista('profissionais', { salaoId: SALAO }))[0];

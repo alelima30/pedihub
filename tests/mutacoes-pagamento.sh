@@ -63,11 +63,11 @@ troca supabase/09_cliente.sql \
   "       (v_cupom->>'cupom_id')::uuid, v_desconto, null," \
   && rodar "a escolha da cliente se perde"
 
-echo "2. banco: grava forma que o salão não aceita"
+echo "2. banco: grava forma que o restaurante não aceita"
 troca supabase/09_cliente.sql \
   "           and not v_aceitas ? v_forma) then" \
   "           and false) then" \
-  && rodar "dinheiro num salão que só aceita Pix"
+  && rodar "dinheiro num restaurante que só aceita Pix"
 
 echo "3. link: a confirmação não pergunta"
 troca agendar.html \
@@ -80,7 +80,7 @@ echo "4. link: marca sem escolher"
 troca agendar.html \
   "  if(faltaFormaPagamento()) return;" \
   "  ;" \
-  && rodar "o salão não sabe como ela paga"
+  && rodar "o restaurante não sabe como ela paga"
 
 echo "5. link: a escolha não sobe"
 troca agendar.html \
@@ -88,15 +88,15 @@ troca agendar.html \
   "          ? {} : {})," \
   && rodar "a tela mostra Pix e o banco não sabe"
 
-echo "6. link: oferece forma que o salão não aceita"
+echo "6. link: oferece forma que o restaurante não aceita"
 troca agendar.html \
   "  return pag && pag.formas.length ? todas.filter(([k]) => pag.formas.includes(k)) : todas;" \
   "  return todas;" \
-  && rodar "dinheiro aparece num salão que só aceita Pix"
+  && rodar "dinheiro aparece num restaurante que só aceita Pix"
 
 echo "7. link: o resumo não mostra a forma"
 troca agendar.html \
-  "        ? linha('cartao', 'Pagamento (no salão)', escapar(nomeDaForma(escolha.formaPagamento))) : '')" \
+  "        ? linha('cartao', 'Pagamento (no restaurante)', escapar(nomeDaForma(escolha.formaPagamento))) : '')" \
   "        ? '' : '')" \
   && rodar "ela confirma sem ver o que escolheu"
 

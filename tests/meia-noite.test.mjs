@@ -4,7 +4,7 @@
    Achado pelo teste do Ranking na bateria: um horário das 23:30 às 00:30
    fazia o painel abrir dizendo "NÃO consegui salvar no banco — range lower
    bound must be less than or equal to range upper bound", e a partir daí NADA
-   mais gravava naquele salão. O fim virava "00:30 do mesmo dia", antes do
+   mais gravava naquele restaurante. O fim virava "00:30 do mesmo dia", antes do
    começo; a tela achava que o horário tinha mudado e tentava regravá-lo.
 
      1. o painel abre sem aviso, com o fim no dia seguinte;
@@ -85,7 +85,7 @@ e('a folga vai de 0 a 1440 (o dia inteiro), as férias de 0 a 7×1440',
 console.log('\n2. Salvar outra coisa');
 await p.evaluate(() => { acharSalao(salaoAtual).nome = 'Madrugada renomeada'; salvar(); });
 await p.waitForTimeout(3000);
-e('salvar o nome do salão funciona', avisos.length === 0, JSON.stringify(avisos));
+e('salvar o nome do restaurante funciona', avisos.length === 0, JSON.stringify(avisos));
 e('e os horários da madrugada, a folga e as férias ficam exatamente iguais no banco', await retrato() === antes);
 
 console.log('\n3. A agenda');

@@ -5,7 +5,7 @@
 -- `produtos.custo` é quanto o DONO paga pelo produto. A `vitrine()` é
 -- `security definer` e responde a QUALQUER PESSOA, sem login — é assim que a
 -- página da cliente funciona. Um `to_jsonb(pr)` no lugar dos campos nomeados
--- entregaria a margem do salão a qualquer concorrente que abrisse a página, e
+-- entregaria a margem do restaurante a qualquer concorrente que abrisse a página, e
 -- nada quebraria: a loja continuaria funcionando, só que publicando o custo.
 --
 -- Foi exatamente essa a forma dos três vazamentos que a varredura de segurança
@@ -15,7 +15,7 @@
 
 \set ON_ERROR_STOP on
 
--- ── Cenário: um salão com dois produtos, um publicado e um só de balcão ───
+-- ── Cenário: um restaurante com dois produtos, um publicado e um só de balcão ───
 insert into auth.users (id) values
   ('b1000000-0000-0000-0000-00000000000a') on conflict do nothing;
 insert into public.perfis (id, nome, email) values
@@ -23,7 +23,7 @@ insert into public.perfis (id, nome, email) values
   on conflict (id) do update
     set nome = excluded.nome, email = excluded.email;
 insert into public.saloes (id, slug, nome, whatsapp, status) values
-  ('b1000000-1111-0000-0000-00000000000b', 'salao-loja', 'Salão com Loja',
+  ('b1000000-1111-0000-0000-00000000000b', 'salao-loja', 'Restaurante com Loja',
    '11988887777', 'ativo');
 insert into public.vinculos (perfil_id, salao_id, papel, status) values
   ('b1000000-0000-0000-0000-00000000000a',
@@ -118,7 +118,7 @@ select t_igual('e aparece na loja mesmo assim',
    onde se perde uma linha sem ninguém notar — e o sintoma seria mudo: o dono
    escolhe um ajuste, o painel grava, a prévia obedece, e a página da cliente
    continua igual. Já aconteceu neste projeto, com `cartoes`. */
-select t_verdade('o objeto salão manteve tudo o que tinha',
+select t_verdade('o objeto restaurante manteve tudo o que tinha',
   (public.vitrine('salao-loja')->'salao') ?& array[
     'id','slug','nome','tipo','logo','capa','telefone','whatsapp',
     'endereco','fuso','diasLiberados','cor','tema','precoNaCapa','cartoes']);
@@ -130,6 +130,6 @@ select t_verdade('e a vitrine continua trazendo serviços e profissionais',
 
 /* A loja publica pela `vitrine()`, que é `security definer` e escolhe o que
    sai. A TABELA continua inalcançável — senão bastaria pedir `produtos?select=*`
-   com a chave publicável para levar custo e comissão de todo salão. */
+   com a chave publicável para levar custo e comissão de todo restaurante. */
 select t_falso('anon não lê a tabela de produtos',
   has_table_privilege('anon', 'public.produtos', 'SELECT'));

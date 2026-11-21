@@ -14,7 +14,7 @@
 --    `planos` no servidor, pelo código do plano — e é por isso que
 --    `abrir_cobranca()` recebe o CÓDIGO do plano, nunca o valor.
 --
--- 2. O SALÃO NÃO EDITA A PRÓPRIA ASSINATURA.
+-- 2. O RESTAURANTE NÃO EDITA A PRÓPRIA ASSINATURA.
 --    Já era verdade antes deste arquivo (`assinaturas` só tem `grant select`
 --    para `authenticated`, e a policy de escrita exige `is_super()`), e
 --    continua sendo: quem move `plano` e `vence_em` é `registrar_pagamento()`,
@@ -29,7 +29,7 @@
 --    não é fonte de nada.
 --
 -- ── POR QUE PIX E BOLETO, E NÃO CARTÃO RECORRENTE ─────────────────────────
--- Pix não exige cartão salvo — e dono de salão pequeno resiste a deixar
+-- Pix não exige cartão salvo — e dono de restaurante pequeno resiste a deixar
 -- cartão em arquivo. Em compensação, Pix avulso NÃO se renova sozinho: quem
 -- renova é a gente, com aviso antes do vencimento e uma folga depois. É o que
 -- as funções do fim deste arquivo fazem.
@@ -42,7 +42,7 @@
 -- ---------------------------------------------------------------------------
 -- 1) A COBRANÇA
 --
--- Uma linha por tentativa de pagamento. Não é o extrato do salão (isso é
+-- Uma linha por tentativa de pagamento. Não é o extrato do restaurante (isso é
 -- `comandas`, o dinheiro que ele RECEBE) — é o que ele nos paga.
 -- ---------------------------------------------------------------------------
 create table if not exists public.cobrancas (
@@ -92,7 +92,7 @@ create index if not exists ix_cobranca_salao
    nas cobranças de antes dos adicionais — eram só o plano. */
 alter table public.cobrancas add column if not exists itens jsonb;
 
-/* ⚠ UMA COBRANÇA ABERTA POR SALÃO, E SÓ UMA.
+/* ⚠ UMA COBRANÇA ABERTA POR RESTAURANTE, E SÓ UMA.
    Sem isto, cada clique em "Assinar" abre uma cobrança nova no Mercado Pago.
    O dono acaba com seis Pix na mão sem saber qual vale, paga dois, e a gente
    fica devendo devolução — que é o pior jeito de começar uma assinatura.
@@ -104,7 +104,7 @@ create unique index if not exists ux_cobranca_aberta
 
 alter table public.cobrancas enable row level security;
 
-/* Ler: só a gestão do próprio salão. É onde está o Pix copia-e-cola dele.
+/* Ler: só a gestão do próprio restaurante. É onde está o Pix copia-e-cola dele.
    Escrever: ninguém, por aqui. Quem cria é `abrir_cobranca()` e quem conclui
    é `registrar_pagamento()`, ambas `security definer` — a tabela em si não
    aceita INSERT nem UPDATE vindo de sessão de navegador. */
@@ -120,18 +120,18 @@ revoke all on public.cobrancas from anon, authenticated;
 grant select on public.cobrancas to authenticated;
 
 -- ---------------------------------------------------------------------------
--- 1b) PREÇO ESPECIAL POR SALÃO
+-- 1b) PREÇO ESPECIAL POR RESTAURANTE
 --
--- O preço é do PLANO, e vale para todo salão. Mas tem casos de um salão só:
--- o salão de teste do dono da plataforma (o Essencial a R$ 1 para pagar um
+-- O preço é do PLANO, e vale para todo restaurante. Mas tem casos de um restaurante só:
+-- o restaurante de teste do dono da plataforma (o Essencial a R$ 1 para pagar um
 -- Pix de verdade sem gastar R$ 97), um combinado com um cliente, um
 -- desconto de lançamento. Mudar o preço do plano para isso mudaria para
 -- todos — e foi exatamente a armadilha de abrir a venda com o Essencial a
 -- R$ 1 na tabela.
 --
--- `precos_especiais` é por salão, por plano: {"individual": 1.00}. Plano
+-- `precos_especiais` é por restaurante, por plano: {"individual": 1.00}. Plano
 -- fora do mapa usa o preço normal. Quem escreve é só a plataforma: a tabela
--- `assinaturas` já não aceita escrita do salão (policy `is_super()`), então
+-- `assinaturas` já não aceita escrita do restaurante (policy `is_super()`), então
 -- ninguém dá desconto a si mesmo. Quem lê o preço — Pix, cartão e a
 -- recorrência do cartão — lê por `preco_do_plano()`, e só por ela.
 -- ---------------------------------------------------------------------------
@@ -190,14 +190,14 @@ begin
          where v.perfil_id = p_quem and v.salao_id = p_salao
            and v.status = 'ativo' and v.papel in ('dono','admin'))
      and not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
   /* ⚠ BOLETO SAIU DA VENDA — mas a coluna e o histórico ficam.
 
      A tarifa do boleto é FIXA por emissão. Num plano de entrada de R$ 57 ela
      pesava mais de 6% da mensalidade: cinco vezes o que pesa num plano de
-     R$ 297. Somado à compensação de até três dias úteis, com o salão sem plano
+     R$ 297. Somado à compensação de até três dias úteis, com o restaurante sem plano
      enquanto espera, ele não se pagava.
 
      A recusa mora AQUI, e não só no botão da tela: esconder botão não é
@@ -215,7 +215,7 @@ begin
     raise exception 'Forma de pagamento desconhecida.' using errcode = 'check_violation';
   end if;
 
-  -- O preço do plano PARA ESTE SALÃO (1b): o normal, ou o especial dele —
+  -- O preço do plano PARA ESTE RESTAURANTE (1b): o normal, ou o especial dele —
   -- mais os módulos adicionais que ele contratou (46_adicionais).
   if not exists (select 1 from public.planos where codigo = p_plano) then
     raise exception 'Plano não encontrado.' using errcode = 'check_violation';
@@ -342,7 +342,7 @@ grant execute on function public.dados_do_pagador(uuid) to service_role;
 -- ⚠ IDEMPOTENTE POR CONSTRUÇÃO. O Mercado Pago reenvia o mesmo aviso até
 -- receber 200, e reenvia de novo em cada mudança do pagamento. Sem a trava do
 -- `status <> 'paga'` abaixo, cada reenvio somaria mais um mês de assinatura —
--- e o salão que pagou uma vez ficaria com meio ano de graça.
+-- e o restaurante que pagou uma vez ficaria com meio ano de graça.
 -- ---------------------------------------------------------------------------
 create or replace function public.registrar_pagamento(
   p_mp_id text, p_valor numeric, p_status text)
@@ -413,7 +413,7 @@ end $$;
 
 /* ⚠ ESTAS DUAS NÃO SÃO DE NINGUÉM QUE ESTEJA NUM NAVEGADOR.
    `anotar_cobranca` escreve o instrumento; `registrar_pagamento` estende a
-   assinatura. Alcançáveis por `authenticated`, qualquer dono de salão
+   assinatura. Alcançáveis por `authenticated`, qualquer dono de restaurante
    assinaria o plano maior de graça chamando a segunda com o mp_id certo. */
 revoke all on function public.abrir_cobranca(uuid, text, text, uuid) from public, anon, authenticated;
 revoke all on function public.anotar_cobranca(uuid, text, text, text, text, text, text) from public, anon, authenticated;
@@ -449,7 +449,7 @@ returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 begin
   if not public.e_gestor(p_salao) then
-    raise exception 'Sem permissão neste salão.'
+    raise exception 'Sem permissão neste restaurante.'
       using errcode = 'insufficient_privilege';
   end if;
 
@@ -492,7 +492,7 @@ declare v public.cobrancas;
 begin
   select * into v from public.cobrancas where id = p_cobranca for update;
   if not found or not public.e_gestor(v.salao_id) then
-    raise exception 'Sem permissão neste salão.' using errcode = 'insufficient_privilege';
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
   end if;
   if v.status <> 'pendente' or v.metodo = 'cartao' then
     return false;
@@ -538,7 +538,7 @@ language sql security definer set search_path = public as $$
 $$;
 
 /* A faxina do dia: cobrança que passou da validade vira 'vencida'.
-   Sem isto o índice parcial de "uma pendente por salão" travaria o dono para
+   Sem isto o índice parcial de "uma pendente por restaurante" travaria o dono para
    sempre num Pix que ele nunca pagou. */
 create or replace function public.vencer_cobrancas()
 returns int

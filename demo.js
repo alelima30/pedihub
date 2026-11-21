@@ -1,10 +1,10 @@
 /* ===========================================================================
    PediHub — dados de demonstração
    ---------------------------------------------------------------------------
-   Os dois aplicativos (o do salão e o do cliente) leem o mesmo `localStorage`,
+   Os dois aplicativos (o do restaurante e o do cliente) leem o mesmo `localStorage`,
    então a semente precisa ser uma só. Antes ela morava dentro do `app.html`:
    quem abrisse o link do cliente primeiro — que é exatamente o que acontece
-   quando o salão manda o link no WhatsApp — caía numa tela vazia dizendo
+   quando o restaurante manda o link no WhatsApp — caía numa tela vazia dizendo
    "abra o app.html antes". Aqui ela é um arquivo, e as duas telas semeiam.
 
    Vale só para a demonstração. Com o `config.js` preenchido, os dados vêm do
@@ -17,7 +17,7 @@
 // Cores das colunas da agenda: mesma luminosidade, saturação baixa, para
 // distinguir profissionais sem transformar a tela num painel de avisos.
 //
-// Nenhuma delas puxa para o rosa, e isso é intencional: metade dos salões que
+// Nenhuma delas puxa para o rosa, e isso é intencional: metade dos restaurantes que
 // usam isto é barbearia, e a coluna de um barbeiro pintada de lilás é a
 // primeira coisa que ele nota. Sete matizes bem separados em volta do azul,
 // do verde e do terroso resolvem a distinção sem esse recado.
@@ -41,7 +41,7 @@ function somarDias(dataIso, n){
    cabe folgada no localStorage, e o repositório não carrega binário.
 
    Servem para mostrar o FORMATO: onde a logo entra, o que a capa ocupa, como
-   o card de serviço se comporta com e sem foto. Fingir fotografia de salão
+   o card de serviço se comporta com e sem foto. Fingir fotografia de restaurante
    com imagem de banco seria pior — o dono trocaria tudo no primeiro minuto. */
 const LOGO = {
   s1: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij48cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgZmlsbD0iIzJBMjgyMyIvPjx0ZXh0IHg9IjY0IiB5PSI2NCIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjU4IiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjRjdGNkY0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCI+U0I8L3RleHQ+PC9zdmc+',
@@ -64,8 +64,8 @@ const FOTO_SERVICO = {
 function id(){ return 'x' + Math.random().toString(36).slice(2,10); }
 
 /* ── Dados de demonstração ───────────────────────────────────────────────
-   Dois salões de propósito: dá para trocar no seletor lá em cima e conferir
-   que um não enxerga o outro — que é a ideia do multi-salão.
+   Dois restaurantes de propósito: dá para trocar no seletor lá em cima e conferir
+   que um não enxerga o outro — que é a ideia do multi-restaurante.
    ──────────────────────────────────────────────────────────────────────── */
 function semear(){
   const s1 = 'salao-bella', s2 = 'barbearia-ze';
@@ -73,7 +73,7 @@ function semear(){
   const tarde = {2:[[720,1200]],3:[[720,1200]],4:[[720,1200]],5:[[720,1200]],6:[[540,1020]]};
 
   // `criadoEm` distinto de propósito: é ele que decide quem fica na cota do
-  // plano quando o salão tem mais gente do que o plano cobre. Com todo mundo
+  // plano quando o restaurante tem mais gente do que o plano cobre. Com todo mundo
   // carimbado no mesmo instante, quem decidiria seria o desempate por id — que
   // funciona, mas não é o que o dono espera ver.
   const nascido = n => somarDias(hoje(), -n) + 'T09:00:00Z';
@@ -191,7 +191,7 @@ function semear(){
       /* Cada comanda do passado ganha o atendimento que a originou. Sem
          isso, o relatório mostrava 73 comandas fechadas ao lado de "1
          atendimento concluído" — as duas contas certas, e a tela mentindo
-         por omissão, porque no salão de verdade uma vem da outra.
+         por omissão, porque no restaurante de verdade uma vem da outra.
 
          A agenda de cada profissional anda em fila: o próximo entra quando o
          anterior acaba. Atendimento em cima de atendimento é um dado que não
@@ -222,7 +222,7 @@ function semear(){
           precoUnit:sv.preco, profissionalId:pro.id,
           comissaoPct: sv.comissaoPct != null ? sv.comissaoPct : pro.comissaoPct }];
         // Uma em cada cinco leva produto. É o que faz "o que mais saiu"
-        // misturar serviço e prateleira, como no salão de verdade.
+        // misturar serviço e prateleira, como no restaurante de verdade.
         if(sorteio() < 0.2 && gondola.length){
           const pr = escolher(gondola);
           itens.push({ tipo:'produto', descricao:pr.nome, qtd:1,
@@ -246,7 +246,7 @@ function semear(){
 
       /* E um dia sim, outro não, alguém não aparece. Sem falta nenhuma o
          relatório mostraria "R$ 0,00 ficou na mesa" — que é o número que
-         justifica lembrete e sinal, e o único que nenhum salão tem zerado. */
+         justifica lembrete e sinal, e o único que nenhum restaurante tem zerado. */
       if(sorteio() < 0.28){
         const sv  = escolher(catalogo);
         const pro = escolher(equipe);
@@ -282,12 +282,12 @@ function semear(){
        recursos:{lembrete_whatsapp:true, agenda_online:true}},
       {codigo:'equipe',     nome:'Equipe',       maxProfissionais:5,  precoMes:187,
        recursos:{lembrete_whatsapp:true, agenda_online:true}},
-      {codigo:'salao',      nome:'Salão',        maxProfissionais:20, precoMes:297,
+      {codigo:'salao',      nome:'Restaurante',        maxProfissionais:20, precoMes:297,
        recursos:{lembrete_whatsapp:true, agenda_online:true}},
     ],
     // Três situações de propósito, porque são as três telas que o dono vê:
     // o Studio Bella assina o Time e está no limite; a barbearia está com o
-    // teste acabando; e o terceiro caso — o salão que nunca vai assinar —
+    // teste acabando; e o terceiro caso — o restaurante que nunca vai assinar —
     // aparece quando o teste da barbearia vence e ela cai no Grátis.
     assinaturas: [
       {salaoId:s1, plano:'time',  status:'ativa', trialAte:null, venceEm:null},
@@ -295,7 +295,7 @@ function semear(){
        trialAte:somarDias(hoje(), 2), venceEm:null},
     ],
     saloes: [
-      {id:s1, slug:'studio-bella', nome:'Studio Bella', tipo:'salão',
+      {id:s1, slug:'studio-bella', nome:'Studio Bella', tipo:'restaurante',
        telefone:'(11) 3322-1100', whatsapp:'(11) 99911-2233',
        endereco:{logradouro:'Rua das Flores', numero:'210', complemento:'',
                  bairro:'Centro', cidade:'Itu', uf:'SP', cep:'13300000'},
@@ -356,7 +356,7 @@ function semear(){
        fim:null, limiteTotal:null, umPorCliente:true, ativo:true},
     ],
     /* Dois procedimentos, para o tópico não abrir vazio na demonstração. São
-       exemplo de como escrever, não receita: cada salão põe a sua. */
+       exemplo de como escrever, não receita: cada restaurante põe a sua. */
     procedimentos: [
       {id:'pr1', salaoId:s1, servicoId:'v4', nome:'Morena iluminada',
        produtos:'Pó descolorante; ox 20 volumes; tonalizante; máscara de hidratação',

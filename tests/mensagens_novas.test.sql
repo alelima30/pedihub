@@ -8,7 +8,7 @@
 --   2. ligou: as vendas em aberto ganham os avisos das parcelas — e o resumo
 --      de compra antiga, não;
 --   3. venda nova: o resumo sai agora; cada parcela tem lembrete (2 dias
---      antes), vence hoje e atraso (1 dia depois), às 10h do salão;
+--      antes), vence hoje e atraso (1 dia depois), às 10h do restaurante;
 --   4. pagou parte: o texto diz o que falta; pagou tudo: sai da fila;
 --      desfez o recebimento: volta;
 --   5. as chaves do dono, uma por uma;
@@ -121,7 +121,7 @@ select t_texto('o resumo da compra sai agora, pelo modelo dele',
   (t_msg('crediario_compra', :'cr')).modelo || ' | ' || (t_msg('crediario_compra', :'cr')).status
     || ' | ' || ((t_msg('crediario_compra', :'cr')).quando <= now())::text,
   'pedihub_crediario_compra | pendente | true');
-select t_texto('   com o nome, o salão, o valor e as parcelas numa linha',
+select t_texto('   com o nome, o restaurante, o valor e as parcelas numa linha',
   (t_msg('crediario_compra', :'cr')).variaveis::text,
   '["Maria", "Lingerie da Ana", "R$ 300,00", "1ª R$ 100,00 em ' || to_char(:'primeiro'::date, 'DD/MM')
     || '; 2ª R$ 100,00 em ' || to_char((:'primeiro'::date + interval '1 month')::date, 'DD/MM')
@@ -148,7 +148,7 @@ select t_texto('atraso: um dia depois, 10h, com a data em que venceu',
   to_char(:'primeiro'::date + 1, 'YYYY-MM-DD') || ' 10:00 | ' || to_char(:'primeiro'::date, 'DD/MM'));
 select t_verdade('   e o texto do histórico, sem ameaça: "ainda aparece em aberto"',
   (t_msg('crediario_atraso', t_parcela(:'cr', 1))).corpo like
-    'Olá, Maria. A parcela 1 de 3 do seu crediário em Lingerie da Ana venceu em %ainda aparece em aberto.%Valor: R$ 100,00%Em caso de dúvida, fale com o salão.%');
+    'Olá, Maria. A parcela 1 de 3 do seu crediário em Lingerie da Ana venceu em %ainda aparece em aberto.%Valor: R$ 100,00%Em caso de dúvida, fale com o restaurante.%');
 
 \echo ''
 \echo '4. Pagou parte, pagou tudo, desfez'
@@ -178,7 +178,7 @@ update public.saloes set cfg = cfg || '{"notifCredAtraso": false}' where id = '5
 select t_texto('desligou o aviso de atraso: os de atraso saem, com o motivo',
   (select string_agg(distinct n.status || ' ' || n.motivo, ',') from public.notificacoes n
     join public.crediario_parcelas p on n.chave = 'crediario_atraso:' || p.id where p.crediario_id = :'cr'),
-  'cancelado desligado pelo salão');
+  'cancelado desligado pelo restaurante');
 select t_texto('   o lembrete e o vence hoje ficam',
   (t_msg('crediario_lembrete', t_parcela(:'cr', 2))).status || ' ' || (t_msg('crediario_vence_hoje', t_parcela(:'cr', 2))).status,
   'pendente pendente');
@@ -308,7 +308,7 @@ select t_texto('a cliente recebe o de antes e o novo, pelo modelo do remarcado',
     || '", "16:00", "Conjunto renda", "Ju"]');
 select t_verdade('   saindo agora, para o número dela, com o texto do histórico',
   (select n.quando <= now() and n.destino = '5511952000003'
-          and n.corpo like 'Olá, Maria. Seu horário no Lingerie da Ana foi remarcado.%Antes: %Nova data: %Novo horário: 16:00%Se o novo horário não for bom para você, fale com o salão.%'
+          and n.corpo like 'Olá, Maria. Seu horário no Lingerie da Ana foi remarcado.%Antes: %Nova data: %Novo horário: 16:00%Se o novo horário não for bom para você, fale com o restaurante.%'
      from public.notificacoes n where n.tipo = 'remarcado' and n.status = 'pendente'));
 select t_remarcar(8, '09:00') as rm3 \gset
 select t_verdade('remarcou de novo antes de sair: só a última fica',

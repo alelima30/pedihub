@@ -17,7 +17,7 @@
 
    Os três liam colunas diferentes, e não havia ninguém para arbitrar. O pior é
    o primeiro par: a cliente confirmava por 90 e a linha nascia 130 — ela só
-   descobria no balcão, e a culpa parecia do salão.
+   descobria no balcão, e a culpa parecia do restaurante.
 
    A funcionalidade nova só ficou de pé depois que passou a existir UM lugar
    que responde "quanto custa": `preco_do_servico()` no 33.
@@ -95,7 +95,7 @@ const sv = await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte',
 // O par que já existia e que ninguém respeitava por igual.
 await dona.inserir('servicos_profissionais',
   { servicoId: sv.id, profissionalId: prof.id, preco:130 });
-ok('salão criado: corte a R$ 90 no catálogo, R$ 130 com a profissional');
+ok('restaurante criado: corte a R$ 90 no catálogo, R$ 130 com a profissional');
 
 const vitrine = async () => {
   const v = await dona.chamar('vitrine', { p_slug: SLUG });
@@ -134,7 +134,7 @@ igual('sem regra nenhuma, vale o preço do par',
 const r1 = await dona.inserir('precos_regras',
   { salaoId: SALAO, servicoId: sv.id, preco:50, dias:[2,3,4] });
 /* ⚠ A REGRA GANHA DO PAR, e não o contrário. Uma promoção de terça é do
-   salão: ela vale para quem atender, inclusive para quem cobra mais caro. Quem
+   restaurante: ela vale para quem atender, inclusive para quem cobra mais caro. Quem
    quiser a profissional de fora põe o nome dela numa regra própria — e aí essa
    ganha, porque tem mais recortes. */
 igual('a regra de terça ganha do preço do par',
@@ -168,12 +168,12 @@ igual('a regra com profissional ganha de todas',
    arquivo, ela ganhava de todo jeito — com peso de profissional ou sem. A
    mutação que zerava esse peso sobreviveu por isso: o número não mudava.
 
-   A r5 é do salão (sem profissional), tem os mesmos recortes que a r1 e nasce
+   A r5 é do restaurante (sem profissional), tem os mesmos recortes que a r1 e nasce
    DEPOIS da r3. Agora o peso da profissional é a única coisa que decide entre
    95 e 70. */
 const r5 = await dona.inserir('precos_regras',
   { salaoId: SALAO, servicoId: sv.id, preco:70, dias:[2,3,4] });
-igual('e ganha até de uma regra do salão cadastrada depois dela',
+igual('e ganha até de uma regra do restaurante cadastrada depois dela',
   await precoNoBanco(emUtc(TERCA, 15)), '95.00');
 
 /* ⚠ A REGRA FUTURA PRECISA SER A MAIS ESPECÍFICA DE TODAS, senão ela não

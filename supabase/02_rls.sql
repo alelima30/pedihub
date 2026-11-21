@@ -9,7 +9,7 @@
 -- Se o RLS deixar, o dado sai.
 --
 -- A mudança em relação ao AdminPro: lá a pergunta era "qual é o seu
--- condomínio?", uma coluna só. Aqui é "você tem vínculo com ESTE salão, e em
+-- condomínio?", uma coluna só. Aqui é "você tem vínculo com ESTE restaurante, e em
 -- que papel?" — porque a mesma pessoa pode ser cliente em um e profissional
 -- em outro.
 -- ===========================================================================
@@ -28,7 +28,7 @@ language sql stable security definer set search_path = public as $$
   select coalesce((select super_admin from public.perfis where id = auth.uid()), false)
 $$;
 
--- Papel mais alto que a pessoa tem neste salão. Null = nenhum vínculo ativo.
+-- Papel mais alto que a pessoa tem neste restaurante. Null = nenhum vínculo ativo.
 create or replace function public.papel_no_salao(p_salao uuid) returns text
 language sql stable security definer set search_path = public as $$
   select papel
@@ -53,7 +53,7 @@ $$;
 
    um NULL vira `not NULL` = NULL, o `if` NÃO dispara, e a função segue como
    se a permissão existisse. Foi assim, exatamente, que `placar_campanha()`
-   devolveu o placar da campanha de outro salão para quem só tinha o uuid na
+   devolveu o placar da campanha de outro restaurante para quem só tinha o uuid na
    mão — achado pelo tests/campanhas.test.sql antes de ir para o ar.
 
    O `coalesce` fecha a classe inteira, para o auxiliar de hoje e para o
@@ -63,7 +63,7 @@ language sql stable security definer set search_path = public as $$
   select coalesce(is_super() or papel_no_salao(p_salao) is not null, false)
 $$;
 
--- Equipe = trabalha no salão. Cliente NÃO é equipe.
+-- Equipe = trabalha no restaurante. Cliente NÃO é equipe.
 create or replace function public.e_equipe(p_salao uuid) returns boolean
 language sql stable security definer set search_path = public as $$
   select coalesce(is_super()
@@ -82,7 +82,7 @@ language sql stable security definer set search_path = public as $$
   select coalesce(is_super() or papel_no_salao(p_salao) in ('dono','admin','recepcao'), false)
 $$;
 
--- A ficha DESTA pessoa NESTE salão. É o que amarra o cliente logado aos
+-- A ficha DESTA pessoa NESTE restaurante. É o que amarra o cliente logado aos
 -- próprios agendamentos, sem deixá-lo perto dos agendamentos dos outros.
 create or replace function public.meu_cliente_id(p_salao uuid) returns uuid
 language sql stable security definer set search_path = public as $$
@@ -91,7 +91,7 @@ language sql stable security definer set search_path = public as $$
    limit 1
 $$;
 
--- O profissional logado, dentro deste salão.
+-- O profissional logado, dentro deste restaurante.
 create or replace function public.meu_profissional_id(p_salao uuid) returns uuid
 language sql stable security definer set search_path = public as $$
   select id from public.profissionais
@@ -102,7 +102,7 @@ $$;
 -- ── Três atalhos para a comanda, e o motivo de existirem ──────────────────
 --
 -- A policy de `comandas` precisa saber se o profissional tem item nela; a de
--- `comanda_itens` precisa saber de que salão é a comanda. Escritas como
+-- `comanda_itens` precisa saber de que restaurante é a comanda. Escritas como
 -- subconsulta comum, uma dispara a policy da outra e o Postgres para com
 -- "infinite recursion detected in policy" — foi o que aconteceu aqui.
 --
@@ -156,7 +156,7 @@ alter table public.planos                 enable row level security;
 alter table public.assinaturas            enable row level security;
 
 -- ---------------------------------------------------------------------------
--- 3) SALÃO
+-- 3) RESTAURANTE
 -- ---------------------------------------------------------------------------
 
 drop policy if exists salao_ler on public.saloes;
@@ -167,7 +167,7 @@ drop policy if exists salao_gerir on public.saloes;
 create policy salao_gerir on public.saloes for update to authenticated
   using ( e_gestor(id) ) with check ( e_gestor(id) );
 
--- Criar e apagar salão é ato da plataforma, não do salão.
+-- Criar e apagar restaurante é ato da plataforma, não do restaurante.
 drop policy if exists salao_criar on public.saloes;
 create policy salao_criar on public.saloes for insert to authenticated
   with check ( is_super() );
@@ -208,8 +208,8 @@ create policy assin_gerir on public.assinaturas for all to authenticated
 -- 4) PERFIL — a identidade global
 --
 -- Ninguém lê o perfil de ninguém. Nem a recepção: para ela existe a ficha do
--- cliente (`clientes`), que é a cópia daquele salão. Assim o telefone que a
--- pessoa deu na barbearia não aparece no salão do outro lado da rua.
+-- cliente (`clientes`), que é a cópia daquele restaurante. Assim o telefone que a
+-- pessoa deu na barbearia não aparece no restaurante do outro lado da rua.
 -- ---------------------------------------------------------------------------
 
 drop policy if exists perfil_meu on public.perfis;
@@ -228,14 +228,14 @@ create policy perfil_editar on public.perfis for update to authenticated
 -- não por INSERT vindo do navegador. Por isso não existe policy de insert.
 
 -- ---------------------------------------------------------------------------
--- 5) VÍNCULOS — quem entra em qual salão
+-- 5) VÍNCULOS — quem entra em qual restaurante
 -- ---------------------------------------------------------------------------
 
 drop policy if exists vinc_meus on public.vinculos;
 create policy vinc_meus on public.vinculos for select to authenticated
   using ( perfil_id = auth.uid() or e_equipe(salao_id) );
 
--- Virar CLIENTE de um salão é livre: é o que acontece quando a pessoa abre o
+-- Virar CLIENTE de um restaurante é livre: é o que acontece quando a pessoa abre o
 -- link e agenda pela primeira vez. Virar equipe, não — o dono precisa liberar.
 drop policy if exists vinc_virar_cliente on public.vinculos;
 create policy vinc_virar_cliente on public.vinculos for insert to authenticated
@@ -251,7 +251,7 @@ create policy vinc_gerir on public.vinculos for all to authenticated
 -- A EQUIPE lê, só a gestão ESCREVE.
 --
 -- ⚠ ERA `tem_acesso()`, que inclui o papel "cliente" — e virar cliente de um
--- salão é livre (`vinc_virar_cliente`, logo acima). Qualquer conta criava um
+-- restaurante é livre (`vinc_virar_cliente`, logo acima). Qualquer conta criava um
 -- vínculo de cliente com o id que a vitrine pública mostra e passava a ler a
 -- tabela inteira: o TELEFONE pessoal de cada profissional, a comissão de cada
 -- um e de cada serviço, os serviços desligados, a jornada. Achado pelo
@@ -328,7 +328,7 @@ drop policy if exists cli_eu on public.clientes;
 create policy cli_eu on public.clientes for select to authenticated
   using ( perfil_id = auth.uid() );
 
--- Virar cliente de um salão é ato da própria pessoa: é o que acontece na
+-- Virar cliente de um restaurante é ato da própria pessoa: é o que acontece na
 -- primeira vez que ela marca pelo link. Sem esta policy o autoatendimento
 -- simplesmente não funciona — e era o caso: o furo só apareceu no teste
 -- ponta a ponta contra um Postgres de verdade, porque no modo demonstração
@@ -342,7 +342,7 @@ create policy cli_eu on public.clientes for select to authenticated
 -- `agendar()`, que é `security definer` e decide campo a campo o que
 -- aproveitar. Com o UPDATE aberto, a cliente marcada pelo dono como "precisa
 -- de confirmação" tirava a marca sozinha (`exige_confirmacao = false`), e
--- reescrevia a anotação do salão e o próprio telefone — reproduzido pela API.
+-- reescrevia a anotação do restaurante e o próprio telefone — reproduzido pela API.
 -- Com o INSERT aberto, uma conta criava antes uma ficha com o telefone de
 -- outra pessoa, e as marcações dessa pessoa pelo link caíam na ficha dela.
 drop policy if exists cli_eu_criar on public.clientes;
@@ -435,7 +435,7 @@ create policy ags_apagar on public.agendamento_servicos for delete to authentica
 --
 -- Mesma regra da agenda: a equipe vê a fila inteira, o cliente vê só o lugar
 -- dele. Uma fila aberta diria a todo mundo quem mais quer horário naquele
--- salão — e com nome e ficha junto, porque `cliente_id` leva a `clientes`.
+-- restaurante — e com nome e ficha junto, porque `cliente_id` leva a `clientes`.
 -- ---------------------------------------------------------------------------
 
 drop policy if exists espera_ler on public.lista_espera;
@@ -460,7 +460,7 @@ create policy espera_apagar on public.lista_espera for delete to authenticated
 -- ---------------------------------------------------------------------------
 -- 9) DINHEIRO — comanda, itens, pagamento, produto
 --
--- Profissional vê o que é dele (a comissão dele). Faturamento do salão é da
+-- Profissional vê o que é dele (a comissão dele). Faturamento do restaurante é da
 -- gestão. Cliente vê a própria conta, que é o recibo dele.
 -- ---------------------------------------------------------------------------
 
@@ -524,7 +524,7 @@ create policy pgto_caixa on public.pagamentos for all to authenticated
 -- ---------------------------------------------------------------------------
 -- 10) A VITRINE PÚBLICA (sem login)
 --
--- A página de agendamento precisa mostrar o salão, os serviços e quem atende
+-- A página de agendamento precisa mostrar o restaurante, os serviços e quem atende
 -- ANTES de a pessoa se cadastrar. Isso sai por vistas de colunas escolhidas a
 -- dedo — nunca liberando a tabela para `anon`.
 --
@@ -564,7 +564,7 @@ create or replace view public.profissionais_publicos as
 --
 -- Conferido num projeto de verdade: as 20 tabelas apareceram liberadas para
 -- `anon`. Ninguém leu nada — o RLS segurou, e escrever levou "new row
--- violates row-level security policy". A dona do salão também não conseguiu
+-- violates row-level security policy". A dona do restaurante também não conseguiu
 -- se promover de plano: `update 0`.
 --
 -- Mas depender só do RLS é usar uma camada quando dá para ter duas. Com o
@@ -588,7 +588,7 @@ create or replace view public.profissionais_publicos as
 --
 -- O que NÃO funciona é reaplicar só este arquivo depois, que é a coisa mais
 -- natural do mundo quando se quer reforçar a segurança. Ele zera e ninguém
--- devolve nada: todo dono de salão logado perde `minha_assinatura` e o painel
+-- devolve nada: todo dono de restaurante logado perde `minha_assinatura` e o painel
 -- do plano passa a responder "permission denied for view minha_assinatura".
 -- Aconteceu numa bancada aqui, e o erro não fala em permissão revogada — fala
 -- como se a tela estivesse errada.
@@ -616,7 +616,7 @@ alter default privileges in schema public
 --   grant select on public.profissionais_publicos to anon, authenticated;
 --
 -- O 06_vitrine.sql desfaz as três, porque um `GET /rest/v1/saloes_publicos`
--- devolvia a plataforma inteira — nome, endereço e WhatsApp de todo salão
+-- devolvia a plataforma inteira — nome, endereço e WhatsApp de todo restaurante
 -- cliente. Como o 06 roda depois, na instalação completa o resultado ficava
 -- certo, e por isso a contradição passava despercebida.
 --
@@ -634,7 +634,7 @@ alter default privileges in schema public
 --
 -- O RLS filtra LINHA; o grant decide se a pessoa chega na TABELA. Precisa dos
 -- dois. `anon` quase não recebe nada: quem não fez login enxerga a lista de
--- planos (a página de preços precisa dela) e chega no salão pela função
+-- planos (a página de preços precisa dela) e chega no restaurante pela função
 -- `vitrine()` do 06, que pede o apelido. Nada além disso.
 -- ---------------------------------------------------------------------------
 

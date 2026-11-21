@@ -7,12 +7,12 @@
    ── O PEDIDO ───────────────────────────────────────────────────────────────
    A franquia de cada plano cobre o que a cliente gasta (confirmação e
    lembrete), o teste grátis tem um teto pequeno, e quando a franquia está no
-   fim as mensagens do salão param antes e as da cliente seguem.
+   fim as mensagens do restaurante param antes e as da cliente seguem.
 
    ── O QUE ESTE ARQUIVO PROTEGE ─────────────────────────────────────────────
      1. OS NÚMEROS de cada plano — e o teste grátis com 100, separado do
         Essencial (eram a mesma linha).
-     2. A RESERVA: a 90% da franquia, aviso, lembrete para o salão e resumo
+     2. A RESERVA: a 90% da franquia, aviso, lembrete para o restaurante e resumo
         param; confirmação e lembrete da cliente seguem até o teto. No teto,
         para tudo.
      3. O PRAZO: mensagem de um horário que já começou não sai, nem que a
@@ -60,7 +60,7 @@ async function montar(nome, plano){
   const d = novaAba();
   await d.criarConta({ email:`fr-${nome}-${marca}@teste.com`, senha:'minhasenhaboa',
     nome:'Dona ' + nome, telefone: tel() });
-  const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão ' + nome + ' ' + marca,
+  const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante ' + nome + ' ' + marca,
     p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
   const salao = cr[0].salao_id;
   if(plano) await banco.query(
@@ -110,21 +110,21 @@ igual('o Essencial tem 500', franquias.individual, 500);
 igual('a Dupla tem 800', franquias.duo, 800);
 igual('o Time tem 1.100', franquias.time, 1100);
 igual('o Equipe tem 2.000', franquias.equipe, 2000);
-igual('o Salão tem 3.600', franquias.salao, 3600);
+igual('o Restaurante tem 3.600', franquias.salao, 3600);
 
 const TESTE = await montar('Teste', null);
-igual('um salão novo, em teste, tem 100 no mês',
+igual('um restaurante novo, em teste, tem 100 no mês',
   Number((await um(`select public.teto_mensagens($1) as t`, [TESTE.salao])).t), 100);
-igual('e as do salão vão até 90',
+igual('e as do restaurante vão até 90',
   Number((await um(`select public.teto_mensagens_salao($1) as t`, [TESTE.salao])).t), 90);
 
 /* ══════════════════════════════════════════════════════════════════════════
    2 — A RESERVA DA CLIENTE
    ══════════════════════════════════════════════════════════════════════════ */
-secao('2) Perto do fim, as do salão param antes');
+secao('2) Perto do fim, as do restaurante param antes');
 
 const E = await montar('Ess', 'individual');
-igual('Essencial: as do salão vão até 450 de 500',
+igual('Essencial: as do restaurante vão até 450 de 500',
   Number((await um(`select public.teto_mensagens_salao($1) as t`, [E.salao])).t), 450);
 
 await enfileirar(E.salao, 'livre');
@@ -144,7 +144,7 @@ igual('com 450, só confirmação e lembrete da cliente saem',
 const pode = async (t) => (await um(
   `select public.pode_enviar_tipo($1, $2) as p`, [E.salao, t])).p;
 verdade('aviso de horário novo espera', (await pode('novo')) === false);
-verdade('lembrete para o salão espera', (await pode('lembrete_equipe')) === false);
+verdade('lembrete para o restaurante espera', (await pode('lembrete_equipe')) === false);
 verdade('resumo do dia espera', (await pode('resumo')) === false);
 verdade('confirmação segue', (await pode('confirmacao')) === true);
 verdade('lembrete da cliente segue', (await pode('lembrete')) === true);
@@ -226,10 +226,10 @@ igual('e o resumo do dia, que não é de um horário, também',
 /* ══════════════════════════════════════════════════════════════════════════
    4 — A TELA LÊ O MESMO NÚMERO
    ══════════════════════════════════════════════════════════════════════════ */
-secao('4) O uso do plano traz até onde vão as do salão');
+secao('4) O uso do plano traz até onde vão as do restaurante');
 
 const u = await E.d.chamar('uso_do_plano', { p_salao: E.salao });
-igual('500 usadas de 500, e as do salão até 450',
+igual('500 usadas de 500, e as do restaurante até 450',
   [u.mensagens.usado, u.mensagens.teto, u.mensagens.tetoSalao], [500, 500, 450]);
 const ug = await G.d.chamar('uso_do_plano', { p_salao: G.salao });
 igual('no Grátis, zero e zero', [ug.mensagens.teto, ug.mensagens.tetoSalao], [0, 0]);
@@ -248,7 +248,7 @@ for(const papel of ['anon', 'authenticated'])
    6 — A CAMPANHA NÃO É PORTA DOS FUNDOS
    "Não pode escapar para que o usuário não consiga usar mensagens que não
    estão liberadas pra ele." A fila de campanhas não perguntava por cota: um
-   salão montava uma campanha pelo console e ela sairia sem limite.
+   restaurante montava uma campanha pelo console e ela sairia sem limite.
    ══════════════════════════════════════════════════════════════════════════ */
 secao('6) Campanha não passa por fora do limite');
 
@@ -280,17 +280,17 @@ const filaK = async () => {
                       where campanha_id=$1 and status='processando'`, [campK]);
   return meus;
 };
-igual('com o status forçado, a fila não entrega nada do salão', await filaK(), 0);
+igual('com o status forçado, a fila não entrega nada do restaurante', await filaK(), 0);
 
 /* E o dia em que um plano liberar campanha: só dentro da franquia, pela regra
-   das mensagens do salão (para nos 90%). */
+   das mensagens do restaurante (para nos 90%). */
 try{
   await banco.query(`update public.planos set recursos = recursos || '{"campanhas_whatsapp": true}'
                       where codigo = 'salao'`);
   igual('plano que libera, com franquia sobrando: a fila entrega', await filaK(), 1);
   const tetoK = Number((await um(`select public.teto_mensagens_salao($1) as t`, [K.salao])).t);
   await gastar(K.salao, tetoK);
-  igual('plano que libera, mas a franquia do salão acabou: não entrega', await filaK(), 0);
+  igual('plano que libera, mas a franquia do restaurante acabou: não entrega', await filaK(), 0);
 } finally {
   await banco.query(`update public.planos set recursos = recursos - 'campanhas_whatsapp'
                       where codigo = 'salao'`);

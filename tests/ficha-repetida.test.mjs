@@ -7,7 +7,7 @@
    ── O DEFEITO QUE ESTA SUÍTE EXISTE PARA IMPEDIR ───────────────────────────
    Relatado com print, no ar. A recepção abre "Novo agendamento", escolhe
    "— novo cliente —", digita o nome e o telefone de quem JÁ era cliente do
-   salão. Ao salvar, um alerta do navegador, em inglês:
+   restaurante. Ao salvar, um alerta do navegador, em inglês:
 
        NÃO consegui salvar no banco:
        duplicate key value violates unique constraint "ux_cli_tel"
@@ -59,7 +59,7 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`ficha-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
-const cr = await d.chamar('criar_salao', { p_nome_salao:'Salão Ficha ' + marca,
+const cr = await d.chamar('criar_salao', { p_nome_salao:'Restaurante Ficha ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 const PROF = (await d.lista('profissionais', { salaoId: SALAO }))[0];

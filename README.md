@@ -1,6 +1,6 @@
 # PediHub
 
-Sistema de agendamento para salão de beleza, barbearia, manicure e estética.
+Sistema de agendamento para restaurante de beleza, barbearia, manicure e estética.
 Irmão do [AdminPro](https://github.com/alelima30/adminpro): mesma stack —
 HTML/CSS/JS puro, sem build, backend Supabase, PWA instalável — com as dívidas
 daquele projeto corrigidas de saída.
@@ -15,12 +15,12 @@ verificados de ponta a ponta.
 
 | Arquivo | O que faz |
 |---|---|
-| `app.html` | O salão: agenda, clientes, serviços, equipe e caixa |
-| `agendar.html` | O cliente: capa do salão, escolha, código no WhatsApp, meus horários |
+| `app.html` | O restaurante: agenda, clientes, serviços, equipe e caixa |
+| `agendar.html` | O cliente: capa do restaurante, escolha, código no WhatsApp, meus horários |
 | `index.html` | Encaminha a raiz para o app |
 | `sw.js` + `manifest.webmanifest` | PWA — instala no celular e no computador |
 | `supabase/01_schema.sql` | 20 tabelas, as duas travas da agenda, comanda e comissão |
-| `supabase/02_rls.sql` | Isolamento entre salões e entre papéis — a segurança de verdade |
+| `supabase/02_rls.sql` | Isolamento entre restaurantes e entre papéis — a segurança de verdade |
 | `config.js` | **o único arquivo a editar** para ligar no Supabase |
 | `dados.js` | a camada de dados: localStorage ou Supabase, escolhido pelo config |
 | `supabase/00_tudo.sql` | instalação completa, para colar de uma vez no SQL Editor |
@@ -45,26 +45,26 @@ São dois aplicativos sobre o mesmo banco:
 | **Recepção** | dono, recepção, profissional | `app.html` |
 | **Cliente** | quem marca horário | `agendar.html?salao=<slug>` |
 
-### Como o cliente chega no salão certo
+### Como o cliente chega no restaurante certo
 
-Pelo `slug` — a coluna `saloes.slug`, que é o apelido do salão no endereço:
+Pelo `slug` — a coluna `saloes.slug`, que é o apelido do restaurante no endereço:
 
 ```
 agendar.html?salao=studio-bella
 agendar.html?salao=barbearia-do-ze
 ```
 
-É esse link que o salão manda no WhatsApp, cola na bio do Instagram ou imprime
-como QR no espelho. Cada salão tem o seu, e ele é a única porta de entrada
-do cliente — quem abre um link não enxerga o outro salão.
+É esse link que o restaurante manda no WhatsApp, cola na bio do Instagram ou imprime
+como QR no espelho. Cada restaurante tem o seu, e ele é a única porta de entrada
+do cliente — quem abre um link não enxerga o outro restaurante.
 
 Dentro do `app.html`, na aba **Ver como cliente**, o link aparece pronto com
-botão de copiar. Sem o parâmetro, `agendar.html` mostra a lista de salões:
+botão de copiar. Sem o parâmetro, `agendar.html` mostra a lista de restaurantes:
 isso existe só para a demonstração; em produção o link sempre traz um.
 
 **A tela** — abra `app.html` **ou** `agendar.html?salao=studio-bella` no
 navegador. Qualquer uma das duas cria os dados de demonstração se ainda não
-existirem: dois salões, cinco profissionais, dez serviços e a agenda de hoje
+existirem: dois restaurantes, cinco profissionais, dez serviços e a agenda de hoje
 preenchida. (O app do cliente semeia também porque, na vida real, o link do
 WhatsApp costuma ser a primeira porta que a pessoa abre.) Tudo fica no
 `localStorage`; o botão **Recomeçar** devolve ao estado inicial.
@@ -91,7 +91,7 @@ aberta, nenhuma tabela exposta para quem não fez login).
 
 ## O que dá para conferir na tela
 
-- **Multi-salão** — troque de salão no seletor do topo: agenda, clientes e
+- **Multi-restaurante** — troque de restaurante no seletor do topo: agenda, clientes e
   serviços mudam junto, e um não enxerga o outro
 - **A grade entende serviço** — mecha ocupa 3h, corte ocupa 1h; o listrado
   marca fora da jornada e o hachurado marca almoço
@@ -103,12 +103,12 @@ aberta, nenhuma tabela exposta para quem não fez login).
 
 ## As três decisões que definem o projeto
 
-**1. Um login, vários salões.** No AdminPro a pessoa pertence a um condomínio
+**1. Um login, vários restaurantes.** No AdminPro a pessoa pertence a um condomínio
 — uma coluna `condominio_id` resolve. Aqui não: a mesma cliente corta o cabelo
-na barbearia e faz unha no salão da esquina, com o mesmo telefone. Então a
+na barbearia e faz unha no restaurante da esquina, com o mesmo telefone. Então a
 identidade é global (`perfis`, uma linha por telefone) e o pertencimento é uma
-tabela à parte (`vinculos`), com papel por salão. As policies perguntam *"você
-tem vínculo com este salão, e em que papel?"*, não *"qual é o seu salão?"*.
+tabela à parte (`vinculos`), com papel por restaurante. As policies perguntam *"você
+tem vínculo com este restaurante, e em que papel?"*, não *"qual é o seu restaurante?"*.
 
 **2. Horário duplicado é impossível, e não por educação do JavaScript.** O
 AdminPro confere conflito no navegador (`hrConflita`), então duas recepcionistas
@@ -137,8 +137,8 @@ Supabase pelo navegador, sem passar pelo nosso app.
 |---|---|
 | Cliente | Os agendamentos **dele**, a ficha **dele**, a conta **dele**. Horário livre vem de função que devolve horários, não linhas. |
 | Profissional | A agenda dele e a comissão dele. Não vê o que a colega ganhou. |
-| Recepção / dono | Tudo do próprio salão. |
-| Outro salão | Nada. Nem uma linha. |
+| Recepção / dono | Tudo do próprio restaurante. |
+| Outro restaurante | Nada. Nem uma linha. |
 | Sem login | Só a vitrine: nome, serviços, preços e quem atende. |
 
 Cada uma dessas linhas é um teste em `tests/02_rls.test.sql`, rodando com
@@ -146,15 +146,15 @@ Cada uma dessas linhas é um teste em `tests/02_rls.test.sql`, rodando com
 papel, o teste rodaria como superusuário e passaria por cima do RLS: verde
 mentiroso, o pior tipo.
 
-## As fotos do salão
+## As fotos do restaurante
 
 Três imagens, e cada uma resolve um problema diferente na hora de o cliente
 abrir o link vindo do WhatsApp:
 
 | | Onde aparece | Tamanho final |
 |---|---|---|
-| **Logo** | selo no topo da vitrine e na lista de salões | 256 px, até 120 KB |
-| **Foto do salão** | a faixa larga logo abaixo do nome | 1200 px, até 420 KB |
+| **Logo** | selo no topo da vitrine e na lista de restaurantes | 256 px, até 120 KB |
+| **Foto do restaurante** | a faixa larga logo abaixo do nome | 1200 px, até 420 KB |
 | **Foto do serviço** | o card que o cliente escolhe | 600 px, até 220 KB |
 
 A foto do serviço é a que mais muda conversão: "corte navalhado" não diz nada
@@ -168,7 +168,7 @@ navegador, com `<canvas>`, e sai em JPEG. Sem biblioteca — o navegador faz iss
 desde sempre. Um PNG de 16,7 MB e 3000×2000 sai com 213 KB e 1200×800.
 
 Fundo branco antes de desenhar, porque PNG transparente vira preto ao virar
-JPEG — e logo de salão quase sempre vem em PNG transparente.
+JPEG — e logo de restaurante quase sempre vem em PNG transparente.
 
 **Onde os bytes ficam.** Em produção, no Supabase Storage, e a coluna guarda a
 URL. Na demonstração, a própria `data:` URL no `localStorage`. Coluna `text`
@@ -196,11 +196,11 @@ de uma policy derruba a consulta inteira em vez de simplesmente negar.
 
 ## Como o dinheiro entra (e o que acontece com quem não paga)
 
-Nem todo salão vai assinar, e o sistema foi desenhado sabendo disso. Quem não
+Nem todo restaurante vai assinar, e o sistema foi desenhado sabendo disso. Quem não
 assina fica no **Grátis** — plano de verdade, sem prazo — e quem cresce esbarra
 num teto que cresce junto:
 
-| | Grátis | Individual | Duo → Salão |
+| | Grátis | Individual | Duo → Restaurante |
 |---|---|---|---|
 | Profissionais na agenda | 1 | 1 | 2 a 20 |
 | Horários por mês | 40 | sem teto | sem teto |
@@ -212,7 +212,7 @@ As duas linhas do meio são o que faz o Individual existir. Sem elas, um
 profissional com tudo liberado é exatamente o que o Grátis já dá, e ninguém
 sairia dele — o plano de R$ 47 seria invendável por aritmética, não por preço.
 O lembrete fica de fora do Grátis por caixa: cada mensagem é dinheiro que sai
-por salão que não paga.
+por restaurante que não paga.
 
 Os números moram na tabela `planos`, coluna `recursos`. Mudar o teto de 40 é um
 `UPDATE`, não um deploy.
@@ -220,7 +220,7 @@ Os números moram na tabela `planos`, coluna `recursos`. Mudar o teto de 40 é u
 ### Onde a regra é aplicada
 
 Toda a cobrança passa por `plano_efetivo(salao)`, que responde *"qual plano vale
-hoje"* — considerando `trial_ate` e `vence_em`. Fora de vigor, o salão cai no
+hoje"* — considerando `trial_ate` e `vence_em`. Fora de vigor, o restaurante cai no
 Grátis; nunca em ilimitado, e nunca em nada.
 
 Três coisas que custaram uma reescrita cada:
@@ -235,7 +235,7 @@ rebaixamento enquanto sobrasse gente ativa. Estava errado duas vezes: quem troca
 de plano é a plataforma (a policy não deixa o dono escrever em `assinaturas`),
 então a trava só atrapalhava cancelamento e fim de contrato; e não pegava o caso
 mais comum, porque **teste grátis vence sozinho** — a data passa e não existe
-`UPDATE` nenhum para interceptar. O salão seguia com 3 pessoas atendendo num
+`UPDATE` nenhum para interceptar. O restaurante seguia com 3 pessoas atendendo num
 plano de 1.
 
 A regra certa é sobre **usar** a vaga, não sobre contratá-la: profissional fora
@@ -291,7 +291,7 @@ unha num lugar claro e barba num lugar escuro, com outro botão e outra
 tipografia — e o dourado sobre preto derrubava o contraste do texto pequeno.
 Quem identifica a casa é o nome, o monograma e a lista de serviços, que é como
 Fresha, Booksy e Square resolvem. O vocabulário continua mudando com o tipo do
-salão ("quem corta" x "quem atende"); o que saiu foi a segunda paleta.
+restaurante ("quem corta" x "quem atende"); o que saiu foi a segunda paleta.
 
 ⚠ **Este parágrafo envelheceu, e a parte que envelheceu foi só uma.** A
 segunda paleta voltou — o dono escolhe cores, gradiente e formato do logo para
@@ -366,7 +366,7 @@ for conferir e desmoraliza a lista toda.
 
 7. **Chaves do Mercado Pago** em Edge Functions → Secrets, e as funções
    `criar-cobranca` e `webhook-mp` publicadas. O SQL da cobrança está
-   instalado; sem as chaves, nenhum salão consegue pagar.
+   instalado; sem as chaves, nenhum restaurante consegue pagar.
 8. **Verificação do Meta Business.** É ela que libera o template
    transacional do lembrete — o item 1 depende dela para sair do papel.
 9. **O e-mail de "esqueci minha senha" que antivírus não gasta.** O link
@@ -385,7 +385,7 @@ for conferir e desmoraliza a lista toda.
    <p>O link vale por 1 hora, e só o do e-mail mais recente funciona. Se não foi você que pediu, ignore este e-mail.</p>
    ```
 
-   `{{ .RedirectTo }}` é a `nova-senha.html` (com a volta para o salão,
+   `{{ .RedirectTo }}` é a `nova-senha.html` (com a volta para o restaurante,
    quando a cliente pediu pelo link). O código vai depois do `#`, que não
    sai do navegador. Sem esta troca o link padrão continua funcionando —
    só sem a proteção.
@@ -410,7 +410,7 @@ for conferir e desmoraliza a lista toda.
   exibição, nove cores uma a uma, onze temas prontos, gradiente e formato do
   logo. ⚠ Construída ao contrário do jeito óbvio: cada chave AUSENTE quer
   dizer "calcule a partir da cor da marca, como sempre", e não "use o padrão
-  novo". Salão que nunca abrir a tela não tem chave nenhuma e continua com a
+  novo". Restaurante que nunca abrir a tela não tem chave nenhuma e continua com a
   página de antes, byte a byte. Metade do `identidade-visual.test.mjs` mede só
   isso — personalização que não funciona o dono reclama no mesmo dia, a que
   vaza chega calada em quem não pediu nada.
@@ -452,12 +452,12 @@ for conferir e desmoraliza a lista toda.
   fixo e regra de bruto/líquido com data de corte.
 - **Caixa, sangria, suprimento e estorno**, e o **painel do dia**.
 - **O passo a passo do primeiro dia.** Oito passos que abrem sozinhos no
-  salão vazio: horário da semana com copiar para os outros dias, o que o
-  salão faz, serviços sugeridos com duração e preço num toque, equipe,
+  restaurante vazio: horário da semana com copiar para os outros dias, o que o
+  restaurante faz, serviços sugeridos com duração e preço num toque, equipe,
   produtos (só para quem vende), os dois interruptores de comanda e
   confirmação, e o link com o QR pronto para imprimir. Grava a cada passo,
   então fechar no meio não perde nada. Não é aba: abre uma vez, e depois só
-  por quem procurar o botão em Meu salão.
+  por quem procurar o botão em Meu restaurante.
 
 ## Onde este código mora
 

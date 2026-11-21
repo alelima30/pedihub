@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ===========================================================================
-#  Quebrar de propósito o fuso do salão (58_fuso.sql e as telas). Uma regra
+#  Quebrar de propósito o fuso do restaurante (58_fuso.sql e as telas). Uma regra
 #  por vez.
 #
 #    bash tests/bancada/subir.sh        (noutro terminal)
@@ -88,13 +88,13 @@ echo "6. a lista troca na tela antes de o banco confirmar"
 troca app.html \
   "  if(sel && sl) sel.value = sl.fuso;" \
   "  if(false) sel.value = sl.fuso;" \
-  && rodar "cancelar deixa a tela dizendo Manaus num salão de Brasília"
+  && rodar "cancelar deixa a tela dizendo Manaus num restaurante de Brasília"
 
 echo "7. a dica do relógio do aparelho nunca aparece"
 troca app.html \
   "  if(Math.abs(dif) < 30) return '';" \
   "  if(true) return '';" \
-  && rodar "o salão de Manaus não fica sabendo que precisa trocar"
+  && rodar "o restaurante de Manaus não fica sabendo que precisa trocar"
 
 echo "8. o link da cliente não confere o relógio antes de marcar"
 troca agendar.html \

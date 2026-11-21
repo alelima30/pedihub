@@ -64,14 +64,14 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`at-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const SEMANA = [0,1,2,3,4,5,6].reduce((o, d) => (o[d] = [['00:00','00:00']], o), {});
 // A marca NÃO é a de fábrica, para "a letra do Horários na cor da marca"
 // não passar por acidente.
 const BASE_CFG = { diasLiberados:30, cor:'#7C3AED', tema:'claro',
-  funcionamento: SEMANA, pagamentos:{ formas:['pix','credito'] }, sobre:'Salão de beleza' };
+  funcionamento: SEMANA, pagamentos:{ formas:['pix','credito'] }, sobre:'Restaurante de beleza' };
 const porCfg = extra => dona.atualizar('saloes', SALAO, { cfg: Object.assign({}, BASE_CFG, extra) });
 await dona.atualizar('saloes', SALAO, {
   endereco:{ logradouro:'Rua Avanhandava', numero:'10', bairro:'Cidade Nova', cidade:'Itu', uf:'SP' } });

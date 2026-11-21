@@ -5,10 +5,10 @@
    ── POR QUE ESTE ARQUIVO NÃO PODE VIRAR JAVASCRIPT DO PAINEL ───────────────
    Ele é o único lugar do projeto que enxerga duas credenciais:
 
-     WHATSAPP_TOKEN            manda mensagem em nome do salão
+     WHATSAPP_TOKEN            manda mensagem em nome do restaurante
      SUPABASE_SERVICE_ROLE_KEY passa por cima de TODO o RLS
 
-   Qualquer uma delas no painel é o fim do isolamento entre salões — o painel
+   Qualquer uma delas no painel é o fim do isolamento entre restaurantes — o painel
    é HTML servido do GitHub Pages, e tudo o que chega nele é público por
    construção. As duas vivem em variáveis de ambiente da função, postas pelo
    painel do Supabase.

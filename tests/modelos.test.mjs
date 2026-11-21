@@ -69,7 +69,7 @@ const m = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const dona = aba();
 await dona.criarConta({ email:`mo-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Salão Megatop',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
   p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
@@ -81,10 +81,10 @@ await dona.inserir('servicos', { salaoId: SALAO, nome:'Hidratação', duracaoMin
   preco:80, ativo:true, aceitaOnline:true, categoria:'Cabelo' });
 const SEMANA = [0,1,2,3,4,5,6].reduce((o, d) => (o[d] = [['00:00','00:00']], o), {});
 const LOGO = arte('#4C1D95', '#A78BFA'), CAPA = arte('#2E1065', '#7C3AED'), FUNDO = arte('#111111', '#333333');
-/* O que é do salão, e não do estilo: nenhum modelo pode tocar. */
+/* O que é do restaurante, e não do estilo: nenhum modelo pode tocar. */
 const DO_SALAO = { diasLiberados:30, precoNaCapa:true, slideDe:'galeria', capaFoco:30, veu:60,
   cartoes:'vidro', slideForma:'quadrado', funcionamento: SEMANA, pagamentos:{ formas:['pix'] },
-  sobre:'Salão de beleza', fundo: FUNDO };
+  sobre:'Restaurante de beleza', fundo: FUNDO };
 const ANTES = Object.assign({}, DO_SALAO, { cor:'#1D4ED8', tema:'claro', modo:'atual', moldura:'reta',
   letra:'moderno', fundoTipo:'imagem', gradiente:'#111111,#222222', fitaCor:'#FF0000',
   // `produtos` fica de fora de quase todo modelo: o de antes não pode sobrar.
@@ -284,7 +284,7 @@ const doBanco = cfg => ordenado(Object.assign({}, Object.fromEntries(Object.keys
   igual('com a sombra dos atalhos dele',
     [s.cfg.atalhos.sombra.desfoque, s.cfg.atalhos.sombra.opacidade, s.cfg.atalhos.sombra.distancia, s.cfg.atalhos.sombra.cor],
     [mo.atalhos.sombra.desfoque, mo.atalhos.sombra.opacidade, mo.atalhos.sombra.distancia, mo.atalhos.sombra.cor]);
-  igual('o que é do salão ficou igual (funcionamento, pagamentos, sobre, foto de fundo, slide, véu, preço na capa)',
+  igual('o que é do restaurante ficou igual (funcionamento, pagamentos, sobre, foto de fundo, slide, véu, preço na capa)',
     ordenado(Object.fromEntries(Object.keys(DO_SALAO).map(k => [k, s.cfg[k]]))), ordenado(DO_SALAO));
   igual('a logo e a capa são as mesmas', [s.logo === LOGO, s.capa === CAPA], [true, true]);
   const svs = await dona.lista('servicos', { salaoId: SALAO });
@@ -315,7 +315,7 @@ const doBanco = cfg => ordenado(Object.assign({}, Object.fromEntries(Object.keys
   igual('e a barra do "nada foi salvo" sai na hora', [b.barra, b.on], ['none', 0]);
 
   /* Trocar de estabelecimento relê a aparência: o modelo da prévia e o
-     "Voltar" de um salão não podem passar para o outro. */
+     "Voltar" de um restaurante não podem passar para o outro. */
   await experimentar(p, 'lavanda');
   const r = await p.evaluate(() => { aparencia = null; pintarAparencia();
     return { antes: modeloAntes, atual: modeloAtual,

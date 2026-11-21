@@ -59,11 +59,11 @@ const banco = new pg.Client({ host: process.env.PGHOST || '/tmp',
 await banco.connect();
 const um = async (q, v) => (await banco.query(q, v)).rows[0] || null;
 
-// ── O salão, com a dona e a Bia (outro login, convidada) ───────────────────
+// ── O restaurante, com a dona e a Bia (outro login, convidada) ───────────────────
 const dDona = novaAba();
 await dDona.criarConta({ email:`fe-dona-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone: tel() });
-const cr = await dDona.chamar('criar_salao', { p_nome_salao:'Salão Ficha ' + marca,
+const cr = await dDona.chamar('criar_salao', { p_nome_salao:'Restaurante Ficha ' + marca,
   p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 await banco.query(`update public.assinaturas set plano='time', status='ativa' where salao_id=$1`, [SALAO]);

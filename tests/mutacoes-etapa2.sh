@@ -84,7 +84,7 @@ echo "6. a relação não vai junto do nome"
 troca agendar.html \
   "  return nome && r && r[0] !== 'outra' ? nome + ' (' + r[1].toLowerCase() + ')' : nome;" \
   "  return nome;" \
-  && rodar "o salão não sabe que é a filha"
+  && rodar "o restaurante não sabe que é a filha"
 
 echo "7. \"Outra pessoa\" vira \"(outra pessoa)\""
 troca agendar.html \
