@@ -841,7 +841,7 @@ span.ajuda{display:block;margin-top:5px}
     <div class="barra">
       <span class="espaco"></span>
       <button class="btn btn-p" id="btNovoProduto"
-              onclick="abrirProduto()">+ Produto</button>
+              onclick="abrirProduto()">+ Item</button>
     </div>
     <div id="listaProdutos"></div>
   </section>
@@ -2211,7 +2211,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.747096';
+const VERSAO_APP = 'v9.6db466';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -6869,7 +6869,7 @@ function desenharRelatorio(r){
         ${variacao(fat, n(r.faturamentoAntes), r)}</div>
       <div class="kpi"><div class="v">${at}</div><div class="r">vendas</div></div>
       <div class="kpi"><div class="v">${real(at ? fat/at : 0)}</div><div class="r">ticket médio</div></div>
-      ${temAPagar ? `<div class="kpi"><div class="v">${real(totalComissao)}</div><div class="r">comissões a pagar</div></div>` : ''}
+      <!-- PediHub: sem comissão de profissional. -->
       <div class="kpi"><div class="v">${real(n(r.descontos))}</div><div class="r">descontos dados</div></div>
     </div>
 
@@ -9782,7 +9782,7 @@ function duvidasDaTela(){
    do tipo de negócio. As que ele já escreveu não aparecem de novo. */
 function sugestoesDeDuvida(sl){
   const ja = new Set(duvidasDoCfg(sl).map(d => semAcentoPainel(String(d.p || '')).trim()));
-  const dosServicos = servsAtivos().slice(0, 3).map(x => 'Como funciona ' + x.nome + '?');
+  const dosServicos = [];   // PediHub: sem serviço
   const porTipo = {
     barbearia: ['Precisa agendar ou atende por ordem de chegada?', 'Atendem criança?',
                 'Quanto tempo leva o corte?', 'Posso escolher o barbeiro?'],
@@ -9800,9 +9800,9 @@ function sugestoesDeDuvida(sl){
                 'Quanto tempo leva o banho e tosa?', 'Atendem gatos?', 'Posso ficar esperando?'],
     restaurante: ['Fazem entrega? Qual a taxa?', 'Quanto tempo demora a entrega?',
                   'Posso retirar no local?', 'Aceitam encomenda?'],
-  }[sl.tipo] || ['Como funciona o primeiro atendimento?', 'Quais os cuidados depois?'];
-  const gerais = ['Preciso chegar com antecedência?', 'Como cancelar ou remarcar?',
-                  'Quais as formas de pagamento?', 'Tem estacionamento?'];
+  }.restaurante;   // PediHub: toda casa é restaurante
+  const gerais = ['Quais as formas de pagamento?', 'Têm opção vegetariana?',
+                  'Posso cancelar o pedido?', 'Tem estacionamento?'];
   const vistas = new Set();
   return [...dosServicos, ...porTipo, ...gerais].filter(p => {
     const k = semAcentoPainel(p).trim();
@@ -9813,7 +9813,7 @@ function sugestoesDeDuvida(sl){
 function linhaDeDuvida(d){
   d = d || {};
   return `<div class="ficha-duv-linha">
-      <input class="fDuvP" maxlength="150" placeholder="Pergunta. Ex.: Estraga a unha?"
+      <input class="fDuvP" maxlength="150" placeholder="Pergunta. Ex.: Fazem entrega no meu bairro?"
              value="${escapar(fichaTxt(d.p, 150))}">
       <textarea class="fDuvR" rows="2" maxlength="600" placeholder="Resposta">${
         escapar(fichaTxt(d.r, 600))}</textarea>
