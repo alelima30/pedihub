@@ -4924,7 +4924,8 @@ const produtosDaLoja = () => (!salao || !casaVendeProdutos() ? []
    despublicado por dois dias volta com as unidades que a cliente já tinha
    escolhido, e produto que não volta simplesmente nunca mais é contado. */
 const itensNoCarrinho = () => produtosDaLoja()
-  .reduce((s, p) => s + (carrinho[p.id] > 0 ? carrinho[p.id] : 0), 0);
+  .reduce((s, p) => s + (carrinho[p.id] > 0 ? carrinho[p.id] : 0), 0)
+  + linhasComOpcoes().reduce((s, l) => s + carrinho[l.id], 0);
 
 /* ⚠ SOMA SÓ O QUE TEM PREÇO — E QUEM CHAMA PRECISA DIZER ISSO.
 
@@ -4948,7 +4949,8 @@ const itensNoCarrinho = () => produtosDaLoja()
    dizer que ele está incompleto. */
 function totalDoCarrinho(){
   return produtosDaLoja().reduce(
-    (s, p) => s + (carrinho[p.id] > 0 ? carrinho[p.id] * Number(p.preco || 0) : 0), 0);
+    (s, p) => s + (carrinho[p.id] > 0 ? carrinho[p.id] * Number(p.preco || 0) : 0), 0)
+    + linhasComOpcoes().reduce((s, l) => s + carrinho[l.id] * l.preco, 0);
 }
 
 // Algum item do carrinho está sem preço? É o que obriga o total a se declarar
@@ -4980,7 +4982,152 @@ function zapDoSalao(){
   return '';
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPLEMENTOS E VARIAÇÕES (67_complementos.sql)
+
+   Item com grupos de opções ("Tamanho", "Sabores", "Borda"...) não entra
+   direto no carrinho: abre a folha de escolha. Cada combinação vira uma
+   LINHA própria do carrinho, com chave "produto~opção~opção" — duas pizzas
+   com sabores diferentes são duas linhas, como na comanda da cozinha.
+
+   O preço mostrado aqui é PRÉVIA, com a mesma regra do banco (soma, a mais
+   cara, a média). Quem calcula o que vale é o `fazer_pedido()`.
+   ═══════════════════════════════════════════════════════════════════════════ */
+var opcoesCasa = {};            // { produtoId: [grupos] }, do opcoes_da_casa()
+let carrinhoOpcoes = {};        // { chave: { pid, opcoes:[ids], texto, preco } }
+let escolhaOpcoes = null;       // a folha aberta: { pid, sel:{grupo:[ids]}, qtd }
+
+const chaveDasOpcoes = () => chaveDoCarrinho() + '.opcoes';
+function lerCarrinhoOpcoes(){
+  try{ carrinhoOpcoes = JSON.parse(localStorage.getItem(chaveDasOpcoes()) || '{}') || {}; }
+  catch(e){ carrinhoOpcoes = {}; }
+}
+function gravarCarrinhoOpcoes(){
+  try{ localStorage.setItem(chaveDasOpcoes(), JSON.stringify(carrinhoOpcoes)); }catch(e){}
+}
+const gruposDoItem = pid => (opcoesCasa && Array.isArray(opcoesCasa[pid])) ? opcoesCasa[pid] : [];
+const temOpcoes = pid => modoPedidos() && gruposDoItem(pid).length > 0;
+
+/* As linhas com complemento que ainda valem: o item continua no cardápio. */
+function linhasComOpcoes(){
+  const loja = produtosDaLoja();
+  return Object.keys(carrinho).filter(k => k.includes('~') && carrinho[k] > 0 && carrinhoOpcoes[k])
+    .map(k => {
+      const x = carrinhoOpcoes[k];
+      const p = loja.find(q => q.id === x.pid);
+      return p ? { id: k, produtoId: p.id, nome: p.nome + (x.texto ? ' — ' + x.texto : ''),
+                   preco: Number(x.preco || 0), opcoes: x.opcoes || [], foto: p.foto } : null;
+    }).filter(Boolean);
+}
+
+/* A prévia do preço, com a regra de cada grupo. */
+function calcularOpcoes(pid, sel){
+  const p = (bd.produtos || []).find(q => q.id === pid) || {};
+  let preco = Number(p.preco || 0);
+  const partes = [], ids = [];
+  let falta = null;
+  for(const g of gruposDoItem(pid)){
+    const escolhidas = (g.opcoes || []).filter(o => (sel[g.id] || []).includes(o.id) && o.ativo !== false);
+    const n = escolhidas.length;
+    if(n < Number(g.min || 0) && !falta)
+      falta = Number(g.min) === 1 ? `Escolha ${String(g.nome).toLowerCase()}.` : `Em "${g.nome}", escolha pelo menos ${g.min}.`;
+    if(!n) continue;
+    const valores = escolhidas.map(o => Number(o.preco || 0));
+    preco += g.regra === 'maior' ? Math.max(...valores)
+           : g.regra === 'media' ? valores.reduce((a, b) => a + b, 0) / n
+           : valores.reduce((a, b) => a + b, 0);
+    const frac = n === 2 ? '½' : n === 3 ? '⅓' : n === 4 ? '¼' : '1/' + n;
+    partes.push(g.nome + ': ' + (g.regra !== 'soma' && n > 1
+      ? escolhidas.map(o => frac + ' ' + o.nome).join(', ')
+      : escolhidas.map(o => o.nome).join(', ')));
+    escolhidas.forEach(o => ids.push(o.id));
+  }
+  return { preco: Math.round(preco * 100) / 100, texto: partes.join(' · '), ids, falta };
+}
+
+function abrirEscolhaDeOpcoes(pid){
+  escolhaOpcoes = { pid, sel: {}, qtd: 1 };
+  abrirFolha('opcoes:' + pid);
+}
+
+function folhaOpcoes(pid){
+  const p = (bd.produtos || []).find(q => q.id === pid);
+  if(!p || !escolhaOpcoes) return '';
+  return `${cabecaDaFolha('carrinho', escapar(p.nome), p.descricao ? escapar(p.descricao) : 'Monte do seu jeito')}
+    <div id="folhaOpcoesCorpo">${corpoDasOpcoes()}</div>`;
+}
+
+function corpoDasOpcoes(){
+  const e = escolhaOpcoes; if(!e) return '';
+  const calc = calcularOpcoes(e.pid, e.sel);
+  return `${gruposDoItem(e.pid).map(g => {
+      const sel = e.sel[g.id] || [];
+      const regra = Number(g.min) >= 1 ? (Number(g.max) === 1 ? 'Obrigatório · escolha 1'
+                    : `Obrigatório · de ${g.min} a ${g.max}`)
+                  : (Number(g.max) === 1 ? 'Opcional · até 1' : `Opcional · até ${g.max}`);
+      const meio = g.regra !== 'soma' && Number(g.max) > 1
+        ? ` <small>(${g.regra === 'maior' ? 'vale o preço do mais caro' : 'vale a média dos preços'})</small>` : '';
+      return `<div class="op-grupo">
+        <div class="op-cabeca"><b>${escapar(g.nome)}</b>${meio}<span>${regra}</span></div>
+        ${(g.opcoes || []).map(o => {
+          const on = sel.includes(o.id), fora = o.ativo === false;
+          return `<button type="button" class="op-item${on ? ' on' : ''}" ${fora ? 'disabled' : ''}
+                    aria-pressed="${on}" onclick="marcarOpcao('${g.id}','${o.id}')">
+              <span class="op-marca" aria-hidden="true">${on ? '✓' : ''}</span>
+              <span class="op-nome">${escapar(o.nome)}${fora ? ' <small>(esgotado)</small>' : ''}</span>
+              <span class="op-preco">${Number(o.preco) ? '+ ' + real(Number(o.preco)) : ''}</span>
+            </button>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+    <div class="op-pe">
+      <span class="pd-qtd">
+        <button type="button" onclick="qtdDasOpcoes(-1)" aria-label="Menos um">−</button>
+        <b>${e.qtd}</b>
+        <button type="button" onclick="qtdDasOpcoes(1)" aria-label="Mais um">+</button>
+      </span>
+      <button type="button" class="btn btn-p op-confirmar" onclick="confirmarOpcoes()" ${calc.falta ? 'data-falta="1"' : ''}>
+        Adicionar · ${real(calc.preco * e.qtd)}</button>
+    </div>
+    ${calc.falta ? `<p class="pd-alerta" id="opFalta" style="display:none">${escapar(calc.falta)}</p>` : ''}`;
+}
+
+function redesenharOpcoes(){
+  const c = document.getElementById('folhaOpcoesCorpo');
+  if(c) c.innerHTML = corpoDasOpcoes();
+}
+function marcarOpcao(gid, oid){
+  const g = gruposDoItem(escolhaOpcoes.pid).find(x => x.id === gid); if(!g) return;
+  let sel = escolhaOpcoes.sel[gid] || [];
+  if(sel.includes(oid)) sel = sel.filter(x => x !== oid);
+  else if(Number(g.max) === 1) sel = [oid];                      // escolha única: troca
+  else if(sel.length < Number(g.max)) sel = sel.concat(oid);
+  escolhaOpcoes.sel[gid] = sel;
+  redesenharOpcoes();
+}
+function qtdDasOpcoes(d){
+  escolhaOpcoes.qtd = Math.max(1, Math.min(99, escolhaOpcoes.qtd + d));
+  redesenharOpcoes();
+}
+function confirmarOpcoes(){
+  const e = escolhaOpcoes; if(!e) return;
+  const calc = calcularOpcoes(e.pid, e.sel);
+  if(calc.falta){
+    const f = document.getElementById('opFalta'); if(f) f.style.display = '';
+    return;
+  }
+  const chave = e.pid + '~' + calc.ids.slice().sort().join('~');
+  carrinhoOpcoes[chave] = { pid: e.pid, opcoes: calc.ids, texto: calc.texto, preco: calc.preco };
+  carrinho[chave] = (carrinho[chave] || 0) + e.qtd;
+  gravarCarrinho(); gravarCarrinhoOpcoes();
+  escolhaOpcoes = null;
+  fecharFolha();
+  desenhar();
+}
+
 function mudarNoCarrinho(pid, delta){
+  // Item com complemento: "mais um" abre a escolha (cada combinação é uma linha).
+  if(delta > 0 && !String(pid).includes('~') && temOpcoes(pid)) return abrirEscolhaDeOpcoes(pid);
   const n = (carrinho[pid] || 0) + delta;
   if(n > 0) carrinho[pid] = n; else delete carrinho[pid];
   gravarCarrinho();
@@ -5181,6 +5328,7 @@ function abrirFolha(qual, origem){
               : tipo === 'duvidas' || tipo === 'comofunciona' ? folhaDuvidas(a1)
               : tipo === 'ficha'      ? folhaFicha(a1)
               : tipo === 'comparar'   ? folhaComparar(a1, a2)
+              : tipo === 'opcoes'     ? folhaOpcoes(a1)
               : folhaInformacoes();
   if(!miolo) return;
   const f = document.createElement('div');
@@ -6132,6 +6280,9 @@ async function carregarPedidosDaCasa(){
   if(!ehRestaurante()) return;
   try{ pedidosCasa = await Dados.chamar('pedidos_da_casa', { p_slug: salao.slug }); }
   catch(e){ console.info('[PediHub] pedidos_da_casa:', e.message); pedidosCasa = { ligado: false }; }
+  try{ opcoesCasa = await Dados.chamar('opcoes_da_casa', { p_slug: salao.slug }) || {}; }
+  catch(e){ console.info('[PediHub] opcoes_da_casa:', e.message); opcoesCasa = {}; }
+  lerCarrinhoOpcoes();
   const ult = meusPedidosGuardados()[0];
   if(ult){
     try{
@@ -6170,7 +6321,7 @@ function taxaDoPedido(){
   const t = taxas.find(x => semAcento(x.bairro).trim() === semAcento(f.bairro).trim());
   return t ? Number(t.taxa) || 0 : null;
 }
-const itensDoPedido = () => produtosDaLoja().filter(p => carrinho[p.id] > 0);
+const itensDoPedido = () => produtosDaLoja().filter(p => carrinho[p.id] > 0).concat(linhasComOpcoes());
 
 function contaDoPedidoHtml(){
   const sub = totalDoCarrinho(), taxa = taxaDoPedido(), c = pedidosCasa || {};
@@ -6307,7 +6458,8 @@ async function confirmarPedido(){
       troco: f.pagamento === 'dinheiro' ? f.troco.trim() : '', observacao: f.obs.trim(),
       endereco: f.entrega === 'entrega' ? { rua: f.rua, numero: f.numero, complemento: f.complemento,
                                             bairro: f.bairro, referencia: f.referencia } : null,
-      itens: itensDoPedido().map(p => ({ produto: p.id, quantidade: carrinho[p.id] })) } });
+      itens: itensDoPedido().map(p => ({ produto: p.produtoId || p.id, quantidade: carrinho[p.id],
+                                         opcoes: p.opcoes || [] })) } });
   }catch(e){
     pedidoEnviando = false;
     pedidoErro = e.message || 'Não consegui mandar o pedido. Tente de novo.';
