@@ -98,7 +98,7 @@ begin
   --
   -- Diagnóstico que descreve o sintoma errado custa mais caro que diagnóstico
   -- nenhum: ele ocupa a pessoa procurando no lugar errado.
-  if v_email = 'TROQUE-PELO-SEU@EMAIL.COM' then
+  if upper(v_email) like 'TROQUE%' then   -- não repete o texto de exemplo: trocar "todos" não quebra a conferência
     select string_agg('     ' || coalesce(u.email, '(sem e-mail)'), E'\n'
                       order by u.created_at desc)
       into v_lista
@@ -106,7 +106,7 @@ begin
              order by created_at desc limit 10) u;
 
     raise exception E'O e-mail não foi trocado: o script ainda está com\n'
-      'TROQUE-PELO-SEU@EMAIL.COM na linha do `v_email`.\n\n'
+      'o texto de exemplo (TROQUE-...) na linha do `v_email`.\n\n'
       'Contas deste projeto — copie a sua para lá:\n%',
       coalesce(v_lista, '     (nenhuma conta ainda; crie em Authentication → Users)');
   end if;
