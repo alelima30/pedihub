@@ -816,6 +816,7 @@ span.ajuda{display:block;margin-top:5px}
         <input type="checkbox" id="pdAutoImprimir" onchange="alternarAutoImprimir(this.checked)">
         <span>Imprimir sozinho</span></label>
       <button class="btn" onclick="carregarPedidos()">Atualizar</button>
+      <button class="btn" onclick="abrirAcertoEntregadores('hoje')">Entregadores</button>
       <button class="btn" onclick="abrirConfigPedidos()">Entrega e pagamento</button>
       <button class="btn btn-p" onclick="abrirNovoPedido()">+ Novo pedido</button>
     </div>
@@ -2214,7 +2215,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.f994ea';
+const VERSAO_APP = 'v9.ab5208';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23017,7 +23018,7 @@ function telefoneNaTela(d){
   if(t.length === 10) return `(${t.slice(0, 2)}) ${t.slice(2, 6)}-${t.slice(6)}`;
   return t;
 }
-const PEDIDO_PAGAMENTO = { pix:'Pix', dinheiro:'Dinheiro', cartao:'Cartão na entrega' };
+const PEDIDO_PAGAMENTO = { pix:'Pix', dinheiro:'Dinheiro', cartao:'Cartão na entrega', na_mesa:'Paga na mesa, no fim' };
 const PEDIDO_ETAPA = { recebido:'Novo', em_preparo:'Em preparo', saiu:'Saiu para entrega',
   pronto:'Pronto para retirar', entregue:'Entregue', cancelado:'Cancelado' };
 
@@ -23068,6 +23069,8 @@ function abrirNovoPedido(){
     <div class="campo"><label>Como recebe</label>
       <label class="check"><input type="radio" name="npModo" value="retirada" checked onchange="npPintarEntrega()"> <span>Retira no balcão</span></label>
       <label class="check"><input type="radio" name="npModo" value="entrega" onchange="npPintarEntrega()"> <span>Entrega</span></label>
+      <label class="check"><input type="radio" name="npModo" value="mesa" onchange="npPintarEntrega()"> <span>Mesa</span></label>
+      <span id="npMesaCampo" style="display:none"><input id="npMesa" maxlength="10" placeholder="Nº da mesa" style="width:110px"></span>
     </div>
     <div id="npEntrega" style="display:none">
       <div class="dupla">
@@ -23088,7 +23091,7 @@ function abrirNovoPedido(){
     <div class="dupla">
       <div class="campo"><label for="npPag">Pagamento</label>
         <select id="npPag" onchange="npPintarEntrega()">
-          ${Object.entries(PEDIDO_PAGAMENTO).map(([k, v]) => `<option value="${k}">${escapar(k === 'cartao' ? 'Cartão' : v)}</option>`).join('')}
+          ${Object.entries(PEDIDO_PAGAMENTO).map(([k, v]) => `<option value="${k}" ${k === 'na_mesa' ? 'data-mesa="1" hidden' : ''}>${escapar(k === 'cartao' ? 'Cartão' : v)}</option>`).join('')}
         </select></div>
       <div class="campo" id="npTrocoCampo" style="display:none"><label for="npTroco">Troco para (R$)</label>
         <input id="npTroco" inputmode="decimal" placeholder="em branco = sem troco"></div>
@@ -23111,8 +23114,13 @@ function npFiltrar(q){
   });
 }
 function npPintarEntrega(){
-  const ent = (document.querySelector('input[name="npModo"]:checked') || {}).value === 'entrega';
+  const modo = (document.querySelector('input[name="npModo"]:checked') || {}).value;
+  const ent = modo === 'entrega';
   const e = document.getElementById('npEntrega'); if(e) e.style.display = ent ? '' : 'none';
+  const m = document.getElementById('npMesaCampo'); if(m) m.style.display = modo === 'mesa' ? '' : 'none';
+  // "Paga na mesa, no fim" só existe na mesa.
+  const naMesa = document.querySelector('#npPag option[data-mesa]');
+  if(naMesa){ naMesa.hidden = modo !== 'mesa'; if(modo !== 'mesa' && naMesa.selected) document.getElementById('npPag').value = 'pix'; }
   const pag = (document.getElementById('npPag') || {}).value;
   const t = document.getElementById('npTrocoCampo'); if(t) t.style.display = pag === 'dinheiro' ? '' : 'none';
   npPintarTotal();
@@ -23226,10 +23234,12 @@ async function lancarNovoPedido(){
   const origem = (document.querySelector('input[name="npOrigem"]:checked') || {}).value || 'balcao';
   if(!v('npNome')){ alert('Diga o nome do cliente (no balcão pode ser "Mesa 3" ou o primeiro nome).'); return; }
   if(!npItens.length){ alert('Ponha pelo menos um item no pedido.'); return; }
+  if(modo === 'mesa' && !v('npMesa')){ alert('Diga o número da mesa.'); return; }
   const pedido = {
     origem, nome: v('npNome'), telefone: v('npTel') || null, entrega: modo, pagamento: v('npPag'),
     troco: v('npPag') === 'dinheiro' ? v('npTroco') : '', observacao: v('npObs'),
     taxa: modo === 'entrega' ? v('npTaxa') : '',
+    mesa: modo === 'mesa' ? v('npMesa') : '',
     endereco: modo === 'entrega' ? { rua: v('npRua'), numero: v('npNum'), bairro: v('npBairro'), referencia: v('npRef') } : null,
     itens: npItens.map(x => ({ produto: x.pid, quantidade: x.qtd, opcoes: x.opcoes })),
   };
@@ -23256,6 +23266,9 @@ function cfgPedidosDoSalao(){
     minimo: Number(p.minimo) || 0, tempo: p.tempo || '',
     pagamentos: Array.isArray(p.pagamentos) && p.pagamentos.length ? p.pagamentos : ['pix', 'dinheiro', 'cartao'],
     avisarCliente: p.avisarCliente !== false, avisarCasa: p.avisarCasa !== false,
+    mesas: Math.min(200, Math.max(0, parseInt(p.mesas, 10) || 0)),
+    entregadores: Array.isArray(p.entregadores) ? p.entregadores.map(x => String(x).trim()).filter(Boolean) : [],
+    fidelidade: Object.assign({ ligado:false, pedidos:10, desconto:10 }, p.fidelidade || {}),
   };
 }
 function gravarCfgPedidos(mudancas){
@@ -23375,7 +23388,9 @@ function cartaoDePedido(p){
       i.observacao ? ` <small>(${escapar(i.observacao)})</small>` : ''}<span>${real(Number(i.preco) * i.quantidade)}</span></li>`).join('')}</ul>
     ${p.observacao ? `<p class="pedido-obs"><b>Observação:</b> ${escapar(p.observacao)}</p>` : ''}
     <p class="pedido-entrega">${p.entrega === 'entrega'
-      ? '🛵 <b>Entrega</b> — ' + escapar(enderecoDoPedido(p)) : '🏪 <b>Retirada</b> no balcão'}</p>
+      ? '🛵 <b>Entrega</b> — ' + escapar(enderecoDoPedido(p)) + (p.entregador ? ' · com <b>' + escapar(p.entregador) + '</b>' : '')
+      : p.entrega === 'mesa' ? '🍽️ <b>Mesa ' + escapar(p.mesa || '') + '</b>'
+      : '🏪 <b>Retirada</b> no balcão'}</p>
     <p class="pedido-pag">${escapar(PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento)}${
       p.troco ? ' · troco para ' + real(Number(p.troco)) + ' (levar ' + real(Number(p.troco) - Number(p.total)) + ')' : ''}
       · ${Number(p.desconto) ? 'cupom ' + escapar(p.cupom || '') + ' − ' + real(Number(p.desconto)) + ' · ' : ''}${
@@ -23462,7 +23477,41 @@ function pintarPedidos(){
 function mudarPedido(id, status){
   return umaVez('pedido:' + id, null, () => mudarPedidoAgora(id, status));
 }
+/* Uma pergunta rápida, numa janela com um botão por resposta. Devolve a
+   escolha, ou null se a pessoa fechou. */
+let _respostaRapida = null;
+function perguntaRapida(titulo, texto, opcoes){
+  return new Promise(ok => {
+    _respostaRapida = v => { _respostaRapida = null; fecharModal(); ok(v); };
+    abrirModal(titulo, `<p class="secao-sub">${texto}</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">${opcoes.map(([v, r], i) =>
+        `<button type="button" class="btn ${i === 0 ? 'btn-p' : ''}" data-v="${escapar(v)}"
+           onclick="_respostaRapida && _respostaRapida(this.dataset.v)">${escapar(r)}</button>`).join('')}</div>`,
+      [['Cancelar', '_respostaRapida ? _respostaRapida(null) : fecharModal()', '']]);
+  });
+}
+
 async function mudarPedidoAgora(id, status){
+  const ped = (pedidosLista || []).find(x => x.id === id) || {};
+  /* Saiu para entrega: quem levou (71). Só pergunta se há entregadores. */
+  if(status === 'saiu' && ped.entrega === 'entrega'){
+    const quem = cfgPedidosDoSalao().entregadores;
+    if(quem.length){
+      const r = await perguntaRapida('Quem vai levar?', 'Pedido #' + ped.numero + ' — escolha o entregador.',
+        quem.map(n => [n, n]).concat([['—', 'Sem entregador']]));
+      if(r === null) return;
+      try{ await Dados.chamar('definir_entregador', { p_pedido: id, p_nome: r === '—' ? '' : r }); }
+      catch(e){ alert('Não deu para guardar o entregador: ' + limparRecusa(e.message)); }
+    }
+  }
+  /* Mesa que paga no fim: como pagou, antes de virar venda (71). */
+  if(status === 'entregue' && ped.pagamento === 'na_mesa'){
+    const forma = await perguntaRapida('Como a mesa pagou?', 'Mesa ' + (ped.mesa || '') + ' — pedido #' + ped.numero + '.',
+      [['pix', 'Pix'], ['dinheiro', 'Dinheiro'], ['cartao', 'Cartão']]);
+    if(forma === null) return;
+    try{ await Dados.chamar('pagamento_da_mesa', { p_pedido: id, p_forma: forma }); }
+    catch(e){ alert('Não deu para guardar o pagamento: ' + limparRecusa(e.message)); return; }
+  }
   let motivo = null;
   if(status === 'cancelado'){
     motivo = prompt('Cancelar este pedido?\n\nEscreva o motivo — ele vai para a cliente (ex.: acabou a massa).');
@@ -23497,7 +23546,8 @@ function imprimirPedido(id){
     ...(p.itens || []).map(i => i.quantidade + 'x ' + i.nome + (i.observacao ? ' (' + i.observacao + ')' : '')
       + '  ' + real(Number(i.preco) * i.quantidade)),
     '', p.observacao ? 'Obs.: ' + p.observacao : '',
-    p.entrega === 'entrega' ? 'ENTREGA: ' + enderecoDoPedido(p) : 'RETIRADA no balcão',
+    p.entrega === 'entrega' ? 'ENTREGA: ' + enderecoDoPedido(p) + (p.entregador ? ' — ' + p.entregador : '')
+      : p.entrega === 'mesa' ? '*** MESA ' + (p.mesa || '') + ' ***' : 'RETIRADA no balcão',
     (PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento) + (p.troco ? ' · troco para ' + real(Number(p.troco)) : ''),
     Number(p.desconto) ? 'Cupom ' + (p.cupom || '') + ': -' + real(Number(p.desconto)) : '',
     Number(p.taxa) ? 'Taxa de entrega: ' + real(Number(p.taxa)) : '', 'TOTAL: ' + real(Number(p.total))]
@@ -23565,6 +23615,23 @@ function abrirConfigPedidos(){
         <span>Avisar no WhatsApp do estabelecimento quando chegar pedido novo</span></label>
       <p class="ajuda">Cada aviso gasta uma mensagem do plano, e só sai com o WhatsApp do PediHub ligado.</p>
     </div>
+    <div class="campo"><label for="pcMesas">Mesas com QR Code</label>
+      <input id="pcMesas" type="number" min="0" max="200" step="1" value="${c.mesas || ''}" placeholder="0 = não atende mesa">
+      <p class="ajuda">Quantas mesas recebem pedido pelo QR. O cliente lê o QR da mesa e pede sem endereço,
+        sem taxa e pode pagar no fim. ${c.mesas ? `<a href="#" onclick="imprimirQrDasMesas(); return false">Imprimir os QR das mesas</a>` : ''}</p></div>
+    <div class="campo"><label for="pcEntregadores">Entregadores (um por linha)</label>
+      <textarea id="pcEntregadores" rows="3" placeholder="Lu&#10;Beto">${escapar(c.entregadores.join('\n'))}</textarea>
+      <p class="ajuda">Ao marcar "Saiu para entrega" você escolhe quem levou, e o acerto do dia soma as entregas e as taxas de cada um.</p></div>
+    <div class="campo"><label>Fidelidade</label>
+      <label class="check"><input type="checkbox" id="pcFid" ${marcado(c.fidelidade.ligado)}>
+        <span>Dar desconto automático para cliente fiel</span></label>
+      <div class="dupla" style="margin-top:6px">
+        <div class="campo"><label for="pcFidN">A cada quantos pedidos entregues</label>
+          <input id="pcFidN" type="number" min="2" max="50" value="${Number(c.fidelidade.pedidos) || 10}"></div>
+        <div class="campo"><label for="pcFidD">Desconto no próximo (%)</label>
+          <input id="pcFidD" type="number" min="1" max="50" value="${Number(c.fidelidade.desconto) || 10}"></div>
+      </div>
+      <p class="ajuda">Reconhece o cliente pelo WhatsApp do pedido. Não soma com cupom.</p></div>
     <div id="pcRecado"></div>`,
     [['Cancelar', 'fecharModal()', ''], ['Salvar', 'salvarConfigPedidos()', 'btn-p']]);
 }
@@ -23587,9 +23654,64 @@ function salvarConfigPedidos(){
   })).filter(t => t.bairro);
   gravarCfgPedidos({ entrega, retirada, taxaPadrao: num('pcTaxa'), taxas, minimo: num('pcMinimo'),
     tempo: String(v('pcTempo').value || '').trim().slice(0, 40), pagamentos,
-    avisarCliente: !!v('pcAvisaCliente').checked, avisarCasa: !!v('pcAvisaCasa').checked });
+    avisarCliente: !!v('pcAvisaCliente').checked, avisarCasa: !!v('pcAvisaCasa').checked,
+    mesas: Math.min(200, Math.floor(num('pcMesas'))),
+    entregadores: String(v('pcEntregadores').value || '').split('\n').map(x => x.trim()).filter(Boolean).slice(0, 30),
+    fidelidade: { ligado: !!v('pcFid').checked,
+                  pedidos: Math.min(50, Math.max(2, Math.floor(num('pcFidN')) || 10)),
+                  desconto: Math.min(50, Math.max(1, num('pcFidD') || 10)) } });
   fecharModal();
   desenharPedidos();
+}
+
+/* Os QR das mesas, numa folha para imprimir e recortar: um por mesa, com o
+   número grande. Cada QR abre o cardápio já na mesa certa (?mesa=N). */
+function imprimirQrDasMesas(){
+  const c = cfgPedidosDoSalao(), sl = acharSalao(salaoAtual) || {};
+  if(!c.mesas || !window.QR) return;
+  const base = pdLinkDoSalao();
+  let html = '';
+  for(let n = 1; n <= c.mesas; n++){
+    html += `<div class="m"><div class="q">${QR.svg(base + '&mesa=' + n, { rotulo: 'QR da mesa ' + n })}</div>
+      <b>Mesa ${n}</b><span>Aponte a câmera e faça o seu pedido</span></div>`;
+  }
+  const q = document.createElement('iframe');
+  q.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+  document.body.appendChild(q);
+  const doc = q.contentWindow.document;
+  doc.open();
+  doc.write('<!doctype html><html><head><meta charset="utf-8"><title>QR das mesas</title><style>'
+    + 'body{font-family:system-ui,Arial,sans-serif;margin:8mm}h1{font-size:16px;margin:0 0 8mm}'
+    + '.g{display:grid;grid-template-columns:repeat(3,1fr);gap:8mm}'
+    + '.m{border:1px dashed #999;border-radius:8px;padding:6mm;text-align:center;break-inside:avoid}'
+    + '.q svg{width:100%;height:auto}.m b{display:block;font-size:22px;margin-top:3mm}'
+    + '.m span{font-size:11px;color:#555}</style></head><body><h1></h1><div class="g">' + html
+    + '</div></body></html>');
+  doc.close();
+  doc.querySelector('h1').textContent = (sl.nome || '') + ' — QR das mesas';
+  setTimeout(() => { try{ q.contentWindow.focus(); q.contentWindow.print(); }catch(e){} }, 150);
+  setTimeout(() => q.remove(), 60000);
+}
+
+/* O acerto dos entregadores: hoje, 7 dias ou o mês. */
+async function abrirAcertoEntregadores(periodo){
+  const hojeIso = hoje();
+  const de = periodo === 'mes' ? hojeIso.slice(0, 8) + '01' : periodo === '7' ? somarDias(hojeIso, -6) : hojeIso;
+  let lista = [];
+  try{ lista = await Dados.chamar('acerto_entregadores', { p_salao: salaoAtual, p_de: de, p_ate: hojeIso }) || []; }
+  catch(e){ alert('Não consegui ler o acerto: ' + limparRecusa(e.message)); return; }
+  const botao = (k, r) => `<button type="button" class="btn btn-peq ${periodo === k ? 'btn-p' : ''}"
+      onclick="abrirAcertoEntregadores('${k}')">${r}</button>`;
+  abrirModal('Acerto dos entregadores', `
+    <div style="display:flex;gap:6px;margin-bottom:12px">${botao('hoje', 'Hoje')}${botao('7', '7 dias')}${botao('mes', 'Este mês')}</div>
+    ${lista.length ? `<table class="tabela"><thead><tr><th>Entregador</th><th style="text-align:right">Entregas</th>
+        <th style="text-align:right">Taxas</th><th style="text-align:right">Em pedidos</th></tr></thead><tbody>
+      ${lista.map(x => `<tr><td><b>${escapar(x.entregador)}</b></td><td style="text-align:right">${x.entregas}</td>
+        <td style="text-align:right"><b>${real(Number(x.taxas))}</b></td><td style="text-align:right">${real(Number(x.total))}</td></tr>`).join('')}
+      </tbody></table>
+      <p class="ajuda" style="margin-top:8px">"Taxas" é o que os clientes pagaram de entrega: a base do acerto com cada um.</p>`
+      : '<p class="secao-sub">Nenhuma entrega concluída neste período.</p>'}`,
+    [['Fechar', 'fecharModal()', 'btn-p']]);
 }
 
 function iniciar(){

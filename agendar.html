@@ -6258,7 +6258,17 @@ function ehRestaurante(){ return !!(salao && salao.tipo === 'restaurante' && NA_
 function modoPedidos(){ return ehRestaurante() && (!pedidosCasa || pedidosCasa.ligado === true); }
 function lojaTemSaida(){ return modoPedidos() || !!zapDoSalao(); }
 function pedidosAbertos(){ return !pedidosCasa || pedidosCasa.aberto !== false; }
-const PAGAMENTOS_PEDIDO = { pix:'Pix', dinheiro:'Dinheiro', cartao:'Cartão na entrega' };
+const PAGAMENTOS_PEDIDO = { pix:'Pix', dinheiro:'Dinheiro', cartao:'Cartão na entrega', na_mesa:'Pagar na mesa, no fim' };
+
+/* ── A MESA DO QR (71) ──────────────────────────────────────────────────────
+   O QR de cada mesa abre ?salao=…&mesa=5. Vale só se a casa tem essa mesa
+   (pedidos_da_casa().mesas): aí o pedido é na mesa — sem endereço, sem
+   taxa, telefone opcional — e dá para pagar no fim. */
+function mesaDoLink(){
+  const m = String(new URLSearchParams(location.search).get('mesa') || '').trim();
+  const n = parseInt(m, 10), total = Number((pedidosCasa || {}).mesas) || 0;
+  return /^[0-9]{1,3}$/.test(m) && n >= 1 && n <= total ? String(n) : null;
+}
 const ETAPAS_PEDIDO = { recebido:'Recebido', em_preparo:'Em preparo', saiu:'Saiu para entrega',
   pronto:'Pronto para retirar', entregue:'Entregue', cancelado:'Cancelado' };
 
@@ -6309,6 +6319,7 @@ function formDoPedido(){
     pagamento: so((c.pagamentos || ['pix', 'dinheiro', 'cartao'])),
     troco: '', obs: '' });
   if(pedidoForm.entrega === null && c.entrega !== false && eu.rua) pedidoForm.entrega = 'entrega';
+  if(mesaDoLink()){ pedidoForm.entrega = 'mesa'; pedidoForm.pagamento = 'na_mesa'; }
   return pedidoForm;
 }
 function anotarPedido(campo, valor){ formDoPedido()[campo] = valor; atualizarContaDoPedido(); }
@@ -6317,7 +6328,7 @@ function escolherNoPedido(campo, valor){ formDoPedido()[campo] = valor; pedidoEr
 // A taxa que a tela MOSTRA — a mesma regra do banco. Nulo = ainda não dá para saber.
 function taxaDoPedido(){
   const f = formDoPedido(), c = pedidosCasa || {};
-  if(f.entrega !== 'entrega') return 0;
+  if(f.entrega !== 'entrega') return 0;   // retirada e mesa: sem taxa
   const taxas = Array.isArray(c.taxas) ? c.taxas : [];
   if(!taxas.length) return Number(c.taxaPadrao) || 0;
   const t = taxas.find(x => semAcento(x.bairro).trim() === semAcento(f.bairro).trim());
@@ -6420,8 +6431,11 @@ function desenharPedido(){
       <input id="${id}" value="${escapar(f[chave] || '')}" oninput="anotarPedido('${chave}', this.value)" ${extra || ''}>
     </div>`;
   const taxas = Array.isArray(c.taxas) ? c.taxas : [];
-  const modos = [c.entrega !== false && ['entrega', 'Entrega'], c.retirada !== false && ['retirada', 'Retirar no local']].filter(Boolean);
-  const pags = (c.pagamentos || ['pix', 'dinheiro', 'cartao']);
+  const mesa = mesaDoLink();
+  const modos = mesa ? [['mesa', 'Mesa ' + mesa]]
+    : [c.entrega !== false && ['entrega', 'Entrega'], c.retirada !== false && ['retirada', 'Retirar no local']].filter(Boolean);
+  const pags = mesa ? ['na_mesa'].concat(c.pagamentos || ['pix', 'dinheiro', 'cartao'])
+    : (c.pagamentos || ['pix', 'dinheiro', 'cartao']);
   /* Montados fora do HTML de baixo: o `campo()` já escapa o que escreve, e o
      varredor do seguranca.test não precisa de exceção para isso. */
   const linhaDoNumero = campo('pdNumero', 'Número <span class="obrig">*</span>', 'numero', 'inputmode="numeric"')
@@ -6462,7 +6476,7 @@ function desenharPedido(){
     <div class="cat">Seus dados</div>
     ${campo('pdNome', 'Nome <span class="obrig">*</span>', 'nome', 'autocomplete="name"')}
     <div class="campo">
-      <label for="pdTel">WhatsApp <span class="obrig">*</span></label>
+      <label for="pdTel">WhatsApp ${f.entrega === 'mesa' ? '<small>(opcional na mesa)</small>' : '<span class="obrig">*</span>'}</label>
       <input id="pdTel" type="tel" inputmode="numeric" placeholder="(11) 99999-9999" autocomplete="tel"
              value="${escapar(f.tel || '')}" oninput="mascaraTelefone(this); anotarPedido('tel', this.value)">
       <p class="pista">É por aqui que chega a confirmação do pedido.</p>
@@ -6482,6 +6496,8 @@ function desenharPedido(){
     ${campoDoCupomHtml()}
     <div class="pd-bloco" id="pedidoConta">${contaDoPedidoHtml()}</div>
     ${c.tempo ? `<p class="pista">Tempo estimado: ${escapar(c.tempo)}.</p>` : ''}
+    ${c.fidelidade && c.fidelidade.ligado ? `<p class="pista">⭐ Fidelidade: a cada ${Number(c.fidelidade.pedidos)} pedidos
+      entregues, o próximo sai com ${Number(c.fidelidade.desconto)}% de desconto — sozinho, pelo seu WhatsApp.</p>` : ''}
     ${pedidoErro ? `<div class="recado erro" role="alert">${escapar(pedidoErro)}</div>` : ''}`;
 }
 
@@ -6494,13 +6510,14 @@ function faltaNoPedido(){
     return 'Para entregar, preencha a rua, o número e o bairro.';
   if(!f.nome.trim()) return 'Diga o seu nome para o pedido.';
   const d = (f.tel || '').replace(/\D/g, '');
-  if(d.length < 10 || d.length > 11) return 'Confira o WhatsApp: precisa do DDD.';
+  if((f.entrega !== 'mesa' || d) && (d.length < 10 || d.length > 11)) return 'Confira o WhatsApp: precisa do DDD.';
+  if(f.entrega === 'mesa' && !f.pagamento) return 'Escolha como vai pagar.';
   if(!f.pagamento) return 'Escolha como vai pagar.';
   /* O mínimo também, com a mesma conta do aviso da conta logo acima: sem
      isto o botão ia ao banco só para voltar com a recusa — que o banco
      continua dando, se alguém pular esta tela. */
   const minimo = Number((pedidosCasa || {}).minimo) || 0, sub = totalDoCarrinho();
-  if(minimo && sub < minimo)
+  if(minimo && sub < minimo && f.entrega !== 'mesa')
     return `O pedido mínimo é de ${real(minimo)}. Faltam ${real(minimo - sub)} — `
          + 'adicione mais itens.';
   return '';
@@ -6518,6 +6535,7 @@ async function confirmarPedido(){
       nome: f.nome.trim(), telefone: f.tel, entrega: f.entrega, pagamento: f.pagamento,
       troco: f.pagamento === 'dinheiro' ? f.troco.trim() : '', observacao: f.obs.trim(),
       cupom: cupomPedido ? cupomPedido.codigo : '',
+      mesa: f.entrega === 'mesa' ? mesaDoLink() : null,
       endereco: f.entrega === 'entrega' ? { rua: f.rua, numero: f.numero, complemento: f.complemento,
                                             bairro: f.bairro, referencia: f.referencia } : null,
       itens: itensDoPedido().map(p => ({ produto: p.produtoId || p.id, quantidade: carrinho[p.id],
@@ -6591,7 +6609,9 @@ function desenharAcompanhar(){
         : 'Motivo: ' + escapar(d.motivo || 'não informado') + '.'}</div>`
     : `<ol class="pd-etapas">${caminho.map((e, i) => `<li class="${i < aqui ? 'feito' : i === aqui ? 'agora' : ''}">
           <span class="pd-bola">${i < aqui ? '✓' : i + 1}</span>
-          <span>${e === 'entregue' && d.entrega === 'retirada' ? 'Retirado' : ETAPAS_PEDIDO[e]}${
+          <span>${e === 'entregue' && d.entrega === 'retirada' ? 'Retirado'
+                : e === 'entregue' && d.entrega === 'mesa' ? 'Servido'
+                : e === 'pronto' && d.entrega === 'mesa' ? 'Pronto, já vai para a mesa' : ETAPAS_PEDIDO[e]}${
             i === aqui && e === 'recebido' ? '<small>Esperando o restaurante confirmar.</small>' : ''}${
             i === aqui && e === 'em_preparo' && d.tempo ? '<small>Previsão: ' + escapar(d.tempo) + '.</small>' : ''}</span>
         </li>`).join('')}</ol>`}
@@ -6599,12 +6619,18 @@ function desenharAcompanhar(){
       ${(d.itens || []).map(i => `<div class="pd-linha"><span>${i.quantidade}× ${escapar(i.nome)}${
         i.observacao ? `<small>${escapar(i.observacao)}</small>` : ''}</span>
         <b>${real(Number(i.preco) * i.quantidade)}</b></div>`).join('')}
+      ${Number(d.desconto) ? `<div class="pd-linha pd-desconto"><span>${d.cupom === 'FIDELIDADE' ? 'Desconto fidelidade'
+          : 'Cupom ' + escapar(d.cupom || '')}</span><b>− ${real(Number(d.desconto))}</b></div>` : ''}
       ${Number(d.taxa) ? `<div class="pd-linha"><span>Taxa de entrega</span><b>${real(Number(d.taxa))}</b></div>` : ''}
       <div class="pd-linha pd-total"><span>Total</span><b>${real(Number(d.total))}</b></div>
-      <p class="pista">${d.entrega === 'entrega' ? 'Entrega' + (d.bairro ? ' — ' + escapar(d.bairro) : '') : 'Retirada no local'}
+      <p class="pista">${d.entrega === 'entrega' ? 'Entrega' + (d.bairro ? ' — ' + escapar(d.bairro) : '')
+        : d.entrega === 'mesa' ? 'Mesa ' + escapar(d.mesa || '') : 'Retirada no local'}
         · ${escapar(PAGAMENTOS_PEDIDO[d.pagamento] || d.pagamento || '')}${
         d.troco ? ' (troco para ' + real(Number(d.troco)) + ')' : ''}</p>
     </div>
+    ${d.fidelidade ? `<div class="recado" style="margin:12px 0">${d.fidelidade.temDesconto
+        ? `🎉 <b>Você ganhou ${Number(d.fidelidade.desconto)}% de desconto</b> no próximo pedido (sai sozinho).`
+        : `⭐ <b>Fidelidade:</b> faltam ${d.fidelidade.faltam} pedido(s) para ganhar ${Number(d.fidelidade.desconto)}% de desconto.`}</div>` : ''}
     ${zapUrl ? `<a class="link" href="${zapUrl}" target="_blank" rel="noopener">Falar com o restaurante no WhatsApp</a>` : ''}
     ${d.status === 'recebido' ? `<p style="margin-top:14px">
         <button class="link" style="color:var(--erro)" onclick="cancelarPedidoDaCliente()">Cancelar este pedido</button></p>` : ''}`;
