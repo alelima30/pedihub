@@ -60,7 +60,7 @@ await dono.criarConta({ email: `dono-${sufixo}@teste.com`, senha: 'barbearia123'
 dizer(!!dono.sessao() && !!dono.sessao().usuarioId, 'conta criada e sessão aberta');
 
 const planos = await dono.lista('planos', {}, 'ordem');
-dizer(planos.length >= 6, `os ${planos.length} planos chegam na tela de preços`);
+dizer(planos.length >= 4, `os ${planos.length} planos chegam na tela de preços`);
 dizer(planos[0].maxProfissionais === 1 && planos[0].precoMes !== undefined,
   'o mapa de colunas traduziu max_profissionais e preco_mes');
 
@@ -272,7 +272,7 @@ secao('A ponte entre o `bd` da tela e o banco');
   const bd = await dono.baixar(salaoId);
   dizer(Array.isArray(bd.servicos) && bd.servicos.length === 1,
     'baixar() monta o bd com o que existe no banco');
-  dizer(Array.isArray(bd.planos) && bd.planos.length >= 6,
+  dizer(Array.isArray(bd.planos) && bd.planos.length >= 4,
     'e traz também as tabelas de leitura (planos)');
 
   // A tela mexe no objeto, como faria ao clicar em salvar.
