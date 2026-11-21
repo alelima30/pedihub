@@ -16,12 +16,12 @@
 /* Sobe a cada correção publicada, e tem que andar junto com o VERSAO_APP do
    app.html: o carimbo na lateral mostra aquele, e dois números divergentes
    fariam a tela afirmar uma versão que não é a que está servindo. */
-const VERSAO = 'pedihub-v9.ab5208';
+const VERSAO = 'pedihub-v9.ad4e15';
 
 const ESSENCIAIS = [
   './',
   './app.html',
-  './agendar.html',
+  './cardapio.html',
   './criar.html',
   './entrar.html',
   // Chega-se aqui pelo link de um e-mail, às vezes na rua e com pouca rede.

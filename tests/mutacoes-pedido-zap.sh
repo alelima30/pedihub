@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 T=tests/pedido-zap.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mpz-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mpz-$(basename "$a")" "$a"; done
@@ -62,7 +62,7 @@ troca estilo.css \
   && rodar "Enviar pedido a 360px"
 
 echo "3. o total volta a dividir a linha com a contagem"
-troca agendar.html \
+troca cardapio.html \
   "        <b>\${totalEscrito()}</b>
         <span>\${modoPedidos() ? (n === 1 ? '1 item' : n + ' itens') : (n === 1 ? '1 produto' : n + ' produtos')} · Ver meu pedido</span>" \
   "        <b>\${n === 1 ? '1 produto' : n + ' produtos'} · \${totalEscrito()}</b>
@@ -82,7 +82,7 @@ troca estilo.css \
   && rodar "Enviar sem contraste na fita escolhida"
 
 echo "6. a página não calcula a letra da fita"
-troca agendar.html \
+troca cardapio.html \
   "p('--fita-cor', cor); p('--fita-txt', letraSobre(cor));" \
   "p('--fita-cor', cor);" \
   && rodar "letra branca na fita clara"
@@ -94,7 +94,7 @@ troca estilo.css \
   && rodar "letra da fita errada"
 
 echo "8. o botão perde o nome para leitor de tela"
-troca agendar.html \
+troca cardapio.html \
   ' aria-label="Enviar pedido no WhatsApp">' \
   '>' \
   && rodar "botão sem nome"

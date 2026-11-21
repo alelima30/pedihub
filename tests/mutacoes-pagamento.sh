@@ -14,7 +14,7 @@ T=tests/forma-pagamento.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 PSQL="psql -h ${PGHOST_BANCADA:-/tmp} -p ${PGPORT_BANCADA:-5444} -U postgres -d app -v ON_ERROR_STOP=1 -q"
 
-ARQS="app.html agendar.html dados.js estilo.css supabase/09_cliente.sql"
+ARQS="app.html cardapio.html dados.js estilo.css supabase/09_cliente.sql"
 SQLS="supabase/09_cliente.sql"
 guarda(){ echo "/tmp/mfp-$(echo "$1" | tr '/' '_')"; }
 for a in $ARQS; do cp "$a" "$(guarda "$a")"; done
@@ -70,38 +70,38 @@ troca supabase/09_cliente.sql \
   && rodar "dinheiro num restaurante que só aceita Pix"
 
 echo "3. link: a confirmação não pergunta"
-troca agendar.html \
+troca cardapio.html \
   "  desenharFormaPagamento();
   desenharCupomAgenda();" \
   "  desenharCupomAgenda();" \
   && rodar "a pergunta some"
 
 echo "4. link: marca sem escolher"
-troca agendar.html \
+troca cardapio.html \
   "  if(faltaFormaPagamento()) return;" \
   "  ;" \
   && rodar "o restaurante não sabe como ela paga"
 
 echo "5. link: a escolha não sobe"
-troca agendar.html \
+troca cardapio.html \
   "          ? { p_forma_pagamento: escolha.formaPagamento } : {})," \
   "          ? {} : {})," \
   && rodar "a tela mostra Pix e o banco não sabe"
 
 echo "6. link: oferece forma que o restaurante não aceita"
-troca agendar.html \
+troca cardapio.html \
   "  return pag && pag.formas.length ? todas.filter(([k]) => pag.formas.includes(k)) : todas;" \
   "  return todas;" \
   && rodar "dinheiro aparece num restaurante que só aceita Pix"
 
 echo "7. link: o resumo não mostra a forma"
-troca agendar.html \
+troca cardapio.html \
   "        ? linha('cartao', 'Pagamento (no restaurante)', escapar(nomeDaForma(escolha.formaPagamento))) : '')" \
   "        ? '' : '')" \
   && rodar "ela confirma sem ver o que escolheu"
 
 echo "8. link: Meus horários não mostra a forma"
-troca agendar.html \
+troca cardapio.html \
   "            nomeDaForma(a.forma_pagamento) ? ' · ' + escapar(nomeDaForma(a.forma_pagamento)) : ''}</div>\${" \
   "            ''}</div>\${" \
   && rodar "ela não lembra o que disse"

@@ -109,7 +109,7 @@ async function pagina(){
   const ctx = await nav.newContext({ viewport:{ width:412, height:2200 }, isMobile:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('página: ' + e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => document.querySelector('#capaInfo .recurso svg')
     && document.querySelector('.sv-cartao-relogio svg') && document.querySelector('.boas-cta svg'),
     null, { timeout: 15000 });

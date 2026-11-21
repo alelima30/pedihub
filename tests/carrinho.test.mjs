@@ -89,7 +89,7 @@ const erros = [];
 p.on('pageerror', x => erros.push(x.message));
 
 async function abrir(){
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForTimeout(2400);
 }
 /* As três contas, do mesmo instante. Medi-las juntas é o ponto do arquivo: o

@@ -21,7 +21,7 @@ T=tests/fita.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST="${PGHOST:-/tmp}" PGPORT="${PGPORT:-5444}" PGUSER="${PGUSER:-postgres}"
 
-ARQS="app.html agendar.html estilo.css supabase/25_loja.sql"
+ARQS="app.html cardapio.html estilo.css supabase/25_loja.sql"
 for a in $ARQS; do cp "$a" "/tmp/mf-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mf-$(basename "$a")" "$a"; done
@@ -80,13 +80,13 @@ troca supabase/25_loja.sql \
   && rodar "peneira de brilho com ::boolean" sql
 
 echo "3. a ponte esquece a cor da fita"
-troca agendar.html \
+troca cardapio.html \
   "      fitaCor: s.fitaCor || null," \
   "      fitaCor: null," \
   && rodar "cor não atravessa a ponte"
 
 echo "4. o padrão passa a escrever variável"
-troca agendar.html \
+troca cardapio.html \
   "  if(t && t !== '5.2s') p('--fita-tempo', t); else fora('--fita-tempo');" \
   "  if(t) p('--fita-tempo', t); else fora('--fita-tempo');" \
   && rodar "padrão virando escolha"
@@ -133,7 +133,7 @@ troca estilo.css \
   && rodar "valor do pedido piscando de branco"
 
 echo "9. chapado passa a escrever luz zero, e o gradiente volta"
-troca agendar.html \
+troca cardapio.html \
   "  const METAL = { suave: ['18%','12%'], media: ['30%','18%'], forte: ['46%','30%'] };" \
   "  const METAL = { chapado: ['0%','0%'], suave: ['18%','12%'], media: ['30%','18%'], forte: ['46%','30%'] };" \
   && rodar "chapado que não é chapado"

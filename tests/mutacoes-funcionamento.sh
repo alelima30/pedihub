@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 T=tests/funcionamento.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css funcionamento.js"
+ARQS="app.html cardapio.html estilo.css funcionamento.js"
 for a in $ARQS; do cp "$a" "/tmp/mfn-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mfn-$(basename "$a")" "$a"; done
@@ -115,25 +115,25 @@ troca app.html \
   && rodar "desligar o horário não desliga"
 
 echo "11. a página mostra Informações para quem não cadastrou nada"
-troca agendar.html \
+troca cardapio.html \
   "  if(extra || botoes.length) botoes.push(['informacoes', 'info', 'Informações']);" \
   "  botoes.push(['informacoes', 'info', 'Informações']);" \
   && rodar "página que já estava no ar mudando sozinha"
 
 echo "12. o destaque vai sempre para a segunda"
-troca agendar.html \
+troca cardapio.html \
   "        return \`<div class=\"semana-dia\${d === ag.dow ? ' hoje' : ''}" \
   "        return \`<div class=\"semana-dia\${d === 1 ? ' hoje' : ''}" \
   && rodar "hoje é sábado e a segunda acesa"
 
 echo "13. o cartão não se atualiza sozinho"
-troca agendar.html \
+troca cardapio.html \
   "    if(tela === 'capa') desenharStatusDaCasa();" \
   "" \
   && rodar "ABERTO na hora do almoço"
 
 echo "14. trocar de tela deixa a folha aberta"
-troca agendar.html \
+troca cardapio.html \
   "  if(typeof fecharFolha === 'function') fecharFolha(true);" \
   "" \
   && rodar "folha flutuando sobre a loja"
@@ -151,7 +151,7 @@ troca estilo.css \
   && rodar "folha roxa em restaurante vermelho"
 
 echo "17. o endereço volta a entrar sem escape na folha"
-troca agendar.html \
+troca cardapio.html \
   "  if(end.length) itens.push(['local', 'Endereço', escapar(end.join(' · '))," \
   "  if(end.length) itens.push(['local', 'Endereço', end.join(' · ')," \
   && rodar "HTML do dono rodando no celular da cliente"

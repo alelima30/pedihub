@@ -271,7 +271,7 @@ console.log('\nO app do cliente e o cadastro');
 // `demo=1` em todas: estas medidas são de LAYOUT, e layout não deve depender
 // de o banco estar no ar. Sem isso, a suíte de celular passaria a exigir
 // internet e rede boa para dizer se um botão tem 44px.
-for(const [url, nome] of [['agendar.html?salao=studio-bella&demo=1','vitrine do cliente'],
+for(const [url, nome] of [['cardapio.html?salao=studio-bella&demo=1','vitrine do cliente'],
                           ['criar.html?demo=1','cadastro do dono']]){
   await p.goto(BASE + url); await p.waitForTimeout(900);
   const r = await medir();
@@ -282,7 +282,7 @@ for(const [url, nome] of [['agendar.html?salao=studio-bella&demo=1','vitrine do 
 /* A loja do link: a lupa da busca (o `background:… !important` do estilo
    geral a apagava, e sobrava o recuo vazio) e o "Adicionar" com margem
    interna (encostava nas bordas). */
-await p.goto(BASE + 'agendar.html?salao=studio-bella&demo=1'); await p.waitForTimeout(900);
+await p.goto(BASE + 'cardapio.html?salao=studio-bella&demo=1'); await p.waitForTimeout(900);
 await p.evaluate(() => irPara('loja')); await p.waitForTimeout(600);
 const loja = await p.evaluate(() => {
   const b = document.getElementById('buscaProduto'), a = document.querySelector('#listaProdutos .loja-add');

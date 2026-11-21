@@ -18,7 +18,7 @@ trava toda casa como restaurante (`64_so_restaurante.sql`).
 
 | Para quem | O quê |
 |---|---|
-| **Cliente** (`agendar.html?salao=…`) | Cardápio por categoria, complementos e variações (tamanho, meio a meio, borda, adicionais), carrinho, entrega com taxa por bairro ou retirada, troco, cupom, acompanhamento do pedido e fidelidade. Pelo QR da mesa (`&mesa=N`): pedido na mesa, sem endereço, pagando no fim. |
+| **Cliente** (`cardapio.html?salao=…`) | Cardápio por categoria, complementos e variações (tamanho, meio a meio, borda, adicionais), carrinho, entrega com taxa por bairro ou retirada, troco, cupom, acompanhamento do pedido e fidelidade. Pelo QR da mesa (`&mesa=N`): pedido na mesa, sem endereço, pagando no fim. |
 | **Restaurante** (`app.html`) | Pedidos em colunas com som, aviso no celular e impressão (automática por aparelho); pedido por telefone e balcão; cardápio com complementos e "esgotado" com um toque; entrega e pagamento, mesas com QR, entregadores e o acerto, fidelidade; cupons; caixa, dashboard e relatórios; clientes, aniversariantes e equipe. |
 | **Plataforma** (`admin.html`) | Os restaurantes, as assinaturas e o check-up do sistema. |
 
@@ -31,7 +31,7 @@ preço muda com o `supabase/PRECOS.sql`.
 | Arquivo | O que faz |
 |---|---|
 | `app.html` | O painel do restaurante |
-| `agendar.html` | O cardápio e o pedido do cliente (o nome ficou do AgendaPro) |
+| `cardapio.html` | O cardápio e o pedido do cliente (`agendar.html` só redireciona, para links antigos) |
 | `criar.html`, `entrar.html`, `nova-senha.html`, `convite.html` | Cadastro, login, senha e convite da equipe |
 | `conheca.html` | A página de venda |
 | `config.js` | **O único arquivo a editar** para ligar no Supabase |

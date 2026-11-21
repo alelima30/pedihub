@@ -82,7 +82,7 @@ async function link(slug){
   const c = await ctx.newPage();
   c.on('pageerror', e => erros.push('link: ' + e.message));
   c.on('dialog', d => d.accept());
-  await c.goto(BASE + '/agendar.html?salao=' + slug);
+  await c.goto(BASE + '/cardapio.html?salao=' + slug);
   await c.waitForFunction(() => typeof salao !== 'undefined' && salao, null, { timeout: 15000 });
   await c.waitForTimeout(1500);
   return c;

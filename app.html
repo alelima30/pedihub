@@ -6,7 +6,7 @@
      qualquer punha esta tela num quadro invisivel e fazia a dona clicar sem
      saber (clickjacking). O GitHub Pages nao deixa mandar o cabecalho que
      barra isso, entao a pagina se recusa sozinha: some e abre no lugar
-     certo. O link da cliente (agendar.html) fica de fora de proposito: o
+     certo. O link da cliente (cardapio.html) fica de fora de proposito: o
      salao pode querer o agendamento dentro do proprio site. -->
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -657,7 +657,7 @@ span.ajuda{display:block;margin-top:5px}
     <button class="menu-botao" onclick="alternarLateral()" aria-label="Abrir menu">
       <span data-ico="menu"></span></button>
     <div class="trilha-topo">
-      <h1 id="tituloTela">Agenda</h1>
+      <h1 id="tituloTela">Pedidos</h1>
       <span class="tb-tag" id="tbSalao">—</span>
     </div>
     <span class="espaco"></span>
@@ -2215,7 +2215,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.ab5208';
+const VERSAO_APP = 'v9.ad4e15';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -3498,7 +3498,7 @@ function pintarServicos(){
    ⚠ LISTA VAZIA QUER DIZER "NÃO ESCOLHI", nunca "esconda tudo". É o estado
    de todo restaurante que já existe, e tratá-la como "nenhum" deixaria essas casas
    com a capa em branco no dia da atualização. Sem escolha, a capa se vira —
-   ver `destaquesDaCapa()` no agendar.html. */
+   ver `destaquesDaCapa()` no cardapio.html. */
 function destaquesDoSalao(sl){
   const d = ((sl || acharSalao(salaoAtual) || {}).cfg || {}).destaques;
   return Array.isArray(d) ? d : [];
@@ -4697,7 +4697,7 @@ async function tirarDoPacoteAgora(vendaId, nome, deExcluir){
    Texto livre, e por isso passa por aqui: sem espaço sobrando nas pontas nem
    dois no meio. A comparação entre elas ignora maiúscula — "Tratamento de
    cabelo" e "tratamento de CABELO" são a mesma, e a forma que aparece é a
-   mais usada. A loja do link faz a mesma conta (agendar.html). */
+   mais usada. A loja do link faz a mesma conta (cardapio.html). */
 function limparCategoria(c){ return String(c || '').replace(/\s+/g, ' ').trim(); }
 function categoriasDosProdutos(){
   const formas = new Map();   // chave em minúscula → { forma: quantas }
@@ -7024,9 +7024,9 @@ function prepararPublico(){
      e o QR abriam a página ligada no banco de VERDADE — e, se existisse lá um
      restaurante com o mesmo apelido, quem só estava conhecendo o sistema marcava
      horário num restaurante real. Achado pelo caça-bug. */
-  const base = location.href.replace(/\/[^\/]*$/, '/') + 'agendar.html?salao=' + s.slug + sufixoDemo();
+  const base = location.href.replace(/\/[^\/]*$/, '/') + 'cardapio.html?salao=' + s.slug + sufixoDemo();
   document.getElementById('linkPublico').value = base;
-  document.getElementById('abrirComoCliente').href = 'agendar.html?salao=' + s.slug + sufixoDemo();
+  document.getElementById('abrirComoCliente').href = 'cardapio.html?salao=' + s.slug + sufixoDemo();
 
   /* ⚠ O QR QUE O CARTÃO AQUI EM CIMA PROMETIA HÁ MUITO TEMPO.
 
@@ -11854,8 +11854,8 @@ function pintarSalao(){
 
 <section class="ap-sec" id="apBotoes">
         <h4 class="ap-sec-t"><span class="ap-sec-ic" aria-hidden="true">🔘</span>Botões e atalhos</h4>
-        <p class="ap-sec-sub">O botão de agendar e os atalhos abaixo do endereço.</p>
-      <div class="ap-sub" style="margin-top:4px">Botão Agendar horário</div>
+        <p class="ap-sec-sub">O botão de pedir e os atalhos abaixo do endereço.</p>
+      <div class="ap-sub" style="margin-top:4px">Botão Faça seu pedido</div>
       <div id="coresBotoes" class="cores-grupo"></div>
             <div class="rot" style="margin:12px 0 8px">Brilho no botão</div>
       <div class="regua" id="reguaBrilho" style="justify-content:flex-start"></div>
@@ -11870,7 +11870,7 @@ function pintarSalao(){
            sozinho. (Sem crase: template literal.) -->
       <div class="ap-sub">Botão de baixo</div>
       <p class="secao-sub" style="margin:0 0 6px">O botão fixo no pé da página
-        (“Agendar horário”), que acompanha a cliente enquanto ela rola.</p>
+        (“Faça seu pedido”), que acompanha a cliente enquanto ela rola.</p>
       <div id="coresRodape" class="cores-grupo"></div>
       <div class="rot" style="margin:12px 0 8px">Acabamento</div>
       <div class="regua" id="reguaRodapeMetal" style="justify-content:flex-start"></div>
@@ -11896,7 +11896,7 @@ function pintarSalao(){
       <div class="ap-sub">Barra do carrinho</div>
       <p class="secao-sub" style="margin-bottom:12px">A barra que aparece no
         pé da tela quando a cliente põe um produto no pedido. Ela é metálica,
-        como o botão de agendar — aqui você decide o quanto.</p>
+        como o botão de pedir — aqui você decide o quanto.</p>
 
       <div class="dupla">
         <div>
@@ -13092,7 +13092,7 @@ const CORES_SOLTAS = [
      passou a medir o texto contra o papel também, e não só contra o card. */
   ['papel',      'Fundo da página', 'O papel atrás de tudo. Vale a página inteira.'],
   ['secundaria', 'Destaques clarinhos', 'O tom claro atrás do Bem-vindo e da inicial do serviço sem foto.'],
-  ['botao',      'Cor dos botões',  'O botão de agendar e os de ação. O degradê metálico sai desta cor.'],
+  ['botao',      'Cor dos botões',  'O botão de pedir e os de ação. O degradê metálico sai desta cor.'],
   ['texto',      'Texto principal', 'A rua do endereço e o corpo do texto, no cartão e na lista.'],
   /* O cinza dos detalhes. Vale a pena listar ONDE ele aparece, porque "texto
      secundário" não diz nada a quem está olhando a própria página: é a linha
@@ -13123,7 +13123,7 @@ const CORES_SOLTAS = [
   ['moldura',    'Moldura do logo', 'O anel em volta da logo, na capa.'],
   /* A cor dos produtos: o botão "Ver produtos", o carrinho de cada produto e o
      "Ver todos os produtos". Sem escolha, a cor dos botões — a mesma do
-     Agendar horário. O preço continua sendo "Texto de destaque e preço", como
+     Faça seu pedido. O preço continua sendo "Texto de destaque e preço", como
      o de todo serviço: dois lugares pintando o mesmo preço seria a mistura que
      a tela em seções existe para acabar. */
   ['produtos',   'Cor dos produtos','O botão Ver produtos, o carrinho de cada produto e o Ver todos os produtos.'],
@@ -13147,16 +13147,16 @@ const CORES_SOLTAS = [
   /* A letra dos dois botões do Bem-vindo, com o ícone junto. Sem escolha, a
      do Agendar é branca ou preta — a que se lê melhor no botão, a conta de
      sempre — e a do Ver produtos é a que o estilo dele já dava. */
-  ['letraAgendar',  'Letra do Agendar horário', 'A letra e o ícone do botão Agendar horário.'],
+  ['letraAgendar',  'Letra do Faça seu pedido', 'A letra e o ícone do botão Faça seu pedido.'],
   ['letraProdutos', 'Letra do Ver produtos',    'A letra e o ícone do botão Ver produtos.'],
   /* ── O BOTÃO DE BAIXO ──────────────────────────────────────────────────
      "Na prévia não aparece lá no final o Agendar corte que aparece no link,
      e não achei para mudar a cor." É o botão fixo no pé da página — o
-     "Agendar corte" da barbearia, o "Agendar horário" do restaurante, e o
+     "Agendar corte" da barbearia, o "Faça seu pedido" do restaurante, e o
      "Continuar" dos passos. Pintava com a Cor dos botões, junto com o
      Agendar do Bem-vindo, sem aparecer na prévia nem ter linha própria.
      Sem escolha, continua assim: acompanha a Cor dos botões. */
-  ['rodape',      'Botão de baixo',  'O botão fixo no pé da página: o "Agendar horário" e o "Continuar" dos passos.'],
+  ['rodape',      'Botão de baixo',  'O botão fixo no pé da página: o "Faça seu pedido" e o "Continuar" dos passos.'],
   ['letraRodape', 'Letra do botão de baixo', 'A letra do botão fixo no pé da página.'],
   /* ── E CADA FRASE DE BAIXO ─────────────────────────────────────────────
      "Fez também de todas as frases abaixo?" O slide, os serviços, os
@@ -13335,9 +13335,9 @@ function pintarAparencia(){
     el.querySelector('.cor-linha-ajuda').textContent = tem ? ajuda
       : chave === 'icone' ? 'automático — o cinza do texto, sem acompanhar a cor que você der a ele'
       : chave === 'moldura' ? 'automático — a cor dos cartões, que recorta a logo da foto'
-      : chave === 'produtos' ? 'acompanha a cor dos botões — a mesma do Agendar horário'
+      : chave === 'produtos' ? 'acompanha a cor dos botões — a mesma do Faça seu pedido'
       : chave === 'letraAgendar' ? 'automático — branca ou preta, a que se lê melhor no botão'
-      : chave === 'rodape' ? 'acompanha a cor dos botões — a mesma do Agendar horário'
+      : chave === 'rodape' ? 'acompanha a cor dos botões — a mesma do Faça seu pedido'
       : chave === 'fundoServico' || chave === 'fundoProduto' ? 'acompanha "Cartões"'
       : chave === 'letraRodape' ? 'automático — branca ou preta, a que se lê melhor no botão'
       : chave === 'letraProdutos' ? 'automático — a que o estilo do botão Ver produtos já dá'
@@ -13437,7 +13437,7 @@ function pintarAparencia(){
   const RODAPE_METAL = [
     ['chapado', 'Liso',   'A cor lisa, sem relevo — como o botão sempre foi.'],
     ['suave',   'Suave',  'Um metal de leve, que se nota sem chamar atenção.'],
-    ['media',   'Médio',  'O mesmo metal do Agendar horário do Bem-vindo.'],
+    ['media',   'Médio',  'O mesmo metal do Faça seu pedido do Bem-vindo.'],
     ['forte',   'Forte',  'Metal bem marcado, com claro e escuro bem separados.'],
   ];
   const rm = document.getElementById('reguaRodapeMetal');
@@ -13466,7 +13466,7 @@ function pintarAparencia(){
   const FITA_METAL = [
     ['chapado', 'Lisa',    'Sem relevo nenhum: a cor lisa, como era antes.'],
     ['suave',   'Suave',   'Um relevo de leve, que se nota sem chamar atenção.'],
-    ['media',   'Média',   'O mesmo metal do botão de agendar. É o padrão.'],
+    ['media',   'Média',   'O mesmo metal do botão de pedir. É o padrão.'],
     ['forte',   'Forte',   'Metal bem marcado, com claro e escuro bem separados.'],
   ];
   document.getElementById('reguaFitaMetal').innerHTML = FITA_METAL.map(([v, rot]) =>
@@ -13496,7 +13496,7 @@ function pintarAparencia(){
      que a tela está quebrada. */
   document.getElementById('explicaFitaBrilho').innerHTML = aparencia.fitaBrilho
     ? 'Uma faixa de luz atravessa a barra de tempos em tempos, como acontece '
-      + 'no botão de agendar.'
+      + 'no botão de pedir.'
     : 'A barra fica em metal <b>parado</b>. A velocidade ao lado só volta a '
       + 'valer com o brilho animado.';
 
@@ -13567,7 +13567,7 @@ function pintarAparencia(){
 
   regua('reguaCartoes', CARTOES, 'cartoes', 'explicaCartoes');
   /* "Cliquei em Vidro e nada mudou": com bastante branco por cima da foto, o
-     Automático JÁ é vidro — a mesma conta do agendar.html, que só fecha com o
+     Automático JÁ é vidro — a mesma conta do cardapio.html, que só fecha com o
      véu abaixo de 35. Dizer em qual dos dois ele cai agora explica o clique
      que não mexe em nada, em vez de parecer botão quebrado. */
   const expCartoes = document.getElementById('explicaCartoes');
@@ -13585,10 +13585,10 @@ function pintarAparencia(){
   ], 'capaForma', 'explicaCapaForma');
   pintarAtalhos();
   regua('reguaBotaoProdutos', [
-    ['discreto', 'Discreto', 'Contorno fino, sem fundo — como era. O Agendar horário '
+    ['discreto', 'Discreto', 'Contorno fino, sem fundo — como era. O Faça seu pedido '
       + 'continua sendo o que chama mais atenção.'],
-    ['metal', 'Igual ao Agendar horário', 'Botão cheio, com o mesmo metal e o mesmo '
-      + 'brilho do Agendar horário, na cor dos produtos (logo abaixo).'],
+    ['metal', 'Igual ao Faça seu pedido', 'Botão cheio, com o mesmo metal e o mesmo '
+      + 'brilho do Faça seu pedido, na cor dos produtos (logo abaixo).'],
   ], 'botaoProdutos', 'explicaBotaoProdutos');
   regua('reguaMoldura', MOLDURAS, 'moldura', 'explicaMoldura');
   regua('reguaLetra', LETRAS, 'letra', 'explicaLetra');
@@ -13944,7 +13944,7 @@ function ligarHex(){
 }
 
 /* A letra que se lê melhor sobre a cor escolhida — a MESMA conta que a página
-   da cliente faz (`letraSobre` em agendar.html). Se as duas discordassem, a
+   da cliente faz (`letraSobre` em cardapio.html). Se as duas discordassem, a
    prévia mentiria justamente sobre a escolha que ela existe para mostrar.
 
    Sem isto a prévia era sempre de letra branca, e o dourado — que precisa de
@@ -13959,14 +13959,14 @@ function letraSobre(hex){
   return (L + 0.05) / 0.05 > 1.05 / (L + 0.05) ? '#101014' : '#FFFFFF';
 }
 
-/* A MESMA conta de `agendar.html`, e pelo mesmo motivo do `letraSobre()` aqui
+/* A MESMA conta de `cardapio.html`, e pelo mesmo motivo do `letraSobre()` aqui
    em cima: duas definições de "cor válida" que discordem deixariam o painel
    aceitar um valor que a página da cliente recusa — e o dono passaria a tarde
    sem entender por que a cor dele não pega. */
 function corValida(c){ return /^#[0-9a-fA-F]{6}$/.test(String(c || '')); }
 
 /* Clareia (p > 0) ou escurece (p < 0) um hex. A MESMA conta do
-   `agendar.html`, pelo terceiro motivo igual: duas versões que discordem
+   `cardapio.html`, pelo terceiro motivo igual: duas versões que discordem
    fazem a prévia mostrar um tom e a cliente ver outro. */
 function mexer(hex, p){
   if(!corValida(hex)) return hex;
@@ -14182,7 +14182,7 @@ function conferirLegibilidade(){
       : herdadaEntra(chave) ? corHerdada(chave) : null;
     if(!cor) return;                          // herdada sobre fundo de fábrica
     /* ⚠ SEM FUNDO ESCOLHIDO NÃO EXISTE TEXTO SOBRE O PAPEL: a coluna da página
-       (`.app`, no agendar.html) tem a cor dos CARTÕES e cobre tudo. Medir a
+       (`.app`, no cardapio.html) tem a cor dos CARTÕES e cobre tudo. Medir a
        letra contra o papel de fábrica acusava letra branca em cartão preto —
        cinco "difíceis de ler" numa página certa — e o "Arrumar para mim"
        estragava a página para calar o aviso. Com foto de fundo a coluna é
@@ -14251,7 +14251,7 @@ function conferirLegibilidade(){
       queixas.push(rot + ' (' + r.toFixed(1) + ':1 sobre o botão)');
     }
   };
-  noBotao('letraAgendar', 'a letra do Agendar horário', corDoBotaoNaPrevia());
+  noBotao('letraAgendar', 'a letra do Faça seu pedido', corDoBotaoNaPrevia());
   noBotao('letraRodape', 'a letra do botão de baixo', corValida(c.rodape) ? c.rodape : corDoBotaoNaPrevia());
   noBotao('letraProdutos', 'a letra do Ver produtos', aparencia.botaoProdutos === 'metal'
     ? (corValida(c.produtos) ? c.produtos : corDoBotaoNaPrevia()) : cartao);
@@ -14534,7 +14534,7 @@ const INTRO_EFEITOS = [
   ['deslizar', 'Deslizar', 'O logo sobe deslizando, e a abertura sai para cima '
     + 'como uma cortina, mostrando a página.'],
   ['brilho', 'Brilho', 'O logo aparece e uma faixa de luz passa por ele, como '
-    + 'no botão de agendar.'],
+    + 'no botão de pedir.'],
 ];
 const INTRO_TEMPOS = [['rapida', 'Rápida · 1s'], ['media', 'Normal · 2s'], ['longa', 'Longa · 3s']];
 const INTRO_MS = { rapida: 1200, media: 2000, longa: 3000 };
@@ -14970,13 +14970,13 @@ function anelDaPrevia(){
 
 /* ── O BOTÃO DE BAIXO, NA PRÉVIA ──────────────────────────────────────────
    "Na prévia não aparece lá no final o Agendar corte que aparece no link."
-   O pé fixo da página (o `#btPrincipal` do agendar.html), com o MESMO rótulo
+   O pé fixo da página (o `#btPrincipal` do cardapio.html), com o MESMO rótulo
    e a MESMA regra de quando aparece: pedido no restaurante, o "agendar" de
    cada tipo de negócio quando há serviços, "Ver produtos" numa casa só de
    produtos — e nada quando não há para onde ir. */
 /* ⚠ AS PALAVRAS DO LINK, POR TIPO DE NEGÓCIO — cópia do VOCABULARIO do
-   agendar.html. A prévia escrevia sempre "Nossos serviços", "Quem atende" e
-   "Agendar horário", e o link de uma estética dizia "Nossos tratamentos" e
+   cardapio.html. A prévia escrevia sempre "Nossos serviços", "Quem atende" e
+   "Faça seu pedido", e o link de uma estética dizia "Nossos tratamentos" e
    "Agendar sessão": prévia que não bate com o link engana. Mudou lá, muda
    aqui (o tests/vocabulario-previa.test.mjs compara as duas). */
 const VOC_DO_TIPO = {
@@ -14987,7 +14987,7 @@ const VOC_DO_TIPO = {
   outro:       { oferecemos:'O que oferecemos' },
   restaurante: { acao:'Fazer reserva',    oferecemos:'Reservas' },
 };
-const VOC_PADRAO = { acao:'Agendar horário', oferecemos:'Nossos serviços', atende:'Quem atende' };
+const VOC_PADRAO = { acao:'Faça seu pedido', oferecemos:'Nossos serviços', atende:'Quem atende' };
 const vocPrevia = (sl, chave) => (VOC_DO_TIPO[(sl || {}).tipo] || {})[chave] || VOC_PADRAO[chave];
 function previaDoRodape(sl, comServicos, temPr){
   const rot = restaurantePainel() && temPr ? 'Faça seu pedido'
@@ -15024,7 +15024,7 @@ function sombraDaPrevia(){
    celular. Aqui ele vê antes de salvar. */
 /* A fileira de Pagamentos, Horários e Informações, e o cartão ABERTO/FECHADO,
    dentro da prévia. As MESMAS regras da página (desenharInfoDaCasa, no
-   agendar.html): só entra o que o dono cadastrou, e a conta do relógio é a
+   cardapio.html): só entra o que o dono cadastrou, e a conta do relógio é a
    do funcionamento.js, a mesma que a cliente vê. Lê o que está SALVO — a
    prévia mostra o link como ele está no ar. */
 function previaDaInfo(sl){
@@ -15080,7 +15080,7 @@ function pintarPreviaFone(){
     : zapDaCasa(sl) ? 'Fale com a gente pelo WhatsApp — respondemos por lá.'
     : 'Que bom ver você por aqui.';
   /* Os botões: o primeiro é sempre o de metal; o "Ver produtos", quando vem
-     em segundo, é discreto — ou igual ao Agendar horário, se o dono escolheu.
+     em segundo, é discreto — ou igual ao Faça seu pedido, se o dono escolheu.
      A cor dele é a "Cor dos produtos", e sem ela a dos botões. */
   const corProd = corValida((aparencia.cores || {}).produtos) ? aparencia.cores.produtos : null;
   const metalProd = corProd || corDoBotaoNaPrevia();
@@ -15212,7 +15212,7 @@ function pintarPreviaFone(){
 }
 
 /* ── TOCAR NA PRÉVIA LEVA À CONFIGURAÇÃO ─────────────────────────────────
-   "É possível clicar em cima do Agendar horário e ir direto para a
+   "É possível clicar em cima do Faça seu pedido e ir direto para a
    configuração dele? Ou clicar na moldura e configurar?" Cada pedaço do
    celular desenhado tem um `data-cfg`, e o toque rola a tela até os
    controles que mudam aquele pedaço e acende eles por um instante. O dono
@@ -16136,7 +16136,7 @@ function usaLojaNoLink(sl){
 
 /* O número por onde a página da cliente manda o pedido.
 
-   ⚠ A MESMA REGRA DO `zapDoSalao()` DO agendar.html, LETRA POR LETRA — e
+   ⚠ A MESMA REGRA DO `zapDoSalao()` DO cardapio.html, LETRA POR LETRA — e
    não a do `numeroWhatsapp()` aqui de cima, que aceita número estrangeiro de
    12 dígitos sem o 55. Parecem a mesma coisa e divergem justamente no caso
    em que o painel diria "está tudo certo" e a página esconderia a loja. Este
@@ -22454,7 +22454,7 @@ function pdEscolherCor(hex){
 /* ── Passo 10 · o link ───────────────────────────────────────────────────── */
 function pdLinkDoSalao(){
   const sl = acharSalao(salaoAtual) || {};
-  return location.href.replace(/\/[^\/]*$/, '/') + 'agendar.html?salao=' + sl.slug + sufixoDemo();
+  return location.href.replace(/\/[^\/]*$/, '/') + 'cardapio.html?salao=' + sl.slug + sufixoDemo();
 }
 // Na demonstração, o link da cliente continua na demonstração (ver `pintarPublico`).
 function sufixoDemo(){ return NA_NUVEM ? '' : '&demo=1'; }

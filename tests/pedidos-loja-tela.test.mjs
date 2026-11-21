@@ -93,7 +93,7 @@ await pl.addInitScript(() => {
   window.open = u => { const w = { opener: 1, close(){ w.fechada = true; },
     location: { set href(v){ window.__zap.push(v); } } }; if(u) window.__zap.push(u); return w; };
 });
-await pl.goto(BASE + '/agendar.html?salao=' + SLUG);
+await pl.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await pl.waitForFunction(() => typeof produtosDaLoja === 'function' && produtosDaLoja().length === 2, null, { timeout: 15000 });
 await pl.evaluate(([b, c]) => { mudarNoCarrinho(b, 1); mudarNoCarrinho(b, 1); mudarNoCarrinho(c, 1); irPara('loja'); }, [BATOM.id, CREME.id]);
 await pl.waitForTimeout(400);
@@ -328,7 +328,7 @@ secao('5. Conta sem WhatsApp: o caminho para completar, e de volta à loja');
     window.open = u => { const w = { opener: 1, close(){ window.__fechadas++; },
       location: { set href(v){ window.__zap.push(v); } } }; if(u) window.__zap.push(u); return w; };
   }, [BASE, lia.sessao()]);
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'completar', null, { timeout: 15000 }).catch(() => {});
   igual('ao abrir, logada e sem WhatsApp, o link pede para completar (só o WhatsApp: o aniversário ela já tem)',
     await p.evaluate(() => [tela, getComputedStyle(document.getElementById('campoCpNasc')).display === 'none',

@@ -76,7 +76,7 @@ secao('1 a 3. No cadastro do link');
   const ctx = await nav.newContext({ viewport:{ width:360, height:880 }, isMobile:true, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   await p.waitForTimeout(600);
   await p.click('.boas-cta'); await p.waitForTimeout(300);

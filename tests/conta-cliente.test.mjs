@@ -95,7 +95,7 @@ async function aparelho(largura = 390){
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
   p.on('dialog', d => d.accept());
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   await p.waitForTimeout(800);
   return { p, ctx };
@@ -257,7 +257,7 @@ secao('2b. E-mail que já tem conta');
   verdade('diz que o e-mail já tem conta, e oferece entrar', /Este e-mail já tem conta/.test(await aviso(p))
     && await p.isVisible('#avisoConta button:has-text("Entrar com ele")'), await aviso(p));
   verdade('o e-mail de confirmação da conta nova volta para o link do restaurante',
-    cadastros.length === 1 && cadastros[0].includes('redirect_to=') && cadastros[0].includes('agendar.html?salao=' + SLUG), cadastros.join(' | '));
+    cadastros.length === 1 && cadastros[0].includes('redirect_to=') && cadastros[0].includes('cardapio.html?salao=' + SLUG), cadastros.join(' | '));
   await ctx.close();
 }
 
@@ -335,7 +335,7 @@ secao('10. Esqueci a senha e a confirmação voltam para o link');
   await p.fill('#cEmail', `maria-${m}@t.com`);
   await p.click('#linhaEsqueci button'); await p.waitForTimeout(800);
   verdade('o pedido de senha nova volta, depois, para este restaurante', pedidos.some(u =>
-    u.includes('nova-senha.html?volta=' + encodeURIComponent('agendar.html?salao=' + SLUG))), pedidos.join(' | '));
+    u.includes('nova-senha.html?volta=' + encodeURIComponent('cardapio.html?salao=' + SLUG))), pedidos.join(' | '));
   verdade('e a tela não diz se o e-mail existe', /Se houver conta com/.test(await aviso(p)));
   await p.evaluate(() => reenviarConfirmacaoCliente()); await p.waitForTimeout(600);
   verdade('o reenvio da confirmação também volta para o link', pedidos.some(u =>
@@ -420,7 +420,7 @@ secao('13. A volta do e-mail de confirmação');
   const ctx = await nav.newContext({ viewport:{ width:390, height:880 }, isMobile:true, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG + '#access_token=' + s.token
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG + '#access_token=' + s.token
     + '&refresh_token=' + (s.refresh || '') + '&expires_in=3600&token_type=bearer&type=signup');
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   await p.waitForTimeout(1500);
@@ -431,7 +431,7 @@ secao('13. A volta do e-mail de confirmação');
   const ctx2 = await nav.newContext({ viewport:{ width:390, height:880 } });
   const p2 = await ctx2.newPage();
   p2.on('pageerror', e => erros.push(e.message));
-  await p2.goto(BASE + '/agendar.html?salao=' + SLUG + '#access_token=' + s.token + '&type=recovery');
+  await p2.goto(BASE + '/cardapio.html?salao=' + SLUG + '#access_token=' + s.token + '&type=recovery');
   await p2.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   await p2.waitForTimeout(800);
   igual('o de "esqueci a senha" não vira login aqui', [await logada(p2), await p2.evaluate(() => location.hash)], [false, '']);

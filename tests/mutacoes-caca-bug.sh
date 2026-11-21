@@ -16,7 +16,7 @@ T=tests/caca-bug.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 PSQL="psql -h ${PGHOST_BANCADA:-/tmp} -p ${PGPORT_BANCADA:-5444} -U postgres -d app -v ON_ERROR_STOP=1 -q"
 
-ARQS="app.html agendar.html supabase/34_cupons.sql supabase/09_cliente.sql"
+ARQS="app.html cardapio.html supabase/34_cupons.sql supabase/09_cliente.sql"
 SQLS="supabase/34_cupons.sql supabase/09_cliente.sql"
 guarda(){ echo "/tmp/mcb-$(echo "$1" | tr '/' '_')"; }
 for a in $ARQS; do cp "$a" "$(guarda "$a")"; done
@@ -60,44 +60,44 @@ PY
 }
 
 echo "1. link: a capa vai crua para dentro do url()"
-troca agendar.html \
+troca cardapio.html \
   "style=\"background-image:url('\${urlNoCss(salao.capa)}');--foco:\${" \
   "style=\"background-image:url('\${salao.capa}');--foco:\${" \
   && rodar "a capa roda código"
 
 echo "2. link: restaurante que não existe mostra a demonstração"
-troca agendar.html \
+troca cardapio.html \
   "  if(passo) passo.classList.add('so-recado');" \
   "  if(passo) passo.classList.add('x');" \
   && rodar "o texto da demonstração aparece"
 
 echo "3. link: o +55 vira DDD"
-troca agendar.html \
+troca cardapio.html \
   "  if(v.length >= 12 && v.startsWith('55')) v = v.slice(2);
   v = v.slice(0,11);" \
   "  v = v.slice(0,11);" \
   && rodar "(55) 51999-9988"
 
 echo "4. link: dia fechado vira cheio"
-troca agendar.html \
+troca cardapio.html \
   "  return !!func && !Funcionamento.periodosDoDia(func, diaDaSemana(data));" \
   "  return false;" \
   && rodar "domingo cheio com lista de espera"
 
 echo "5. link: eu e mais alguém cobra um só"
-troca agendar.html \
+troca cardapio.html \
   "  const precoOutra = ambos ? precoNoHorario(escolha.inicio + duracaoEscolhida()) : 0;" \
   "  const precoOutra = 0;" \
   && rodar "o total é de uma pessoa"
 
 echo "6. link: a marca da remarcação fica para a próxima marcação"
-troca agendar.html \
+troca cardapio.html \
   "    delete escolha.remarcar; delete escolha.descontoAntigo; delete escolha.remarcarLocal;" \
   "    ;" \
   && rodar "desistir de remarcar cancela outro horário"
 
 echo "7. link: remarcar só cancela (o cupom fica para trás)"
-troca agendar.html \
+troca cardapio.html \
   "        await Dados.chamar('remarcar_agendamento', { p_token_antigo: velho, p_token_novo: novoToken });" \
   "        await Dados.chamar('cancelar_agendamento', { p_token: velho });" \
   && rodar "o desconto some na remarcação"
@@ -111,19 +111,19 @@ troca supabase/34_cupons.sql \
   && rodar "a tela promete e o banco cobra cheio"
 
 echo "9. link: sair deixa o cadastro na tela"
-troca agendar.html \
+troca cardapio.html \
   "    if(el && 'value' in el) el.value = '';" \
   "    ;" \
   && rodar "a próxima pessoa marca no telefone da anterior"
 
 echo "10. loja: a busca exige acento"
-troca agendar.html \
+troca cardapio.html \
   "      || plano(p.nome).includes(busca)" \
   "      || String(p.nome).toLowerCase().includes(busca)" \
   && rodar "mascara não acha Máscara"
 
 echo "11. loja: reenviar o pedido corrigido gasta outro uso"
-troca agendar.html \
+troca cardapio.html \
   "  return !!(cupomLoja && (cupomLoja.usado || cupomLoja.chave === chaveDoCupomLoja()));" \
   "  return !!(cupomLoja && cupomLoja.chave === chaveDoCupomLoja());" \
   && rodar "o limite da loja chega duas vezes mais rápido"
@@ -230,13 +230,13 @@ troca supabase/09_cliente.sql \
   && rodar "a acompanhante é atendida de graça"
 
 echo "28. link: o segundo horário não diz que é da acompanhante"
-troca agendar.html \
+troca cardapio.html \
   "        await marcar(segundoIso, filho || null, false, true);" \
   "        await marcar(segundoIso, filho || null, false, false);" \
   && rodar "o banco gasta duas sessões"
 
 echo "29. link: o total de eu e mais alguém com pacote volta a R\$ 0"
-troca agendar.html \
+troca cardapio.html \
   "  const total = real((coberto ? 0 : precoDela) + precoOutra - desc);" \
   "  const total = coberto ? 'R\$ 0,00' : real(precoDela + precoOutra - desc);" \
   && rodar "a tela promete de graça e o restaurante cobra"
@@ -258,7 +258,7 @@ troca supabase/34_cupons.sql \
   && rodar "chamar em repetição esgota o cupom"
 
 echo "32. link: a caixa do cupom da loja mostra o campo sem conta"
-troca agendar.html \
+troca cardapio.html \
   "  if(!logada()){
     return \`<details" \
   "  if(false){

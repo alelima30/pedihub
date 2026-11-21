@@ -79,7 +79,7 @@ async function escolher(){
   const ctx = await nav.newContext({ viewport:{ width:412, height:900 }, isMobile:true, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => document.querySelector('#capaServicos .sv-cartao'), null, { timeout: 15000 });
   return { p, fechar: () => ctx.close() };
 }

@@ -254,7 +254,7 @@ for(const c of chamadas){
 /* ═══════════════════════════════════════════════════════════════════════════
    3) NINGUÉM PODE DEPENDER SÓ DA FRASE
 
-   O `agendar.html` já sabia tratar este caso antes de tudo isto existir: ele
+   O `cardapio.html` já sabia tratar este caso antes de tudo isto existir: ele
    reconhecia a instalação atrasada e dizia à cliente que a agenda online não
    tinha sido ligada. Reconhecia POR TEXTO — `/Could not find the function/`
    em cima de `e.message`.
@@ -270,7 +270,7 @@ for(const c of chamadas){
    ═══════════════════════════════════════════════════════════════════════════ */
 secao('3) reconhecer o erro pelo código, não pela frase');
 
-for(const arq of ['agendar.html','app.html','index.html','dados.js']){
+for(const arq of ['cardapio.html','app.html','index.html','dados.js']){
   const caminho = path.join(RAIZ, arq);
   if(!fs.existsSync(caminho)) continue;
   const t = fs.readFileSync(caminho, 'utf8');

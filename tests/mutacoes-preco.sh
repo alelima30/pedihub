@@ -21,7 +21,7 @@ T=tests/preco.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST="${PGHOST:-/tmp}" PGPORT="${PGPORT:-5444}" PGUSER="${PGUSER:-postgres}"
 
-ARQS="app.html agendar.html supabase/33_preco_regras.sql supabase/25_loja.sql"
+ARQS="app.html cardapio.html supabase/33_preco_regras.sql supabase/25_loja.sql"
 for a in $ARQS; do cp "$a" "/tmp/mpr-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mpr-$(basename "$a")" "$a"; done
@@ -135,7 +135,7 @@ troca supabase/25_loja.sql \
   && rodar "ordem de quem ganha embaralhada" sql
 
 echo "10. o espelho da tela para de olhar a faixa de horário"
-troca agendar.html \
+troca cardapio.html \
   "    if(r.horaIni != null){
       if(minutos == null) continue;
       if(minutos < r.horaIni || minutos >= r.horaFim) continue;
@@ -144,13 +144,13 @@ troca agendar.html \
   && rodar "espelho ignorando o horário"
 
 echo "11. o espelho da tela para de olhar o dia da semana"
-troca agendar.html \
+troca cardapio.html \
   "    if(Array.isArray(r.dias) && r.dias.length && !r.dias.includes(dow)) continue;" \
   "" \
   && rodar "espelho ignorando o dia"
 
 echo "12. o espelho da tela ignora o preço do par"
-troca agendar.html \
+troca cardapio.html \
   "  const base = (profId && sv.precoPorProf && sv.precoPorProf[profId] != null)
     ? Number(sv.precoPorProf[profId])
     : Number(sv.preco);" \

@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 T=tests/botao-de-baixo.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mrd-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mrd-$(basename "$a")" "$a"; done
@@ -62,7 +62,7 @@ troca app.html \
   && rodar "prévia na Cor dos botões, link marrom"
 
 echo "3. o link ignora a cor escolhida"
-troca agendar.html \
+troca cardapio.html \
   "  document.body.classList.toggle('tem-cor-rodape', !!rodape);" \
   "  document.body.classList.toggle('tem-cor-rodape', false);" \
   && rodar "cor salva e botão de sempre"
@@ -74,7 +74,7 @@ troca estilo.css \
   && rodar "os dois botões mudam juntos"
 
 echo "5. só o fundo escolhido, e a letra não acompanha"
-troca agendar.html \
+troca cardapio.html \
   "  if(rodape || letraRodape) p('--cor-letra-rodape', letraRodape || letraSobre(rodape));" \
   "  if(rodape || letraRodape) p('--cor-letra-rodape', letraRodape || '#FFFFFF');" \
   && rodar "letra branca em botão amarelo-claro"
@@ -98,7 +98,7 @@ troca app.html \
   && rodar "a cor existe e ninguém acha"
 
 echo "9. o link ignora o metal escolhido"
-troca agendar.html \
+troca cardapio.html \
   "    raiz.setAttribute('data-rodape-metal', a.metal);" \
   "" \
   && rodar "metal salvo e botão liso no link"
@@ -110,7 +110,7 @@ troca estilo.css \
   && rodar "escolheu cor e o metal sumiu"
 
 echo "11. a faixa de luz liga com qualquer coisa"
-troca agendar.html \
+troca cardapio.html \
   "  if(m && a.brilho === true) raiz.setAttribute('data-rodape-brilho', 'sim');" \
   "  if(a.brilho) raiz.setAttribute('data-rodape-brilho', 'sim');" \
   && rodar "faixa de luz num botão liso"

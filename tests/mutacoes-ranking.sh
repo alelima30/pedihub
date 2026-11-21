@@ -13,7 +13,7 @@ export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST=${PGHOST:-/tmp} PGPORT=${PGPORT:-5444} PGUSER=${PGUSER:-postgres}
 BANCO=${PGBANCO:-app}
 
-ARQS="app.html agendar.html supabase/60_dashboard.sql"
+ARQS="app.html cardapio.html supabase/60_dashboard.sql"
 for a in $ARQS; do cp "$a" "/tmp/mrk-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mrk-$(basename "$a")" "$a"; done
@@ -81,13 +81,13 @@ troca supabase/60_dashboard.sql \
   && rodar "dá para seguir a pessoa de um dia para o outro"
 
 echo "6. o link não conta a visita"
-troca agendar.html \
+troca cardapio.html \
   "  contarVisita(slug);" \
   "  void slug;" \
   && rodar "o quadro de visitas fica sempre em zero"
 
 echo "7. a origem do Instagram se perde"
-troca agendar.html \
+troca cardapio.html \
   "    if(tem('instagram') || /Instagram/i.test(ua)) return 'instagram';" \
   "    if(false) return 'instagram';" \
   && rodar "o dono não sabe que o Instagram é o que traz gente"

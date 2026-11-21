@@ -67,7 +67,7 @@ async function abrir(q){
   const c = await ctx.newPage();
   c.on('pageerror', e => erros.push(e.message));
   c.on('dialog', x => x.accept());
-  await c.goto(BASE + '/agendar.html?salao=' + slug + q);
+  await c.goto(BASE + '/cardapio.html?salao=' + slug + q);
   await c.waitForFunction(() => typeof salao !== 'undefined' && salao && typeof pedidosCasa !== 'undefined'
     && pedidosCasa && pedidosCasa.mesas, null, { timeout: 15000 });
   await c.waitForTimeout(600);

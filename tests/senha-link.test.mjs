@@ -60,7 +60,7 @@ const SLUG = cr[0].slug;
 const EMAIL = `cliente-${m}@t.com`, VELHA = 'senhavelha12', NOVA = 'senhanova123';
 await aba().criarConta({ email: EMAIL, senha: VELHA, nome:'Maria',
   telefone:'+5551' + (900000000 + (Date.now() % 89999999)) });
-const VOLTA = 'agendar.html?salao=' + SLUG;
+const VOLTA = 'cardapio.html?salao=' + SLUG;
 const COM_VOLTA = BASE + '/nova-senha.html?volta=' + encodeURIComponent(VOLTA);
 const pescar = () => fetch(BASE + '/_recuperacao?email=' + encodeURIComponent(EMAIL)).then(r => r.json());
 
@@ -128,7 +128,7 @@ secao('3. A cliente do link do restaurante');
     && await visivel(p, 'repedir'));
   await ctx.close();
 
-  const fora = await abrir(BASE + '/nova-senha.html?volta=' + encodeURIComponent('https://golpe.example/agendar.html?salao=x'));
+  const fora = await abrir(BASE + '/nova-senha.html?volta=' + encodeURIComponent('https://golpe.example/cardapio.html?salao=x'));
   igual('`volta` para fora do site é ignorado: textos e volta do painel', await fora.p.evaluate(() =>
     [document.getElementById('voltarLink').getAttribute('href'), /painel/.test(document.getElementById('sub').textContent)]),
     ['entrar.html', true]);

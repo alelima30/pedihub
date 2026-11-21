@@ -80,7 +80,7 @@ async function aparelho(largura = 390){
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
   p.on('dialog', d => d.dismiss());
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   await p.waitForTimeout(800);
   return { p, ctx };

@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 T=tests/produto-categoria.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mpc-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mpc-$(basename "$a")" "$a"; done
@@ -50,38 +50,38 @@ PY
 }
 
 echo "1. a página joga a categoria fora"
-troca agendar.html \
+troca cardapio.html \
   "      categoria: x.categoria || null,
 " \
   "" \
   && rodar "o painel guarda e o link não sabe"
 
 echo "2. o filtro não filtra"
-troca agendar.html \
+troca cardapio.html \
   "(!filtroLoja || chaveCategoria(p.categoria) === filtroLoja)" \
   "(true)" \
   && rodar "tocar e ver tudo igual"
 
 echo "3. maiúscula separa a categoria no link"
-troca agendar.html \
+troca cardapio.html \
   "    const k = rot.toLocaleLowerCase('pt');" \
   "    const k = rot;" \
   && rodar "dois \"tratamento de cabelo\""
 
 echo "4. tocar de novo não desmarca"
-troca agendar.html \
+troca cardapio.html \
   "  filtroLoja = c && c === filtroLoja ? null : c;" \
   "  filtroLoja = c;" \
   && rodar "presa numa categoria"
 
 echo "5. a fileira aparece sem categoria nenhuma"
-troca agendar.html \
+troca cardapio.html \
   "    fileira.style.display = lojaCatsAtuais.length ? '' : 'none';" \
   "    fileira.style.display = '';" \
   && rodar "faixa vazia na tela"
 
 echo "6. o nome da categoria sai cru"
-troca agendar.html \
+troca cardapio.html \
   "onclick=\"escolherCategoriaLoja(\${i - 1})\">\${escapar(c.rot)}</button>" \
   "onclick=\"escolherCategoriaLoja(\${i - 1})\">\${c.rot}</button>" \
   && rodar "HTML do dono na página da cliente"

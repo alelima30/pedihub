@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 T=tests/loja-curvada.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mlc-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mlc-$(basename "$a")" "$a"; done
@@ -51,25 +51,25 @@ PY
 }
 
 echo "1. a loja ignora a Curvada"
-troca agendar.html \
+troca cardapio.html \
   "  const curva = (salao.moldura || (salao.cfg || {}).moldura) === 'elegante';" \
   "  const curva = false;" \
   && rodar "fileiras com a curva escolhida"
 
 echo "2. a loja sempre curva"
-troca agendar.html \
+troca cardapio.html \
   "  const curva = (salao.moldura || (salao.cfg || {}).moldura) === 'elegante';" \
   "  const curva = true;" \
   && rodar "a Clássica perde as fileiras"
 
 echo "3. o Adicionar sem a classe"
-troca agendar.html \
+troca cardapio.html \
   "    : \`<button class=\"btn btn-peq loja-add\"" \
   "    : \`<button class=\"btn btn-peq\"" \
   && rodar "Adicionar branco de novo"
 
 echo "4. o cartão perde a descrição"
-troca agendar.html \
+troca cardapio.html \
   "          \${p.descricao ? \`<span class=\"loja-desc\">\${escapar(p.descricao)}</span>\` : ''}
 " \
   "" \

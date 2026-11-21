@@ -20,11 +20,11 @@ T=tests/identidade-visual.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST="${PGHOST:-/tmp}" PGPORT="${PGPORT:-5444}" PGUSER="${PGUSER:-postgres}"
 
-for a in agendar.html app.html estilo.css supabase/25_loja.sql; do
+for a in cardapio.html app.html estilo.css supabase/25_loja.sql; do
   cp "$a" "/tmp/mv-$(basename "$a")"
 done
 restaurar(){
-  for a in agendar.html app.html estilo.css supabase/25_loja.sql; do
+  for a in cardapio.html app.html estilo.css supabase/25_loja.sql; do
     cp "/tmp/mv-$(basename "$a")" "$a"
   done
   bash versao.sh >/dev/null 2>&1
@@ -61,12 +61,12 @@ PY
 }
 
 echo "1. o modo Atual também marca o <html>"
-troca agendar.html \
+troca cardapio.html \
   "if(modo === 'personalizado' || modo === 'premium')" \
   "if(true)" && rodar "modo Atual marcando o <html>"
 
 echo "2. o logo circular também marca o <html>"
-troca agendar.html \
+troca cardapio.html \
   "if(forma === 'arredondado' || forma === 'quadrado')" \
   "if(true)" && rodar "logo circular marcando o <html>"
 
@@ -91,25 +91,25 @@ troca app.html \
 
 echo "5. as cores escolhidas entram ANTES do cálculo"
 python3 - <<'PY'
-s = open('agendar.html', encoding='utf-8').read()
+s = open('cardapio.html', encoding='utf-8').read()
 alvo = "  aplicarCoresSoltas(s, p, escuro);\n}"
 if alvo not in s: print('!! não achei a chamada'); raise SystemExit(9)
 s = s.replace(alvo, "}", 1)
 s = s.replace("  const p = (k, v) => raiz.style.setProperty(k, v);\n",
               "  const p = (k, v) => raiz.style.setProperty(k, v);\n"
               "  aplicarCoresSoltas(s, p, escuro);\n", 1)
-open('agendar.html', 'w', encoding='utf-8').write(s)
+open('cardapio.html', 'w', encoding='utf-8').write(s)
 PY
 rodar "escolha do dono aplicada antes do cálculo"
 
 echo "6. o gradiente não tira a foto de fundo"
-troca agendar.html \
+troca cardapio.html \
   "  const fundo = (tipoFundo === 'imagem' || tipoFundo === 'cor') ? fotoAnexada : null;" \
   "  const fundo = fotoAnexada;" \
   && rodar "foto e gradiente empilhados"
 
 echo "7. gradiente torto é aceito sem conferir"
-troca agendar.html \
+troca cardapio.html \
   "  if(!(cores.length === 2 || cores.length === 3) || !cores.every(corValida)){" \
   "  if(false){" \
   && rodar "gradiente sem conferência"

@@ -100,7 +100,7 @@ async function link(){
   const ctx = await nav.newContext({ viewport:{ width:390, height:844 }, isMobile:true, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('link: ' + e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => { const b = document.getElementById('btPrincipal'); return b && b.offsetParent; },
     null, { timeout: 15000 });
   await p.waitForTimeout(500);

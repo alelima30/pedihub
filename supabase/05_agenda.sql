@@ -2,7 +2,7 @@
 -- PediHub — 05: a agenda pública
 --
 -- Este arquivo existe por um motivo só: hoje quem calcula horário livre é o
--- JavaScript de `agendar.html`, contra o localStorage. Isso funciona para
+-- JavaScript de `cardapio.html`, contra o localStorage. Isso funciona para
 -- conhecer o sistema e não funciona para nada além disso — o link que o dono
 -- copia no fim do cadastro abre vazio no celular da cliente, porque o dado
 -- mora no navegador dele.

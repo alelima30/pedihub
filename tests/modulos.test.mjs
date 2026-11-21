@@ -242,7 +242,7 @@ async function capa(){
                                      isMobile:true, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => {
     const m = document.querySelector('#capaMarca');
     return m && m.textContent.trim().length > 0;
@@ -441,7 +441,7 @@ const crZero = await novo.chamar('criar_salao', { p_nome_salao:'Casa Zero',
 const ctxZ = await nav.newContext({ viewport:{ width:412, height:915 },
                                     isMobile:true, hasTouch:true });
 const pz = await ctxZ.newPage();
-await pz.goto(BASE + '/agendar.html?salao=' + crZero[0].slug);
+await pz.goto(BASE + '/cardapio.html?salao=' + crZero[0].slug);
 await pz.waitForTimeout(2200);
 const zero = await pz.evaluate(() => {
   const r = document.getElementById('rodapeAcao');
@@ -496,7 +496,7 @@ const ctxD = await nav.newContext({ viewport:{ width:412, height:915 },
 const pd = await ctxD.newPage();
 const errosD = [];
 pd.on('pageerror', e => errosD.push(e.message));
-await pd.goto(ESTATICO + 'agendar.html?salao=studio-bella&demo=1');
+await pd.goto(ESTATICO + 'cardapio.html?salao=studio-bella&demo=1');
 await pd.waitForTimeout(2200);
 
 // Como o dono desligaria: a chave no cfg do restaurante. Em demonstração ela chega

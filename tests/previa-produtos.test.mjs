@@ -120,7 +120,7 @@ async function pagina(){
   const ctx = await nav.newContext({ viewport:{ width:412, height:2000 }, isMobile:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('página: ' + e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => document.querySelector('.boas') && document.querySelector('#slidesPista'),
     null, { timeout: 15000 });
   await p.waitForTimeout(600);

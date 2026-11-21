@@ -125,7 +125,7 @@ await c.addInitScript(([base, ses]) => {
   window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
   localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, maria.sessao()]);
-await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await c.waitForTimeout(3500);
 
 const politica = await c.evaluate(() =>

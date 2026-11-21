@@ -20,7 +20,7 @@ T=tests/produto-cadastro.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST="${PGHOST:-/tmp}" PGPORT="${PGPORT:-5444}" PGUSER="${PGUSER:-postgres}"
 
-ARQS="app.html agendar.html supabase/32_produto_cadastro.sql supabase/25_loja.sql"
+ARQS="app.html cardapio.html supabase/32_produto_cadastro.sql supabase/25_loja.sql"
 for a in $ARQS; do cp "$a" "/tmp/mp-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mp-$(basename "$a")" "$a"; done

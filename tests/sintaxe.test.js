@@ -24,7 +24,7 @@ const path = require('path');
 const vm = require('vm');
 
 const RAIZ = path.dirname(__dirname);
-const TELAS = ['app.html', 'agendar.html', 'criar.html', 'entrar.html',
+const TELAS = ['app.html', 'cardapio.html', 'criar.html', 'entrar.html',
                'admin.html', 'index.html', 'nova-senha.html'];
 const AVULSOS = ['dados.js', 'demo.js', 'imagens.js', 'icones.js',
                  'endereco.js', 'funcionamento.js', 'config.js', 'sw.js'];
@@ -113,7 +113,7 @@ for(const tela of TELAS){
          ↓
        06_vitrine.sql    vitrine() devolve a chave (o `cfg` cru nunca sai)
          ↓
-       agendar.html      bdDaVitrine() copia a chave para o restaurante da tela
+       cardapio.html      bdDaVitrine() copia a chave para o restaurante da tela
 
    Esquecer qualquer um dos dois últimos não dá erro nenhum. O dono escolhe,
    o painel grava, a PRÉVIA do painel obedece — e a página da cliente
@@ -132,7 +132,7 @@ console.log('\nA aparência atravessa do painel até a página da cliente');
   const app = fs.readFileSync(path.join(RAIZ, 'app.html'), 'utf8');
   const vitrine = fs.readFileSync(
     path.join(RAIZ, 'supabase', '06_vitrine.sql'), 'utf8');
-  const cliente = fs.readFileSync(path.join(RAIZ, 'agendar.html'), 'utf8');
+  const cliente = fs.readFileSync(path.join(RAIZ, 'cardapio.html'), 'utf8');
 
   /* 1) As chaves de APARÊNCIA — as que `salvarAparencia()` grava, e só elas.
 
@@ -188,7 +188,7 @@ console.log('\nA aparência atravessa do painel até a página da cliente');
   dizer(semCliente.length === 0,
     'e toda chave é copiada pela página da cliente',
     semCliente.join(', ') + ' — a vitrine devolve e o bdDaVitrine() joga '
-    + 'fora (agendar.html)');
+    + 'fora (cardapio.html)');
 }
 
 /* ── E O QUARTO LUGAR, QUE NINGUÉM VÊ ─────────────────────────────────────

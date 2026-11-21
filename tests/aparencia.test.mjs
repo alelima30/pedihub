@@ -55,7 +55,7 @@ function novaAba(){
 }
 
 /* ── A conta do contraste, aqui do lado de fora ───────────────────────────
-   Escrita de novo de propósito, e não importada do agendar.html: um teste que
+   Escrita de novo de propósito, e não importada do cardapio.html: um teste que
    usa a mesma função que testa concorda com ela mesmo quando as duas estão
    erradas. Esta é a fórmula da norma, copiada da norma. */
 function contraste(hexA, hexB){
@@ -89,7 +89,7 @@ async function abrir(){
   const p = await ctx.newPage();
   p.erros = [];
   p.on('pageerror', e => p.erros.push(e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForTimeout(2400);
   return p;
 }
@@ -293,7 +293,7 @@ await sb.close();
 const rm = await ctx.newPage();
 await rm.emulateMedia({ reducedMotion:'reduce' });
 await d.atualizar('saloes', salaoId, { cfg: { cor:'#C8A33C', tema:'escuro' } });
-await rm.goto(BASE + '/agendar.html?salao=' + SLUG); await rm.waitForTimeout(2200);
+await rm.goto(BASE + '/cardapio.html?salao=' + SLUG); await rm.waitForTimeout(2200);
 verdade('com "reduzir animações" ligado no aparelho, o brilho não roda',
   await rm.evaluate(() => getComputedStyle(
     document.querySelector('.boas-cta'), '::after').animationName === 'none'));

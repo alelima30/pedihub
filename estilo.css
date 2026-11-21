@@ -1023,7 +1023,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
    ⚠ E OS NÚMEROS TÊM QUE SER OS MESMOS DOS DOIS LADOS. Prévia que mente é
    pior que prévia nenhuma: o dono escolhe "forte", vê pouca coisa, escolhe
    de novo, e a página fica com o dobro do que ele queria. Os pares abaixo
-   são os mesmos do `aplicarFita()` no agendar.html — mexer num lugar é
+   são os mesmos do `aplicarFita()` no cardapio.html — mexer num lugar é
    mexer nos dois. */
 .fone-fita{
   position:relative; overflow:hidden;
@@ -1566,7 +1566,7 @@ label.btn{ display:inline-flex; align-items:center; justify-content:center; curs
 @media (max-width:640px){ .ao-lado{ text-align:left } }
 /* ⚠ A LUPA DA BUSCA. O `background:… !important` logo acima é atalho: zera
    também a imagem de fundo, e a lupa do `.busca` (desenhada como imagem, no
-   agendar.html) sumia — sobrava o recuo de 40px à esquerda do "Buscar
+   cardapio.html) sumia — sobrava o recuo de 40px à esquerda do "Buscar
    produto…", com nada dentro. Aqui a lupa volta, no mesmo lugar e no mesmo
    cinza de antes. */
 input.busca{
@@ -2426,7 +2426,7 @@ body.sem-brilho .marca-selo{ animation:none }
      ou não na primeira dobra. A foto continua inteira — quem enquadra é o
      `contain` com o borrão atrás, não a proporção da caixa. */
   /* A forma sai de `--slide-forma` quando o dono escolhe; sem escolha, o
-     16/8 de sempre. Ver o `aplicarModo()` no agendar.html. */
+     16/8 de sempre. Ver o `aplicarModo()` no cardapio.html. */
   aspect-ratio:var(--slide-forma, 16 / 8);
 }
 .slide{
@@ -3126,7 +3126,7 @@ body.tem-cor-produtos .ver-todos-produtos .ver-todos-n{
    uma escada: duas colunas, uma faixa inteira, duas colunas, outra faixa. Na
    capa, que é a primeira coisa que a cliente vê, isso lê como página
    quebrada.
-   O `com-foto` é posto pelo `agendar.html` quando existe pelo menos uma foto
+   O `com-foto` é posto pelo `cardapio.html` quando existe pelo menos uma foto
    no restaurante. A partir daí a grade é uma só, e quem não tem foto ganha uma capa
    com a inicial em vez de um retângulo vazio. */
 .sv-grade.com-foto .sv-cartao.sem-foto{ grid-column:auto }
@@ -4802,7 +4802,7 @@ body.com-folha{ overflow:hidden }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    A ABERTURA — o logo por um instante quando alguém abre o link
-   (agendar.html → tocarIntro; a prévia do painel → verIntroNaPrevia)
+   (cardapio.html → tocarIntro; a prévia do painel → verIntroNaPrevia)
 
    As cores vêm de quatro variáveis com reserva nas da página: no link, o
    botão (`--acao`) e o cartão (`--painel`) do restaurante; na prévia do painel, o
@@ -4887,7 +4887,7 @@ body.com-folha{ overflow:hidden }
 .fone[data-logo="quadrado"] .intro-logo{ border-radius:4% }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   A TELA DE PRODUTOS (agendar.html → desenharLoja)
+   A TELA DE PRODUTOS (cardapio.html → desenharLoja)
 
    "Aplicar moldura curvada quando tiver configurável também em produtos;
    pintar o Adicionar na cor do tema; 'Escolha pelo menos 1 produto' também
@@ -4961,7 +4961,7 @@ body[data-passo="loja"] #btPrincipal:disabled{
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CONFIRA SEU AGENDAMENTO e AGENDAMENTO ENVIADO (agendar.html → .cf-*)
+   CONFIRA SEU AGENDAMENTO e AGENDAMENTO ENVIADO (cardapio.html → .cf-*)
 
    ⚠ NENHUMA COR ESCRITA AQUI. Tudo sai das variáveis que a Aparência já
    escreve na página: --acao/--acao-txt (o botão), --ac-600 (a cor da marca
@@ -5053,7 +5053,7 @@ body[data-passo="loja"] #btPrincipal:disabled{
   background:var(--bg); color:var(--txt); font:inherit; font-size:15px }
 .cf-obs textarea:focus{ outline:2px solid var(--ac-line); border-color:var(--ac-600) }
 
-/* Como você vai pagar (agendar.html → .cf-pag*): a mesma caixa da
+/* Como você vai pagar (cardapio.html → .cf-pag*): a mesma caixa da
    observação, com as formas em botões de duas colunas. A escolhida ganha a
    moldura e o tom da marca — só variáveis do tema, nenhuma cor escrita. */
 .cf-pag{ background:var(--painel); border:1px solid var(--borda); border-radius:var(--r-lg);
@@ -5072,7 +5072,7 @@ body[data-passo="loja"] #btPrincipal:disabled{
 .cf-pag-op:focus-visible{ outline:2px solid var(--ac-line); outline-offset:2px }
 .cf-pag-obs{ margin-top:10px; font-size:13px; line-height:1.4; color:var(--txt2) }
 
-/* O cupom (agendar.html → .cupom-*): a mesma caixa da observação, com o
+/* O cupom (cardapio.html → .cupom-*): a mesma caixa da observação, com o
    campo e o botão lado a lado; aceito, vira a faixa do "deu certo" — o tom
    de sucesso que o tema já tem (--su-soft/--ok). Nenhuma cor escrita aqui. */
 .cupom-linha{ display:flex; gap:8px; margin:0 16px 14px }
@@ -5178,7 +5178,7 @@ body[data-passo="pronto"] #btSecundario{
 }
 .loja-cat.on{ background:var(--acao); color:var(--acao-txt); border-color:var(--acao) }
 
-/* ── O PRODUTO ABERTO (agendar.html → #p-produto) ─────────────────────────
+/* ── O PRODUTO ABERTO (cardapio.html → #p-produto) ─────────────────────────
    A foto grande, com a mesma montagem de duas camadas do .pr-foto (nítida
    na frente, borrada atrás), e o texto inteiro. Só variáveis do tema. */
 .abre-produto{ cursor:pointer }
@@ -5201,7 +5201,7 @@ body.tem-cor-produtos .loja-cat.on{
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   A CONTA DA CLIENTE NO LINK (agendar.html → #p-conta e a senha do cadastro)
+   A CONTA DA CLIENTE NO LINK (cardapio.html → #p-conta e a senha do cadastro)
    Só variáveis do tema: a tela acompanha a Aparência como as outras.
    ═══════════════════════════════════════════════════════════════════════════ */
 .conta-abas{ display:flex; gap:6px; padding:4px; margin:4px 0 18px;
@@ -5241,7 +5241,7 @@ body.tem-cor-produtos .loja-cat.on{
   border:0; background:transparent; color:transparent }
 
 /* O cadastro de quem está logada, no link: os dados para conferir, sem
-   campo para trocar (agendar.html → desenharDados). */
+   campo para trocar (cardapio.html → desenharDados). */
 .cadastro-conta .cc-linha{ display:block; margin-top:8px }
 .cadastro-conta .cc-linha small{ display:block; font-size:12.5px; color:var(--txt2) }
 .cadastro-conta .cc-linha b{ display:block; font-size:15.5px; overflow-wrap:anywhere }

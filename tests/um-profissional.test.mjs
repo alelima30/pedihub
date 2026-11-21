@@ -90,7 +90,7 @@ async function ateComQuem(servico){
   p.on('dialog', d => { erros.push('ALERT: ' + d.message()); d.dismiss(); });
   p.perguntas = 0;
   p.on('request', r => { if(r.url().includes('/rpc/horarios_livres_periodo')) p.perguntas++; });
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => document.querySelector('.boas-cta'), null, { timeout: 15000 });
   await p.click('.boas-cta');
   await p.waitForTimeout(500);

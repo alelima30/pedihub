@@ -252,7 +252,7 @@ async function link(){
   q.on('pageerror', e => erros.push('link: ' + e.message));
   q.on('dialog', d => d.accept());
   await q.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-  await q.goto(BASE + '/agendar.html?salao=' + SLUG); await q.waitForTimeout(3200);
+  await q.goto(BASE + '/cardapio.html?salao=' + SLUG); await q.waitForTimeout(3200);
   return { q, fechar: () => ctx.close() };
 }
 {

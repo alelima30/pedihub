@@ -75,7 +75,7 @@ async function fita(largura, quantos){
   const ctx = await nav.newContext({ viewport:{ width: largura, height:780 }, isMobile:true, hasTouch:true });
   const c = await ctx.newPage();
   c.on('pageerror', e => erros.push('página: ' + e.message));
-  await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await c.waitForFunction(() => typeof produtosDaLoja === 'function' && produtosDaLoja().length, null, { timeout: 15000 });
   const r = await c.evaluate(([h, n]) => { const hex = eval(h);
     const pr = produtosDaLoja()[0];

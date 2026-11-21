@@ -6,7 +6,7 @@
      qualquer punha esta tela num quadro invisivel e fazia a dona clicar sem
      saber (clickjacking). O GitHub Pages nao deixa mandar o cabecalho que
      barra isso, entao a pagina se recusa sozinha: some e abre no lugar
-     certo. O link da cliente (agendar.html) fica de fora de proposito: o
+     certo. O link da cliente (cardapio.html) fica de fora de proposito: o
      salao pode querer o agendamento dentro do proprio site. -->
 <script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -721,7 +721,7 @@ function mudouNomeSalao(){
   cx.style.display = 'block';
   cx.innerHTML = `<span class="st ${livre?'livre':'ocupado'}">${
       livre ? ico('ok') + ' livre' : 'já usado'}</span>`
-    + `Seu link: <b>agendar.html?salao=${usar}</b>`
+    + `Seu link: <b>cardapio.html?salao=${usar}</b>`
     + (livre ? '' : `<div style="color:var(--txt3);margin-top:5px;font-size:12.5px">
          "${base}" já é de outro estabelecimento, então reservamos este.</div>`);
 }
@@ -921,7 +921,7 @@ async function criarConta(){
           await Dados.atualizar('saloes', criado.salao_id, { fuso: doAparelho });
       }catch(e){ console.info('[PediHub] fuso do restaurante novo:', e.message); }
       const url = location.href.replace(/\/[^\/]*$/, '/')
-                + 'agendar.html?salao=' + apelido;
+                + 'cardapio.html?salao=' + apelido;
       /* Quem ganha o teste é o BANCO (39_teste_unico): o WhatsApp ou o e-mail
          que já usaram os 7 dias nascem no Grátis. A tela pergunta em vez de
          supor — prometer 7 dias a quem não os tem é mentir no primeiro minuto.
@@ -1000,7 +1000,7 @@ async function criarConta(){
 
   salvar(salaoId);
 
-  const url = location.href.replace(/\/[^\/]*$/, '/') + 'agendar.html?salao=' + slug;
+  const url = location.href.replace(/\/[^\/]*$/, '/') + 'cardapio.html?salao=' + slug;
   document.getElementById('textoPronto').innerHTML = textoDoTeste(nomeSalao);
   document.getElementById('linkFinal').textContent = url;
   // Na demonstração, a agenda também: sem o `?demo=1` o painel pedia login

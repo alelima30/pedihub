@@ -15,7 +15,7 @@ cd "$(dirname "$0")/.."
 T=tests/atalhos.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mat-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mat-$(basename "$a")" "$a"; done
@@ -52,14 +52,14 @@ PY
 }
 
 echo "1. a página esquece os atalhos no caminho da vitrine"
-troca agendar.html \
+troca cardapio.html \
   "      atalhos: (s.atalhos && typeof s.atalhos === 'object') ? s.atalhos : null,
 " \
   "" \
   && rodar "a vitrine entrega e a página joga fora"
 
 echo "2. a página não aplica o estilo"
-troca agendar.html \
+troca cardapio.html \
   "  aplicarAtalhos(s.atalhos || c.atalhos);
 " \
   "" \
@@ -106,19 +106,19 @@ troca estilo.css \
   && rodar "caixa tingida só no Horários"
 
 echo "9. a página aceita desfoque sem teto"
-troca agendar.html \
+troca cardapio.html \
   "  raiz.style.setProperty('--at-desfoque',  num(sb.desfoque, 40, 16) + 'px');" \
   "  raiz.style.setProperty('--at-desfoque',  num(sb.desfoque, 9999, 16) + 'px');" \
   && rodar "desfoque de 999px vindo do banco"
 
 echo "10. a página aceita cor torta"
-troca agendar.html \
+troca cardapio.html \
   "  raiz.style.setProperty('--at-cor', corValida(sb.cor) ? sb.cor : '#000000');" \
   "  raiz.style.setProperty('--at-cor', sb.cor || '#000000');" \
   && rodar "texto do dono dentro do CSS"
 
 echo "11. a página aceita qualquer estilo"
-troca agendar.html \
+troca cardapio.html \
   "  const estilo = (a && typeof a === 'object' && ['limpo', 'sombra'].includes(a.estilo))
     ? a.estilo : null;" \
   "  const estilo = (a && typeof a === 'object' && a.estilo) ? a.estilo : null;" \
@@ -168,13 +168,13 @@ troca app.html \
   && rodar "painel dizendo Com borda para quem salvou sombra"
 
 echo "19. a página ignora as cores escolhidas"
-troca agendar.html \
+troca cardapio.html \
   "    if(corValida(cores[k])) raiz.style.setProperty('--at-' + k, cores[k]);" \
   "    if(false) raiz.style.setProperty('--at-' + k, cores[k]);" \
   && rodar "cor escolhida, link na cor da marca"
 
 echo "20. a página aceita cor torta"
-troca agendar.html \
+troca cardapio.html \
   "    if(corValida(cores[k])) raiz.style.setProperty('--at-' + k, cores[k]);" \
   "    if(cores[k]) raiz.style.setProperty('--at-' + k, cores[k]);" \
   && rodar "texto do dono dentro do CSS"
@@ -236,7 +236,7 @@ troca app.html \
   && rodar "prévia cinza, link dourado"
 
 echo "30. a página aceita moldura torta do banco"
-troca agendar.html \
+troca cardapio.html \
   "  if(a && typeof a === 'object' && corValida(a.moldura)) raiz.style.setProperty('--at-moldura', a.moldura);" \
   "  if(a && typeof a === 'object' && a.moldura) raiz.style.setProperty('--at-moldura', a.moldura);" \
   && rodar "url(x) vira borda"
@@ -254,7 +254,7 @@ troca app.html \
   && rodar "moldura salva some do painel"
 
 echo "33. a página ignora a cor de dentro"
-troca agendar.html \
+troca cardapio.html \
   "    raiz.setAttribute('data-at-fundo', '');" \
   "" \
   && rodar "cor de dentro salva e cartão branco no link"
@@ -278,7 +278,7 @@ troca app.html \
   && rodar "cor de dentro salva some do painel"
 
 echo "37. a página aceita cor de dentro torta do banco"
-troca agendar.html \
+troca cardapio.html \
   "  if(a && typeof a === 'object' && corValida(a.fundo)){" \
   "  if(a && typeof a === 'object' && a.fundo){" \
   && rodar "url(x) vira atributo"

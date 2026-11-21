@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 T=tests/escolha-cartao.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mec-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mec-$(basename "$a")" "$a"; done
@@ -50,13 +50,13 @@ PY
 }
 
 echo "1. a escolha perde o modo de escolher"
-troca agendar.html \
+troca cardapio.html \
   "        return cartaoDeServico(s, { elegante, temAlgumaFoto, sel, escolher: true," \
   "        return cartaoDeServico(s, { elegante, temAlgumaFoto, sel," \
   && rodar "seta no lugar da marca"
 
 echo "2. a escolha ignora a moldura de Aparência"
-troca agendar.html \
+troca cardapio.html \
   "  const elegante = (salao.moldura || (salao.cfg||{}).moldura) === 'elegante';
   // A mesma regra da capa: com foto" \
   "  const elegante = false;
@@ -64,7 +64,7 @@ troca agendar.html \
   && rodar "sempre clássica"
 
 echo "3. a escolha esquece a regra das fotos"
-troca agendar.html \
+troca cardapio.html \
   "  const temAlgumaFoto = todos.some(s => s.foto);
   alvo.innerHTML =" \
   "  const temAlgumaFoto = false;
@@ -72,19 +72,19 @@ troca agendar.html \
   && rodar "sem a inicial"
 
 echo "4. o cartão não diz se está escolhido"
-troca agendar.html \
+troca cardapio.html \
   "                  o.escolher ? \` aria-pressed=\"\${o.sel ? 'true' : 'false'}\"\` : ''}" \
   "                  ''}" \
   && rodar "leitor de tela sem saber"
 
 echo "5. a borda da escolhida não acende"
-troca agendar.html \
+troca cardapio.html \
   "        <button class=\"sv-cartao\${s.foto ? '' : ' sem-foto'}\${o.sel ? ' sel' : ''}\${" \
   "        <button class=\"sv-cartao\${s.foto ? '' : ' sem-foto'}\${" \
   && rodar "escolhida igual às outras"
 
 echo "6. a marca não ganha o visto"
-troca agendar.html \
+troca cardapio.html \
   "<span class=\"sv-cartao-marca\">\${o.sel ? ico('ok') : ''}</span>" \
   "<span class=\"sv-cartao-marca\"></span>" \
   && rodar "círculo sempre vazio"
@@ -102,20 +102,20 @@ troca estilo.css \
   && rodar "marca fora do lugar da seta"
 
 echo "9. o relógio some a cada toque"
-troca agendar.html \
+troca cardapio.html \
   "  // data-ico, e sem esta linha ele sumia a cada toque.
   if(window.aplicarIcones) aplicarIcones(alvo);" \
   "  // data-ico, e sem esta linha ele sumia a cada toque." \
   && rodar "duração sem relógio"
 
 echo "10. o combo perde o selo"
-troca agendar.html \
+troca cardapio.html \
   "          combo: ehCombo(s), acao: \`alternarServico('\${s.id}')\`," \
   "          acao: \`alternarServico('\${s.id}')\`," \
   && rodar "combo sem COMBO"
 
 echo "11. o cartão não mostra o preço"
-troca agendar.html \
+troca cardapio.html \
   "              \${o.preco ? \`<span class=\"sv-cartao-preco\">\${o.preco}</span>\` : ''}" \
   "" \
   && rodar "escolher sem saber quanto custa"

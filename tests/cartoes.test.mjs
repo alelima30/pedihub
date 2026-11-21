@@ -18,7 +18,7 @@
    Que a escolha ATRAVESSA. Um ajuste de aparência passa por quatro lugares
    antes de virar pixel na tela da cliente:
 
-       painel grava no cfg → vitrine() devolve a chave → agendar.html lê
+       painel grava no cfg → vitrine() devolve a chave → cardapio.html lê
        → o CSS obedece
 
    Basta um deles esquecer e o sintoma é o mais desanimador que existe: o
@@ -88,7 +88,7 @@ async function comAjuste(cfg){
     { cfg: Object.assign({ fundo: FOTO }, cfg) });
   const p = await (await nav.newContext({ viewport:{ width:420, height:820 } })).newPage();
   p.on('pageerror', e => erros.push(e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForTimeout(2200);
   const r = await p.evaluate(() => {
     const c = document.querySelector('.cartao, .opcao, .boas');

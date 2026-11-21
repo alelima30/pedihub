@@ -239,7 +239,7 @@ secao('4. O link da cliente não recebe nada disso');
   p.on('pageerror', e => erros.push('link: ' + e.message));
   const respostas = [];
   p.on('response', async r => { if(/\/rest\/v1\//.test(r.url())) respostas.push(await r.text().catch(() => '')); });
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   await p.waitForTimeout(1500);
   const tudo = respostas.join('\n') + (await p.content());
@@ -325,7 +325,7 @@ const PASSOS = '1. Separar o cabelo em mechas finas\n2. Aplicar o descolorante\n
   p.on('pageerror', e => erros.push('link: ' + e.message));
   const respostas = [];
   p.on('response', async r => { if(/\/rest\/v1\//.test(r.url())) respostas.push(await r.text().catch(() => '')); });
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   await p.waitForTimeout(1500);
   const tudo = respostas.join('\n') + (await p.content());

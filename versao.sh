@@ -33,7 +33,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 # Os arquivos que o navegador baixa e que mudam o comportamento do painel.
 # `sw.js` fica de fora de propósito: ele carrega o próprio carimbo, e entraria
 # num ciclo — muda o carimbo, muda o hash, que muda o carimbo.
-ARQUIVOS=(app.html agendar.html criar.html entrar.html index.html
+ARQUIVOS=(app.html cardapio.html criar.html entrar.html index.html
           nova-senha.html estilo.css dados.js demo.js icones.js
           imagens.js endereco.js funcionamento.js)
 

@@ -96,7 +96,7 @@ async function abrir(){
   const p = await ctx.newPage();
   p.erros = [];
   p.on('pageerror', e => p.erros.push(e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForTimeout(2400);
   return p;
 }

@@ -67,7 +67,7 @@ const cli = await cel.newPage();
 const errosCli = [];
 cli.on('pageerror', e => errosCli.push(e.message));
 await cli.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-await cli.goto(BASE + '/agendar.html?salao=' + SLUG);
+await cli.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await cli.waitForTimeout(2800);
 
 verdade('a capa do restaurante abre pelo link', await cli.isVisible('.boas-cta'));

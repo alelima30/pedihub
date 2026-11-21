@@ -88,7 +88,7 @@ async function loja(largura = 390){
   const ctx = await nav.newContext({ viewport:{ width: largura, height:844 }, isMobile:true, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   await p.evaluate(() => irPara('loja'));
   await p.waitForTimeout(500);

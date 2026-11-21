@@ -19,14 +19,14 @@ Os três aplicativos, na ordem em que a vida acontece:
 |---|---|
 | `criar.html` | o dono, para abrir a conta |
 | `app.html` | o restaurante: agenda, clientes, caixa, plano |
-| `agendar.html?salao=studio-bella` | o cliente, para marcar |
+| `cardapio.html?salao=studio-bella` | o cliente, para marcar |
 
 Vale conferir:
 
 - Troque de restaurante no seletor do topo — um não enxerga o outro
 - Clique num espaço vazio da agenda; tente marcar em cima de alguém
-- Aba **Ver como cliente** → copie o link → abra `agendar.html`
-- Abra `agendar.html?salao=barbearia-do-ze`: o sistema passa a dizer
+- Aba **Ver como cliente** → copie o link → abra `cardapio.html`
+- Abra `cardapio.html?salao=barbearia-do-ze`: o sistema passa a dizer
   "barbeiro" em vez de "profissional", e "quem corta" em vez de "quem atende"
 - Um dia cheio oferece a **lista de espera**
 - Aba **Plano**: a Barbearia do Zé está com o teste vencendo e 2

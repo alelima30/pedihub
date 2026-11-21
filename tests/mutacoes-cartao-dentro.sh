@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 T=tests/cartao-por-dentro.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mcd-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mcd-$(basename "$a")" "$a"; done
@@ -50,7 +50,7 @@ PY
 }
 
 echo "1. o link ignora a cor de dentro dos serviços"
-troca agendar.html \
+troca cardapio.html \
   "  document.body.classList.toggle('tem-fundo-servico', !!fundoServico);" \
   "  document.body.classList.toggle('tem-fundo-servico', false);" \
   && rodar "cor salva e cartão branco no link"

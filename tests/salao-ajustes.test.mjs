@@ -167,7 +167,7 @@ const ctxCli = await nav.newContext({ viewport:{ width:412, height:915 } });
 async function horariosDoLink(){
   const c = await ctxCli.newPage();
   c.on('pageerror', e => erros.push('cliente: ' + e.message));
-  await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await c.waitForTimeout(2400);
   const r = await c.evaluate(async id => {
     escolha.servicos = [id];

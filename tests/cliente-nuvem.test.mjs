@@ -98,7 +98,7 @@ p.on('response', r => { if (r.status() >= 400) ruins.push(r.status() + ' ' + r.u
 
 const tela = () => p.evaluate(() => document.body.getAttribute('data-passo'));
 
-await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await p.waitForTimeout(1500);
 
 verdade('a página está falando com o banco, não com o navegador',
@@ -281,7 +281,7 @@ verdade('e o botão de cancelar', meu.includes('Cancelar'));
    uma lista pública das clientes da casa. */
 const bisbilhoteira = await nav.newContext({ viewport: { width: 430, height: 800 } });
 const b = await bisbilhoteira.newPage();
-await b.goto(BASE + '/agendar.html?salao=' + SLUG);
+await b.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await b.waitForTimeout(1500);
 await b.evaluate(() => irPara('meus'));
 await b.waitForTimeout(1500);
@@ -396,7 +396,7 @@ const cli = await ctx.newPage();
 const errosCli = [];
 cli.on('pageerror', e => errosCli.push(e.message));
 cli.on('console', m => { if (m.type() === 'error') errosCli.push(m.text()); });
-await cli.goto(BASE + '/agendar.html?salao=' + SLUG);
+await cli.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await cli.waitForTimeout(1800);
 
 igual('as DUAS fotos chegam ao slide da capa',
@@ -440,7 +440,7 @@ await semFuncao.route('**/rpc/horarios_livres_periodo', r => r.fulfill({
   status: 404, contentType: 'application/json',
   body: JSON.stringify({ code:'PGRST202',
     message:'Could not find the function public.horarios_livres_periodo' }) }));
-await semFuncao.goto(BASE + '/agendar.html?salao=' + SLUG);
+await semFuncao.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await semFuncao.waitForTimeout(1500);
 await semFuncao.click('#btPrincipal'); await semFuncao.waitForTimeout(300);
 await semFuncao.click('#listaServicos button.sv-cartao'); await semFuncao.waitForTimeout(200);
@@ -469,7 +469,7 @@ const criadoZero = await zero.chamar('criar_salao', {
   p_telefone: '(51) 99887-6600', p_documento: null, p_origem: null });
 
 const z = await ctx.newPage();
-await z.goto(BASE + '/agendar.html?salao=' + criadoZero[0].slug);
+await z.goto(BASE + '/cardapio.html?salao=' + criadoZero[0].slug);
 await z.waitForTimeout(1500);
 await z.click('#btPrincipal'); await z.waitForTimeout(400);
 const vazio = await z.textContent('#listaServicos');
@@ -481,7 +481,7 @@ verdade('e não manda a cliente arrumar uma busca que ela não fez',
 secao('Um apelido que não existe');
 
 const q = await ctx.newPage();
-await q.goto(BASE + '/agendar.html?salao=salao-que-nao-existe-' + marca);
+await q.goto(BASE + '/cardapio.html?salao=salao-que-nao-existe-' + marca);
 await q.waitForTimeout(1500);
 verdade('diz que não encontrou, em vez de listar os outros restaurantes',
   (await q.textContent('#listaSaloes')).includes('não corresponde a nenhum restaurante ativo'));

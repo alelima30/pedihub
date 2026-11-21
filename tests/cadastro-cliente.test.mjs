@@ -51,7 +51,7 @@ p.on('pageerror', x => erros.push('pageerror: ' + x.message));
 p.on('console', c => { if(c.type() === 'error') erros.push('console: ' + c.text()); });
 p.on('dialog', d => d.accept());
 
-await p.goto(BASE + 'agendar.html?salao=studio-bella&demo=1');
+await p.goto(BASE + 'cardapio.html?salao=studio-bella&demo=1');
 await p.waitForTimeout(2200);
 
 /* Chega ao passo do cadastro pelo caminho de sempre: serviço, profissional e

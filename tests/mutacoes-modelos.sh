@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 T=tests/modelos.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mmo-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mmo-$(basename "$a")" "$a"; done

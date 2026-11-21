@@ -1,6 +1,6 @@
 ---
 name: caca-bug
-description: Caça bug no PediHub — abre o painel (app.html), o link da cliente (agendar.html) e o banco (supabase/*.sql) numa bancada local, reproduz cada defeito de verdade e devolve a lista com o passo a passo, o arquivo:linha e o conserto sugerido. Use quando pedirem "caçar bug", "procurar erro", "revisar o app" ou depois de uma mudança grande.
+description: Caça bug no PediHub — abre o painel (app.html), o link da cliente (cardapio.html) e o banco (supabase/*.sql) numa bancada local, reproduz cada defeito de verdade e devolve a lista com o passo a passo, o arquivo:linha e o conserto sugerido. Use quando pedirem "caçar bug", "procurar erro", "revisar o app" ou depois de uma mudança grande.
 tools: Read, Grep, Glob, Bash
 ---
 
@@ -33,7 +33,7 @@ antes de chamar de bug.
 
 - Painel na nuvem: `http://127.0.0.1:8123/app.html` (sessão via
   `localStorage['pedihub.sessao']` + `window.PEDIHUB = {url, chave:'k', ambiente:'bancada'}`).
-- Link da cliente: `http://127.0.0.1:8123/agendar.html?salao=<slug>`.
+- Link da cliente: `http://127.0.0.1:8123/cardapio.html?salao=<slug>`.
 - Demonstração (sem banco): `http://127.0.0.1:8099/app.html?demo=1`.
 - Playwright: `PLAYWRIGHT=/opt/node22/lib/node_modules/playwright`,
   Chromium em `/opt/pw-browsers/chromium`.

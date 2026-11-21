@@ -18,7 +18,7 @@ T=tests/conta-cliente.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 PSQL="psql -h ${PGHOST_BANCADA:-/tmp} -p ${PGPORT_BANCADA:-5444} -U postgres -d app -v ON_ERROR_STOP=1 -q"
 
-ARQS="app.html agendar.html dados.js"
+ARQS="app.html cardapio.html dados.js"
 for a in $ARQS; do cp "$a" "/tmp/mcc-$(basename "$a")"; done
 L=$(grep -n '7) A CONTA DA CLIENTE' supabase/09_cliente.sql | cut -d: -f1)
 sed -n "$((L-1)),\$p" supabase/09_cliente.sql > /tmp/mcc-sec7.sql
@@ -90,13 +90,13 @@ grant execute on function public.meus_agendamentos_da_conta() to anon;" \
   && rodar "sem login, as funções respondem"
 
 echo "6. a página entra e não liga a ficha"
-troca agendar.html \
+troca cardapio.html \
   "  try{ f = await Dados.chamar('ligar_minha_ficha', { p_salao: salao.id }); }" \
   "  try{ f = null; }" \
   && rodar "logada, e o pacote não vale"
 
 echo "7. entrou, e os pacotes não são buscados de novo"
-troca agendar.html \
+troca cardapio.html \
   "  meusDaNuvem = null;
   await carregarMeusPacotes();
   return f;" \
@@ -105,55 +105,55 @@ troca agendar.html \
   && rodar "Meus pacotes só aparece depois de recarregar"
 
 echo "8. Meus horários não pergunta à conta"
-troca agendar.html \
+troca cardapio.html \
   "        naConta ? Dados.chamar('meus_agendamentos_da_conta', {}) : []," \
   "        []," \
   && rodar "noutro celular, nada aparece"
 
 echo "9. a mesma marcação duas vezes"
-troca agendar.html \
+troca cardapio.html \
   "        if(a && a.token && !porToken.has(a.token)) porToken.set(a.token, a);" \
   "        if(a && a.token) porToken.set(a.token + Math.random(), a);" \
   && rodar "aparelho e conta acham a mesma escova, e ela aparece em dobro"
 
 echo "10. sair não sai da conta"
-troca agendar.html \
+troca cardapio.html \
   "  if(logada()){ try{ await Dados.sair(); }catch(e){} }" \
   "" \
   && rodar "toca em Sair e continua logada"
 
 echo "11. a senha do cadastro é ignorada"
-troca agendar.html \
+troca cardapio.html \
   "    return criarContaNoCadastro(nome, tel, nasc, email, cpf, senha);" \
   "" \
   && rodar "digitou senha e a conta não nasceu"
 
 echo "12. senha errada vira erro genérico"
-troca agendar.html \
+troca cardapio.html \
   "  if(eh('invalid_credentials', /invalid login|invalid_grant|credentials/i))" \
   "  if(false)" \
   && rodar "\"não conferem\" some"
 
 echo "13. a capa não oferece entrar"
-troca agendar.html \
+troca cardapio.html \
   "    atalhos.push([ 'conta', 'usuario', 'Entrar na minha conta'," \
   "    if(0) atalhos.push([ 'conta', 'usuario', 'Entrar na minha conta'," \
   && rodar "sem porta de entrada na capa"
 
 echo "14. esqueci a senha volta para o painel"
-troca agendar.html \
-  "    await Dados.pedirNovaSenha(email, 'agendar.html?salao=' + salao.slug);" \
+troca cardapio.html \
+  "    await Dados.pedirNovaSenha(email, 'cardapio.html?salao=' + salao.slug);" \
   "    await Dados.pedirNovaSenha(email);" \
   && rodar "a cliente troca a senha e cai no painel do dono"
 
 echo "15. a volta do e-mail aceita a de recuperação"
-troca agendar.html \
+troca cardapio.html \
   "    if(NA_NUVEM && h.get('access_token') && h.get('type') !== 'recovery')" \
   "    if(NA_NUVEM && h.get('access_token'))" \
   && rodar "o link de senha nova vira login"
 
 echo "16. a volta do e-mail não guarda o token"
-troca agendar.html \
+troca cardapio.html \
   "      Dados.entrarComToken({ token: h.get('access_token'), refresh: h.get('refresh_token') });" \
   "      void 0;" \
   && rodar "confirmou o e-mail e continua de fora"
@@ -173,37 +173,37 @@ troca app.html \
   && rodar "o dono vê o contrário"
 
 echo "19. WhatsApp de outra conta, e a tela calada"
-troca agendar.html \
+troca cardapio.html \
   "  if(f && typeof f === 'object' && !f.telefone && !f.ficha){" \
   "  if(false){" \
   && rodar "a conta nasce sem ficha, e a cliente acha que o pacote sumiu"
 
 echo "20. logada, o cadastro inteiro de novo"
-troca agendar.html \
+troca cardapio.html \
   "  const naConta = NA_NUVEM && logada();" \
   "  const naConta = false;" \
   && rodar "a conta não poupa nada"
 
 echo "21. logada, o WhatsApp aparece mesmo já sabido"
-troca agendar.html \
+troca cardapio.html \
   "['campoTel', !naConta || falta.tel]" \
   "['campoTel', true]" \
   && rodar "pede de novo o que a conta já tem"
 
 echo "22. o aniversário que falta fica escondido"
-troca agendar.html \
+troca cardapio.html \
   "           nasc: !nasc || nasc > hoje() || nasc < '1900-01-01'," \
   "           nasc: false," \
   && rodar "erro sobre um campo que ela não vê"
 
 echo "23. Meus horários diz Entrar para quem já entrou"
-troca agendar.html \
+troca cardapio.html \
   "  } else if(casaFazServicos() && !conhecida && NA_NUVEM && tela !== 'conta' && tela !== 'saloes'){" \
   "  } else if(casaFazServicos() && NA_NUVEM && tela !== 'conta' && tela !== 'saloes'){" \
   && rodar "acabou de cadastrar e o topo pede para entrar"
 
 echo "24. logada, o nome vira campo para trocar"
-troca agendar.html \
+troca cardapio.html \
   "  for(const [id, mostra] of [['campoNome', !naConta || semNome]," \
   "  for(const [id, mostra] of [['campoNome', true]," \
   && rodar "a dona da conta troca o próprio nome no agendamento"

@@ -97,7 +97,7 @@ async function abrir(larg, alt){
     isMobile: larg < 700, hasTouch: larg < 700 });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(`${larg}px: ${e.message}`));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForTimeout(2600);
   return p;
 }

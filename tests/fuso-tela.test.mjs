@@ -104,7 +104,7 @@ const horasNaTela = p => p.evaluate(dia => (bd.agendamentos || [])
 
 const p = await abrir('/app.html', dona.sessao());
 const outro = await abrir('/app.html', dona.sessao());      // o aparelho da recepção
-const link = await abrir('/agendar.html?salao=' + SLUG);    // a cliente, com a página aberta
+const link = await abrir('/cardapio.html?salao=' + SLUG);    // a cliente, com a página aberta
 
 secao('1. Meu negócio mostra o horário da cidade');
 e('a agenda abre com os dois horários às 09:00 e 10:00',

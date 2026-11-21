@@ -273,7 +273,7 @@ async function noLink(d){
     window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
     localStorage.setItem('pedihub.sessao', JSON.stringify(s));
   }, [BASE, d.sessao()]);
-  await p.goto(BASE + '/agendar.html?salao=' + B.slug);
+  await p.goto(BASE + '/cardapio.html?salao=' + B.slug);
   await p.waitForFunction(() => typeof irPara === 'function' && typeof salao !== 'undefined' && salao, null, { timeout: 15000 });
   await p.waitForTimeout(800);
   await p.evaluate(() => { irPara('meus'); });

@@ -55,7 +55,7 @@ const erros = [];
 p.on('pageerror', x => erros.push('pageerror: ' + x.message));
 p.on('console', c => { if(c.type() === 'error') erros.push('console: ' + c.text()); });
 
-await p.goto(BASE + 'agendar.html?salao=studio-bella&demo=1');
+await p.goto(BASE + 'cardapio.html?salao=studio-bella&demo=1');
 await p.waitForTimeout(2200);
 
 /* Um PNG cinza de 8×6, embutido: o teste não depende de arquivo em disco nem

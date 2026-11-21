@@ -234,7 +234,7 @@ await p.waitForTimeout(1800);
   const c2 = await nav.newContext({ viewport:{ width:390, height:844 }, isMobile:true, hasTouch:true });
   const q = await c2.newPage();
   q.on('pageerror', e => erros.push('link: ' + e.message));
-  await q.goto(BASE + '/agendar.html?salao=' + cr[0].slug);
+  await q.goto(BASE + '/cardapio.html?salao=' + cr[0].slug);
   await q.waitForFunction(() => document.querySelectorAll('.sv-cartao').length >= 1, null, { timeout: 15000 });
   await q.waitForTimeout(600);
   const r = await q.evaluate(() => { const lum = c => { const v = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c).slice(1, 4).map(Number).map(x => { x /= 255;

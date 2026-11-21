@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 T=tests/etapa2.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/me2-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/me2-$(basename "$a")" "$a"; done
@@ -51,55 +51,55 @@ PY
 }
 
 echo "1. o serviço pula a Etapa 2"
-troca agendar.html \
+troca cardapio.html \
   "  if(tela === 'servico')   return irPara('quem');" \
   "  if(tela === 'servico')   return irPara('prof');" \
   && rodar "sem perguntar para quem"
 
 echo "2. Para mim não segue direto"
-troca agendar.html \
+troca cardapio.html \
   "  if(q === 'mim'){ mudarPara('mim'); return seguirDepoisDoQuem(); }" \
   "  if(q === 'mim'){ mudarPara('mim'); }" \
   && rodar "para mim abre a tela do nome"
 
 echo "3. o Continuar liga sem a relação"
-troca agendar.html \
+troca cardapio.html \
   "  if(!escolha.relacao) return 'Escolha a relação com você';" \
   "" \
   && rodar "só o nome basta"
 
 echo "4. o nome em branco conta"
-troca agendar.html \
+troca cardapio.html \
   "  if(!(escolha.filhoNome || '').trim()) return 'Digite o nome da pessoa';" \
   "  if(!(escolha.filhoNome || '')) return 'Digite o nome da pessoa';" \
   && rodar "espaços valem como nome"
 
 echo "5. o Continuar não desliga"
-troca agendar.html \
+troca cardapio.html \
   "  bp.disabled = !!falta;" \
   "  bp.disabled = false;" \
   && rodar "botão ligado sem nada"
 
 echo "6. a relação não vai junto do nome"
-troca agendar.html \
+troca cardapio.html \
   "  return nome && r && r[0] !== 'outra' ? nome + ' (' + r[1].toLowerCase() + ')' : nome;" \
   "  return nome;" \
   && rodar "o restaurante não sabe que é a filha"
 
 echo "7. \"Outra pessoa\" vira \"(outra pessoa)\""
-troca agendar.html \
+troca cardapio.html \
   "  return nome && r && r[0] !== 'outra' ? nome + ' (' + r[1].toLowerCase() + ')' : nome;" \
   "  return nome && r ? nome + ' (' + r[1].toLowerCase() + ')' : nome;" \
   && rodar "parêntese sem sentido"
 
 echo "8. o \"eu também\" é esquecido"
-troca agendar.html \
+troca cardapio.html \
   "  mudarPara(escolha.junto ? 'ambos' : 'filho');" \
   "  mudarPara('filho');" \
   && rodar "um horário só para dois"
 
 echo "9. trocar quem é atendido não solta o horário"
-troca agendar.html \
+troca cardapio.html \
   "  escolha.data = null; escolha.inicio = null;
 }
 function escolherQuem(q){" \
@@ -108,7 +108,7 @@ function escolherQuem(q){" \
   && rodar "duração nova, horário velho"
 
 echo "10. o voltar esquece a relação"
-troca agendar.html \
+troca cardapio.html \
   "  document.getElementById('gradeRelacao').innerHTML = RELACOES.map(([v, rot, emoji]) => \`
     <button type=\"button\" class=\"rel-card\${escolha.relacao === v ? ' sel' : ''}\"" \
   "  document.getElementById('gradeRelacao').innerHTML = RELACOES.map(([v, rot, emoji]) => \`
@@ -116,19 +116,19 @@ troca agendar.html \
   && rodar "a escolhida não aparece marcada"
 
 echo "11. a primeira tela não marca a porta escolhida"
-troca agendar.html \
+troca cardapio.html \
   "    if(b) b.classList.toggle('sel', escolha.quem === q);" \
   "" \
   && rodar "voltar sem saber o que escolheu"
 
 echo "12. a primeira tela mostra o botão de baixo"
-troca agendar.html \
+troca cardapio.html \
   "  if(tela === 'quem')        { desenharQuem();      trilhaAte(2); rodape.style.display = 'none'; }" \
   "  if(tela === 'quem')        { desenharQuem();      trilhaAte(2); }" \
   && rodar "botão repetindo o cartão"
 
 echo "13. a trilha não anda na Etapa 2"
-troca agendar.html \
+troca cardapio.html \
   "  if(tela === 'quemOutra')   { desenharQuemOutra(); trilhaAte(2); acertarBotaoQuem(); }" \
   "  if(tela === 'quemOutra')   { desenharQuemOutra(); trilhaAte(1); acertarBotaoQuem(); }" \
   && rodar "trilha parada"
@@ -140,7 +140,7 @@ troca estilo.css \
   && rodar "lista comprida no celular"
 
 echo "15. o nome não chega ao banco"
-troca agendar.html \
+troca cardapio.html \
   "  const unit = duracaoEscolhida();
   const filho = nomeDoAtendido();" \
   "  const unit = duracaoEscolhida();

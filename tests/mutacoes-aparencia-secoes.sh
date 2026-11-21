@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 T=tests/aparencia-secoes.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mas-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mas-$(basename "$a")" "$a"; done
@@ -88,13 +88,13 @@ troca estilo.css \
   && rodar "Destaque → Horários"
 
 echo "7. a página não guarda a cor da marca à parte"
-troca agendar.html \
+troca cardapio.html \
   "  p('--ac-marca', escuro ? mexer(cor, 0.30) : mexer(cor, -0.28));" \
   "" \
   && rodar "tudo volta a depender do destaque"
 
 echo "8. a página ignora os Ícones de destaque"
-troca agendar.html \
+troca cardapio.html \
   "  if(iconeDestaque) p('--ico-destaque', iconeDestaque);" \
   "" \
   && rodar "escolhido e ignorado"

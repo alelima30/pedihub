@@ -131,7 +131,7 @@ await banco.query(`update public.servicos set ficha = ficha || jsonb_build_objec
 
 /* ═══════════════════════════════════ 3 ══ */
 secao('3. No link, no celular');
-const c = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:360, height:780 } } });
+const c = await abrir('/cardapio.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:360, height:780 } } });
 const rotulos = await c.$$eval('#capaInfo .recurso-rot', xs => xs.map(x => x.textContent.trim()));
 e('o botão "Dúvidas" está na fileira — ' + JSON.stringify(rotulos), rotulos.includes('Dúvidas') && !rotulos.includes('Como funciona'));
 e('o convite "Primeira vez aqui?" aparece', await c.locator('.ficha-convite').isVisible());
@@ -167,7 +167,7 @@ const palavrasInteiras = () => [...document.querySelectorAll('#capaInfo .recurso
 });
 for(const [larg, tipo] of [[320, 'salao'], [360, 'salao'], [390, 'salao'], [360, 'barbearia']]){
   await banco.query(`update public.saloes set tipo = $2 where id = $1`, [SALAO, tipo]);
-  const q = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width: larg, height: 780 } } });
+  const q = await abrir('/cardapio.html?salao=' + SLUG, null, { ctx:{ viewport:{ width: larg, height: 780 } } });
   const r = await q.evaluate(palavrasInteiras);
   e(`${larg}px (${tipo}): os quatro atalhos — ${r.map(x => x.rot).join(' · ')}`, r.length === 4, JSON.stringify(r));
   e(`${larg}px (${tipo}): nenhuma palavra quebrada no meio`, r.every(x => !x.cortadas.length), JSON.stringify(r.filter(x => x.cortadas.length)));
@@ -195,7 +195,7 @@ const atalhoNoCartao = () => [...document.querySelectorAll('#capaServicos .sv-ca
   return { txt, sozinha: linhaDe(seta) !== linhaDe(antes), cobre, temBotao: !!ir };
 }).filter(Boolean);
 for(const larg of [320, 360, 390]){
-  const q = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width: larg, height: 780 } } });
+  const q = await abrir('/cardapio.html?salao=' + SLUG, null, { ctx:{ viewport:{ width: larg, height: 780 } } });
   const r = await q.evaluate(atalhoNoCartao);
   e(`${larg}px (elegante): os cartões com explicação têm o atalho e o botão redondo`, r.length >= 2 && r.every(x => x.temBotao), JSON.stringify(r));
   e(`${larg}px (elegante): a seta nunca cai sozinha na linha de baixo`, r.every(x => !x.sozinha), JSON.stringify(r));
@@ -255,7 +255,7 @@ await c.context().close();
 /* ═══════════════════════════════════ 7 ══ */
 secao('7. Sem ficha nenhuma, a página é a de sempre');
 await banco.query(`update public.servicos set ficha = null where salao_id = $1`, [SALAO]);
-const c2 = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:390, height:844 } } });
+const c2 = await abrir('/cardapio.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:390, height:844 } } });
 e('sem botão "Dúvidas"', await c2.locator('#capaInfo .recurso', { hasText: 'Dúvidas' }).count() === 0);
 e('sem convite', await c2.locator('.ficha-convite').count() === 0);
 e('sem atalho nos cartões', await c2.locator('.sv-cartao-ficha').count() === 0);
@@ -379,7 +379,7 @@ e('restaurante fora do ar não entrega nada', (await anon.duvidasDaCasa(SLUG)).l
 await banco.query(`update public.saloes set status = 'ativo' where id = $1`, [SALAO]);
 await banco.query(`update public.saloes set cfg = jsonb_set(cfg, '{duvidas}', (cfg->'duvidas') - 2 - 3 - 4) where id = $1`, [SALAO]);
 
-const d = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:360, height:780 } } });
+const d = await abrir('/cardapio.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:360, height:780 } } });
 const rotD = await d.$$eval('#capaInfo .recurso-rot', xs => xs.map(x => x.textContent.trim()));
 e('só com as dúvidas da casa (nenhuma ficha), o botão "Dúvidas" aparece — ' + rotD.join(' · '),
   rotD.join() === 'Pagamentos,Horários,Dúvidas,Informações');
@@ -407,7 +407,7 @@ await d.context().close();
 await banco.query(`update public.servicos set ficha = '{"explicacao":"Gel","inclui":["Preparo","Gel"],"dura":"3 semanas"}' where id = $1`, [GEL]);
 await banco.query(`update public.servicos set ficha = '{"explicacao":"Fibra","inclui":["Preparo","Fibra"]}' where id = $1`, [FIBRA]);
 await banco.query(`update public.servicos set ficha = '{"explicacao":"Mão"}' where id = $1`, [MANI]);
-const d2 = await abrir('/agendar.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:360, height:780 } } });
+const d2 = await abrir('/cardapio.html?salao=' + SLUG, null, { ctx:{ viewport:{ width:360, height:780 } } });
 await d2.locator('#capaInfo .recurso', { hasText: 'Dúvidas' }).click();
 await d2.waitForTimeout(600);
 const txtD2 = await d2.locator('.folha').innerText();

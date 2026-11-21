@@ -100,7 +100,7 @@ async function aparelho(sufixo, largura = 390, telaEsperada = null){
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
   p.on('dialog', d => d.accept());
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG + sufixo);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG + sufixo);
   await p.waitForFunction(t => typeof tela !== 'undefined' && (t ? tela === t : tela !== 'saloes')
     && typeof salao !== 'undefined' && salao, telaEsperada, { timeout: 15000 });
   await p.waitForTimeout(1500);
@@ -214,7 +214,7 @@ secao('4. Criar a conta pela tela de sempre também faz a ficha');
   const eva = (await fichas()).find(x => x.nome === 'Eva Lima');
   igual('e a ficha nasceu', eva && [!!eva.perfil_id, eva.pelo_link], [true, true]);
   verdade('a volta do e-mail leva o aviso de conta nova',
-    pedidos.length === 1 && decodeURIComponent(pedidos[0]).includes('agendar.html?salao=' + SLUG + '&conta=nova'),
+    pedidos.length === 1 && decodeURIComponent(pedidos[0]).includes('cardapio.html?salao=' + SLUG + '&conta=nova'),
     pedidos.join(' | '));
   await ctx.close();
 }
@@ -259,7 +259,7 @@ secao('6. O painel: a marca em Clientes e o botão do link');
   await p.click('button:has-text("Link de cadastro")');
   await p.waitForSelector('#linkCadastro');
   const link = await p.inputValue('#linkCadastro');
-  verdade('a janela mostra o link do restaurante com o cadastro', link.endsWith('agendar.html?salao=' + SLUG + '&cadastro=1'), link);
+  verdade('a janela mostra o link do restaurante com o cadastro', link.endsWith('cardapio.html?salao=' + SLUG + '&cadastro=1'), link);
   const botoes = await p.evaluate(() => [...document.querySelectorAll('#modalPe .btn')].map(b => b.textContent.trim()));
   igual('com Fechar, Copiar e Mandar no WhatsApp', botoes, ['Fechar', 'Copiar o link', 'Mandar no WhatsApp']);
   await p.click('#modalPe .btn:has-text("Mandar no WhatsApp")');

@@ -186,7 +186,7 @@ await c.addInitScript(([base, ses]) => {
   window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
   localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, maria.sessao()]);
-await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await c.waitForTimeout(3000);
 
 const carregou = await c.evaluate(() => ({
@@ -302,7 +302,7 @@ console.log('\n── O PACOTE COM A AGENDA DESLIGADA ────────�
     window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
     localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
   }, [BASE, maria.sessao()]);
-  await c2.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await c2.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await c2.waitForFunction(() => {
     const a = document.getElementById('capaAtalhos');
     return a && /pacote/i.test(a.textContent);

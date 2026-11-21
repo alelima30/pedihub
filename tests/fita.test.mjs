@@ -92,12 +92,12 @@ async function comFita(){
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
   /* ⚠ A CHAVE LEVA O ID DO RESTAURANTE, e não o slug — ver `chaveDoCarrinho()` no
-     agendar.html. Escrevi o slug primeiro: o carrinho nascia vazio, a fita
+     cardapio.html. Escrevi o slug primeiro: o carrinho nascia vazio, a fita
      nunca aparecia, e o teste morria no `waitForFunction` sem dizer por quê. */
   await p.addInitScript(([id, salaoId]) => {
     localStorage.setItem('pedihub.carrinho.' + salaoId, JSON.stringify({ [id]: 2 }));
   }, [prod.id, SALAO]);
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => {
     const f = document.getElementById('carrinhoFita');
     return f && f.style.display !== 'none' && f.innerHTML.trim() !== '';

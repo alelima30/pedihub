@@ -118,7 +118,7 @@ async function abrirCapa(){
   const p = await ctxCli.newPage();
   p.on('pageerror', e => erros.push('pageerror: ' + e.message));
   p.on('console', c => { if(c.type()==='error') erros.push('console: ' + c.text()); });
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForTimeout(2400);
   return p;
 }

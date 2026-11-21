@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 T=tests/previa-capa.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mpc-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mpc-$(basename "$a")" "$a"; done
@@ -51,13 +51,13 @@ PY
 }
 
 echo "1. a página esquece a divisão escolhida no caminho da vitrine"
-troca agendar.html \
+troca cardapio.html \
   "      capaForma: s.capaForma || null," \
   "" \
   && rodar "Reta na prévia, arco no link"
 
 echo "2. a página não marca o atributo"
-troca agendar.html \
+troca cardapio.html \
   "  if((s.capaForma || c.capaForma) === 'reta') raiz.setAttribute('data-capa', 'reta');" \
   "  if(false) raiz.setAttribute('data-capa', 'reta');" \
   && rodar "escolha gravada e ignorada"

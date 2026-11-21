@@ -118,7 +118,7 @@ await ctxLink.addInitScript(() => {
 async function impressao(){
   const c = await ctxLink.newPage();
   c.on('pageerror', e => erros.push('link: ' + e.message));
-  await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await c.waitForFunction(() => document.querySelector('#capaServicos .sv-cartao')
     && document.querySelector('.marca-salao'), null, { timeout: 15000 });
   await c.waitForTimeout(500);
@@ -268,7 +268,7 @@ secao('2. Curvada sem foto nos serviços');
     await dona.atualizar('saloes', SALAO, { cfg: c });
     const pg = await ctxLink.newPage();
     pg.on('pageerror', e => erros.push('link: ' + e.message));
-    await pg.goto(BASE + '/agendar.html?salao=' + SLUG);
+    await pg.goto(BASE + '/cardapio.html?salao=' + SLUG);
     await pg.waitForFunction(() => document.querySelector('#capaServicos .sv-cartao'), null, { timeout: 15000 });
     await pg.waitForTimeout(400);
     const r = await pg.evaluate(() => {
@@ -354,7 +354,7 @@ secao('4. A cor do "Agende seu horário"');
   await dona.atualizar('saloes', SALAO, { endereco: {} });
   const lerSub = async () => {
     const pg = await ctxLink.newPage();
-    await pg.goto(BASE + '/agendar.html?salao=' + SLUG);
+    await pg.goto(BASE + '/cardapio.html?salao=' + SLUG);
     await pg.waitForFunction(() => document.querySelector('.marca-salao'), null, { timeout: 15000 });
     await pg.waitForTimeout(400);
     const r = await pg.evaluate(() => { const e = document.querySelector('.marca-salao .sub');

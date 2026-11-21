@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 T=tests/voltar-produto.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="agendar.html estilo.css"
+ARQS="cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mvp-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mvp-$(basename "$a")" "$a"; done
@@ -49,13 +49,13 @@ PY
 
 
 echo "1. Para quem fica sem Voltar"
-troca agendar.html \
+troca cardapio.html \
   "const VOLTAR_ESCRITO = ['servico', 'quem', 'quemOutra'," \
   "const VOLTAR_ESCRITO = ['servico', 'quemOutra'," \
   && rodar "a tela sem botão nenhum prende a cliente"
 
 echo "2. o Voltar escrito some de todas"
-troca agendar.html \
+troca cardapio.html \
   "  if(VOLTAR_ESCRITO.includes(tela)){
     const sozinho" \
   "  if(false){
@@ -63,13 +63,13 @@ troca agendar.html \
   && rodar "só o ‹ pequeno do topo"
 
 echo "3. o Voltar aparece mas não volta"
-troca agendar.html \
+troca cardapio.html \
   "  if(VOLTAR_ESCRITO.includes(tela)) return voltar();" \
   "" \
   && rodar "toca e nada acontece"
 
 echo "4. o Adicionar do cartão abre o produto"
-troca agendar.html \
+troca cardapio.html \
   "  if(ev && ev.target && ev.target.closest('button')) return;" \
   "" \
   && rodar "quem só queria pôr no carrinho sai da loja"
@@ -81,13 +81,13 @@ troca estilo.css \
   && rodar "o texto do restaurante vira um bloco só"
 
 echo "6. a fita do carrinho repete o pé no produto"
-troca agendar.html \
+troca cardapio.html \
   "&& tela !== 'loja' && tela !== 'produto'" \
   "&& tela !== 'loja'" \
   && rodar "dois Enviar pedido um sobre o outro"
 
 echo "7. Ver meu pedido só adiciona"
-troca agendar.html \
+troca cardapio.html \
   "    return n ? irPara('loja') : mudarNoCarrinho(produtoAbertoId, 1);" \
   "    return mudarNoCarrinho(produtoAbertoId, 1);" \
   && rodar "o botão diz uma coisa e faz outra"

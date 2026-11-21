@@ -14,7 +14,7 @@ T=tests/confirma-cliente.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 PSQL="psql -h ${PGHOST_BANCADA:-/tmp} -p ${PGPORT_BANCADA:-5444} -U postgres -d app -v ON_ERROR_STOP=1 -q"
 
-ARQS="app.html agendar.html"
+ARQS="app.html cardapio.html"
 for a in $ARQS; do cp "$a" "/tmp/mcf-$(basename "$a")"; done
 cp supabase/09_cliente.sql /tmp/mcf-09.sql
 restaurar(){
@@ -75,7 +75,7 @@ trocaSql "revoke all on function public.cliente_exige_confirmacao(uuid, uuid, te
   && rodar "qualquer um descobre quem está marcada"
 
 echo "4. o link diz confirmado para quem ficou esperando"
-troca agendar.html \
+troca cardapio.html \
   "  if(!salaoConfirmaSozinho || statusDaMarcacao === 'pendente'){" \
   "  if(!salaoConfirmaSozinho){" \
   && rodar "promete em nome do restaurante"

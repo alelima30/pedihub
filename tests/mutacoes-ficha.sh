@@ -14,7 +14,7 @@ export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST=${PGHOST:-/tmp} PGPORT=${PGPORT:-5444} PGUSER=${PGUSER:-postgres}
 BANCO=${PGBANCO:-app}
 
-ARQS="app.html agendar.html estilo.css supabase/62_ficha_servico.sql supabase/63_duvidas_casa.sql"
+ARQS="app.html cardapio.html estilo.css supabase/62_ficha_servico.sql supabase/63_duvidas_casa.sql"
 for a in $ARQS; do cp "$a" "/tmp/mfi-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mfi-$(basename "$a")" "$a"; done
@@ -94,19 +94,19 @@ troca supabase/62_ficha_servico.sql \
   && rodar "peça de dentro vira porta"
 
 echo "6. tocar no atalho escolhe o serviço"
-troca agendar.html \
+troca cardapio.html \
   "      onclick=\"event.stopPropagation(); abrirFolha('ficha:\${escapar(s.id)}', this)\"" \
   "      onclick=\"abrirFolha('ficha:\${escapar(s.id)}', this)\"" \
   && rodar "quem só queria ler já sai com o serviço marcado"
 
 echo "7. o texto do dono sem escapar"
-troca agendar.html \
+troca cardapio.html \
   "        \${f.cuidadosDepois ? \`<p><b>Depois:</b> \${escapar(f.cuidadosDepois)}</p>\` : ''}" \
   "        \${f.cuidadosDepois ? \`<p><b>Depois:</b> \${f.cuidadosDepois}</p>\` : ''}" \
   && rodar "HTML do texto roda na página da cliente"
 
 echo "8. a ficha mostra o preço que o dono escondeu na capa"
-troca agendar.html \
+troca cardapio.html \
   "  if(tela === 'capa' && salao.precoNaCapa !== true) return '';" \
   "" \
   && rodar "preço aparece pela porta dos fundos"
@@ -118,7 +118,7 @@ troca app.html \
   && rodar "a dona escreve e nada vai para o link"
 
 echo "10. o convite lista serviço sem ficha"
-troca agendar.html \
+troca cardapio.html \
   "  const nomes = svs.slice(0, 4);" \
   "  const nomes = servicosDoSalao().slice(0, 4);" \
   && rodar "a cliente toca e não abre nada"
@@ -145,7 +145,7 @@ troca supabase/63_duvidas_casa.sql \
   && rodar "moldura vazia na página da cliente"
 
 echo "14. a resposta da dona sem escapar"
-troca agendar.html \
+troca cardapio.html \
   "        <div class=\"duv-resposta\">\${escapar(d.r).replace(/\\n/g, '<br>')}</div>" \
   "        <div class=\"duv-resposta\">\${d.r.replace(/\\n/g, '<br>')}</div>" \
   && rodar "HTML da resposta roda na página da cliente"
@@ -157,13 +157,13 @@ troca app.html \
   && rodar "a dona escreve e nada vai para o link"
 
 echo "16. o botão Dúvidas só com ficha de serviço"
-troca agendar.html \
+troca cardapio.html \
   "  if(temDuvidas()){" \
   "  if(servicosComFicha().length){" \
   && rodar "quem só escreveu as dúvidas da casa não vê o botão"
 
 echo "17. a cliente compara um serviço com ele mesmo"
-troca agendar.html \
+troca cardapio.html \
   "  if(a === b){" \
   "  if(false){" \
   && rodar "comparação de um serviço com ele mesmo"
@@ -181,7 +181,7 @@ troca app.html \
   && rodar "a pergunta editada volta a ser a ideia pronta"
 
 echo "20. a seta do atalho cai sozinha na linha de baixo"
-troca agendar.html \
+troca cardapio.html \
   "'Como funciona'}&nbsp;→</span>\`;" \
   "'Como funciona'} →</span>\`;" \
   && rodar "a seta sozinha em cima do botão redondo"

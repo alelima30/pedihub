@@ -136,7 +136,7 @@ async function lerPagina(){
   const ctx = await nav.newContext({ viewport:{ width:412, height:1400 }, isMobile:true });
   const c = await ctx.newPage();
   c.on('pageerror', e => erros.push('página: ' + e.message));
-  await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await c.waitForFunction(() => document.querySelector('.boas-sub') && document.querySelector('.sv-cartao-dur')
     && document.querySelector('.status-txt') && document.querySelector('.boas-produtos svg')
     && document.querySelector('.slide figcaption') && document.querySelector('#capaEquipe .tt')
@@ -360,7 +360,7 @@ async function lerBotoes(){
   const ctx = await nav.newContext({ viewport:{ width:412, height:1000 }, isMobile:true });
   const c = await ctx.newPage();
   c.on('pageerror', e => erros.push('página: ' + e.message));
-  await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await c.waitForFunction(() => document.querySelector('.boas-produtos svg') && document.querySelector('.boas-cta svg'),
     null, { timeout: 15000 });
   const r = await c.evaluate(h => { const hex = eval(h);

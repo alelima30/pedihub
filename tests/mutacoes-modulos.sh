@@ -20,7 +20,7 @@ T=tests/modulos.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST="${PGHOST:-/tmp}" PGPORT="${PGPORT:-5444}" PGUSER="${PGUSER:-postgres}"
 
-ARQS="app.html agendar.html supabase/25_loja.sql"
+ARQS="app.html cardapio.html supabase/25_loja.sql"
 for a in $ARQS; do cp "$a" "/tmp/mm-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mm-$(basename "$a")" "$a"; done
@@ -104,7 +104,7 @@ troca supabase/25_loja.sql \
 # linha serve.
 
 echo "4. o bdDaVitrine() esquece de copiar os serviços"
-troca agendar.html \
+troca cardapio.html \
   "      usaServicos: s.usaServicos !== false," \
   "      usaServicos: true," \
   && rodar "módulo não atravessa a ponte"
@@ -128,7 +128,7 @@ echo "5. o rodapé volta a olhar a lista, e não o módulo"
 # Com a linha de antes: o mesmo "if(casaFazServicos()){" existe também no
 # rodapé dos pacotes, e sem ela o trecho aparecia duas vezes e a mutação
 # simplesmente não rodava.
-troca agendar.html \
+troca cardapio.html \
   "                               } else if(casaFazServicos()){
                                  bp.textContent = voc('acao');" \
   "                               } else if(servicosDoSalao().length){
@@ -136,13 +136,13 @@ troca agendar.html \
   && rodar "rodapé olhando a lista"
 
 echo "6. produtosDaLoja() deixa de olhar o módulo"
-troca agendar.html \
+troca cardapio.html \
   "const produtosDaLoja = () => (!salao || !casaVendeProdutos() ? []" \
   "const produtosDaLoja = () => (!salao ? []" \
   && rodar "consulta sem a peneira"
 
 echo "7. o rodapé volta a apontar sempre para serviços"
-troca agendar.html \
+troca cardapio.html \
   "  if(tela === 'capa'){
     if(modoPedidos() && produtosDaLoja().length) return irPara('loja');
     if(casaFazServicos()) return irPara('servico');
@@ -153,7 +153,7 @@ troca agendar.html \
   && rodar "botão do pé com destino fixo"
 
 echo "8. o cartão promete produtos a quem não vende produto"
-troca agendar.html \
+troca cardapio.html \
   "    : (temSv)          ? 'Escolha o serviço e agende seu horário em poucos toques.'" \
   "    : (temSv)          ? 'Escolha o serviço, agende seu horário ou confira nossos produtos.'" \
   && rodar "convite prometendo o que não existe"
@@ -171,19 +171,19 @@ troca app.html \
   && rodar "régua sem ler o banco"
 
 echo "11. a equipe volta a aparecer sem agendamento"
-troca agendar.html \
+troca cardapio.html \
   "const profsDoSalao = () => !casaFazServicos() ? [] : bd.profissionais.filter(p =>" \
   "const profsDoSalao = () => bd.profissionais.filter(p =>" \
   && rodar "Quem atende numa casa sem agenda"
 
 echo "12. o rótulo 'Quem atende' fica mesmo sem ninguém embaixo"
-troca agendar.html \
+troca cardapio.html \
   "  rotEq.style.display = equipe.length ? '' : 'none';" \
   "  rotEq.style.display = '';" \
   && rodar "título em cima de nada"
 
 echo "13. o atalho Meus horários volta sem agendamento"
-troca agendar.html \
+troca cardapio.html \
   "  if((sessao || logada()) && casaFazServicos()){
     atalhos.push([ 'meus', 'calendario', 'Meus horários'," \
   "  if((sessao || logada())){
@@ -191,7 +191,7 @@ troca agendar.html \
   && rodar "atalho para a agenda desligada"
 
 echo "14. o botão com o nome volta sem agendamento"
-troca agendar.html \
+troca cardapio.html \
   "  if(casaFazServicos() && conhecida && tela !== 'meus' && tela !== 'conta'){" \
   "  if(conhecida && tela !== 'meus' && tela !== 'conta'){" \
   && rodar "o nome dela levando à agenda desligada"

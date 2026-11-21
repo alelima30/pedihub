@@ -115,7 +115,7 @@ async function pagina(){
   const ctx = await nav.newContext({ viewport:{ width:412, height:915 }, isMobile:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('página: ' + e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => {
     const e = document.getElementById('capaMarca');
     return e && e.textContent.trim().length > 0;

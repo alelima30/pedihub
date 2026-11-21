@@ -23,7 +23,7 @@
 
    Sem conta. Sem senha. Só marcar um horário.
 
-   O segundo furo não pedia nem isso: `agendar.html?salao=XXX`, quando o
+   O segundo furo não pedia nem isso: `cardapio.html?salao=XXX`, quando o
    apelido não existe, escrevia o XXX de volta na tela — também em innerHTML.
    Um link pronto, mandado por WhatsApp, rodava no navegador de quem abrisse.
 
@@ -200,7 +200,7 @@ secao('Um link com carga no endereço');
 
 const pag = await nav.newContext().then(c => c.newPage());
 await pag.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-await pag.goto(BASE + '/agendar.html?salao=' + encodeURIComponent(CARGA('link')));
+await pag.goto(BASE + '/cardapio.html?salao=' + encodeURIComponent(CARGA('link')));
 await pag.waitForTimeout(2800);
 
 const doLink = await pag.evaluate(() => ({
@@ -230,7 +230,7 @@ await d.atualizar('servicos', servico.id, { nome: CARGA('servico') + 'Corte' });
 
 const cli = await nav.newContext().then(c => c.newPage());
 await cli.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-await cli.goto(BASE + '/agendar.html?salao=' + SLUG);
+await cli.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await cli.waitForTimeout(2800);
 igual('a capa mostra o nome sem executá-lo',
   await cli.evaluate(() => window.INVADIDO || null), null);
@@ -293,7 +293,7 @@ const dentroDeEvento = (linha, pos) => {
 };
 
 let crus = 0;
-for(const arq of ['app.html', 'agendar.html']){
+for(const arq of ['app.html', 'cardapio.html']){
   const linhas = fs.readFileSync(path.join(RAIZ, arq), 'utf8').split('\n');
   linhas.forEach((l, i) => {
     if(LINHA_PODE_CRU.some(r => r.vale(l))) return;
@@ -326,7 +326,7 @@ verdade('nenhuma interpolação de nome, observação ou endereço saiu crua',
    lê `this.dataset`. Lê o arquivo inteiro, e não linha a linha: atributo que
    quebra linha também conta. */
 let emEvento = 0;
-for(const arq of ['app.html', 'agendar.html', 'admin.html']){
+for(const arq of ['app.html', 'cardapio.html', 'admin.html']){
   const txt = fs.readFileSync(path.join(RAIZ, arq), 'utf8');
   for(const a of txt.matchAll(/\son[a-z]+="[^"]*"/gi)){
     for(const m of a[0].matchAll(/\$\{[^{}]*\}/g)){
@@ -343,7 +343,7 @@ verdade('nenhum nome, observação ou endereço escrito dentro de onclick/oninpu
 
 // A rede de segurança só vale se estiver armada. Se alguém apagar o
 // `escapar()`, tudo acima passa a dar ReferenceError, não silêncio.
-for(const arq of ['app.html', 'agendar.html'])
+for(const arq of ['app.html', 'cardapio.html'])
   verdade(`${arq} define o escapar() que usa`,
     /const escapar = /.test(fs.readFileSync(path.join(RAIZ, arq), 'utf8')));
 

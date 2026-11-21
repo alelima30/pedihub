@@ -134,7 +134,7 @@ const cp = await cli.newPage();
 const errosC = [];
 cp.on('pageerror', e => errosC.push(e.message));
 await cp.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-await cp.goto(BASE + '/agendar.html?salao=' + SLUG);
+await cp.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await cp.waitForTimeout(3000);
 
 const man = await cp.evaluate(async () => {

@@ -34,7 +34,7 @@ const nav = await chromium.launch({ executablePath: CHROMIUM });
 secao('1 e 2. Dentro de um quadro de outro site');
 const SENSIVEIS = ['app.html?demo=1', 'admin.html', 'entrar.html', 'criar.html',
                    'nova-senha.html', 'convite.html?t=x'];
-for(const pagina of SENSIVEIS.concat(['agendar.html?salao=qualquer'])){
+for(const pagina of SENSIVEIS.concat(['cardapio.html?salao=qualquer'])){
   const ctx = await nav.newContext();
   const p = await ctx.newPage();
   // Uma página "de fora": about:blank tem outra origem que a do PediHub.
@@ -48,7 +48,7 @@ for(const pagina of SENSIVEIS.concat(['agendar.html?salao=qualquer'])){
     ? await quadro.evaluate(() => document.documentElement.style.display === 'none').catch(() => false)
     : false;
   const nome = pagina.split('?')[0];
-  if(nome === 'agendar.html'){
+  if(nome === 'cardapio.html'){
     verdade('o link da cliente abre num quadro, de propósito', !tomouAJanela && !escondida);
   } else {
     verdade(`${nome} não aparece dentro do quadro de outro site`, tomouAJanela || escondida,

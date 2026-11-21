@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 T=tests/um-profissional.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mup-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mup-$(basename "$a")" "$a"; done
@@ -51,37 +51,37 @@ PY
 }
 
 echo "1. o \"Tanto faz\" aparece com uma pessoa só"
-troca agendar.html \
+troca cardapio.html \
   "  if(!unico) html += \`<button class=\"opcao \${qualquer?'sel':''}\" onclick=\"escolherProf('*')\">" \
   "  html += \`<button class=\"opcao \${qualquer?'sel':''}\" onclick=\"escolherProf('*')\">" \
   && rodar "escolha que não decide nada"
 
 echo "2. a única pessoa não vem marcada"
-troca agendar.html \
+troca cardapio.html \
   "  if(unico && escolha.profissionalId !== aptos[0].id){" \
   "  if(false){" \
   && rodar "toque a mais para seguir"
 
 echo "3. contar a equipe, e não quem faz o serviço"
-troca agendar.html \
+troca cardapio.html \
   "  const unico = aptos.length === 1;" \
   "  const unico = profsDoSalao().length === 1;" \
   && rodar "barba com Tanto faz"
 
 echo "4. o voltar solta o horário"
-troca agendar.html \
+troca cardapio.html \
   "  if(unico && escolha.profissionalId !== aptos[0].id){" \
   "  if(unico){" \
   && rodar "horário perdido no voltar"
 
 echo "5. o \"Com quem?\" não pergunta ao banco"
-troca agendar.html \
+troca cardapio.html \
   "  if(NA_NUVEM && vagasChave !== chaveDasVagas(ids)){ pedirVagas(ids); return; }" \
   "" \
   && rodar "\"sem horário\" com a agenda livre"
 
 echo "6. a pergunta sai com a chave errada"
-troca agendar.html \
+troca cardapio.html \
   "function chaveDasVagas(ids){
   const aptos = ids || (" \
   "function chaveDasVagas(ids){
@@ -89,25 +89,25 @@ troca agendar.html \
   && rodar "o banco perguntado a cada tela"
 
 echo "7. a página não lê a escolha do dono"
-troca agendar.html \
+troca cardapio.html \
   "      pularComQuem: s.pularComQuem === true," \
   "" \
   && rodar "o painel diz pular e o link mostra"
 
 echo "8. pular mesmo com duas pessoas no serviço"
-troca agendar.html \
+troca cardapio.html \
   "    && profsQueAtendem(escolha.servicos).length === 1;" \
   "    && profsQueAtendem(escolha.servicos).length >= 1;" \
   && rodar "a cliente perde a escolha de com quem"
 
 echo "9. pular sem marcar a única pessoa"
-troca agendar.html \
+troca cardapio.html \
   "    escolha.profissionalId = unica.id;" \
   "" \
   && rodar "horários de ninguém"
 
 echo "10. \"Para outra pessoa\" não pula"
-troca agendar.html \
+troca cardapio.html \
   "  mudarPara(escolha.junto ? 'ambos' : 'filho');
   seguirDepoisDoQuem();" \
   "  mudarPara(escolha.junto ? 'ambos' : 'filho');

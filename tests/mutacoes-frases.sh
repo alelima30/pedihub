@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 T=tests/frases.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mfr-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mfr-$(basename "$a")" "$a"; done
@@ -86,7 +86,7 @@ troca estilo.css \
   && rodar "convite na cor errada"
 
 echo "7. a página não escreve as variáveis das frases"
-troca agendar.html \
+troca cardapio.html \
   "    if(cor) p(variavel, cor);" \
   "" \
   && rodar "escolhe e nada chega"
@@ -104,7 +104,7 @@ troca estilo.css \
   && rodar "a cor dos produtos ganha"
 
 echo "10. a classe da letra do Agendar não liga"
-troca agendar.html \
+troca cardapio.html \
   "  document.body.classList.toggle('tem-letra-agendar', !!letraAgendar);" \
   "" \
   && rodar "letra escolhida, botão igual"
@@ -178,7 +178,7 @@ troca app.html \
 
 echo "22. o aviso não olha a letra do botão"
 troca app.html \
-  "  noBotao('letraAgendar', 'a letra do Agendar horário', corDoBotaoNaPrevia());" \
+  "  noBotao('letraAgendar', 'a letra do Faça seu pedido', corDoBotaoNaPrevia());" \
   "" \
   && rodar "letra invisível sem aviso"
 
@@ -207,7 +207,7 @@ troca estilo.css \
   && rodar "dois preços, uma cor"
 
 echo "27. o Ver todos os produtos não liga a classe"
-troca agendar.html \
+troca cardapio.html \
   "  document.body.classList.toggle('tem-cor-ver-produtos', !!verProdutos);" \
   "" \
   && rodar "Ver todos sem cor"
@@ -249,7 +249,7 @@ troca app.html \
   && rodar "toque no lugar errado"
 
 echo "34. a página não escreve a cor da duração"
-troca agendar.html \
+troca cardapio.html \
   "    descServico:'--cor-desc-servico', precoServico:'--cor-preco-servico', duracao:'--cor-duracao'," \
   "    descServico:'--cor-desc-servico', precoServico:'--cor-preco-servico'," \
   && rodar "duração escolhida e nada"

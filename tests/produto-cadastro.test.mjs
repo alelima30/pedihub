@@ -119,7 +119,7 @@ const ctx0 = await nav0.newContext({ viewport:{ width:412, height:915 },
                                      isMobile:true, hasTouch:true });
 const cli0 = await ctx0.newPage();
 await dona.atualizar('saloes', SALAO, { whatsapp:'11988887777' });
-await cli0.goto(BASE + '/agendar.html?salao=' + SLUG);
+await cli0.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await cli0.waitForTimeout(2600);
 
 const carrinho = async ids => cli0.evaluate(lista => {

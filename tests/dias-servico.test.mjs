@@ -252,7 +252,7 @@ const ctx = await nav.newContext({ viewport:{ width:412, height:915 } });
 const c = await ctx.newPage();
 const erros = [];
 c.on('pageerror', e => erros.push(e.message));
-await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await c.waitForTimeout(2600);
 
 /* ⚠ PELOS BOTÕES, e não empurrando `escolha` por dentro. Mexer no estado e
@@ -289,7 +289,7 @@ verdade('e a quinta oferece vagas',
   JSON.stringify(quintas));
 
 // E com o corte escolhido, nenhum dia é "não atende".
-await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await c.waitForTimeout(2600);
 await c.click('#btPrincipal'); await c.waitForTimeout(400);
 await escolherServico('Corte');

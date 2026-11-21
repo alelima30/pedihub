@@ -102,7 +102,7 @@ const lerIntro = p => p.evaluate(() => {
 async function abrir(ctx){
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('página: ' + e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   return p;
 }

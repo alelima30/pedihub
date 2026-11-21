@@ -13,7 +13,7 @@
 
    ── O QUE ESTE ARQUIVO PROTEGE ─────────────────────────────────────────────
      1. A barbearia não fala mais de "corte" nos títulos nem no botão.
-     2. Para CADA tipo de negócio do link (o VOCABULARIO do agendar.html), a
+     2. Para CADA tipo de negócio do link (o VOCABULARIO do cardapio.html), a
         prévia (o VOC_DO_TIPO do app.html) diz o mesmo botão, o mesmo título
         dos serviços e o mesmo título da equipe.
    =========================================================================== */
@@ -28,7 +28,7 @@ const nao = (m, d) => { console.log('  ✗ ' + m + (d ? '\n      ' + d : '')); f
 const igual = (m, a, b) => JSON.stringify(a) === JSON.stringify(b) ? ok(m)
   : nao(m, `esperava ${JSON.stringify(b)}, veio ${JSON.stringify(a)}`);
 
-const link = fs.readFileSync(path.join(RAIZ, 'agendar.html'), 'utf8');
+const link = fs.readFileSync(path.join(RAIZ, 'cardapio.html'), 'utf8');
 const painel = fs.readFileSync(path.join(RAIZ, 'app.html'), 'utf8');
 const trecho = (txt, de, ate) => { const i = txt.indexOf(de); if(i < 0) return null;
   const f = txt.indexOf(ate, i); return f < 0 ? null : txt.slice(i, f + ate.length); };

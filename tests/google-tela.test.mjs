@@ -118,7 +118,7 @@ const aviso = p => p.evaluate(() => (document.getElementById('avisoCompletar') |
 /* ══════════════════════════════════════════════════════════════════════════ */
 secao('0. Com o Google DESLIGADO no Supabase, o botão não aparece (nada quebra)');
 for(const [rotulo, google] of [['desligado (o padrão do Supabase)', false], ['Supabase com erro', 'falha']]){
-  const a = await pagina('agendar.html?salao=' + SLUG, 390, google);
+  const a = await pagina('cardapio.html?salao=' + SLUG, 390, google);
   await esperarTela(a.p, 'capa'); await a.p.waitForTimeout(300);
   await a.p.evaluate(() => abrirConta('criar')); await a.p.waitForTimeout(600);
   const noLink = await a.p.isVisible('#btGoogle');
@@ -139,7 +139,7 @@ for(const [rotulo, google] of [['desligado (o padrão do Supabase)', false], ['S
 /* ══════════════════════════════════════════════════════════════════════════ */
 secao('1. No link: o botão leva ao Google, com a volta para o restaurante');
 {
-  const { p, ctx, pedidos } = await pagina('agendar.html?salao=' + SLUG);
+  const { p, ctx, pedidos } = await pagina('cardapio.html?salao=' + SLUG);
   await esperarTela(p, 'capa'); await p.waitForTimeout(500);
   await p.evaluate(() => abrirConta('criar'));
   await p.waitForSelector('#btGoogle', { state: 'visible', timeout: 5000 }).catch(() => {});
@@ -156,7 +156,7 @@ secao('1. No link: o botão leva ao Google, com a volta para o restaurante');
 secao('2. A volta sem WhatsApp: "Falta pouco", e a ficha nasce com os dois');
 {
   const s = await contaGoogle('Gabriela Prado', `gabi-${m}@gmail.com`);
-  const { p, ctx } = await pagina('agendar.html?salao=' + SLUG + '&conta=google' + fragmento(s));
+  const { p, ctx } = await pagina('cardapio.html?salao=' + SLUG + '&conta=google' + fragmento(s));
   await esperarTela(p, 'completar');
   igual('abre "Falta pouco", com Continuar e Agora não', await p.evaluate(() =>
     [document.querySelector('#p-completar h2').textContent, document.getElementById('btPrincipal').textContent.trim(),
@@ -184,7 +184,7 @@ secao('2. A volta sem WhatsApp: "Falta pouco", e a ficha nasce com os dois');
 secao('3. A ficha do balcão é ligada, sem duplicar; o WhatsApp de outra conta, não');
 {
   const s = await contaGoogle('Helena Costa', `helena-${m}@gmail.com`);
-  const { p, ctx } = await pagina('agendar.html?salao=' + SLUG + '&conta=google' + fragmento(s));
+  const { p, ctx } = await pagina('cardapio.html?salao=' + SLUG + '&conta=google' + fragmento(s));
   await esperarTela(p, 'completar');
   await p.fill('#cpTel', masc(tel('83'))); await p.fill('#cpNasc', '1980-02-03');
   await p.click('#btPrincipal'); await p.waitForTimeout(1200);
@@ -205,7 +205,7 @@ secao('3. A ficha do balcão é ligada, sem duplicar; o WhatsApp de outra conta,
 secao('4. "Agora não" volta para a capa');
 {
   const s = await contaGoogle('Iara Lopes', `iara-${m}@gmail.com`);
-  const { p, ctx } = await pagina('agendar.html?salao=' + SLUG + '&conta=google' + fragmento(s));
+  const { p, ctx } = await pagina('cardapio.html?salao=' + SLUG + '&conta=google' + fragmento(s));
   await esperarTela(p, 'completar');
   await p.click('#btSecundario'); await p.waitForTimeout(400);
   igual('na capa, ainda logada', await p.evaluate(() => [tela, !!(Dados.sessaoAtual && Dados.sessaoAtual())]), ['capa', true]);

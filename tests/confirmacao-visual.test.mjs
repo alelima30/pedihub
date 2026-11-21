@@ -95,7 +95,7 @@ async function naConfirmacao(largura = 390, pendente = true, servicos = null){
   const ctx = await nav.newContext({ viewport:{ width: largura, height:900 }, isMobile: largura < 700, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => typeof tela !== 'undefined' && tela === 'capa', null, { timeout: 15000 });
   await p.waitForTimeout(600);
   await p.evaluate(([sid, pid, pend]) => {
@@ -233,7 +233,7 @@ async function marcar(){
   p.on('pageerror', e => erros.push(e.message));
   await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
     localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, cliente.sessao()]);
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => document.querySelector('.boas-cta'), null, { timeout: 15000 });
   await p.waitForTimeout(1500);
   await p.click('.boas-cta'); await p.waitForTimeout(500);

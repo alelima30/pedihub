@@ -64,7 +64,7 @@ secao('O carimbo de versão não pode mentir');
      navegador baixa. Editar qualquer um deles sem rodar `bash versao.sh`
      reprova aqui — que é o único jeito de o carimbo continuar respondendo à
      pergunta para a qual ele existe: "que versão você está rodando?". */
-  const ARQUIVOS = ['app.html','agendar.html','criar.html','entrar.html',
+  const ARQUIVOS = ['app.html','cardapio.html','criar.html','entrar.html',
                     'index.html','nova-senha.html','estilo.css','dados.js',
                     'demo.js','icones.js','imagens.js','endereco.js',
                     'funcionamento.js'];

@@ -339,7 +339,7 @@ done
 # marcar nele.
 #
 # Esta é a pergunta mais curta que cobre isso: a MESMA lista de argumentos
-# que o `agendar.html` monta, contra o banco recém-atualizado. Recusar por
+# que o `cardapio.html` monta, contra o banco recém-atualizado. Recusar por
 # profissional inexistente é a resposta CERTA — quer dizer que a função foi
 # encontrada, aceitou os dez argumentos e chegou a rodar. O que não pode é o
 # Postgres não achar a função com essa assinatura.

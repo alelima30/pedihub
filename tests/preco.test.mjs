@@ -309,7 +309,7 @@ const ctx = await nav.newContext({ viewport:{ width:412, height:915 },
 const pg = await ctx.newPage();
 const erros = [];
 pg.on('pageerror', e => erros.push(e.message));
-await pg.goto(BASE + '/agendar.html?salao=' + SLUG);
+await pg.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await pg.waitForFunction(() => {
   const m = document.getElementById('capaMarca');
   return m && m.textContent.trim().length > 0;

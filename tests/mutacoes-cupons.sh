@@ -16,7 +16,7 @@ T=tests/cupons.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 PSQL="psql -h ${PGHOST_BANCADA:-/tmp} -p ${PGPORT_BANCADA:-5444} -U postgres -d app -v ON_ERROR_STOP=1 -q"
 
-ARQS="app.html agendar.html dados.js estilo.css supabase/34_cupons.sql supabase/09_cliente.sql supabase/28_sem_comanda.sql"
+ARQS="app.html cardapio.html dados.js estilo.css supabase/34_cupons.sql supabase/09_cliente.sql supabase/28_sem_comanda.sql"
 SQLS="supabase/34_cupons.sql supabase/09_cliente.sql supabase/28_sem_comanda.sql"
 guarda(){ echo "/tmp/mcp-$(echo "$1" | tr '/' '_')"; }
 for a in $ARQS; do cp "$a" "$(guarda "$a")"; done
@@ -169,37 +169,37 @@ troca dados.js \
   && rodar "o cadastro não chega ao banco"
 
 echo "17. link: o código não sobe com a marcação"
-troca agendar.html \
+troca cardapio.html \
   "      ...(comCupom && cupom ? { p_cupom: cupom } : {})," \
   "      ...({})," \
   && rodar "a tela mostra desconto e o banco cobra cheio"
 
 echo "18. link: o total ignora o cupom"
-troca agendar.html \
+troca cardapio.html \
   "  const total = real((coberto ? 0 : precoDela) + precoOutra - desc);" \
   "  const total = real((coberto ? 0 : precoDela) + precoOutra);" \
   && rodar "aplicou e o total não desce"
 
 echo "19. loja: o carrinho muda e a prévia velha continua"
-troca agendar.html \
+troca cardapio.html \
   "  return !!(cupomLoja && (cupomLoja.usado || cupomLoja.chave === chaveDoCupomLoja()));" \
   "  return !!cupomLoja;" \
   && rodar "desconto de outro pedido"
 
 echo "20. loja: o pedido sai sem registrar o uso"
-troca agendar.html \
+troca cardapio.html \
   "  const comCupom = mostraCupomLoja() && cupomLojaVale() && !cupomLoja.usado;" \
   "  const comCupom = false;" \
   && rodar "o limite da loja nunca chega"
 
 echo "21. link: o cupom recusado na hora de marcar vira erro genérico"
-troca agendar.html \
+troca cardapio.html \
   "    if(doCupom){" \
   "    if(false){" \
   && rodar "a cliente não sabe que é o cupom"
 
 echo "22. loja: o campo aparece em restaurante sem cupom"
-troca agendar.html \
+troca cardapio.html \
   "  return NA_NUVEM && salaoTemCupom.produtos && totalDoCarrinho() > 0 && !modoPedidos();" \
   "  return NA_NUVEM && totalDoCarrinho() > 0 && !modoPedidos();" \
   && rodar "a cliente procura um código que não existe"

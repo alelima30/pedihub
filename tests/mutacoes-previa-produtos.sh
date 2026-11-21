@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 T=tests/previa-produtos.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mpp-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mpp-$(basename "$a")" "$a"; done
@@ -102,19 +102,19 @@ troca estilo.css \
   && rodar "preço roxo na prévia, azul no link"
 
 echo "9. a página ignora o Igual ao Agendar"
-troca agendar.html \
+troca cardapio.html \
   "  const metalProd = (salao.botaoProdutos || cfg.botaoProdutos) === 'metal';" \
   "  const metalProd = false;" \
   && rodar "escolhido e ignorado"
 
 echo "10. o botão perde a marca de produtos"
-troca agendar.html \
+troca cardapio.html \
   "    + (t === 'loja' ? ' boas-produtos' : '');" \
   "    + '';" \
   && rodar "cor dos produtos sem onde entrar"
 
 echo "11. a página ignora a cor dos produtos"
-troca agendar.html \
+troca cardapio.html \
   "  document.body.classList.toggle('tem-cor-produtos', !!produtos);" \
   "  document.body.classList.toggle('tem-cor-produtos', false);" \
   && rodar "cor escolhida e ignorada"
@@ -143,13 +143,13 @@ troca estilo.css \
   && rodar "carrinho na cor da marca"
 
 echo "15. o Ver todos ignora a cor dos produtos"
-troca agendar.html \
+troca cardapio.html \
   "    <button class=\"ver-todos ver-todos-produtos\" onclick=\"irPara('loja')\">" \
   "    <button class=\"ver-todos\" onclick=\"irPara('loja')\">" \
   && rodar "ver todos na cor da marca"
 
 echo "16. a página esquece o botão no caminho da vitrine"
-troca agendar.html \
+troca cardapio.html \
   "      botaoProdutos: s.botaoProdutos || null,
 " \
   "" \

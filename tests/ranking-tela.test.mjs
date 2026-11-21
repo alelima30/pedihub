@@ -116,9 +116,9 @@ async function abrir(caminho, sessao, op = {}){
 
 /* ═══════════════════════════════════ 1 ══ */
 secao('1. O link conta a visita');
-const v1 = await abrir('/agendar.html?salao=' + SLUG + '&utm_source=instagram');
+const v1 = await abrir('/cardapio.html?salao=' + SLUG + '&utm_source=instagram');
 await v1.reload(); await v1.waitForTimeout(2500);                       // a mesma pessoa, de novo
-const v2 = await abrir('/agendar.html?salao=' + SLUG, null, { referer: 'https://wa.me/' });
+const v2 = await abrir('/cardapio.html?salao=' + SLUG, null, { referer: 'https://wa.me/' });
 const vis = await banco.query(`select origem, vezes from public.link_visitas where salao_id = $1 order by origem`, [SALAO]);
 e('duas pessoas diferentes viraram duas linhas — ' + JSON.stringify(vis.rows),
   vis.rows.length === 2, JSON.stringify(vis.rows));

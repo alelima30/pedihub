@@ -123,7 +123,7 @@ async function pagina(larg = 412, alt = 915){
     isMobile: larg < 700, hasTouch: larg < 700 });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(`página ${larg}px: ` + e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => document.querySelector('.marca-selo')
     && document.querySelector('#capaInfo .recurso'), null, { timeout: 15000 });
   await p.waitForTimeout(500);

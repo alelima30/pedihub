@@ -337,7 +337,7 @@ secao('6. Cada modelo chega na página da cliente');
     const ctx = await nav.newContext({ viewport:{ width:412, height:1800 }, isMobile:true });
     const c = await ctx.newPage();
     c.on('pageerror', e => erros.push('página: ' + e.message));
-    await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+    await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
     await c.waitForFunction(() => document.querySelector('.boas-cta'), null, { timeout: 15000 });
     await c.waitForTimeout(500);
     const r = await c.evaluate(() => {

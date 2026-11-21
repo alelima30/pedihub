@@ -91,7 +91,7 @@ const erros = [];
 async function olharCapa(){
   const c = await ctxCli.newPage();
   c.on('pageerror', e => erros.push('cliente: ' + e.message));
-  await c.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await c.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await c.waitForTimeout(2400);
   const r = await c.evaluate(() => {
     const raiz = document.documentElement;
@@ -501,7 +501,7 @@ const LADOS = [
 
 const cPrev = await ctxCli.newPage();
 cPrev.on('pageerror', e => erros.push('cliente: ' + e.message));
-await cPrev.goto(BASE + '/agendar.html?salao=' + SLUG);
+await cPrev.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await cPrev.waitForTimeout(2400);
 const naPagina = await cPrev.evaluate(l => l.map(([, sel, , prop]) => {
   const e = document.querySelector(sel);

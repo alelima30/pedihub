@@ -93,7 +93,7 @@ async function link(){
   const ctx = await nav.newContext({ viewport:{ width:390, height:844 }, isMobile:true, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('link: ' + e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => document.querySelectorAll('.sv-cartao').length >= 2, null, { timeout: 15000 });
   await p.waitForTimeout(600);
   return { p, fechar: () => ctx.close() };

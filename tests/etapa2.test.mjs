@@ -78,7 +78,7 @@ async function pagina(largura = 412){
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push(e.message));
   p.on('dialog', d => { erros.push('ALERT: ' + d.message()); d.dismiss(); });
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => document.querySelector('.boas-cta'), null, { timeout: 15000 });
   return { p, fechar: () => ctx.close() };
 }
@@ -235,7 +235,7 @@ async function marcar(quem){
   p.on('pageerror', e => erros.push(e.message));
   await p.addInitScript(([b, s]) => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' };
     localStorage.setItem('pedihub.sessao', JSON.stringify(s)); }, [BASE, cliente.sessao()]);
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => document.querySelector('.boas-cta'), null, { timeout: 15000 });
   await ateEtapa2(p);
   if(quem === 'mim') await p.click('#quemMim');

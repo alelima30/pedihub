@@ -17,7 +17,7 @@ export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST=${PGHOST:-/tmp} PGPORT=${PGPORT:-5444} PGUSER=${PGUSER:-postgres}
 BANCO=${PGBANCO:-app}
 
-ARQS="app.html agendar.html supabase/58_fuso.sql"
+ARQS="app.html cardapio.html supabase/58_fuso.sql"
 for a in $ARQS; do cp "$a" "/tmp/mfu-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mfu-$(basename "$a")" "$a"; done
@@ -97,7 +97,7 @@ troca app.html \
   && rodar "o restaurante de Manaus não fica sabendo que precisa trocar"
 
 echo "8. o link da cliente não confere o relógio antes de marcar"
-troca agendar.html \
+troca cardapio.html \
   "  return !!(f && f !== salao.fuso);" \
   "  return false;" \
   && rodar "a página aberta desde antes marca uma hora errada"

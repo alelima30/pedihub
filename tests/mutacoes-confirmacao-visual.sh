@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 T=tests/confirmacao-visual.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mcv-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mcv-$(basename "$a")" "$a"; done
@@ -51,7 +51,7 @@ PY
 }
 
 echo "1. o status ignora o dono"
-troca agendar.html \
+troca cardapio.html \
   "  return salaoConfirmaSozinho
     ? \`<div class=\"cf-status cf-status-ok\">" \
   "  return false
@@ -59,13 +59,13 @@ troca agendar.html \
   && rodar "\"aguardando\" para quem confirma na hora"
 
 echo "2. o título do fim sempre \"enviado\""
-troca agendar.html \
+troca cardapio.html \
   "    : pendente ? 'Agendamento enviado!' : 'Agendamento confirmado!';" \
   "    : 'Agendamento enviado!';" \
   && rodar "confirmado dito como enviado"
 
 echo "3. o selo sempre de espera"
-troca agendar.html \
+troca cardapio.html \
   "        : pendente
         ? '<span class=\"cf-chip cf-chip-espera\"><span data-ico=\"relogio\">" \
   "        : true
@@ -73,19 +73,19 @@ troca agendar.html \
   && rodar "espera que não existe"
 
 echo "4. o dia no alto sem \"-feira\""
-troca agendar.html \
+troca cardapio.html \
   "<b>\${diaCompleto(escolha.data)} às \${hm(escolha.inicio)}</b>" \
   "<b>\${dataLonga(escolha.data)} às \${hm(escolha.inicio)}</b>" \
   && rodar "quinta, 01/10"
 
 echo "5. \"Alterar horário\" leva aos serviços"
-troca agendar.html \
+troca cardapio.html \
   "  if(tela === 'confirmar') return irPara('quando');" \
   "  if(tela === 'confirmar') return irPara('servico');" \
   && rodar "recomeçar do zero"
 
 echo "6. \"Voltar para a home\" leva aos serviços"
-troca agendar.html \
+troca cardapio.html \
   "    historico = [];
     irPara('capa', true);
   }
@@ -97,7 +97,7 @@ troca agendar.html \
   && rodar "a home que não é a home"
 
 echo "7. a observação não chega"
-troca agendar.html \
+troca cardapio.html \
   "<textarea id=\"fRecado\" rows=\"3\"" \
   "<textarea id=\"fRecadoX\" rows=\"3\"" \
   && rodar "observação perdida"

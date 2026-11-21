@@ -112,7 +112,7 @@ async function abrirLink(slug){
   const ctx = await nav.newContext({ viewport:{ width:390, height:880 }, isMobile:true, hasTouch:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('link: ' + e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + (slug || SLUG));
+  await p.goto(BASE + '/cardapio.html?salao=' + (slug || SLUG));
   await p.waitForFunction(() => typeof tela !== 'undefined' && (tela === 'capa' || tela === 'saloes'), null, { timeout: 15000 });
   await p.waitForTimeout(700);
   return { ctx, p };

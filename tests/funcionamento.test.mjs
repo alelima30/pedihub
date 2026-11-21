@@ -164,7 +164,7 @@ async function pagina(quando, largura = 412){
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('página: ' + e.message));
   if(quando) await p.clock.setFixedTime(quando);
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => {
     const e = document.getElementById('capaMarca');
     return e && e.textContent.trim().length > 0;
@@ -318,7 +318,7 @@ for(const [quando, rot, st, det] of CASOS){
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('página: ' + e.message));
   await p.clock.install({ time: SP('2026-10-05T11:59:20') });
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.clock.runFor(4000);
   await p.waitForFunction(() => !!document.querySelector('.status-casa'), null, { timeout: 15000 });
   const antes = (await lerCapa(p)).status;

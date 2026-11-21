@@ -106,7 +106,7 @@ async function lojaNaPagina(){
                                      isMobile:true });
   const p = await ctx.newPage();
   p.on('pageerror', e => erros.push('página: ' + e.message));
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForFunction(() => {
     const e = document.getElementById('capaMarca');
     return e && e.textContent.trim().length > 0;
@@ -192,7 +192,7 @@ const NUMEROS = ['', '12345', '98111-3251', '(11) 3333-4444', '(11) 98111-3251',
   const { p: pa, fechar } = await painel('produtos');
   const ctx = await nav.newContext();
   const pg = await ctx.newPage();
-  await pg.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await pg.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await pg.waitForFunction(() => typeof zapDoSalao === 'function'
     && typeof salao !== 'undefined' && salao, null, { timeout: 15000 });
   for(const n of NUMEROS){

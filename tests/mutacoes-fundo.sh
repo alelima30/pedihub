@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 T=tests/fundo.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="app.html agendar.html estilo.css"
+ARQS="app.html cardapio.html estilo.css"
 for a in $ARQS; do cp "$a" "/tmp/mfu-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mfu-$(basename "$a")" "$a"; done
@@ -90,13 +90,13 @@ troca app.html \
   && rodar "a foto antiga por cima da cor escolhida"
 
 echo "7. a página deixa a foto entrar com qualquer tipo que não seja gradiente"
-troca agendar.html \
+troca cardapio.html \
   "  const fundo = (tipoFundo === 'imagem' || tipoFundo === 'cor') ? fotoAnexada : null;" \
   "  const fundo = tipoFundo !== 'gradiente' ? fotoAnexada : null;" \
   && rodar "cor sólida com foto"
 
 echo "8. a página tira a foto de quem nunca escolheu"
-troca agendar.html \
+troca cardapio.html \
   "  const fundo = (tipoFundo === 'imagem' || tipoFundo === 'cor') ? fotoAnexada : null;" \
   "  const fundo = tipoFundo === 'imagem' ? fotoAnexada : null;" \
   && rodar "a foto de meses atrás sumindo sozinha"
@@ -144,7 +144,7 @@ troca app.html \
   && rodar "o seletor perde o quadrado no meio do arrasto"
 
 echo "16. a página esquece a classe do papel escolhido"
-troca agendar.html \
+troca cardapio.html \
   "  document.body.classList.toggle('tem-papel'," \
   "  document.body.classList.toggle('tem-papel-nao'," \
   && rodar "cor sólida só nas margens do computador"
@@ -156,7 +156,7 @@ troca estilo.css \
   && rodar "gradiente atrás da coluna, invisível no celular"
 
 echo "18. a página aceita só duas cores no gradiente"
-troca agendar.html \
+troca cardapio.html \
   "  if(!(cores.length === 2 || cores.length === 3) || !cores.every(corValida)){" \
   "  if(!(cores.length === 2) || !cores.every(corValida)){" \
   && rodar "cor do meio salva e ignorada no link"

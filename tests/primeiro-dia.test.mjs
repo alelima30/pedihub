@@ -676,7 +676,7 @@ const fim = await p.evaluate(() => {
   };
 });
 e('o link é o do restaurante, pelo slug — ' + fim.link,
-  fim.link.includes('agendar.html?salao=' + fim.slug), fim.link);
+  fim.link.includes('cardapio.html?salao=' + fim.slug), fim.link);
 e('o QR é desenhado ao lado dele', fim.temQr && /^0 0 (\d+) \1$/.test(fim.caixa || ''),
   String(fim.caixa));
 e('com rótulo para quem usa leitor de tela', /QR/i.test(fim.rotulo || ''),
@@ -894,7 +894,7 @@ const agrupa = await p.evaluate(() => {
   ];
   // A mesma função que a página da cliente usa, carregada aqui pelo iframe.
   const q = document.createElement('iframe');
-  q.src = 'agendar.html?salao=studio-bella&demo=1';
+  q.src = 'cardapio.html?salao=studio-bella&demo=1';
   return new Promise(pronto => {
     q.onload = () => {
       const g = q.contentWindow.agruparPorCategoria(finge, 'Serviços');

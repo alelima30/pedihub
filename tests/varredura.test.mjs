@@ -332,7 +332,7 @@ cli.on('console', m => { if(m.type() === 'error'
   && !/Failed to load resource/.test(m.text()))
   errosCli.push('console: ' + m.text().slice(0,160)); });
 await cli.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-await cli.goto(BASE + '/agendar.html?salao=' + SLUG);
+await cli.goto(BASE + '/cardapio.html?salao=' + SLUG);
 await cli.waitForTimeout(2800);
 
 verdade('a capa abre com o nome novo do restaurante',
@@ -357,7 +357,7 @@ secao('Área da cliente: restaurante que não existe');
   const e2 = [];
   p.on('pageerror', x => e2.push(x.message));
   await p.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-  await p.goto(BASE + '/agendar.html?salao=nao-existe-mesmo-' + marca);
+  await p.goto(BASE + '/cardapio.html?salao=nao-existe-mesmo-' + marca);
   await p.waitForTimeout(2500);
   verdade('explica que não achou, em vez de ficar em branco',
     await p.evaluate(() => /não encontrado/i.test(document.body.textContent)));
@@ -377,7 +377,7 @@ secao('Área da cliente: restaurante sem serviço nenhum');
   const e3 = [];
   p.on('pageerror', x => e3.push(x.message));
   await p.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-  await p.goto(BASE + '/agendar.html?salao=' + c2[0].slug);
+  await p.goto(BASE + '/cardapio.html?salao=' + c2[0].slug);
   await p.waitForTimeout(2800);
   verdade('a capa abre mesmo sem serviço cadastrado',
     await p.evaluate(() => !!document.querySelector('.boas-cta')));
@@ -484,7 +484,7 @@ secao('Área da cliente: lista de espera');
   const e4 = [];
   p.on('pageerror', x => e4.push(x.message));
   await p.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-  await p.goto(BASE + '/agendar.html?salao=' + SLUG);
+  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
   await p.waitForTimeout(2800);
   const temFila = await p.evaluate(() => typeof entrarNaFila === 'function'
                                       || !!document.getElementById('p-fila'));

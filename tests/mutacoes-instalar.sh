@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 T=tests/instalar.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 
-ARQS="agendar.html"
+ARQS="cardapio.html"
 for a in $ARQS; do cp "$a" "/tmp/min-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/min-$(basename "$a")" "$a"; done
@@ -49,25 +49,25 @@ PY
 
 
 echo "1. start_url relativo dentro do blob"
-troca agendar.html \
+troca cardapio.html \
   "    start_url: alvo.href," \
   "    start_url: alvo.pathname + alvo.search," \
   && rodar "o app instalado não sabe onde abrir"
 
 echo "2. ícones relativos dentro do blob"
-troca agendar.html \
+troca cardapio.html \
   "      { src: abs('icones/icone-192.png'), sizes: '192x192', type: 'image/png', purpose: 'any' }," \
   "      { src: 'icones/icone-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' }," \
   && rodar "o Chrome descarta o ícone e não oferece instalar"
 
 echo "3. a instrução esquece o WhatsApp"
-troca agendar.html \
+troca cardapio.html \
   "            <b>Abrir no Chrome</b>. Dentro do WhatsApp não dá para instalar.</li>" \
   "            </li>" \
   && rodar "procura Instalar num menu que não tem"
 
 echo "4. sem o copiar link"
-troca agendar.html \
+troca cardapio.html \
   "        <button class=\"link\" onclick=\"copiarLinkDoSalao(this)\">Copiar o link</button>" \
   "" \
   && rodar "sem jeito de levar o link para o Chrome"
