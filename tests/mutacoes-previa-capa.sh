@@ -220,7 +220,7 @@ troca estilo.css \
 
 echo "27. a margem do escuro vira outra cor"
 troca estilo.css \
-  "  --mesa:#0B1220;" \
+  "  --mesa:#141210;" \
   "  --mesa:#1A1030;" \
   && rodar "margem que não é o papel de fábrica"
 

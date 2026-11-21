@@ -58,10 +58,12 @@
      Não é cinza puro. Cinza neutro ao lado de azul parece sujo — puxa para
      o verde. Um traço de azul no neutro faz o preto da tela e o azul da
      marca serem da mesma família. */
-  --n-0:#FFFFFF;   --n-25:#FCFDFE;  --n-50:#F8FAFC;  --n-100:#F1F5F9;
-  --n-200:#E2E8F0; --n-300:#CBD5E1; --n-400:#94A3B8; --n-500:#64748B;
-  --n-600:#475569; --n-700:#334155; --n-800:#1E293B; --n-900:#172033;
-  --n-950:#0F172A;
+  /* PediHub: neutros quentes (pedra), da família do preto do logotipo e do
+     laranja — um cinza azulado ao lado do laranja pareceria sujo. */
+  --n-0:#FFFFFF;   --n-25:#FDFCFB;  --n-50:#FAFAF9;  --n-100:#F5F5F4;
+  --n-200:#E7E5E4; --n-300:#D6D3D1; --n-400:#A8A29E; --n-500:#78716C;
+  --n-600:#57534E; --n-700:#44403C; --n-800:#292524; --n-900:#1C1917;
+  --n-950:#0C0A09;
 
   /* ── A COR DA MARCA: AZUL, COM ROXO DE APOIO ──────────────────────────
      Duas escalas, e a divisão de trabalho entre elas é a regra que mantém
@@ -77,33 +79,37 @@
      Os tons estão nomeados por ONDE servem, não por quanto são claros: foi
      trocar um pelo outro que quebrou a legibilidade nas versões anteriores.
      Os números ao lado são contraste medido, não estimado. */
-  --az-50:#EFF6FF;  --az-100:#DBEAFE; --az-200:#BFDBFE; --az-300:#93C5FD;
-  --az-400:#60A5FA; --az-500:#3B82F6; --az-600:#2563EB; --az-700:#1D4ED8;
-  --az-800:#1E40AF;
-  --az-soft:rgba(37,99,235,.07);
-  --az-line:rgba(37,99,235,.20);
+  /* ⚠ PEDIHUB: os NOMES ficaram (az-, rx-) porque o sistema inteiro os usa,
+     mas as CORES são outras. `az` agora é o LARANJA-BRASA do logotipo, e
+     `rx` é o DOURADO da chama. Medido: letra branca no botão 5,18:1; texto
+     laranja-escuro no papel 7,3:1. */
+  --az-50:#FFF7ED;  --az-100:#FFEDD5; --az-200:#FED7AA; --az-300:#FDBA74;
+  --az-400:#FB923C; --az-500:#F97316; --az-600:#EA580C; --az-700:#C2410C;
+  --az-800:#9A3412;
+  --az-soft:rgba(234,88,12,.08);
+  --az-line:rgba(234,88,12,.24);
 
-  --rx-50:#F5F3FF;  --rx-100:#EDE9FE; --rx-200:#DDD6FE; --rx-300:#C4B5FD;
-  --rx-400:#A78BFA; --rx-500:#8B5CF6; --rx-600:#7C3AED; --rx-700:#6D28D9;
-  --rx-800:#5B21B6;
-  --rx-soft:rgba(124,58,237,.07);
-  --rx-line:rgba(124,58,237,.20);
+  --rx-50:#FFFBEB;  --rx-100:#FEF3C7; --rx-200:#FDE68A; --rx-300:#FCD34D;
+  --rx-400:#FBBF24; --rx-500:#F59E0B; --rx-600:#D97706; --rx-700:#B45309;
+  --rx-800:#92400E;
+  --rx-soft:rgba(217,119,6,.08);
+  --rx-line:rgba(217,119,6,.24);
 
-  --az-fundo:var(--az-600);   /* fundo de botão, letra branca        5,2:1 */
-  --az-texto:var(--az-700);   /* azul escrito em papel claro         6,7:1 */
-  --az-claro:var(--az-300);   /* azul escrito sobre grafite          9,9:1 */
+  --az-fundo:var(--az-700);   /* fundo de botão, letra branca        5,2:1 */
+  --az-texto:var(--az-800);   /* laranja escrito em papel claro      7,3:1 */
+  --az-claro:var(--az-300);   /* laranja escrito sobre grafite      10,4:1 */
 
   /* A ponta viva do degradê: o roxo. Não pinta interface — só o logotipo,
      o avatar e o dia marcado do calendário. */
   --mg-500:var(--rx-600);
-  --grad-marca:linear-gradient(96deg,#2563EB 0%,#4F46E5 52%,#7C3AED 100%);
+  --grad-marca:linear-gradient(96deg,#C2410C 0%,#EA580C 52%,#F59E0B 100%);
   /* Degradê de avatar e selo: o mesmo par, mais aberto, para caber num
      círculo de 28px sem virar uma cor só. */
-  --grad-suave:linear-gradient(135deg,#3B82F6 0%,#7C3AED 100%);
+  --grad-suave:linear-gradient(135deg,#FB923C 0%,#F59E0B 100%);
 
   /* ── Semânticos, escolhidos para não encostar no azul nem no roxo ──── */
   --su-500:#15803D; --su-soft:rgba(21,128,61,.10);
-  --wa-500:#B45309; --wa-soft:rgba(180,83,9,.10);
+  --wa-500:#A16207; --wa-soft:rgba(161,98,7,.10);   /* PediHub: longe do laranja da marca */
   --er-500:#DC2626; --er-soft:rgba(220,38,38,.09);
 
   /* ── Tokens que as telas já usavam, redirecionados ─────────────────── */
@@ -126,10 +132,10 @@
 
      O quente é de propósito: um cinza frio ao lado do azul da marca puxa
      para o verde e parece sujo. Um creme puxa para o papel. */
-  --bg:#F6F2E8;       --painel:var(--n-0); --painel2:#FBF8F1;
+  --bg:#FAF6EF;       --painel:var(--n-0); --painel2:#FDFAF5;
   /* A margem em volta da coluna da página, num computador, quando o dono
      escolheu um fundo: o papel de fábrica, que o fundo escolhido não apaga. */
-  --mesa:#F6F2E8;
+  --mesa:#FAF6EF;
 
   /* ── A MOLDURA, AGORA CLARA ───────────────────────────────────────────
      A lateral era grafite quase preto nos dois temas. Ficava com cara de
@@ -141,7 +147,7 @@
      Os tons de texto aqui deixam de ser branco transparente e passam a ser
      ardósia sólida: branco a 58% sobre fundo branco é invisível, e foi o
      que quebrou quando a moldura clareou. */
-  --lat:#FDFBF6; --lat-2:#F2EDE1; --lat-borda:#E6DFD2;
+  --lat:#FFFDFA; --lat-2:#F5EEE4; --lat-borda:#EADFD2;
   --lat-txt:var(--n-900); --lat-txt2:var(--n-600); --lat-txt3:var(--n-500);
   --lat-largura:252px;
   /* Os fundos de dentro da moldura, nomeados. Antes eram `rgba(255,255,255,…)`
@@ -152,7 +158,7 @@
   --lat-ic:var(--n-100); --lat-ic-txt:var(--az-600);
   --lat-sel:var(--az-50); --lat-sel-txt:var(--az-700);
   --lat-card:var(--painel);
-  --borda:#E7E2D9; --borda-forte:#D3CCC0;
+  --borda:#ECE4DA; --borda-forte:#D9CDBF;
   --txt:var(--n-900); --txt2:var(--n-600); --txt3:var(--n-400);
   /* O cinza dos ícones de traço da página da cliente, quando ninguém
      escolheu "Cor dos ícones". É o mesmo do texto, mas guardado à parte: o
@@ -185,7 +191,7 @@
   --sombra:0 1px 1px rgba(60,48,30,.04), 0 1px 3px rgba(60,48,30,.05);
   --sombra-md:0 1px 2px rgba(60,48,30,.05), 0 4px 10px -3px rgba(60,48,30,.07);
   --sombra-lg:0 2px 5px -1px rgba(60,48,30,.06), 0 14px 30px -10px rgba(60,48,30,.12);
-  --sombra-marca:0 1px 2px rgba(5,59,53,.22), 0 6px 16px -5px rgba(11,106,96,.34);
+  --sombra-marca:0 1px 2px rgba(124,45,18,.22), 0 6px 16px -5px rgba(234,88,12,.34);
 
   /* ── Tipografia ──────────────────────────────────────────────────────
      A fonte do Windows, que é onde o salão trabalha: o computador da recepção
@@ -213,16 +219,17 @@
    trocar está no pé da lateral e não some. Aqui o azul sobe na rampa, porque
    o #1D4ED8 que serve de texto no papel branco desaparece no grafite. */
 [data-tema="escuro"], html[data-tema="escuro"]{
-  --bg:#0B1220; --painel:#131C2E; --painel2:#18233A;
-  --mesa:#0B1220;
-  --borda:#25324A; --borda-forte:#35455F;
-  --txt:#E8EEF7; --txt2:#A3B2C7; --txt3:#6F8098;
-  --ico-texto:#A3B2C7; --ico-discreto:#6F8098;
+  /* PediHub: carvão quente, o preto do logotipo, e não o azul-noite. */
+  --bg:#141210; --painel:#1C1917; --painel2:#231F1C;
+  --mesa:#141210;
+  --borda:#302A26; --borda-forte:#423A34;
+  --txt:#F5F1EC; --txt2:#B8AFA6; --txt3:#8A8078;
+  --ico-texto:#B8AFA6; --ico-discreto:#8A8078;
 
   --az-texto:var(--az-300);
   --ac-500:var(--az-300); --ac-600:var(--az-300); --ac-700:var(--az-200);
-  --az-soft:rgba(147,197,253,.13); --az-line:rgba(147,197,253,.30);
-  --rx-soft:rgba(196,181,253,.13); --rx-line:rgba(196,181,253,.30);
+  --az-soft:rgba(253,186,116,.13); --az-line:rgba(253,186,116,.30);
+  --rx-soft:rgba(252,211,77,.13); --rx-line:rgba(252,211,77,.30);
   --ac-soft:var(--az-soft); --ac-line:var(--az-line);
   --marca:var(--az-300); --marca-esc:var(--az-200); --marca-viva:var(--rx-400);
   --marca-media:var(--az-400); --marca-clara:var(--az-300); --marca-funda:var(--az-200);
@@ -231,11 +238,11 @@
   /* A moldura acompanha o tema: branca no claro, grafite azulado aqui.
      Deixá-la branca no escuro faria a lateral virar um holofote ao lado de
      uma tela apagada — que é exatamente o que cansa quem trabalha à noite. */
-  --lat:#101A2B; --lat-2:#18233A; --lat-borda:#25324A;
-  --lat-txt:#E8EEF7; --lat-txt2:#A3B2C7; --lat-txt3:#6F8098;
+  --lat:#171412; --lat-2:#231F1C; --lat-borda:#302A26;
+  --lat-txt:#F5F1EC; --lat-txt2:#B8AFA6; --lat-txt3:#8A8078;
   --lat-hover:rgba(255,255,255,.06);
   --lat-ic:rgba(255,255,255,.07); --lat-ic-txt:var(--az-300);
-  --lat-sel:rgba(147,197,253,.14); --lat-sel-txt:var(--az-300);
+  --lat-sel:rgba(253,186,116,.14); --lat-sel-txt:var(--az-300);
   --lat-card:var(--painel2);
 
   --su-500:#4ADE80; --wa-500:#FBBF24; --er-500:#F87171;
@@ -246,15 +253,15 @@
      azul-500 sobre grafite dá 3,7:1 com letra branca, abaixo do mínimo. O
      600 mantém 5,2:1 na letra e ainda se separa do fundo em 3,5:1, que é o
      que uma peça de interface precisa. */
-  --acao:var(--az-600); --acao-hover:var(--az-500); --acao-txt:#FFFFFF;
-  --tinta:#E8EEF7; --tinta-hover:#FFFFFF; --tinta-txt:#0B1220;
-  --tinta-marca:#E8EEF7;
+  --acao:var(--az-700); --acao-hover:var(--az-600); --acao-txt:#FFFFFF;
+  --tinta:#F5F1EC; --tinta-hover:#FFFFFF; --tinta-txt:#141210;
+  --tinta-marca:#F5F1EC;
 
   --sombra-xs:0 1px 1px rgba(0,0,0,.35);
   --sombra:0 1px 2px rgba(0,0,0,.45), 0 2px 6px -1px rgba(0,0,0,.35);
   --sombra-md:0 2px 6px rgba(0,0,0,.42), 0 12px 28px -6px rgba(0,0,0,.45);
   --sombra-lg:0 4px 10px rgba(0,0,0,.45), 0 24px 52px -12px rgba(0,0,0,.55);
-  --sombra-marca:0 1px 2px rgba(0,0,0,.55), 0 6px 18px -6px rgba(37,99,235,.34);
+  --sombra-marca:0 1px 2px rgba(0,0,0,.55), 0 6px 18px -6px rgba(234,88,12,.34);
 }
 
 

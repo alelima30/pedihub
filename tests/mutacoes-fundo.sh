@@ -127,8 +127,8 @@ troca app.html \
 
 echo "13. o padrão do cartão escuro volta ao número antigo"
 troca app.html \
-  "  escuro: { papel:'#131C2E', card:'#131C2E', titulo:'#E8EEF7'," \
-  "  escuro: { papel:'#131C2E', card:'#131A26', titulo:'#E8EEF7'," \
+  "  escuro: { papel:'#1C1917', card:'#1C1917', titulo:'#F5F1EC'," \
+  "  escuro: { papel:'#1C1917', card:'#1A1614', titulo:'#F5F1EC'," \
   && rodar "painel e página discordando do cartão"
 
 echo "14. o CSS da prévia perde o gradiente"
@@ -175,8 +175,8 @@ troca app.html \
 
 echo "21. o papel de fábrica volta ao bege das margens"
 troca app.html \
-  "  claro:  { papel:'#FFFFFF', card:'#FFFFFF', titulo:'#172033'," \
-  "  claro:  { papel:'#F6F2E8', card:'#FFFFFF', titulo:'#172033'," \
+  "  claro:  { papel:'#FFFFFF', card:'#FFFFFF', titulo:'#1C1917'," \
+  "  claro:  { papel:'#FAF6EF', card:'#FFFFFF', titulo:'#1C1917'," \
   && rodar "quadrado bege, celular branco"
 
 echo ""

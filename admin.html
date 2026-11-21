@@ -12,7 +12,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Plataforma — PediHub</title>
 <meta name="robots" content="noindex, nofollow" />
-<meta name="theme-color" content="#0F172A" />
+<meta name="theme-color" content="#1C1917" />
 <link rel="icon" type="image/png" href="icones/icone-192.png" />
 <style>
 /* ===========================================================================
@@ -36,7 +36,7 @@ button,input,select{font:inherit;color:inherit}
 button{cursor:pointer;border:none;background:none}
 body{
   font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;
-  background:#0F172A;color:#E8EEF7;
+  background:#1C1917;color:#F5F1EC;
   padding:26px 20px calc(60px + env(safe-area-inset-bottom));
 }
 .folha{max-width:1180px;margin:0 auto}
@@ -45,11 +45,11 @@ body{
 .topo img{height:30px;width:auto}
 .selo{
   font-size:10.5px;font-weight:700;letter-spacing:.11em;padding:3px 9px;
-  border-radius:99px;background:rgba(124,58,237,.18);color:#C4B5FD;
-  border:1px solid rgba(124,58,237,.38);
+  border-radius:99px;background:rgba(217,119,6,.18);color:#FCD34D;
+  border:1px solid rgba(217,119,6,.38);
 }
 .sair{margin-left:auto;color:rgba(232,238,247,.55);font-size:13.5px;font-weight:550}
-.sair:hover{color:#E8EEF7}
+.sair:hover{color:#F5F1EC}
 .subtopo{color:rgba(237,244,243,.5);font-size:14px;margin-bottom:26px}
 
 /* ── Os números do topo ─────────────────────────────────────────────────── */
@@ -58,7 +58,7 @@ body{
   grid-template-columns:repeat(auto-fit,minmax(158px,1fr));
 }
 .cartao{
-  background:#1B2740;border:1px solid rgba(37,99,235,.15);
+  background:#292524;border:1px solid rgba(234,88,12,.15);
   border-radius:11px;padding:15px 16px;
 }
 .cartao .rot{
@@ -93,16 +93,16 @@ h2{
 .ligar a:hover{text-decoration:underline}
 
 /* ── A lista ────────────────────────────────────────────────────────────── */
-.rolo{overflow-x:auto;border-radius:11px;border:1px solid rgba(37,99,235,.15)}
-table{width:100%;border-collapse:collapse;background:#1B2740;font-size:14px}
+.rolo{overflow-x:auto;border-radius:11px;border:1px solid rgba(234,88,12,.15)}
+table{width:100%;border-collapse:collapse;background:#292524;font-size:14px}
 th{
   text-align:left;font-size:11px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;color:rgba(237,244,243,.4);
-  padding:11px 13px;border-bottom:1px solid rgba(37,99,235,.15);white-space:nowrap;
+  padding:11px 13px;border-bottom:1px solid rgba(234,88,12,.15);white-space:nowrap;
 }
-td{padding:11px 13px;border-bottom:1px solid rgba(37,99,235,.08);vertical-align:middle}
+td{padding:11px 13px;border-bottom:1px solid rgba(234,88,12,.08);vertical-align:middle}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(37,99,235,.05)}
+tr:hover td{background:rgba(234,88,12,.05)}
 td .nome{font-weight:600}
 td .slug{font-size:12px;color:rgba(237,244,243,.38);font-family:ui-monospace,monospace}
 .etq{
@@ -116,14 +116,14 @@ td .slug{font-size:12px;color:rgba(237,244,243,.38);font-family:ui-monospace,mon
 .num{font-variant-numeric:tabular-nums;white-space:nowrap}
 .morto{color:rgba(237,244,243,.34)}
 select.plano{
-  background:#0F172A;border:1px solid rgba(37,99,235,.26);border-radius:7px;
+  background:#1C1917;border:1px solid rgba(234,88,12,.26);border-radius:7px;
   padding:6px 9px;font-size:13px;min-width:118px;
 }
 .acao{
   font-size:12.5px;font-weight:600;padding:6px 11px;border-radius:7px;
-  border:1px solid rgba(37,99,235,.26);color:rgba(237,244,243,.72);
+  border:1px solid rgba(234,88,12,.26);color:rgba(237,244,243,.72);
 }
-.acao:hover{border-color:rgba(37,99,235,.5);color:#E8EEF7}
+.acao:hover{border-color:rgba(234,88,12,.5);color:#F5F1EC}
 .acao.perigo:hover{border-color:rgba(251,113,133,.55);color:#FB7185}
 a.acao{text-decoration:none;display:inline-block}
 .acoes{display:flex;gap:6px;flex-wrap:wrap;min-width:220px}
@@ -132,24 +132,24 @@ a.acao{text-decoration:none;display:inline-block}
 .contato a:hover{text-decoration:underline}
 
 .recado{
-  padding:15px 18px;border-radius:10px;background:#1B2740;
-  border-left:3px solid #2563EB;line-height:1.6;
+  padding:15px 18px;border-radius:10px;background:#292524;
+  border-left:3px solid #EA580C;line-height:1.6;
 }
 .recado.erro{border-left-color:#FB7185;background:rgba(251,113,133,.07)}
 .recado b{display:block;margin-bottom:3px}
 .recado code{
-  background:#0F172A;padding:1px 6px;border-radius:4px;font-size:12.5px;
-  border:1px solid rgba(37,99,235,.2);
+  background:#1C1917;padding:1px 6px;border-radius:4px;font-size:12.5px;
+  border:1px solid rgba(234,88,12,.2);
 }
 .vazio{padding:22px;text-align:center;color:rgba(237,244,243,.42);font-size:14px}
 /* ── Os avisos do sino (54_sino.sql) ────────────────────────────────────── */
 .aviso-form{display:grid;gap:8px;margin-top:10px}
-.aviso-form input,.aviso-form textarea{width:100%;background:#0F172A;border:1px solid rgba(37,99,235,.26);
+.aviso-form input,.aviso-form textarea{width:100%;background:#1C1917;border:1px solid rgba(234,88,12,.26);
   border-radius:7px;padding:8px 10px;font:inherit;font-size:14px;color:inherit;resize:vertical}
 .aviso-form label input{width:auto;padding:5px 8px}
 /* ── Saúde do sistema (40_saude.sql) ────────────────────────────────────── */
 .saude-linha{display:flex;gap:11px;align-items:flex-start;padding:9px 0;
-  border-top:1px solid rgba(37,99,235,.15)}
+  border-top:1px solid rgba(234,88,12,.15)}
 .saude-linha:first-of-type{border-top:none}
 .saude-linha .etq{min-width:74px;text-align:center;margin-top:2px}
 .saude-linha .faz{font-size:13px;color:rgba(237,244,243,.6);margin-top:2px}
@@ -244,7 +244,7 @@ async function carregar(){
     corpo.innerHTML = `<div class="recado"><b>Você não está logado.</b>
       Esta tela lê o negócio inteiro, então ela precisa saber quem é você
       antes de mostrar qualquer número.<br><br>
-      <a href="entrar.html" style="color:var(--az-claro,#93C5FD);font-weight:600">
+      <a href="entrar.html" style="color:var(--az-claro,#FDBA74);font-weight:600">
       Entrar &rsaquo;</a></div>`;
     return;
   }
