@@ -1,472 +1,66 @@
 # PediHub
 
-Sistema de agendamento para restaurante de beleza, barbearia, manicure e estética.
-Irmão do [AdminPro](https://github.com/alelima30/adminpro): mesma stack —
-HTML/CSS/JS puro, sem build, backend Supabase, PWA instalável — com as dívidas
-daquele projeto corrigidas de saída.
+Cardápio digital com pedidos para **restaurante, lanchonete, pizzaria e
+delivery** — sem comissão por pedido. HTML/CSS/JS puro, sem build, backend
+Supabase, app instalável (PWA).
 
-**Estado: completo para testar.** Roda sozinho no navegador, e liga no
-Supabase preenchendo dois campos no `config.js`. Os dois caminhos foram
-verificados de ponta a ponta.
+Nasceu de uma cópia do AgendaPro (agenda de salão) e virou só pedidos: a
+agenda, os serviços, os pacotes e a comissão saíram das telas; o banco
+trava toda casa como restaurante (`64_so_restaurante.sql`).
+
+- **Site:** https://alelima30.github.io/pedihub/
+- **Página de venda:** `conheca.html`
+- **Instalar o banco:** [`INSTALAR-BANCO.md`](INSTALAR-BANCO.md)
 
 ---
 
-## O que já está aqui
+## O que tem
+
+| Para quem | O quê |
+|---|---|
+| **Cliente** (`agendar.html?salao=…`) | Cardápio por categoria, complementos e variações (tamanho, meio a meio, borda, adicionais), carrinho, entrega com taxa por bairro ou retirada, troco, cupom, acompanhamento do pedido e fidelidade. Pelo QR da mesa (`&mesa=N`): pedido na mesa, sem endereço, pagando no fim. |
+| **Restaurante** (`app.html`) | Pedidos em colunas com som, aviso no celular e impressão (automática por aparelho); pedido por telefone e balcão; cardápio com complementos e "esgotado" com um toque; entrega e pagamento, mesas com QR, entregadores e o acerto, fidelidade; cupons; caixa, dashboard e relatórios; clientes, aniversariantes e equipe. |
+| **Plataforma** (`admin.html`) | Os restaurantes, as assinaturas e o check-up do sistema. |
+
+**Planos** (`66_planos_pedihub.sql`): Grátis (até 50 pedidos/mês), Essencial
+R$ 69,90 e Profissional R$ 119,90 (com WhatsApp automático e crediário). O
+preço muda com o `supabase/PRECOS.sql`.
+
+## Os arquivos
 
 | Arquivo | O que faz |
 |---|---|
-| `app.html` | O restaurante: agenda, clientes, serviços, equipe e caixa |
-| `agendar.html` | O cliente: capa do restaurante, escolha, código no WhatsApp, meus horários |
-| `index.html` | Encaminha a raiz para o app |
-| `sw.js` + `manifest.webmanifest` | PWA — instala no celular e no computador |
-| `supabase/01_schema.sql` | 20 tabelas, as duas travas da agenda, comanda e comissão |
-| `supabase/02_rls.sql` | Isolamento entre restaurantes e entre papéis — a segurança de verdade |
-| `config.js` | **o único arquivo a editar** para ligar no Supabase |
-| `dados.js` | a camada de dados: localStorage ou Supabase, escolhido pelo config |
-| `supabase/00_tudo.sql` | instalação completa, para colar de uma vez no SQL Editor |
-| `estilo.css` | o sistema visual: paleta, tipografia e componentes, num lugar só |
-| `icones.js` | 30 ícones em SVG traçado, no lugar de emoji |
-| `demo.js` | a semente da demonstração, compartilhada pelas duas telas |
-| `criar.html` | o cadastro do dono: plano, dados e link pronto |
-| `tests/` | 274 verificações: banco, colunas, camada de dados, cota do plano e imagens |
+| `app.html` | O painel do restaurante |
+| `agendar.html` | O cardápio e o pedido do cliente (o nome ficou do AgendaPro) |
+| `criar.html`, `entrar.html`, `nova-senha.html`, `convite.html` | Cadastro, login, senha e convite da equipe |
+| `conheca.html` | A página de venda |
+| `config.js` | **O único arquivo a editar** para ligar no Supabase |
+| `dados.js` | A camada de dados: demonstração (navegador) ou Supabase |
+| `demo.js` | A demonstração: Pizzaria Bella Massa e Hamburgueria do Zé (`?demo=1`) |
+| `estilo.css` | Cores (laranja-brasa e carvão), tipografia e componentes |
+| `supabase/00_tudo_parte1.sql` e `_parte2.sql` | A instalação do banco, em duas colagens |
+| `supabase/98_modulos.sql` | A atualização de um banco já instalado |
+| `supabase/CONFERIR.sql` | A conferência: tudo tem de dar "certo" |
 
-> **Para instalar e testar de ponta a ponta, siga o
-> [COMO-TESTAR.md](COMO-TESTAR.md).** Este arquivo explica as decisões; aquele
-> explica os passos.
+### Os módulos do PediHub no banco
 
-## Como testar
-
-### Os dois lados
-
-São dois aplicativos sobre o mesmo banco:
-
-| | Quem usa | Onde |
-|---|---|---|
-| **Recepção** | dono, recepção, profissional | `app.html` |
-| **Cliente** | quem marca horário | `agendar.html?salao=<slug>` |
-
-### Como o cliente chega no restaurante certo
-
-Pelo `slug` — a coluna `saloes.slug`, que é o apelido do restaurante no endereço:
-
-```
-agendar.html?salao=studio-bella
-agendar.html?salao=barbearia-do-ze
-```
-
-É esse link que o restaurante manda no WhatsApp, cola na bio do Instagram ou imprime
-como QR no espelho. Cada restaurante tem o seu, e ele é a única porta de entrada
-do cliente — quem abre um link não enxerga o outro restaurante.
-
-Dentro do `app.html`, na aba **Ver como cliente**, o link aparece pronto com
-botão de copiar. Sem o parâmetro, `agendar.html` mostra a lista de restaurantes:
-isso existe só para a demonstração; em produção o link sempre traz um.
-
-**A tela** — abra `app.html` **ou** `agendar.html?salao=studio-bella` no
-navegador. Qualquer uma das duas cria os dados de demonstração se ainda não
-existirem: dois restaurantes, cinco profissionais, dez serviços e a agenda de hoje
-preenchida. (O app do cliente semeia também porque, na vida real, o link do
-WhatsApp costuma ser a primeira porta que a pessoa abre.) Tudo fica no
-`localStorage`; o botão **Recomeçar** devolve ao estado inicial.
-
-Para instalar como aplicativo é preciso servir por http, porque navegador não
-registra service worker em `file://`:
-
-```bash
-cd pedihub && python3 -m http.server 8000
-# abra http://localhost:8000  →  botão "Instalar app"
-```
-
-**O banco** — precisa de um Postgres alcançável:
-
-```bash
-bash tests/rodar.sh
-PGHOST=localhost PGPORT=5432 bash tests/rodar.sh
-```
-
-**No Supabase** — rode `01_schema.sql` e `02_rls.sql` no SQL Editor, depois
-cole `tests/conferir_instalacao.sql` e clique em Run. Ele devolve onze linhas
-✓/✗ dizendo se a instalação ficou de pé (RLS ligado, trava presente, vitrine
-aberta, nenhuma tabela exposta para quem não fez login).
-
-## O que dá para conferir na tela
-
-- **Multi-restaurante** — troque de restaurante no seletor do topo: agenda, clientes e
-  serviços mudam junto, e um não enxerga o outro
-- **A grade entende serviço** — mecha ocupa 3h, corte ocupa 1h; o listrado
-  marca fora da jornada e o hachurado marca almoço
-- **Conflito** — tente marcar em cima de alguém e o aviso aparece antes de salvar
-- **Ver como cliente** — a mesma agenda vista de fora: só os horários livres,
-  sem nome nem telefone de ninguém. Dia cheio sugere os próximos com vaga
-- **Comanda** — clique num atendimento, abra a comanda, some produto e veja a
-  comissão sair por item
-
-## As três decisões que definem o projeto
-
-**1. Um login, vários restaurantes.** No AdminPro a pessoa pertence a um condomínio
-— uma coluna `condominio_id` resolve. Aqui não: a mesma cliente corta o cabelo
-na barbearia e faz unha no restaurante da esquina, com o mesmo telefone. Então a
-identidade é global (`perfis`, uma linha por telefone) e o pertencimento é uma
-tabela à parte (`vinculos`), com papel por restaurante. As policies perguntam *"você
-tem vínculo com este restaurante, e em que papel?"*, não *"qual é o seu restaurante?"*.
-
-**2. Horário duplicado é impossível, e não por educação do JavaScript.** O
-AdminPro confere conflito no navegador (`hrConflita`), então duas recepcionistas
-clicando junto marcam o mesmo horário — nenhuma das duas telas sabe da outra.
-Aqui a recusa é do banco, por uma constraint `EXCLUDE USING gist` sobre
-`tstzrange`. Não fura por corrida, nem chamando a API direto, nem com o
-JavaScript desligado.
-
-O almoço, o médico e o feriado moram noutra tabela (`bloqueios`), e `EXCLUDE`
-não atravessa duas tabelas — então essa metade é um par de gatilhos, um de
-cada lado. Sem eles dava para marcar mecha de três horas por cima do almoço,
-ou bloquear em cima de quem já estava marcado invertendo a ordem.
-
-**3. Nada de `modulo_dados`.** O AdminPro guarda metade do sistema como um
-bloco JSON por módulo, e a própria documentação dele reconhece o custo: dois
-admins salvando junto, o último apaga o trabalho do primeiro, e nada disso tem
-teste. Aqui tudo é tabela, coluna e chave desde o primeiro dia.
-
-## O que o cliente enxerga (e o que não enxerga)
-
-O ponto mais fácil de errar. Uma policy do tipo `using (tem_acesso(salao_id))`
-parece certa na tela e vaza a clientela inteira: basta chamar a API REST do
-Supabase pelo navegador, sem passar pelo nosso app.
-
-| Quem | Alcança |
+| Módulo | O quê |
 |---|---|
-| Cliente | Os agendamentos **dele**, a ficha **dele**, a conta **dele**. Horário livre vem de função que devolve horários, não linhas. |
-| Profissional | A agenda dele e a comissão dele. Não vê o que a colega ganhou. |
-| Recepção / dono | Tudo do próprio restaurante. |
-| Outro restaurante | Nada. Nem uma linha. |
-| Sem login | Só a vitrine: nome, serviços, preços e quem atende. |
+| `64_so_restaurante.sql` | Toda casa é restaurante |
+| `65_pedido_vira_venda.sql` | O pedido entregue entra no caixa, nos relatórios e no estoque |
+| `66_planos_pedihub.sql` | Os planos e o limite do Grátis |
+| `67_complementos.sql` | Complementos e variações do cardápio |
+| `68_cupom_no_pedido.sql` | O cupom no pedido, sobre o subtotal |
+| `69_esgotado.sql` | "Esgotado" com um toque, por qualquer um da equipe |
+| `70_pedido_balcao.sql` | O núcleo do pedido e o pedido lançado pela equipe |
+| `71_mesas_entregadores_fidelidade.sql` | Mesas com QR, entregadores e o acerto, fidelidade |
 
-Cada uma dessas linhas é um teste em `tests/02_rls.test.sql`, rodando com
-`set role authenticated` — que é como o Supabase trata um JWT. Sem trocar o
-papel, o teste rodaria como superusuário e passaria por cima do RLS: verde
-mentiroso, o pior tipo.
+A regra da casa: **o preço é do banco**. A página manda só o que e quantos;
+preço, complementos, cupom, taxa e total são calculados e conferidos no
+Supabase.
 
-## As fotos do restaurante
+## Testar
 
-Três imagens, e cada uma resolve um problema diferente na hora de o cliente
-abrir o link vindo do WhatsApp:
-
-| | Onde aparece | Tamanho final |
-|---|---|---|
-| **Logo** | selo no topo da vitrine e na lista de restaurantes | 256 px, até 120 KB |
-| **Foto do restaurante** | a faixa larga logo abaixo do nome | 1200 px, até 420 KB |
-| **Foto do serviço** | o card que o cliente escolhe | 600 px, até 220 KB |
-
-A foto do serviço é a que mais muda conversão: "corte navalhado" não diz nada
-para quem nunca cortou ali; a imagem diz. Quando nenhum serviço tem foto, a
-grade vira lista sozinha — um card alto e vazio seria pior que uma linha.
-
-### Foto de celular tem 16 MB. Isto não pode chegar cru em lugar nenhum
-
-Toda imagem passa pelo `imagens.js` antes de existir: redimensiona no próprio
-navegador, com `<canvas>`, e sai em JPEG. Sem biblioteca — o navegador faz isso
-desde sempre. Um PNG de 16,7 MB e 3000×2000 sai com 213 KB e 1200×800.
-
-Fundo branco antes de desenhar, porque PNG transparente vira preto ao virar
-JPEG — e logo de restaurante quase sempre vem em PNG transparente.
-
-**Onde os bytes ficam.** Em produção, no Supabase Storage, e a coluna guarda a
-URL. Na demonstração, a própria `data:` URL no `localStorage`. Coluna `text`
-nos dois casos, então a tela não sabe a diferença.
-
-**O guarda de espaço erra por 2,66× se for ingênuo.** Uma imagem de 213 KB
-ocupou 568 KB no navegador: o `data:` é base64, que infla 4/3, e o
-`localStorage` guarda string em UTF-16, que dobra outra vez. A primeira versão
-comparava os bytes *decodificados* contra o teto — deixava passar quase três
-vezes mais imagem do que cabia, e o estouro só aparecia lá na frente, no meio
-de um salvamento, com os dados já pela metade. A conta agora é sobre a string
-que vai ser gravada.
-
-### O balde é público para ler, e só para ler
-
-As fotos existem para aparecer na vitrine, que abre antes de qualquer login —
-imagem atrás de autenticação numa página pública é imagem que não carrega.
-
-A escrita é outra história. O caminho é sempre `<salao_id>/arquivo.jpg`, e a
-policy tira dali de quem é o arquivo. Sem isso, qualquer dono logado troca a
-logo do concorrente. Quatro testes em `tests/02_rls.test.sql` cercam os quatro
-caminhos: a própria pasta, a do vizinho, a raiz do balde e uma pasta com nome
-inventado — esta última importa porque um `::uuid` que levanta exceção dentro
-de uma policy derruba a consulta inteira em vez de simplesmente negar.
-
-## Como o dinheiro entra (e o que acontece com quem não paga)
-
-Nem todo restaurante vai assinar, e o sistema foi desenhado sabendo disso. Quem não
-assina fica no **Grátis** — plano de verdade, sem prazo — e quem cresce esbarra
-num teto que cresce junto:
-
-| | Grátis | Individual | Duo → Restaurante |
-|---|---|---|---|
-| Profissionais na agenda | 1 | 1 | 2 a 20 |
-| Horários por mês | 40 | sem teto | sem teto |
-| Link de agendamento | sim | sim | sim |
-| Lembrete no WhatsApp | não | sim | sim |
-| Preço | R$ 0 | R$ 47 | R$ 87 a R$ 297 |
-
-As duas linhas do meio são o que faz o Individual existir. Sem elas, um
-profissional com tudo liberado é exatamente o que o Grátis já dá, e ninguém
-sairia dele — o plano de R$ 47 seria invendável por aritmética, não por preço.
-O lembrete fica de fora do Grátis por caixa: cada mensagem é dinheiro que sai
-por restaurante que não paga.
-
-Os números moram na tabela `planos`, coluna `recursos`. Mudar o teto de 40 é um
-`UPDATE`, não um deploy.
-
-### Onde a regra é aplicada
-
-Toda a cobrança passa por `plano_efetivo(salao)`, que responde *"qual plano vale
-hoje"* — considerando `trial_ate` e `vence_em`. Fora de vigor, o restaurante cai no
-Grátis; nunca em ilimitado, e nunca em nada.
-
-Três coisas que custaram uma reescrita cada:
-
-**A validade estava só no teste grátis.** Uma assinatura `ativa` com `vence_em`
-há dois meses valia o plano inteiro. Quem parasse de pagar ficava com tudo, para
-sempre, esperando alguém marcar `inadimplente` na mão — e não havia nada que
-marcasse.
-
-**Prender a troca de plano era o lugar errado.** A primeira versão recusava o
-rebaixamento enquanto sobrasse gente ativa. Estava errado duas vezes: quem troca
-de plano é a plataforma (a policy não deixa o dono escrever em `assinaturas`),
-então a trava só atrapalhava cancelamento e fim de contrato; e não pegava o caso
-mais comum, porque **teste grátis vence sozinho** — a data passa e não existe
-`UPDATE` nenhum para interceptar. O restaurante seguia com 3 pessoas atendendo num
-plano de 1.
-
-A regra certa é sobre **usar** a vaga, não sobre contratá-la: profissional fora
-da cota não recebe agendamento (`profissional_na_cota`). Uma regra só cobre
-expiração, rebaixamento e chamada direta na API, e a plataforma nunca fica presa.
-Quem está na cota são os mais antigos entre os ativos — estável, e na prática
-guarda a vaga de quem começou.
-
-**A tela contava diferente do banco.** O `app.html` refaz a conta da cota para
-desenhar a agenda e nomear quem ficou de fora. Se as duas divergirem, o dono vê
-uma coluna, clica, e leva um erro que contradiz o que está escrito na frente
-dele. `tests/cota.test.mjs` roda as duas contas sobre os mesmos dados e compara.
-
-### O que o dono NÃO pode fazer
-
-Provado em `tests/02_rls.test.sql`, com `set role authenticated`:
-
-- escrever na própria assinatura (`permission denied`) — senão assina o plano
-  maior em dois cliques
-- inventar um plano na tabela `planos`
-- passar do limite cadastrando profissional
-- marcar na agenda de quem está fora da cota
-
-O botão **Assinar** na tela do dono sabe disso: em modo nuvem ele não finge
-trocar o plano. Antes ele mexia no `bd` local e repintava — em demonstração
-parecia funcionar, e ligado no Supabase a tela dizia "Time · 3 de 3" enquanto o
-banco seguia no Grátis de 1.
-
-## O visual
-
-Uma paleta só, num arquivo só (`estilo.css`), e as três telas herdam dela.
-As decisões que sustentam o resto:
-
-- **Neutros quentes, não cinza azulado.** Uma escala de onze degraus faz todo
-  o trabalho de fundo, borda e texto.
-- **Uma cor de destaque, com significado.** O verde-azulado marca *seleção*:
-  o dia escolhido, o horário escolhido, o plano escolhido. Ele nunca é
-  decoração.
-- **A ação primária é quase preta**, não colorida. Contraste máximo, e sobra
-  o destaque para carregar informação. O plano recomendado usa a mesma cor de
-  ação — recomendar é empurrar, não é uma escolha já feita.
-- **Nada de degradê e nada de emoji.** Emoji cada sistema desenha do seu
-  jeito, não aceita cor nem espessura e envelhece junto com a moda do teclado;
-  os ícones são SVG traçado de 1,75 (`icones.js`), herdam a cor do texto.
-- **Algarismo tabular** em horário, dinheiro e contagem, para as colunas
-  alinharem.
-
-Duas coisas saíram no caminho, e vale registrar por quê:
-
-**O tema preto-e-dourado da barbearia.** A ideia era o cliente reconhecer a
-casa ao abrir o link. Na prática viraram dois produtos — a mesma pessoa marcava
-unha num lugar claro e barba num lugar escuro, com outro botão e outra
-tipografia — e o dourado sobre preto derrubava o contraste do texto pequeno.
-Quem identifica a casa é o nome, o monograma e a lista de serviços, que é como
-Fresha, Booksy e Square resolvem. O vocabulário continua mudando com o tipo do
-restaurante ("quem corta" x "quem atende"); o que saiu foi a segunda paleta.
-
-⚠ **Este parágrafo envelheceu, e a parte que envelheceu foi só uma.** A
-segunda paleta voltou — o dono escolhe cores, gradiente e formato do logo para
-o link da cliente (ver *identidade visual*). O que continua valendo é a razão
-de ter saído: não existe uma paleta fixa "de barbearia" embutida no produto, e
-o painel não muda de cara. O que mudou é de quem é a decisão. E o contraste
-pequeno, que era a objeção técnica, virou um aviso medido na tela de
-Aparência, com a razão em N:1 — ele avisa e obedece, porque proibir o dono de
-escolher a cor da própria casa é pior do que avisar.
-
-**A página de cadastro preta.** Mesma história: o dono assinava numa tela preta
-e caía num sistema claro no minuto seguinte.
-
-## Dois bugs que os testes pegaram antes de existir tela
-
-Ficam registrados porque são armadilhas que voltam.
-
-**`for all` reabre a leitura restrita.** Uma policy `for all` vale também para
-SELECT, e o Postgres soma as permissivas com OU. Uma policy de escrita da
-equipe ao lado de uma policy de leitura restrita anula a restrição — a
-profissional voltava a ver a agenda das colegas e a comissão delas. Escrita vai
-separada por verbo: `for insert`, `for update`, `for delete`.
-
-**Policies que se citam entram em recursão.** A de `comandas` consultava
-`comanda_itens`, cuja policy consultava `comandas` de volta:
-`infinite recursion detected in policy`. O ciclo se rompe com funções
-`security definer`, que não passam pelo RLS.
-
-## O que falta
-
-Revisado contra o código, e não de memória — a lista inteira, de novo, depois
-da leva do dashboard. Item que já existe e continua aqui dá trabalho a quem
-for conferir e desmoraliza a lista toda.
-
-### Depende de mim (código)
-
-1. **Lembretes automáticos.** `lembrete_whatsapp: true` nos cinco planos
-   pagos, e nada dispara. Falta o `pg_cron` chamando a Edge Function que já
-   existe. É a promessa mais visível do produto que ainda não se cumpre.
-2. **Entrega do código de login pelo WhatsApp.** O *Send SMS Hook* do
-   Supabase apontando para a Cloud API da Meta. Login por email e senha —
-   o do dono — já funciona; o da cliente por telefone, não.
-3. **Status "chegou".** Adiado a pedido. Quando entrar, tem que entrar
-   JUNTO com o `where` do gatilho anti-choque e das policies: só no `check`
-   ele vira um horário que não conta como ocupado, e abre buraco na agenda
-   em vez de fechar.
-4. **Sinal por Pix e fidelidade.** Os campos `sinal_exigido` e `sinal_pago`
-   existem em `agendamentos`, vazios. Os **pacotes** saíram desta lista: o
-   `27_pacotes.sql` está instalado, com aba própria no painel, R$ 0,00 no link
-   da cliente e dias da semana configuráveis — inclusive o bloqueio opcional
-   fora desses dias, que vale só para o link e nunca para a recepção.
-5. **Dias da semana por serviço.** Hoje a restrição de dia só existe DENTRO
-   do pacote (`pacotes.so_nos_dias`). "Escova só de quinta a sábado", sem
-   pacote nenhum, não tem onde ser dita — e é pedido de quem tem serviço
-   longo que só cabe em dia de movimento fraco. Aprovado, não começado.
-   Conferido: `servicos` não tem coluna de dia nenhuma.
-6. **Preço por dia da semana e por faixa de horário.** Pedido junto dos
-   prints de produto, e o único de peso daquela leva que ficou de fora.
-   "Corte R$ 60, mas R$ 80 no sábado"; "20% menos das 9h às 11h, terça e
-   quarta"; com período de vigência, para a tabela nova valer só a partir de
-   uma data.
-
-   ⚠ É a mudança mais delicada da lista, e não pelo tamanho. Preço hoje é uma
-   coluna e sai do banco na hora de marcar; virar REGRA significa uma tabela
-   nova, uma função que resolve qual regra vale para aquele instante, e o
-   cuidado de nunca mexer no valor de um agendamento JÁ FEITO — que é
-   exatamente o que a tela de referência promete em letras miúdas ("a mudança
-   de preço não altera os agendamentos realizados"). Errar aqui é cobrar da
-   cliente um valor diferente do que ela viu ao marcar.
-
-### Depende do dono (fora do código)
-
-7. **Chaves do Mercado Pago** em Edge Functions → Secrets, e as funções
-   `criar-cobranca` e `webhook-mp` publicadas. O SQL da cobrança está
-   instalado; sem as chaves, nenhum restaurante consegue pagar.
-8. **Verificação do Meta Business.** É ela que libera o template
-   transacional do lembrete — o item 1 depende dela para sair do papel.
-9. **O e-mail de "esqueci minha senha" que antivírus não gasta.** O link
-   padrão do Supabase é gasto no primeiro acesso — e o primeiro acesso nem
-   sempre é da pessoa: leitores de e-mail com antivírus (Outlook, Hotmail)
-   visitam o link antes dela, e ela chega em "link inválido ou vencido". A
-   `nova-senha.html` aceita um link que só leva o código e o gasta quando a
-   pessoa toca em Salvar. Para ligar, em Authentication → Emails → Templates
-   → **Reset password**, troque o assunto por **Trocar sua senha — PediHub**
-   (o padrão do Supabase vem em inglês, "Reset Your Password") e o corpo por:
-
-   ```html
-   <h2>Trocar sua senha</h2>
-   <p>Recebemos um pedido para trocar a senha da sua conta.</p>
-   <p><a href="{{ .RedirectTo }}#token_hash={{ .TokenHash }}&type=recovery">Escolher uma senha nova</a></p>
-   <p>O link vale por 1 hora, e só o do e-mail mais recente funciona. Se não foi você que pediu, ignore este e-mail.</p>
-   ```
-
-   `{{ .RedirectTo }}` é a `nova-senha.html` (com a volta para o restaurante,
-   quando a cliente pediu pelo link). O código vai depois do `#`, que não
-   sai do navegador. Sem esta troca o link padrão continua funcionando —
-   só sem a proteção.
-
-   Os outros dois que o sistema manda também nascem em inglês. Em
-   **Confirm signup**: assunto **Confirme seu cadastro — PediHub**, e no
-   corpo `<h2>Confirme seu cadastro</h2><p>Toque no link para confirmar o seu
-   e-mail e entrar no PediHub.</p><p><a href="{{ .ConfirmationURL }}">Confirmar
-   meu e-mail</a></p>`. Em **Change email address**: assunto **Confirme o seu
-   novo e-mail — PediHub**, e no corpo `<h2>Confirme o novo e-mail</h2><p>Recebemos
-   um pedido para trocar o e-mail da sua conta para {{ .NewEmail }}.</p><p><a
-   href="{{ .ConfirmationURL }}">Confirmar a troca</a></p><p>Se não foi você,
-   ignore este e-mail.</p>`.
-
-   E-mail para qualquer cliente exige **SMTP próprio** (Authentication →
-   Emails → SMTP Settings): sem ele, o Supabase só entrega para os e-mails
-   da equipe do projeto, e no máximo 2 por hora.
-
-### O que deixou de faltar
-
-- **Identidade visual por estabelecimento** no link da cliente: modo de
-  exibição, nove cores uma a uma, onze temas prontos, gradiente e formato do
-  logo. ⚠ Construída ao contrário do jeito óbvio: cada chave AUSENTE quer
-  dizer "calcule a partir da cor da marca, como sempre", e não "use o padrão
-  novo". Restaurante que nunca abrir a tela não tem chave nenhuma e continua com a
-  página de antes, byte a byte. Metade do `identidade-visual.test.mjs` mede só
-  isso — personalização que não funciona o dono reclama no mesmo dia, a que
-  vaza chega calada em quem não pediu nada.
-- **O dashboard**, com sete cartões que o dono liga, desliga e ordena
-  (`30_painel.sql` + a aba). Faturamento anual e semanal em SVG desenhado à
-  mão — sem biblioteca, porque o projeto não tem passo de build e funciona
-  sem rede.
-- **Tirar alguém da equipe e tirar um produto da lista.** Quem nunca
-  trabalhou some; quem já trabalhou é arquivado, e o histórico fica. As duas
-  telas barram o caso que o banco NÃO barra: `comanda_itens` tem
-  `on delete set null` nas duas pontas, e apagaria em silêncio.
-- **O dinheiro do dia num lugar só** (o Caixa), com o previsto e a
-  comparação com o dia anterior. Eram três telas somando o mesmo dia com
-  contas diferentes.
-- **Vista de 3 dias** na agenda, e o resumo do dia embaixo do calendário do
-  mês.
-- **A vitrine da capa escolhida pelo dono** (`saloes.cfg.destaques`), o
-  toque no cartão que já escolhe o serviço, e os atalhos de "meus horários"
-  e "meus pacotes".
-- **De quanto em quanto tempo o link oferece horário** (15, 30 ou 60). É
-  peneira de exibição: a agenda por dentro continua fina.
-- **Os recados manuais do WhatsApp**, editáveis, com `cliente`, `horario` e
-  `empresa` como parâmetros.
-- **Cobrança por Pix e boleto.** `13_cobranca.sql` mais as duas Edge
-  Functions, com verificação de assinatura e idempotência pelo `mp_id`.
-- **"Meus horários" e a lista de espera na nuvem.** `meus_agendamentos`,
-  `minha_fila`, `entrar_na_fila` e `sair_da_fila`, em `09_cliente.sql`.
-- **CI rodando `tests/tudo.sh` a cada envio**, com Postgres de serviço.
-  Verde desde 27/08 — antes disso reprovou 29 vezes seguidas por uma pasta
-  no lugar errado, o que é o mesmo que não existir.
-- **`agendar.html` no modo nuvem.** Duração e preço saem do banco, nunca do
-  navegador. Coberto por `tests/cliente-nuvem.test.mjs`.
-- **A agenda não aceita mais horário inválido** (Fase 1): `14_motor.sql`
-  põe choque, bloqueio e jornada num gatilho só, do lado do banco.
-- **As travas do dinheiro** (Fase 2A): uma comanda por atendimento, desconto
-  que não passa do subtotal, pagamento que não excede o total, comanda
-  fechada imutável.
-- **A comissão é do banco**, pela escada par → catálogo → pessoa, com valor
-  fixo e regra de bruto/líquido com data de corte.
-- **Caixa, sangria, suprimento e estorno**, e o **painel do dia**.
-- **O passo a passo do primeiro dia.** Oito passos que abrem sozinhos no
-  restaurante vazio: horário da semana com copiar para os outros dias, o que o
-  restaurante faz, serviços sugeridos com duração e preço num toque, equipe,
-  produtos (só para quem vende), os dois interruptores de comanda e
-  confirmação, e o link com o QR pronto para imprimir. Grava a cada passo,
-  então fechar no meio não perde nada. Não é aba: abre uma vez, e depois só
-  por quem procurar o botão em Meu restaurante.
-
-## Onde este código mora
-
-`alelima30/pedihub`, servido pelo GitHub Pages. Até 27/08/2026 ele vivia
-numa subpasta do repositório `pradotec` — o site da Pradotec Piscinas — e a
-pasta de lá era uma CÓPIA, com história independente.
-
-Isso custou caro no dia em que foi descoberto: uma correção de produção foi
-commitada na cópia e ficou lá, fora do ar, enquanto era relatada como
-resolvida. E o CI nunca rodava, porque o workflow estava em
-`pedihub/.github/workflows/` e o GitHub só lê `.github/workflows/` na raiz.
-
+Sem instalar nada: abra `app.html?demo=1`. Os testes automáticos estão no
+[`COMO-TESTAR.md`](COMO-TESTAR.md) (`bash tests/rodar.sh` para o banco,
+`bash tests/tudo.sh` para tudo).
