@@ -813,7 +813,8 @@ span.ajuda{display:block;margin-top:5px}
         <span id="pdRecebendoTxt">Recebendo pedidos</span></label>
       <span class="espaco"></span>
       <button class="btn" onclick="carregarPedidos()">Atualizar</button>
-      <button class="btn btn-p" onclick="abrirConfigPedidos()">Entrega e pagamento</button>
+      <button class="btn" onclick="abrirConfigPedidos()">Entrega e pagamento</button>
+      <button class="btn btn-p" onclick="abrirNovoPedido()">+ Novo pedido</button>
     </div>
     <div id="listaPedidos"></div>
   </section>
@@ -2210,7 +2211,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.30a6e5';
+const VERSAO_APP = 'v9.747096';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23017,6 +23018,231 @@ const PEDIDO_PAGAMENTO = { pix:'Pix', dinheiro:'Dinheiro', cartao:'Cartão na en
 const PEDIDO_ETAPA = { recebido:'Novo', em_preparo:'Em preparo', saiu:'Saiu para entrega',
   pronto:'Pronto para retirar', entregue:'Entregue', cancelado:'Cancelado' };
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOVO PEDIDO PELA EQUIPE — telefone e balcão (70_pedido_balcao.sql)
+
+   O cliente ligou, ou pediu no caixa. O pedido entra na mesma lista, sai na
+   mesma impressão e vira venda ao ser entregue. Quem confere tudo é o
+   `lancar_pedido()`: a tela só junta o que foi escolhido. A conta mostrada
+   aqui é prévia, com as regras de preço dos complementos.
+   ═══════════════════════════════════════════════════════════════════════════ */
+let npItens = [];          // [{ pid, nome, qtd, opcoes:[ids], texto, preco }]
+let npEscolha = null;      // o item com complementos sendo montado: { pid, grupos, sel }
+const npGruposCache = {};
+
+function abrirNovoPedido(){
+  if(!NA_NUVEM){
+    alert('Na demonstração não há servidor: o pedido lançado precisa do sistema ligado ao banco.');
+    return;
+  }
+  npItens = []; npEscolha = null;
+  const c = cfgPedidosDoSalao();
+  const itens = doSalao(bd.produtos || []).filter(x => x.ativo !== false)
+    .sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+  abrirModal('Novo pedido', `
+    <div class="pd-ops-painel" role="group" aria-label="Por onde chegou">
+      <label class="check"><input type="radio" name="npOrigem" value="telefone" checked> <span>Telefone / WhatsApp</span></label>
+      <label class="check"><input type="radio" name="npOrigem" value="balcao"> <span>Balcão</span></label>
+    </div>
+    <div class="dupla">
+      <div class="campo"><label for="npNome">Nome do cliente</label>
+        <input id="npNome" maxlength="80" placeholder="Ex.: Carlos"></div>
+      <div class="campo"><label for="npTel">WhatsApp (opcional no balcão)</label>
+        <input id="npTel" inputmode="tel" placeholder="(11) 99999-8888"></div>
+    </div>
+
+    <div class="campo"><label for="npBusca">Itens</label>
+      <input id="npBusca" placeholder="Buscar no cardápio..." oninput="npFiltrar(this.value)" autocomplete="off">
+      <div id="npCardapio" class="np-cardapio">${itens.map(x => `
+        <button type="button" class="np-prod" data-nome="${escapar(semAcentoPainel(x.nome))}"
+                onclick="npAdicionar('${x.id}')">
+          <span>${escapar(x.nome)}</span><b>${real(Number(x.preco || 0))}</b></button>`).join('')
+        || '<p class="secao-sub">Cadastre itens no Cardápio primeiro.</p>'}</div>
+      <div id="npEscolha"></div>
+      <div id="npLista" class="np-lista"></div>
+    </div>
+
+    <div class="campo"><label>Como recebe</label>
+      <label class="check"><input type="radio" name="npModo" value="retirada" checked onchange="npPintarEntrega()"> <span>Retira no balcão</span></label>
+      <label class="check"><input type="radio" name="npModo" value="entrega" onchange="npPintarEntrega()"> <span>Entrega</span></label>
+    </div>
+    <div id="npEntrega" style="display:none">
+      <div class="dupla">
+        <div class="campo"><label for="npRua">Rua</label><input id="npRua" maxlength="120"></div>
+        <div class="campo"><label for="npNum">Número</label><input id="npNum" maxlength="20"></div>
+      </div>
+      <div class="dupla">
+        <div class="campo"><label for="npBairro">Bairro</label>
+          <input id="npBairro" maxlength="80" list="npBairros" oninput="npTaxaDoBairro()">
+          <datalist id="npBairros">${c.taxas.map(x => `<option value="${escapar(x.bairro)}">`).join('')}</datalist></div>
+        <div class="campo"><label for="npTaxa">Taxa de entrega (R$)</label>
+          <input id="npTaxa" type="number" min="0" step="0.01" value="${c.taxas.length ? '' : c.taxaPadrao}"
+                 oninput="npPintarTotal()"></div>
+      </div>
+      <div class="campo"><label for="npRef">Complemento / referência</label><input id="npRef" maxlength="120"></div>
+    </div>
+
+    <div class="dupla">
+      <div class="campo"><label for="npPag">Pagamento</label>
+        <select id="npPag" onchange="npPintarEntrega()">
+          ${Object.entries(PEDIDO_PAGAMENTO).map(([k, v]) => `<option value="${k}">${escapar(k === 'cartao' ? 'Cartão' : v)}</option>`).join('')}
+        </select></div>
+      <div class="campo" id="npTrocoCampo" style="display:none"><label for="npTroco">Troco para (R$)</label>
+        <input id="npTroco" inputmode="decimal" placeholder="em branco = sem troco"></div>
+    </div>
+    <div class="campo"><label for="npObs">Observação</label>
+      <textarea id="npObs" rows="2" maxlength="300" placeholder="Ex.: sem cebola, entregar no portão"></textarea></div>
+    <div class="np-total" id="npTotal"></div>
+  `, [
+    ['Cancelar', 'fecharModal()', ''],
+    ['Lançar pedido', 'lancarNovoPedido()', 'btn-p'],
+  ]);
+  npPintarLista();
+}
+
+function semAcentoPainel(t){ return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function npFiltrar(q){
+  const b = semAcentoPainel(q);
+  document.querySelectorAll('#npCardapio .np-prod').forEach(el => {
+    el.style.display = !b || el.dataset.nome.includes(b) ? '' : 'none';
+  });
+}
+function npPintarEntrega(){
+  const ent = (document.querySelector('input[name="npModo"]:checked') || {}).value === 'entrega';
+  const e = document.getElementById('npEntrega'); if(e) e.style.display = ent ? '' : 'none';
+  const pag = (document.getElementById('npPag') || {}).value;
+  const t = document.getElementById('npTrocoCampo'); if(t) t.style.display = pag === 'dinheiro' ? '' : 'none';
+  npPintarTotal();
+}
+function npTaxaDoBairro(){
+  const c = cfgPedidosDoSalao();
+  const b = semAcentoPainel((document.getElementById('npBairro') || {}).value).trim();
+  const achou = c.taxas.find(x => semAcentoPainel(x.bairro).trim() === b);
+  const campo = document.getElementById('npTaxa');
+  if(campo && achou) campo.value = Number(achou.taxa) || 0;
+  npPintarTotal();
+}
+
+async function npAdicionar(pid){
+  const prod = acharProduto(pid); if(!prod) return;
+  let grupos = npGruposCache[pid];
+  if(grupos === undefined){
+    try{ grupos = await Dados.chamar('opcoes_do_produto', { p_produto: pid }) || []; }
+    catch(e){ grupos = []; }
+    npGruposCache[pid] = grupos;
+  }
+  grupos = (grupos || []).filter(g => (g.opcoes || []).some(o => o.ativo !== false));
+  if(!grupos.length){
+    const ja = npItens.find(x => x.pid === pid && !x.opcoes.length);
+    if(ja) ja.qtd++;
+    else npItens.push({ pid, nome: prod.nome, qtd: 1, opcoes: [], texto: '', preco: Number(prod.preco || 0) });
+    npPintarLista();
+    return;
+  }
+  npEscolha = { pid, grupos, sel: {} };
+  npPintarEscolha();
+}
+
+function npCalcular(){
+  const e = npEscolha, prod = acharProduto(e.pid) || {};
+  let preco = Number(prod.preco || 0); const partes = [], ids = []; let falta = null;
+  for(const g of e.grupos){
+    const esc = (g.opcoes || []).filter(o => (e.sel[g.id] || []).includes(o.id));
+    if(esc.length < Number(g.min || 0) && !falta) falta = `Escolha em "${g.nome}".`;
+    if(!esc.length) continue;
+    const v = esc.map(o => Number(o.preco || 0));
+    preco += g.regra === 'maior' ? Math.max(...v) : g.regra === 'media' ? v.reduce((a, b) => a + b, 0) / v.length
+           : v.reduce((a, b) => a + b, 0);
+    const fr = esc.length === 2 ? '½' : esc.length === 3 ? '⅓' : esc.length === 4 ? '¼' : '1/' + esc.length;
+    partes.push(g.nome + ': ' + (g.regra !== 'soma' && esc.length > 1
+      ? esc.map(o => fr + ' ' + o.nome).join(', ') : esc.map(o => o.nome).join(', ')));
+    esc.forEach(o => ids.push(o.id));
+  }
+  return { preco: Math.round(preco * 100) / 100, texto: partes.join(' · '), ids, falta };
+}
+function npPintarEscolha(){
+  const alvo = document.getElementById('npEscolha'); if(!alvo) return;
+  const e = npEscolha;
+  if(!e){ alvo.innerHTML = ''; return; }
+  const prod = acharProduto(e.pid) || {}, calc = npCalcular();
+  alvo.innerHTML = `<div class="card np-escolha">
+    <b>${escapar(prod.nome)}</b>
+    ${e.grupos.map(g => `<div style="margin-top:8px"><div style="font-size:13px;font-weight:700">${escapar(g.nome)}
+        <span style="font-weight:500;color:var(--txt2)">(${Number(g.min) ? 'obrigatório' : 'opcional'}, até ${g.max})</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px">${(g.opcoes || []).filter(o => o.ativo !== false).map(o => {
+        const on = (e.sel[g.id] || []).includes(o.id);
+        return `<button type="button" class="btn btn-peq ${on ? 'btn-p' : ''}" onclick="npMarcar('${g.id}','${o.id}')">${escapar(o.nome)}${
+          Number(o.preco) ? ' +' + real(Number(o.preco)) : ''}</button>`; }).join('')}</div></div>`).join('')}
+    <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
+      <button type="button" class="btn btn-p btn-peq" onclick="npConfirmarEscolha()">Pôr no pedido · ${real(calc.preco)}</button>
+      <button type="button" class="btn btn-peq" onclick="npEscolha=null;npPintarEscolha()">Cancelar</button>
+      ${calc.falta ? `<span style="font-size:12.5px;color:var(--alerta)">${escapar(calc.falta)}</span>` : ''}
+    </div></div>`;
+}
+function npMarcar(gid, oid){
+  const g = npEscolha.grupos.find(x => x.id === gid); if(!g) return;
+  let sel = npEscolha.sel[gid] || [];
+  if(sel.includes(oid)) sel = sel.filter(x => x !== oid);
+  else if(Number(g.max) === 1) sel = [oid];
+  else if(sel.length < Number(g.max)) sel = sel.concat(oid);
+  npEscolha.sel[gid] = sel; npPintarEscolha();
+}
+function npConfirmarEscolha(){
+  const calc = npCalcular(); if(calc.falta) return;
+  const prod = acharProduto(npEscolha.pid) || {};
+  npItens.push({ pid: npEscolha.pid, nome: prod.nome + (calc.texto ? ' — ' + calc.texto : ''), qtd: 1,
+                 opcoes: calc.ids, texto: calc.texto, preco: calc.preco });
+  npEscolha = null; npPintarEscolha(); npPintarLista();
+}
+function npQtd(i, d){
+  npItens[i].qtd += d;
+  if(npItens[i].qtd < 1) npItens.splice(i, 1);
+  npPintarLista();
+}
+function npPintarLista(){
+  const alvo = document.getElementById('npLista'); if(!alvo) return;
+  alvo.innerHTML = npItens.length ? npItens.map((x, i) => `<div class="np-linha">
+      <span>${escapar(x.nome)}</span>
+      <span class="pd-qtd"><button type="button" onclick="npQtd(${i},-1)">−</button><b>${x.qtd}</b>
+        <button type="button" onclick="npQtd(${i},1)">+</button></span>
+      <b>${real(x.preco * x.qtd)}</b></div>`).join('')
+    : '<p class="secao-sub" style="margin:6px 0 0">Toque nos itens acima para pôr no pedido.</p>';
+  npPintarTotal();
+}
+function npPintarTotal(){
+  const alvo = document.getElementById('npTotal'); if(!alvo) return;
+  const sub = npItens.reduce((s, x) => s + x.preco * x.qtd, 0);
+  const ent = (document.querySelector('input[name="npModo"]:checked') || {}).value === 'entrega';
+  const taxa = ent ? Number((document.getElementById('npTaxa') || {}).value || 0) : 0;
+  alvo.innerHTML = `Subtotal <b>${real(sub)}</b>${ent ? ` · entrega <b>${real(taxa)}</b>` : ''} · <span>Total <b>${real(sub + taxa)}</b></span>`;
+}
+
+async function lancarNovoPedido(){
+  const v = id => ((document.getElementById(id) || {}).value || '').trim();
+  const modo = (document.querySelector('input[name="npModo"]:checked') || {}).value || 'retirada';
+  const origem = (document.querySelector('input[name="npOrigem"]:checked') || {}).value || 'balcao';
+  if(!v('npNome')){ alert('Diga o nome do cliente (no balcão pode ser "Mesa 3" ou o primeiro nome).'); return; }
+  if(!npItens.length){ alert('Ponha pelo menos um item no pedido.'); return; }
+  const pedido = {
+    origem, nome: v('npNome'), telefone: v('npTel') || null, entrega: modo, pagamento: v('npPag'),
+    troco: v('npPag') === 'dinheiro' ? v('npTroco') : '', observacao: v('npObs'),
+    taxa: modo === 'entrega' ? v('npTaxa') : '',
+    endereco: modo === 'entrega' ? { rua: v('npRua'), numero: v('npNum'), bairro: v('npBairro'), referencia: v('npRef') } : null,
+    itens: npItens.map(x => ({ produto: x.pid, quantidade: x.qtd, opcoes: x.opcoes })),
+  };
+  const bt = document.querySelector('.modal .btn-p');
+  if(bt){ bt.disabled = true; bt.textContent = 'Lançando…'; }
+  try{
+    const r = await Dados.chamar('lancar_pedido', { p_salao: salaoAtual, p_pedido: pedido });
+    fecharModal();
+    await carregarPedidos();
+    if(r && r.numero) setTimeout(() => alert('Pedido #' + r.numero + ' lançado: ' + real(Number(r.total)) + ', já em preparo.'), 50);
+  }catch(e){
+    alert('Não consegui lançar o pedido:\n\n' + limparRecusa(e.message));
+    if(bt){ bt.disabled = false; bt.textContent = 'Lançar pedido'; }
+  }
+}
+
 // A configuração dos pedidos, com os mesmos padrões do `cfg_pedidos()` do banco.
 function cfgPedidosDoSalao(){
   const p = ((acharSalao(salaoAtual) || {}).cfg || {}).pedidos || {};
@@ -23120,7 +23346,7 @@ function cartaoDePedido(p){
     <div class="pedido-topo">
       <b>#${escapar(String(p.numero))}</b>
       <span class="tag ${p.status === 'cancelado' ? 't-canc' : p.status === 'entregue' ? 't-conc' : p.status === 'recebido' ? 't-pend' : 't-conf'}">${PEDIDO_ETAPA[p.status] || p.status}</span>
-      <span class="pedido-hora">${horaDoPedido(p.criado_em)}${vivo ? ' · ' + haQuanto(p.criado_em) : ''}</span>
+      <span class="pedido-hora">${p.origem && p.origem !== 'link' ? `<span class="tag">${p.origem === 'telefone' ? 'telefone' : p.origem === 'mesa' ? 'mesa' : 'balcão'}</span> ` : ''}${horaDoPedido(p.criado_em)}${vivo ? ' · ' + haQuanto(p.criado_em) : ''}</span>
     </div>
     <div class="pedido-quem"><b>${escapar(p.nome)}</b>${zap
       ? ` · <a href="${zap}" target="_blank" rel="noopener">${escapar(telefoneNaTela(tel))}</a>` : ''}</div>

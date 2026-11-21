@@ -5303,6 +5303,20 @@ body.tem-cor-produtos .loja-cat.on{
 .pd-cupom.on{ justify-content:space-between; margin-top:14px; padding:10px 12px; border-radius:var(--r);
   border:1px dashed var(--ok); background:var(--su-soft); font-size:14px }
 .pd-desconto b{ color:var(--ok) }
+/* Novo pedido pela equipe (70). */
+.pd-ops-painel{ display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px }
+.np-cardapio{ display:flex; flex-wrap:wrap; gap:6px; max-height:170px; overflow:auto; margin-top:8px;
+  padding:8px; border:1px solid var(--borda); border-radius:var(--r) }
+.np-prod{ display:flex; gap:8px; align-items:center; padding:7px 10px; border:1px solid var(--borda);
+  border-radius:var(--r-pill); background:var(--painel); color:var(--txt); font:inherit; font-size:13px; cursor:pointer }
+.np-prod b{ color:var(--txt2); font-weight:600 }
+.np-prod:hover{ border-color:var(--marca) }
+.np-escolha{ margin-top:10px; padding:12px; box-shadow:none }
+.np-lista{ margin-top:10px }
+.np-linha{ display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--borda); font-size:14px }
+.np-linha > span:first-child{ flex:1; min-width:0 }
+.np-total{ margin-top:6px; padding:10px 12px; border-radius:var(--r); background:var(--painel2); font-size:14px }
+.np-total span{ float:right }
 .pd-etapas{ list-style:none; padding:0; margin:14px 0 }
 .pd-etapas li{ display:flex; gap:12px; align-items:flex-start; padding:8px 0; color:var(--txt3) }
 .pd-etapas li.feito, .pd-etapas li.agora{ color:var(--txt) }
