@@ -1644,6 +1644,19 @@ with conferencia(ordem, item, veredito, detalhe) as (
                                  and tgrelid = 'public.pedidos'::regclass)
               then 'cole o 98_modulos.sql (66_planos_pedihub)' else '' end
   union all
+  /* PediHub (67): complementos e variações do cardápio. */
+  select 84, 'Complementos e variações do cardápio (tamanho, meio a meio, borda)',
+         case when to_regclass('public.produto_grupos') is null
+                or to_regclass('public.produto_opcoes') is null
+                or to_regprocedure('public.opcoes_da_casa(text)') is null
+                or pg_get_functiondef(to_regprocedure('public.fazer_pedido(text,jsonb)')) not like '%preco_com_opcoes%'
+              then 'FALTA' else 'certo' end,
+         case when to_regclass('public.produto_grupos') is null
+                or to_regclass('public.produto_opcoes') is null
+                or to_regprocedure('public.opcoes_da_casa(text)') is null
+                or pg_get_functiondef(to_regprocedure('public.fazer_pedido(text,jsonb)')) not like '%preco_com_opcoes%'
+              then 'cole o 98_modulos.sql (67_complementos)' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um
