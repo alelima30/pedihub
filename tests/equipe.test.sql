@@ -213,20 +213,18 @@ select set_config('request.jwt.claim.sub', '', false);
 select set_config('request.jwt.claim.sub',
                   'e0000000-0000-0000-0000-00000000000d', false);
 
--- Sem ficha, o convite de profissional e recusado NA CRIACAO. Era este o
--- buraco: o convite saia, a pessoa aceitava, e entrava numa agenda em branco
--- porque `meu_profissional_id()` devolvia NULL.
-select t_texto('convite de profissional sem ficha e recusado',
+-- PediHub (77): no restaurante o garcom entra SEM ficha — o nome em cada item
+-- vem do cadastro dele. (No salao a ficha era a coluna da agenda.)
+select t_verdade('no restaurante, o convite de garçom sem ficha vale',
   erro_de($$select public.criar_convite(
-    'e0000000-1111-0000-0000-00000000000a', 'profissional', 'Sem ficha')$$),
-  'Escolha de quem é a agenda. Cadastre a pessoa em Equipe antes de dar o login.');
+    'e0000000-1111-0000-0000-00000000000a', 'profissional', 'Sem ficha')$$) is null);
 
 -- Ficha de outro salao seria dar acesso a agenda alheia.
 select t_texto('e ficha de outro restaurante também',
   erro_de($$select public.criar_convite(
     'e0000000-1111-0000-0000-00000000000a', 'profissional', 'Alheia',
     'e0000000-5555-0000-0000-00000000000b')$$),
-  'Esta agenda não é deste restaurante.');
+  'Esta pessoa não é deste restaurante.');
 
 select (public.criar_convite('e0000000-1111-0000-0000-00000000000a',
           'profissional', 'Bia',
@@ -253,6 +251,6 @@ select t_texto('e a mesma agenda não é dada a mais ninguém',
   erro_de($$select public.criar_convite(
     'e0000000-1111-0000-0000-00000000000a', 'profissional', 'Outra',
     'e0000000-5555-0000-0000-00000000000a')$$),
-  'A agenda de Bia já tem login.');
+  'Bia já tem login.');
 
 select set_config('request.jwt.claim.sub', '', false);

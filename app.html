@@ -2231,7 +2231,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.bd0308';
+const VERSAO_APP = 'v9.6a538f';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -5048,9 +5048,9 @@ async function pintarAcessos(){
 
   alvo.innerHTML = `
     <h3 class="secao">Quem entra no sistema</h3>
-    <p class="secao-sub">Login é diferente de ficha. Quem está aqui abre o
-      PediHub com a própria conta; quem está na lista acima aparece na
-      agenda. A mesma pessoa pode estar nos dois, ou em só um.</p>
+    <p class="secao-sub">Quem está aqui abre o PediHub com a própria conta.
+      Para pôr um garçom ou alguém no caixa, toque em <b>Convidar alguém</b>,
+      escolha o que a pessoa vai fazer e mande o link pelo WhatsApp.</p>
     <div id="listaAcessos"><div class="vazio">Carregando…</div></div>
     <div class="card-acoes">
       <button class="btn btn-p" onclick="abrirConvite()">Convidar alguém</button>
@@ -5134,7 +5134,9 @@ function trocarPapelConvite(){
   const sel   = document.getElementById('vProf');
   if(!bloco || !sel) return;
   const escolhido = document.querySelector('input[name="vPapel"]:checked');
-  const ehProf = escolhido && escolhido.value === 'profissional';
+  /* PediHub (77): no restaurante o garçom entra sem ficha — o nome em cada
+     item vem do cadastro dele. A escolha da ficha é só do salão. */
+  const ehProf = escolhido && escolhido.value === 'profissional' && !restaurantePainel();
   bloco.style.display = ehProf ? '' : 'none';
   if(!ehProf) return;
 
@@ -5158,7 +5160,7 @@ async function gerarConviteAgora(){
   const sel = document.getElementById('vProf');
   // O garçom precisa da ficha dele na Equipe (é ela que leva o nome a cada
   // item lançado). Sem ficha livre, diz o caminho em vez de levar a recusa do banco.
-  if(papel === 'profissional' && !(sel && sel.value)){
+  if(papel === 'profissional' && !restaurantePainel() && !(sel && sel.value)){
     saida.innerHTML = '<div class="aviso">Cadastre a pessoa em <b>Equipe</b> primeiro (o nome dela) e depois gere o convite.</div>';
     return;
   }
@@ -5166,7 +5168,7 @@ async function gerarConviteAgora(){
   try{
     const r = await Dados.chamar('criar_convite',
       { p_salao: salaoAtual, p_papel: papel, p_para_quem: nome || null,
-        p_profissional: papel === 'profissional' && sel ? (sel.value || null) : null });
+        p_profissional: papel === 'profissional' && !restaurantePainel() && sel ? (sel.value || null) : null });
     const link = location.origin + location.pathname.replace(/[^/]*$/, '')
                + 'convite.html?c=' + r.token;
     saida.innerHTML = `

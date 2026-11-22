@@ -1760,6 +1760,14 @@ with conferencia(ordem, item, veredito, detalhe) as (
          case when to_regprocedure('public.exigir_plano_a_venda(uuid,text)') is null
               then 'cole o 98_modulos.sql (76_plano_a_venda)' else '' end
   union all
+  /* PediHub (77): o garçom entra sem ficha; o aviso no celular é do pedido de fora. */
+  select 93, 'Garçom convidado sem ficha, e o aviso no celular do pedido de fora',
+         case when pg_get_functiondef(to_regprocedure('public.criar_convite(uuid,text,text,uuid)')) not like '%v_restaurante%'
+                or pg_get_functiondef(to_regprocedure('public.tg_push_pedido()')) not like '%origem%'
+              then 'FALTA' else 'certo' end,
+         case when pg_get_functiondef(to_regprocedure('public.criar_convite(uuid,text,text,uuid)')) not like '%v_restaurante%'
+              then 'cole o 98_modulos.sql (77_garcom_sem_ficha)' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um

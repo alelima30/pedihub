@@ -79,12 +79,10 @@ await dDona.inserir('produtos', { salaoId: SALAO, nome:'X-Burger', preco:30, cus
 await dDona.atualizar('saloes', SALAO, { cfg:{ pedidos:{ mesas: 6 } } });
 
 // ── Convida o caixa/balcão e um garçom ────────────────────────────────────
-// O garçom tem ficha na Equipe (é ela que leva o nome a cada item lançado).
+// No restaurante o garçom entra SEM ficha (77): o nome em cada item vem do cadastro dele.
 async function convidar(papel, nome, email){
-  const ficha = papel === 'profissional'
-    ? (await dDona.inserir('profissionais', { salaoId: SALAO, nome, ativo:true })).id : null;
   const r = await dDona.chamar('criar_convite',
-    { p_salao: SALAO, p_papel: papel, p_para_quem: nome, p_profissional: ficha });
+    { p_salao: SALAO, p_papel: papel, p_para_quem: nome, p_profissional: null });
   const d = novaAba();
   await d.criarConta({ email, senha:'minhasenhaboa', nome, telefone: tel() });
   await d.chamar('aceitar_convite', { p_token: r.token });
@@ -137,6 +135,21 @@ verdade('e nada do salão (agenda, serviços, pacotes, ranking)',
 igual('e o papel dela aparece na lateral',
   (await pgDona.evaluate(() =>
     (document.getElementById('latQuemPapel') || {}).textContent) || '').trim(), 'Proprietário');
+
+// O convite de garçom, pela tela: não pede ficha nenhuma, e sai o link.
+await pgDona.evaluate(() => { irPara('equipe'); abrirConvite(); });
+await pgDona.waitForTimeout(400);
+await pgDona.click('label.serv-op:has(input[name="vPapel"][value="profissional"])');
+await pgDona.waitForTimeout(200);
+verdade('Equipe → Convidar alguém → garçom: não pede "ficha" nem fala de agenda',
+  !(await pgDona.isVisible('#vFicha')) && !/agenda/i.test(await pgDona.innerText('#modalCorpo')),
+  await pgDona.innerText('#modalCorpo'));
+await pgDona.fill('#vNome', 'Beto, garçom de sábado');
+await pgDona.click('#modalPe button:has-text("Gerar link")');
+await pgDona.waitForSelector('#vLink', { timeout: 8000 }).catch(() => {});
+verdade('e o link do convite sai na hora', /convite\.html\?c=/.test(await pgDona.inputValue('#vLink').catch(() => '')),
+  await pgDona.innerText('#vSaida').catch(() => ''));
+await pgDona.evaluate(() => fecharModal());
 
 /* ══════════════════════════════════════════════════════════════════════════
    2. O CAIXA / BALCÃO
