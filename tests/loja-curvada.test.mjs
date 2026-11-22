@@ -141,8 +141,8 @@ await porCfg({ moldura:'elegante' });
   igual('fundo na cor do botão do restaurante, e não branco', t.addFundo, cor('#B8356B'));
   igual('com a letra calculada para ela (branca sobre o rosa)', t.addLetra, 'rgb(255, 255, 255)');
 
-  secao('3. "Escolha pelo menos 1 produto" num tom da cor do tema');
-  igual('desligado, dizendo o que falta', t.bp.slice(0, 2), [true, 'Escolha pelo menos 1 produto']);
+  secao('3. "Escolha pelo menos 1 item" num tom da cor do tema');
+  igual('desligado, dizendo o que falta', t.bp.slice(0, 2), [true, 'Escolha pelo menos 1 item']);
   verdade('a letra na cor do tema (a escrita da marca), e não o cinza', t.bp[3] === t.ac600rgb,
     `letra ${t.bp[3]}, marca ${t.ac600rgb}`);
   // O color-mix chega como "color(srgb 0.97 0.9 0.93)", e não como rgb().
@@ -162,7 +162,9 @@ await porCfg({ moldura:'elegante' });
       bp: [document.getElementById('btPrincipal').disabled, document.getElementById('btPrincipal').textContent.trim()] };
   });
   igual('vira − 1 +, no mesmo cartão', q.passo, '− 1 +');
-  igual('e o botão de baixo liga para enviar o pedido', [q.noCarrinho, q.bp], [1, [false, 'Enviar pedido no WhatsApp']]);
+  // PediHub: o pedido segue para a confirmação (entrega, pagamento), com o total.
+  verdade('e o botão de baixo liga para seguir o pedido, com o total',
+    q.noCarrinho === 1 && q.bp[0] === false && /^Continuar · R\$\s/.test(q.bp[1]), JSON.stringify(q));
   await p.click('#listaProdutos .pr-cartao .loja-qtd button:last-child');
   await p.waitForTimeout(200);
   igual('o + soma', await p.evaluate(() => itensNoCarrinho()), 2);

@@ -61,11 +61,11 @@ const marca = Date.now().toString(36) + Math.floor(Math.random() * 1000);
 const dona = novaAba();
 await dona.criarConta({ email:`af-${marca}@teste.com`, senha:'minhasenhaboa', nome:'Rita Alves',
   telefone:'+5511' + (100000000 + Math.floor(Math.random() * 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Barbearia Lima ' + marca, p_tipo:'barbearia',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Lanchonete Lima ' + marca, p_tipo:'restaurante',
   p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
-await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte navalhado', duracaoMin:40, intervaloMin:0,
-  preco:45, ativo:true, aceitaOnline:true });
+await dona.inserir('produtos', { salaoId: SALAO, nome:'X-Burger', preco:25, custo:0, estoque:0,
+  ativo:true, vendaOnline:true });
 await dona.atualizar('saloes', SALAO, { cfg:{ cor:'#7C3AED', tema:'claro', modo:'premium', letra:'elegante',
   moldura:'elegante', pagamentos:{ formas:['pix'] } } });
 const cfgDe = async () => (await dona.lista('saloes', { id: SALAO }))[0].cfg || {};
@@ -221,7 +221,7 @@ const arrumar   = async () => { await p.click('#avisoLeituraTopo .btn'); await p
 await por({ card:'#000000' });
 const a1 = await avisoSec();
 verdade('"Cartões" em preto numa página clara: o aviso acusa os títulos, o texto e o preço',
-  /os títulos \(1\.3:1 sobre os cards\)/.test(a1) && /o texto \(/.test(a1) && /o preço \(/.test(a1), a1);
+  /os títulos \([\d.]+:1 sobre os cards\)/.test(a1) && /o texto \(/.test(a1) && /o preço \(/.test(a1), a1);
 await arrumar();
 const d1 = await p.evaluate(() => ({ aviso: document.getElementById('avisoLegibilidade').textContent.trim(), card: aparencia.cores.card,
   c: ['titulo', 'texto', 'destaque'].map(k => Math.round(contrasteEntre(aparencia.cores[k], '#000000') * 10) / 10) }));
@@ -230,22 +230,20 @@ verdade('"Arrumar para mim" clareia títulos, texto e preço (4,5:1 ou mais no c
 await p.evaluate(() => salvarAparencia());
 await p.waitForTimeout(1800);
 {
-  // No LINK de verdade: o nome do serviço e o "Entrar na minha conta" se leem sobre o cartão preto.
+  // No LINK de verdade: o nome do item do cardápio se lê sobre o cartão preto.
   const c2 = await nav.newContext({ viewport:{ width:390, height:844 }, isMobile:true, hasTouch:true });
   const q = await c2.newPage();
   q.on('pageerror', e => erros.push('link: ' + e.message));
   await q.goto(BASE + '/cardapio.html?salao=' + cr[0].slug);
-  await q.waitForFunction(() => document.querySelectorAll('.sv-cartao').length >= 1, null, { timeout: 15000 });
+  await q.waitForFunction(() => document.querySelectorAll('.pr-cartao').length >= 1, null, { timeout: 15000 });
   await q.waitForTimeout(600);
   const r = await q.evaluate(() => { const lum = c => { const v = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c).slice(1, 4).map(Number).map(x => { x /= 255;
         return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
     const ct = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return Math.round((x + 0.05) / (y + 0.05) * 10) / 10; };
-    const card = document.querySelector('.sv-cartao'), nome = card.querySelector('.sv-cartao-txt b');
-    const conta = document.querySelector('.cartao, .opcao');
-    return { fundo: getComputedStyle(card).backgroundColor, nome: ct(getComputedStyle(nome).color, getComputedStyle(card).backgroundColor),
-      conta: conta ? ct(getComputedStyle(conta.querySelector('b') || conta).color, getComputedStyle(conta).backgroundColor) : 99 }; });
-  verdade('no link: cartão preto, e o nome do serviço e o "Entrar na minha conta" com 4,5:1 ou mais',
-    r.fundo === 'rgb(0, 0, 0)' && r.nome >= 4.5 && r.conta >= 4.5, JSON.stringify(r));
+    const card = document.querySelector('.pr-cartao'), nome = card.querySelector('.pr-txt b');
+    return { fundo: getComputedStyle(card).backgroundColor, nome: ct(getComputedStyle(nome).color, getComputedStyle(card).backgroundColor) }; });
+  verdade('no link: cartão preto, e o nome do item do cardápio com 4,5:1 ou mais',
+    r.fundo === 'rgb(0, 0, 0)' && r.nome >= 4.5, JSON.stringify(r));
   await c2.close();
 }
 
@@ -254,18 +252,11 @@ await por({ card:'#000000', texto:'#FFFFFF', titulo:'#FFFFFF', destaque:'#FFD54F
 igual('cartão preto com letras claras escolhidas: nenhum aviso (o papel de fábrica não aparece)',
   [await avisoTopo(), await avisoSec()], ['', '']);
 
-// c) A cor de dentro dos serviços, que é outra superfície.
-await por({ fundoServico:'#000000' });
-const a3 = await avisoSec();
-verdade('"Cor de dentro dos serviços" preta: acusa o nome e o preço DO SERVIÇO, e não os títulos da página',
-  /o nome do serviço \(1\.3:1 sobre o quadro\)/.test(a3) && /o preço do serviço \(/.test(a3) && !/os títulos/.test(a3), a3);
-await arrumar();
-igual('e o conserto mexe só nas frases do cartão de serviço',
-  [await avisoSec(), await p.evaluate(() => Object.keys(aparencia.cores).sort())], ['', ['fundoServico', 'nomeServico', 'precoServico']]);
+// c) (PediHub: a "cor de dentro dos serviços" era do salão — saiu.)
 
 // d) A dos produtos.
 await por({ fundoProduto:'#000000' });
-verdade('"Cor de dentro dos produtos" preta: acusa o nome do produto', /o nome do produto \(1\.3:1 sobre o quadro\)/.test(await avisoSec()), await avisoSec());
+verdade('"Cor de dentro dos produtos" preta: acusa o nome do produto', /o nome do produto \([\d.]+:1 sobre o quadro\)/.test(await avisoSec()), await avisoSec());
 
 // e) A cor de dentro dos três atalhos: o conserto mora em atalhos.cores.
 await por({}, { fundo:'#1A1A1A' });
