@@ -170,8 +170,8 @@ troca estilo.css \
 
 echo "20. a prévia no escuro ignora a moldura dos atalhos"
 troca estilo.css \
-  ".fone-escuro .fone-recurso{ border-color:var(--fone-at-moldura, var(--fone-borda, #25324A));" \
-  ".fone-escuro .fone-recurso{ border-color:var(--fone-borda, #25324A);" \
+  ".fone-escuro .fone-recurso{ border-color:var(--fone-at-moldura, var(--fone-borda, #302A26));" \
+  ".fone-escuro .fone-recurso{ border-color:var(--fone-borda, #302A26);" \
   && rodar "moldura dourada no link, cinza na prévia escura"
 
 echo "20b. o Horários da prévia volta a ser diferente"

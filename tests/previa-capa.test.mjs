@@ -360,7 +360,7 @@ await porCfg({});
   verdade('gradiente: atrás do nome, a coluna pinta o gradiente',
     /app/.test(dentro.quem || '') && /gradient/.test(dentro.imagem || ''), JSON.stringify(dentro));
   verdade('e a margem do computador fica lisa, no papel de fábrica do escuro',
-    !fora.imagem && fora.cor === '#0B1220', JSON.stringify(fora));
+    !fora.imagem && fora.cor === '#141210', JSON.stringify(fora));
   await fechar();
 }
 {
@@ -377,7 +377,7 @@ await porCfg({ tema:'claro', fundoTipo:'solida', gradiente:null,
   const dentro = await atrasDoNome(p);
   const fora = await olhar(p, 120, 500);
   igual('cor sólida: a coluna na cor escolhida', dentro.cor, '#F9D5E5');
-  igual('e a margem no papel de fábrica do claro', fora.cor, '#F6F2E8');
+  igual('e a margem no papel de fábrica do claro', fora.cor, '#FAF6EF');
   await fechar();
 }
 // A foto de fundo mora em cfg.fundo.
@@ -392,7 +392,7 @@ await porCfg({ tema:'claro', fundoTipo:'imagem', gradiente:null, veu:40,
   });
   igual('imagem: a foto de fundo ocupa só a coluna (400 a 880)', r, { esq: 400, larg: 480 });
   const fora = await olhar(p, 120, 500);
-  igual('e a margem fica no papel de fábrica', fora.cor, '#F6F2E8');
+  igual('e a margem fica no papel de fábrica', fora.cor, '#FAF6EF');
   await fechar();
 }
 /* Foto de fundo E papel escolhido: as duas classes no <body>. A coluna tem
@@ -427,7 +427,7 @@ await porCfg({ tema:'claro', fundoTipo:null, gradiente:null, cores:{} });
   const fora = await olhar(p, 120, 500);
   verdade('sem fundo escolhido, o computador é o de sempre: coluna branca…',
     /app/.test(dentro.quem || '') && dentro.cor === '#FFFFFF', JSON.stringify(dentro));
-  igual('…sobre o creme', fora.cor, '#F6F2E8');
+  igual('…sobre o creme', fora.cor, '#FAF6EF');
   await fechar();
 }
 

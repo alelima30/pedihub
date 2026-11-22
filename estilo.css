@@ -964,7 +964,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
    nem texto, e sai da frente assim que escolher. Por isso os `var()` aqui
    também, e não as cores cravadas de antes. */
 .fone-escuro{
-  background:var(--fone-papel, #141416); border-color:#2A2A2E;
+  background:var(--fone-papel, #141210); border-color:#302A26;
   color:var(--fone-texto, #F2F2F3);
 }
 .fone-topo{text-align:center;margin-bottom:14px}
@@ -1135,7 +1135,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
   content:"";position:absolute;inset:0;background:var(--fone-papel, var(--painel2));
   opacity:var(--veu, .84);
 }
-.fone-escuro .fone-fundo::after{ background:var(--fone-papel, #141416) }
+.fone-escuro .fone-fundo::after{ background:var(--fone-papel, #141210) }
 /* O gradiente na prévia. Ela não desenhava gradiente nenhum: o dono escolhia
    "Gradiente", o celular ao lado continuava liso, e a conclusão natural era
    que a opção não funcionava. Mais específico que o .fone-escuro de cima de
@@ -1358,7 +1358,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
 .fone-pr.reta .fone-cartao-foto{ -webkit-mask-image:none; mask-image:none; margin-bottom:0 }
 .fone-pr .fone-cartao-foto{ display:grid; place-items:center; color:var(--fone-discreto, var(--txt3)) }
 /* Produto sem foto: o fundo é o cartão um tom acima, como o .pr-foto da
-   página — e não o cinza #26262A das fotos de serviço do escuro antigo. */
+   página — e não o cinza #231F1C das fotos de serviço do escuro antigo. */
 .fone .fone-pr .fone-cartao-foto{
   background-color:color-mix(in srgb, var(--fone-card, var(--painel)) 93%, #fff) }
 .fone-pr .fone-cartao-foto [data-ico], .fone-pr .fone-cartao-foto svg{ width:18px; height:18px }
@@ -1414,7 +1414,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
   width:44px;height:44px;border-radius:10px;flex:none;
   background:var(--borda) center/cover no-repeat;
 }
-.fone-escuro .fone-sv-foto{background-color:#26262A}
+.fone-escuro .fone-sv-foto{background-color:#231F1C}
 .fone-sv-txt b{display:block;font-size:12px;line-height:1.3;
   color:var(--fone-titulo, inherit)}
 /* O preço é "Texto de destaque e preço": na página ele é o --ac-600 (a marca
@@ -1440,13 +1440,13 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
   background:var(--fone-card, var(--painel));
   box-shadow:var(--sombra-xs); padding-bottom:2px;
 }
-.fone-escuro .fone-cartao{ background:var(--fone-card, #1D1D20) }
+.fone-escuro .fone-cartao{ background:var(--fone-card, #1C1917) }
 .fone-cartao-txt b{ color:var(--fone-titulo, inherit) }
 .fone-cartao-foto{
   aspect-ratio:1 / 1; background:var(--borda) center/cover no-repeat;
   display:block;
 }
-.fone-escuro .fone-cartao-foto{ background-color:#26262A }
+.fone-escuro .fone-cartao-foto{ background-color:#231F1C }
 @supports (mask-image: linear-gradient(#000, #000)) or
           (-webkit-mask-image: linear-gradient(#000, #000)) {
   .fone-cartao-foto{
@@ -1468,7 +1468,7 @@ td, .tabela td, .hslot, .horas button, .cs-rodape .vv, .vv{
   display:flex; align-items:center; gap:5px; flex-wrap:wrap;
   border-top:1px solid var(--borda); padding:6px 20px 0 0;
 }
-.fone-escuro .fone-cartao-linha{ border-top-color:#2A2A2E }
+.fone-escuro .fone-cartao-linha{ border-top-color:#302A26 }
 .fone-cartao-linha .fone-preco{ font-size:11.5px }
 .fone-cartao-dur{ font-size:10.5px; opacity:.6 }
 /* Cada frase de baixo com a cor dela, na prévia. Com `.fone` na frente para
@@ -4703,8 +4703,8 @@ body.com-folha{ overflow:hidden }
 /* Com "Letras claras" os cartões da página são escuros — a prévia mostrava
    os três botões brancos, e o dono aprovava uma fileira que não ia ao ar.
    Borda e letra são as do tema escuro da página (--borda e --txt2). */
-.fone-escuro .fone-recurso{ border-color:var(--fone-at-moldura, var(--fone-borda, #25324A));
-  color:var(--fone-at-tinta, var(--fone-texto, #A3B2C7)) }
+.fone-escuro .fone-recurso{ border-color:var(--fone-at-moldura, var(--fone-borda, #302A26));
+  color:var(--fone-at-tinta, var(--fone-texto, #B8AFA6)) }
 /* Na prévia também os três são iguais: sem o Horários tingido (ver .recurso). */
 /* O estilo dos atalhos na prévia — as mesmas regras do [data-atalhos] da
    página, com a sombra na escala da prévia (sombraDaPrevia). `borda` é o
@@ -4725,7 +4725,7 @@ body.com-folha{ overflow:hidden }
   background:color-mix(in srgb, var(--st-cor) 11%, var(--fone-card, var(--painel)));
   border:1px solid var(--st-linha); color:var(--fone-texto, var(--txt2));
 }
-.fone-escuro .fone-status{ color:var(--fone-texto, #A3B2C7) }
+.fone-escuro .fone-status{ color:var(--fone-texto, #B8AFA6) }
 .fone-status.aberto { --st-cor:var(--fone-su);
   --st-linha:color-mix(in srgb, var(--st-cor) 30%, var(--fone-card, var(--painel))) }
 .fone-status.fechado{ --st-cor:var(--fone-er);
@@ -4734,7 +4734,7 @@ body.com-folha{ overflow:hidden }
 .fone-status b{ color:var(--st-cor); letter-spacing:.03em }
 .fone-status-sep{ width:1px; align-self:stretch; background:var(--st-linha); flex:none }
 .fone-status-txt{ flex:1; min-width:0; color:var(--fone-horario, var(--fone-texto, var(--txt2))) }
-.fone-escuro .fone-status-txt{ color:var(--fone-horario, var(--fone-texto, #A3B2C7)) }
+.fone-escuro .fone-status-txt{ color:var(--fone-horario, var(--fone-texto, #B8AFA6)) }
 /* A letra de cada botão da prévia, e o ícone dela, como na página. */
 .fone-cta[data-cfg="agendar"]{ color:var(--fone-letraAgendar, var(--fone-marca-txt)) }
 .fone-cta.fone-cta-prod{ color:var(--fone-letraProdutos, var(--fone-marca-txt)) }
