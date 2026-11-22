@@ -2231,7 +2231,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.6ba182';
+const VERSAO_APP = 'v9.b228e7';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23056,6 +23056,8 @@ const PEDIDO_PAGAMENTO = { pix:'Pix', dinheiro:'Dinheiro', debito:'Cartão de d�
   cartao:'Cartão', na_mesa:'Paga na mesa, no fim' };
 const PEDIDO_ETAPA = { recebido:'Novo', em_preparo:'Em preparo', saiu:'Saiu para entrega',
   pronto:'Pronto para retirar', entregue:'Entregue', cancelado:'Cancelado' };
+// A etiqueta de onde veio o pedido (o do link não leva etiqueta).
+const ORIGEM_DO_PEDIDO = { telefone:'telefone', mesa:'mesa', balcao:'balcão' };
 // Na mesa não se "retira" nem se "entrega": fica pronto para servir, e é servido.
 function etapaDoPedido(p, st){
   st = st || p.status;
@@ -23497,7 +23499,7 @@ function cartaoDePedido(p){
       <b>#${escapar(String(p.numero))}</b>
       <span class="tag ${p.status === 'cancelado' ? 't-canc' : p.status === 'entregue' ? 't-conc' : p.status === 'recebido' ? 't-pend' : 't-conf'}">${etapaDoPedido(p)}</span>
       ${atrasados ? `<span class="tag t-atrasado">${atrasados} atrasado${atrasados > 1 ? 's' : ''}</span>` : ''}
-      <span class="pedido-hora">${p.origem && p.origem !== 'link' ? `<span class="tag">${p.origem === 'telefone' ? 'telefone' : p.origem === 'mesa' ? 'mesa' : 'balcão'}</span> ` : ''}${horaDoPedido(p.criado_em)}${vivo ? ' · ' + haQuanto(p.criado_em) : ''}</span>
+      <span class="pedido-hora">${p.origem && p.origem !== 'link' ? `<span class="tag">${ORIGEM_DO_PEDIDO[p.origem] || 'balcão'}</span> ` : ''}${horaDoPedido(p.criado_em)}${vivo ? ' · ' + haQuanto(p.criado_em) : ''}</span>
     </div>
     <div class="pedido-quem"><b>${escapar(p.nome)}</b>${zap
       ? ` · <a href="${zap}" target="_blank" rel="noopener">${escapar(telefoneNaTela(tel))}</a>` : ''}</div>

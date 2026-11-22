@@ -70,16 +70,11 @@ const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const d = novaAba();
 await d.criarConta({ email:`ap-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Rafael Souza', telefone:'+5551' + (100000000 + (Date.now() % 89999999)) });
-const criado = await d.chamar('criar_salao', { p_nome_salao:'Barbearia ' + marca,
-  p_tipo:'barbearia', p_telefone:'(51) 99887-6655', p_documento:null, p_origem:null });
+const criado = await d.chamar('criar_salao', { p_nome_salao:'Hamburgueria ' + marca,
+  p_tipo:'restaurante', p_telefone:'(51) 99887-6655', p_documento:null, p_origem:null });
 const salaoId = criado[0].salao_id, SLUG = criado[0].slug;
-const prof = (await d.lista('profissionais', { salaoId }))[0];
-for(let i = 0; i <= 6; i++){
-  await d.inserir('jornadas', { profissionalId: prof.id, diaSemana:i,
-                                inicio:'09:00', fim:'19:00' });
-}
-await d.inserir('servicos', { salaoId, nome:'Corte navalhado', preco:40,
-  duracaoMin:30, intervaloMin:0, ativo:true, aceitaOnline:true });
+await d.inserir('produtos', { salaoId, nome:'X-Burger', preco:40, custo:0, estoque:0,
+  ativo:true, vendaOnline:true });
 ok('restaurante de teste criado');
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
@@ -149,29 +144,13 @@ verdade('as sete cores da paleta dão botão legível', todasOk,
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Preço na capa, ligado e desligado');
 
-verdade('ligado, o valor aparece no cartão do serviço',
-  await p.isVisible('.sv-cartao-preco'));
-
-/* ── E O TÍTULO NÃO PODE SAIR DUAS VEZES ───────────────────────────────────
-   A capa tinha um "O que oferecemos" fixo no HTML e a lista escrevia o nome
-   da categoria logo abaixo — então a tela mostrava dois títulos empilhados,
-   dizendo a mesma coisa. Com uma categoria só, sai um. */
-const titulos = await p.evaluate(() =>
-  [...document.querySelectorAll('#capaServicos .cat, #capaServicos .cat-sub')]
-    .map(e => e.textContent.trim()));
-igual('e o título dos serviços sai UMA vez — ' + JSON.stringify(titulos),
-  titulos.length, 1);
-// "Tem que aparecer Nossos serviços, e não cortes" — a barbearia faz barba também.
-igual('com o vocabulário da barbearia', titulos[0], 'Nossos serviços');
+/* PediHub: o "preço na capa" era dos cartões de serviço do salão — saiu. */
 igual('sem erro de JavaScript', p.erros.length ? p.erros.join(' | ') : 0, 0);
 await p.close();
 
 await d.atualizar('saloes', salaoId, { cfg:{ diasLiberados:30,
   cor:'#B0316A', tema:'claro', precoNaCapa:false } });
 const q = await abrir();
-verdade('desligado, o valor some da capa', !(await q.isVisible('.sv-cartao-preco')));
-verdade('mas o serviço continua lá, com a duração',
-  await q.isVisible('.sv-cartao-dur'));
 igual('o fundo volta ao claro', await q.getAttribute('html', 'data-tema'), null);
 igual('e a cor acompanha',
   await q.evaluate(() => getComputedStyle(document.documentElement)
@@ -180,15 +159,6 @@ igual('sobre o rosa, a letra volta a ser branca',
   await q.evaluate(() => getComputedStyle(document.querySelector('.boas-cta')).color),
   'rgb(255, 255, 255)');
 
-/* O preço não some do sistema, só da CAPA: na hora de escolher o serviço ele
-   é informação necessária, e esconder ali seria esconder o que se vai pagar. */
-await q.click('.boas-cta');
-await q.waitForTimeout(900);
-const naEscolha = await q.evaluate(() =>
-  document.getElementById('listaServicos').innerText);
-verdade('e no passo de escolher o serviço o preço aparece de qualquer jeito — '
-        + JSON.stringify(naEscolha.replace(/\s+/g,' ').slice(0, 60)),
-  /R\$\s*40/.test(naEscolha));
 igual('sem erro de JavaScript no tema claro',
   q.erros.length ? q.erros.join(' | ') : 0, 0);
 await q.close();
@@ -401,32 +371,13 @@ igual('o endereço traz rua e número na primeira linha',
 igual('e bairro com cidade/UF na segunda',
   endereco && endereco.lugar, 'Bairro Cidade Nova · Itu/SP');
 
-igual('barbearia nasce com a letra marcante, sem ninguém configurar',
-  await mc.getAttribute('.marca-salao', 'data-letra'), 'marcante');
-verdade('que é caixa alta — a letra de placa de barbearia',
-  await mc.evaluate(() => getComputedStyle(
-    document.querySelector('.marca-salao h2')).textTransform === 'uppercase'));
-
 /* A logo tem que SOBREVIVER à capa. Ela aparecia lá e sumia da tela seguinte
    em diante, e é justamente na hora de escolher serviço e horário que o topo
    é a única coisa dizendo de quem é a página. */
-await mc.click('.boas-cta');
+await mc.click('#btPrincipal');
 await mc.waitForTimeout(900);
 verdade('e continua no topo depois de sair da capa',
   await mc.evaluate(() => !!document.querySelector('#avatarSalao img')));
-
-/* A cor escolhida manda na SELEÇÃO, não só no botão principal. Antes o dono
-   escolhia dourado e tudo o que ele via marcado continuava preto. (Era o
-   "Para mim" do segmento; o "para quem" virou a Etapa 2, e a seleção que
-   fica nesta tela é a do serviço escolhido.) */
-await mc.click('#listaServicos .sv-cartao');
-await mc.waitForTimeout(300);
-const selecionado = await mc.evaluate(() => {
-  const b = document.querySelector('#listaServicos .sv-cartao.sel');
-  return b ? getComputedStyle(b).borderTopColor : null;
-});
-igual('o serviço escolhido usa a cor do restaurante, não o preto do sistema',
-  selecionado, 'rgb(200, 163, 60)');
 
 // E a marca do PediHub NÃO acompanha: ela é de outra empresa.
 verdade('mas a marca do PediHub não vira dourada junto',
@@ -501,8 +452,8 @@ secao('A prévia em Meu negócio');
   verdade('mostra a faixa de capa', partes.capa, JSON.stringify(partes));
   verdade('a logo e o nome', partes.logo && partes.nome);
   verdade('o botão principal', partes.botao);
-  verdade('o slide', partes.slide);
-  verdade('e os serviços com quem atende', partes.svs >= 2, 'vieram ' + partes.svs);
+  // PediHub: o slide "dos serviços" e a lista de serviços da prévia eram do salão.
+  verdade('e nenhum serviço de salão na prévia do restaurante', partes.svs === 0, 'vieram ' + partes.svs);
 
   /* A ordem: botão ANTES do slide, como na página. Estava trocado. */
   verdade('na ordem da página de verdade: botão, depois slide',

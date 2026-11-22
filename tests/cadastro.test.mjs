@@ -166,7 +166,7 @@ console.log('\nO funil inteiro');
   verdade('o link aparece enquanto se digita o nome do restaurante',
     (await p.textContent('.previa-link')).includes('studio-prado'));
 
-  await p.click('button.grande:has-text("Criar minha agenda")');
+  await p.click('button.grande:has-text("Criar meu cardápio")');
   await p.waitForTimeout(900);
   igual('chega no passo 3', await passoAtual(p), 3);
   verdade('e entrega o link pronto',
@@ -176,8 +176,8 @@ console.log('\nO funil inteiro');
   /* "Quando termino o cadastro não aparece que plano estou, não diz que tenho
      direito a 7 dias grátis" — agora é um quadro, com a data. */
   const quadro = await p.textContent('#quadroTeste').catch(() => '');
-  verdade('e um quadro diz o plano (Teste grátis), os 30 dias, as 2 profissionais e até quando',
-    /Teste grátis/.test(quadro) && /30 dias/.test(quadro) && /2 profissionais/.test(quadro) && /\d{2}\/\d{2}\/\d{4}/.test(quadro) && /sem cobrança/i.test(quadro),
+  verdade('e um quadro diz o plano (Teste grátis), os 30 dias e até quando',
+    /Teste grátis/.test(quadro) && /30 dias/.test(quadro) && /\d{2}\/\d{2}\/\d{4}/.test(quadro) && /sem cobrança/i.test(quadro),
     quadro);
 
   verdade('e, na demonstração, o rodapé avisa que nada vai para servidor',

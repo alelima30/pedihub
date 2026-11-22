@@ -5,9 +5,10 @@
      PLAYWRIGHT=/caminho/node_modules/playwright node tests/seguranca.test.mjs
 
    ── O QUE ESTAVA ABERTO ────────────────────────────────────────────────────
-   `agendar()` é liberada para `anon` de propósito: a cliente marca horário sem
-   criar conta, e é isso que faz o link funcionar. O nome que ela digita vai
-   direto para `clientes.nome`.
+   `fazer_pedido()` é liberada para `anon` de propósito: o cliente pede sem
+   criar conta, e é isso que faz o link funcionar. O nome, a observação e a
+   observação de cada item vão direto para o pedido.
+   (Escrito para a agenda do salão; no PediHub, o mesmo risco é o pedido.)
 
    Do outro lado, o painel do dono desenhava a agenda com
 
@@ -42,7 +43,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
-import { maisDias, deslocamento } from './dia.mjs';
 
 const exigir = createRequire(import.meta.url);
 const { chromium } = exigir(process.env.PLAYWRIGHT || 'playwright');
@@ -80,109 +80,89 @@ const d = novaAba();
 await d.criarConta({ email:`seg-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Dona do Restaurante', telefone:'+5511' + (100000000 + (Date.now() % 89999999)) });
 const criado = await d.chamar('criar_salao', { p_nome_salao:'Restaurante ' + marca,
-  p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
+  p_tipo:'restaurante', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const salaoId = criado[0].salao_id, SLUG = criado[0].slug;
-const prof = (await d.lista('profissionais', { salaoId }))[0];
-for(let i = 0; i <= 6; i++)
-  await d.inserir('jornadas', { profissionalId: prof.id, diaSemana:i,
-                                inicio:'08:00', fim:'20:00' });
-const servico = await d.inserir('servicos', { salaoId, nome:'Corte', duracaoMin:30,
-  preco:50, ativo:true, aceitaOnline:true });
+const lanche = await d.inserir('produtos', { salaoId, nome:'X-Burger', preco:20, custo:0, estoque:0,
+  ativo:true, vendaOnline:true });
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 
 /* ══════════════════════════════════════════════════════════════════════════
-   1. QUEM MARCA UM HORÁRIO NÃO ESCREVE NA SESSÃO DO DONO
+   1. QUEM FAZ UM PEDIDO NÃO ESCREVE NA SESSÃO DO DONO
 
-   O caminho completo, sem atalho: chamada anônima ao `agendar()` — só com a
-   chave publicável, a mesma que está à vista no config.js — e depois o painel
-   do dono aberto de verdade, no navegador, com a sessão dele.
+   O caminho completo, sem atalho: chamada anônima ao `fazer_pedido()` — só
+   com a chave publicável, a mesma que está à vista no config.js — e depois o
+   painel do dono aberto de verdade, no navegador, com a sessão dele.
    ══════════════════════════════════════════════════════════════════════════ */
-secao('A cliente marca horário com um nome hostil');
+secao('O cliente faz um pedido com um nome hostil');
 
-/* Amanhã NO RESTAURANTE, não amanhã no relógio deste processo.
-
-   O `mudarDia(1)` lá embaixo anda um dia a partir do `hoje()` do painel, que
-   é o dia do restaurante. Com a bancada em UTC e o restaurante em America/Sao_Paulo, das
-   00:00 às 03:00 UTC os dois calendários discordam: o horário era marcado
-   num dia e o painel abria noutro, e as três verificações de baixo
-   reprovavam dizendo que a agenda estava vazia — culpando o escape de texto,
-   que não tinha nada a ver. */
-const amanha = maisDias(1);
-const marcado = await fetch(BASE + '/rest/v1/rpc/agendar', {
+const pedir = (nome, extra = {}) => fetch(BASE + '/rest/v1/rpc/fazer_pedido', {
   method:'POST', headers:{ apikey:'k', 'Content-Type':'application/json' },
-  body: JSON.stringify({ p_profissional: prof.id,
-    p_inicio: amanha + 'T13:00:00' + deslocamento(amanha),
-    p_servicos:[servico.id],
-    p_nome: CARGA('agenda') + 'Maria', p_telefone:'11977665544',
-    p_obs: CARGA('obs') }) });
-verdade('o banco aceita a marcação — é para aceitar, ela é uma cliente',
-  marcado.ok, 'se isto falhar o resto do teste não prova nada');
+  body: JSON.stringify({ p_slug: SLUG, p_pedido: Object.assign({ nome, telefone:'11977665544',
+    entrega:'retirada', pagamento:'pix',
+    itens:[{ produto: lanche.id, quantidade: 1, observacao: CARGA('item') }] }, extra) }) });
+const pedido = await pedir(CARGA('pedido') + 'Maria', { observacao: CARGA('obs') });
+verdade('o banco aceita o pedido — é para aceitar, ele é um cliente',
+  pedido.ok, 'se isto falhar o resto do teste não prova nada');
 
 const painel = await nav.newContext().then(c => c.newPage());
 const errosPainel = [];
 painel.on('pageerror', e => errosPainel.push(e.message));
+painel.on('dialog', x => x.dismiss());
 await painel.addInitScript(([base, ses]) => {
   window.PEDIHUB = { url: base, chave:'k', ambiente:'bancada' };
   localStorage.setItem('pedihub.sessao', JSON.stringify(ses));
 }, [BASE, d.sessao()]);
 await painel.goto(BASE + '/app.html');
 await painel.waitForTimeout(3500);
-await painel.evaluate(() => mudarDia(1));
+await painel.evaluate(() => { irPara('pedidos'); return carregarPedidos(); });
 await painel.waitForTimeout(1200);
 
-const naAgenda = await painel.evaluate(() => ({
+const naLista = await painel.evaluate(() => ({
   invadido: window.INVADIDO || null,
-  cartoes: document.querySelectorAll('.ag').length,
-  texto: (document.querySelector('.ag b') || {}).textContent || '',
-  imgs: document.querySelectorAll('.ag img').length,
+  cartoes: document.querySelectorAll('.pedido-cartao').length,
+  texto: (document.querySelector('.pedido-cartao .pedido-quem b') || {}).textContent || '',
+  imgs: document.querySelectorAll('.pedido-cartao img').length,
 }));
-verdade('o horário aparece na agenda do dono', naAgenda.cartoes === 1,
-  JSON.stringify(naAgenda));
-igual('e o nome NÃO vira código na sessão dele', naAgenda.invadido, null);
+verdade('o pedido aparece na tela de Pedidos', naLista.cartoes === 1, JSON.stringify(naLista));
+igual('e o nome NÃO vira código na sessão do dono', naLista.invadido, null);
 verdade('nenhuma tag entrou junto — é texto, e só',
-  naAgenda.imgs === 0, `entraram ${naAgenda.imgs} <img>`);
+  naLista.imgs === 0, `entraram ${naLista.imgs} <img>`);
 /* E tem que continuar LEGÍVEL: escapar não pode virar "some com o nome".
    O dono precisa ver o que a pessoa digitou, inclusive para desconfiar. */
 verdade('o dono lê o nome exatamente como foi digitado',
-  naAgenda.texto.includes('<img src=x') && naAgenda.texto.includes('Maria'),
-  JSON.stringify(naAgenda.texto));
+  naLista.texto.includes('<img src=x') && naLista.texto.includes('Maria'),
+  JSON.stringify(naLista.texto));
 
 /* ── E O ERRO QUE COSTUMA VIR JUNTO COM O CONSERTO ────────────────────────
    Escapar duas vezes transforma `&` em `&amp;` NA TELA. Ninguém percebe
-   testando com `<script>`; percebe a dona da "Tesoura & Cia" vendo o nome da
-   cliente sair errado na agenda dela. Então: um nome comum, com os três
-   caracteres que o escapar mexe, tem que aparecer letra por letra igual. */
-const COMUM = `Ana D'Ávila & Cia "Tesoura"`;
-await fetch(BASE + '/rest/v1/rpc/agendar', {
-  method:'POST', headers:{ apikey:'k', 'Content-Type':'application/json' },
-  body: JSON.stringify({ p_profissional: prof.id,
-    p_inicio: amanha + 'T15:00:00-03:00', p_servicos:[servico.id],
-    p_nome: COMUM, p_telefone:'11966554433' }) });
-// Recarrega: o painel baixou os dados antes desta segunda marcação existir.
-await painel.reload();
-await painel.waitForTimeout(3500);
-await painel.evaluate(() => mudarDia(1));
+   testando com `<script>`; percebe a dona da "Lanches & Cia" vendo o nome
+   do cliente sair errado. Então: um nome comum, com os três caracteres que o
+   escapar mexe, tem que aparecer letra por letra igual. */
+const COMUM = `Ana D'Ávila & Cia "Lanches"`;
+await pedir(COMUM, { telefone:'11966554433' });
+await painel.evaluate(() => carregarPedidos());
 await painel.waitForTimeout(1200);
 igual('e um nome comum com & e aspas não vira &amp; na tela',
   await painel.evaluate(() => {
-    const c = [...document.querySelectorAll('.ag b')]
+    const c = [...document.querySelectorAll('.pedido-cartao .pedido-quem b')]
       .find(x => x.textContent.includes('Ana'));
-    return c ? c.textContent.replace(/^\d\d:\d\d /, '') : null;
+    return c ? c.textContent : null;
   }), COMUM);
 
-// A ficha da cliente e o detalhe do horário — os outros dois lugares onde o
-// mesmo nome é desenhado, cada um com o seu próprio `innerHTML`.
+// Os outros lugares onde o mesmo nome é desenhado, cada um com o seu innerHTML.
+await painel.evaluate(() => { const c = [...document.querySelectorAll('.pedido-cartao')].find(x => /Maria/.test(x.textContent));
+  const id = c && c.dataset.pedido; if(id) imprimirPedido(id); });
+await painel.waitForTimeout(900);
+igual('nem na impressão do pedido',
+  await painel.evaluate(() => window.INVADIDO || null), null);
 await painel.evaluate(() => irPara('clientes'));
 await painel.waitForTimeout(900);
 igual('nem na lista de clientes',
   await painel.evaluate(() => window.INVADIDO || null), null);
-
-await painel.evaluate(() => { irPara('agenda'); mudarDia(1); });
-await painel.waitForTimeout(900);
-await painel.evaluate(() => { const c = document.querySelector('.ag'); if(c) c.click(); });
-await painel.waitForTimeout(900);
-igual('nem no detalhe do horário, com a observação junto',
+await painel.evaluate(() => irPara('hoje'));
+await painel.waitForTimeout(1500);
+igual('nem na aba Hoje',
   await painel.evaluate(() => window.INVADIDO || null), null);
 
 igual('e o painel não quebrou no caminho',
@@ -225,8 +205,9 @@ await pag.close();
    ══════════════════════════════════════════════════════════════════════════ */
 secao('O nome do restaurante, na tela da cliente');
 
-await d.atualizar('saloes', salaoId, { nome: CARGA('salao') + 'Studio' });
-await d.atualizar('servicos', servico.id, { nome: CARGA('servico') + 'Corte' });
+await d.atualizar('saloes', salaoId, { nome: CARGA('salao') + 'Lanchonete' });
+await d.atualizar('produtos', lanche.id, { nome: CARGA('produto') + 'X-Burger',
+  descricao: CARGA('descricao') + 'Pão e carne' });
 
 const cli = await nav.newContext().then(c => c.newPage());
 await cli.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
@@ -235,9 +216,13 @@ await cli.waitForTimeout(2800);
 igual('a capa mostra o nome sem executá-lo',
   await cli.evaluate(() => window.INVADIDO || null), null);
 
-await cli.click('.boas-cta');
+await cli.click('#btPrincipal');
 await cli.waitForTimeout(1200);
-igual('e a lista de serviços também',
+igual('e o cardápio também (nome e descrição do item)',
+  await cli.evaluate(() => window.INVADIDO || null), null);
+await cli.evaluate(() => { const x = (bd.produtos || [])[0]; if(x) abrirProduto(x.id); });
+await cli.waitForTimeout(800);
+igual('e a tela do item aberto',
   await cli.evaluate(() => window.INVADIDO || null), null);
 await cli.close();
 
@@ -259,7 +244,7 @@ const CAMPOS = /(nome|apelido|obs|motivo|legenda|descricao|categoria|telefone|lo
 /* Escapar aqui não protegeria — ou estragaria a tela. */
 const PODE_CRU = [
   { porque: 'o trecho já devolve HTML de propósito',
-    vale: (e) => /\bmedidor\(|\bico\(|<[a-z]/i.test(e) },
+    vale: (e) => /\bmedidor\(|\bico\(|\bblocoComplementos\(|<[a-z]/i.test(e) },
   /* "Segunda-feira", "Terça-feira"… — a lista fixa do funcionamento.js. O
      padrão casa por causa do "NOMES" no nome da constante, e não por ser
      texto de gente: ninguém digita o nome do dia. O `seletorHora()` entra
@@ -277,6 +262,18 @@ const PODE_CRU = [
 const LINHA_PODE_CRU = [
   { porque: 'o título do abrirModal() vai por textContent, que não lê HTML',
     vale: (l) => /^\s*abrirModal\(`/.test(l) },
+  /* PediHub (67): a conferência dos complementos junta as mensagens em
+     `fora`, e a primeira vai para alert() — texto puro, não HTML. */
+  { porque: 'mensagem de validação que vai para alert()',
+    vale: (l) => /\bfora\.push\(`/.test(l) },
+  /* O "falta" da escolha dos complementos sai na tela por escapar(calc.falta)
+     (cardapio.html e o "+ Novo pedido"): é escapado onde aparece. */
+  { porque: 'o falta dos complementos é escapado onde aparece',
+    vale: (l) => /\bfalta = (Number\(g\.min\) === 1 \? )?`/.test(l) },
+  /* O recado do link do entregador (75) vai para o WhatsApp por
+     encodeURIComponent — não entra em HTML nenhum. */
+  { porque: 'texto do recado do WhatsApp, que vai por encodeURIComponent',
+    vale: (l) => /^\s*const texto = `Oi, \$\{nome\}! Este é o seu link de entregas/.test(l) },
 ];
 
 /* String JS dentro de atributo (`onclick="f('${x}')"`): o parser de HTML

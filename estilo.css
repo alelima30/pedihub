@@ -4650,8 +4650,10 @@ body.com-folha{ overflow:hidden }
 }
 .func-tirar svg{ width:16px; height:16px }
 .func-mais{
-  margin-top:9px; border:0; background:none; padding:4px 0; cursor:pointer;
+  margin-top:3px; border:0; background:none; padding:4px 0; cursor:pointer;
   color:var(--ac-600); font:inherit; font-size:13.5px; font-weight:650;
+  /* 40px de altura para o dedo (no celular, 4px de folga era alvo de 26px). */
+  min-height:40px; display:inline-flex; align-items:center;
 }
 /* Os controles da sombra dos atalhos. Apagados, e não escondidos, quando o
    estilo não é "Com assombreamento": o dono vê que existem e o que liga. */
