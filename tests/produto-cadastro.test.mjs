@@ -54,7 +54,7 @@ const dona = novaAba();
 await dona.criarConta({ email:`pc-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
 const cr = await dona.chamar('criar_salao', { p_nome_salao:'Casa ' + marca,
-  p_tipo:'salao', p_telefone:'(11) 3222-1100', p_documento:null, p_origem:null });
+  p_tipo:'restaurante', p_telefone:'(11) 3222-1100', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
 
@@ -135,19 +135,23 @@ console.log('      ' + JSON.stringify(soEscondido.fita.replace(/\s+/g, ' ')));
    grátis; o certo é dizer que o valor não está escrito. */
 verdade('só o produto de preço escondido: a fita não anuncia R$ 0,00',
   !/R\$\s*0,00/.test(soEscondido.fita), soEscondido.fita);
-verdade('ela diz que o valor é a combinar',
-  /a combinar/.test(soEscondido.fita), soEscondido.fita);
-verdade('e a mensagem do WhatsApp também',
-  /Total estimado: a combinar/.test(soEscondido.pedido),
-  soEscondido.pedido.slice(-120));
+/* No PediHub (modo Pedidos) o item sem preço nem entra no cardápio do link:
+   o banco recusaria o pedido com ele (72: "está sem preço no cardápio e não
+   pode ser pedido pelo link"). Então ele não conta, e o carrinho fica vazio. */
+igual('o item sem preço não entra no carrinho do link', Number(soEscondido.soma), 0);
+verdade('e a mensagem do WhatsApp não o lista',
+  !/Shampoo/.test(soEscondido.pedido), soEscondido.pedido.slice(-160));
 
 const misturado = await carrinho([shampoo.id, mascara.id]);
 console.log('      ' + JSON.stringify(misturado.fita.replace(/\s+/g, ' ')));
 /* ⚠ O TOTAL PARCIAL PRECISA SE DECLARAR PARCIAL. R$ 60,00 sozinho, com um
    item sem preço no carrinho, é um número que o restaurante nunca disse. */
-verdade('carrinho misto: o total aparece, mas dizendo que falta preço',
-  /a combinar/.test(misturado.fita) && /60,00/.test(misturado.fita),
+verdade('carrinho misto: o total é só o do item com preço, sem "a combinar"',
+  !/a combinar/.test(misturado.fita) && /60,00/.test(misturado.fita),
   misturado.fita);
+verdade('e a mensagem lista só ele',
+  /Mascara/.test(misturado.pedido) && !/Shampoo/.test(misturado.pedido),
+  misturado.pedido.slice(-200));
 igual('e a soma continua contando só o que tem preço',
   Number(misturado.soma), 60);
 await nav0.close();

@@ -64,16 +64,8 @@ const dona = novaAba();
 await dona.criarConta({ email:`cv-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
 const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
-  p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
+  p_tipo:'restaurante', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
-const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
-for(let i = 0; i <= 6; i++){
-  await dona.inserir('jornadas', { profissionalId: prof.id, diaSemana:i,
-                                   inicio:'08:00', fim:'19:00' });
-}
-await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte feminino',
-  duracaoMin:30, intervaloMin:0, preco:90, ativo:true, aceitaOnline:true,
-  categoria:'Cabelo', foto: arte('#7C3AED', '#C084FC') });
 
 /* ⚠ A COR NÃO É A PADRÃO DO APP. Se o restaurante ficasse com o azul de fábrica,
    toda verificação de "respeitou a cor escolhida" passaria por acidente —
@@ -161,8 +153,9 @@ igual('o cartão de boas-vindas fica empilhado', m.boasDisplay, 'block');
 verdade('e o botão ocupa a largura toda',
   m.ctaLargura > m.boasLargura - 40, `${m.ctaLargura} de ${m.boasLargura}`);
 verdade('com altura de alvo de toque', m.ctaAltura >= 48, String(m.ctaAltura));
-verdade('e o cartão explica o que dá para fazer aqui',
-  /Escolha o serviço/.test(m.subtitulo), m.subtitulo);
+// Ainda sem item no cardápio: o cartão diz como falar com o restaurante.
+verdade('e o cartão explica o que dá para fazer aqui (sem cardápio ainda: o WhatsApp)',
+  /WhatsApp/.test(m.subtitulo), m.subtitulo);
 
 /* ⚠ OS PONTINHOS DENTRO DA FOTO. Sem ancestral posicionado eles foram parar
    em cima do botão fixo do rodapé — visíveis, no lugar errado, sem erro
@@ -293,10 +286,10 @@ const fita = await p3.evaluate(() => {
 console.log('      ' + JSON.stringify(fita));
 verdade('com produto no carrinho, a fita aparece', fita.apareceu);
 verdade('ela conta o que tem e quanto dá',
-  /1 produto/.test(fita.texto) && /45,00/.test(fita.texto), fita.texto);
-verdade('e leva ao WhatsApp', /Enviar pedido/.test(fita.texto) && fita.rotuloZap === 'Enviar pedido no WhatsApp',
+  /1 item/.test(fita.texto) && /45,00/.test(fita.texto), fita.texto);
+verdade('e leva ao pedido', /Ver meu pedido/.test(fita.texto) && fita.rotuloZap === 'Continuar o pedido',
   fita.texto + ' / ' + fita.rotuloZap);
-verdade('a fita fica ACIMA do botão de agendar, sem cobri-lo', fita.acimaDoRodape);
+verdade('a fita fica ACIMA do botão do rodapé, sem cobri-lo', fita.acimaDoRodape);
 verdade('e o botão do WhatsApp cabe na tela', fita.dentroDaTela);
 verdade('com alvo de toque de gente', fita.alvoZap >= 44, String(fita.alvoZap));
 /* "O botão fixo inferior não pode esconder conteúdo importante" foi pedido
@@ -330,17 +323,12 @@ igual('e o botão do carrinho traz a quantidade já escolhida',
 verdade('e fica marcado quando já tem', vitrine.marcado === true);
 verdade('com alvo de toque de gente', vitrine.alvo >= 40, String(vitrine.alvo));
 
-/* ⚠ A MOLDURA DOS PRODUTOS É A MESMA DOS SERVIÇOS, e não uma segunda
-   escolha. Duas escolhas para a mesma coisa é a garantia de que um dia a
-   página sai com metade das fotos onduladas e metade quadrada. */
+/* ⚠ A MOLDURA DOS ITENS segue a escolha da aparência: sem escolher, reta. */
 const semOnda = await p3.evaluate(() => ({
   attr: document.documentElement.getAttribute('data-moldura'),
   prod: getComputedStyle(document.querySelector('#capaLoja .pr-foto')).maskImage,
-  serv: getComputedStyle(document.querySelector('#capaServicos .sv-cartao-foto'))
-          .maskImage,
 }));
-igual('sem escolher moldura, nem o serviço nem o produto têm onda',
-  [semOnda.prod, semOnda.serv], ['none', 'none']);
+igual('sem escolher moldura, o item não tem onda', semOnda.prod, 'none');
 
 await dona.atualizar('saloes', SALAO, { cfg: Object.assign({},
   (await dona.lista('saloes', { id: SALAO }))[0].cfg, { moldura:'elegante' }) });
@@ -348,14 +336,10 @@ const pOnda = await abrir(412, 915);
 const comOnda = await pOnda.evaluate(() => ({
   attr: document.documentElement.getAttribute('data-moldura'),
   prod: getComputedStyle(document.querySelector('#capaLoja .pr-foto')).maskImage,
-  serv: getComputedStyle(document.querySelector('#capaServicos .sv-cartao-foto'))
-          .maskImage,
 }));
 igual('escolhendo a moldura elegante, o atributo aparece',
   comOnda.attr, 'elegante');
-verdade('o serviço ganha a onda', /svg/.test(comOnda.serv), comOnda.serv.slice(0,40));
-verdade('e o produto ganha a MESMA onda', comOnda.prod === comOnda.serv,
-  comOnda.prod.slice(0, 60) + ' | ' + comOnda.serv.slice(0, 60));
+verdade('e o item ganha a onda', /svg/.test(comOnda.prod), comOnda.prod.slice(0, 60));
 await pOnda.close();
 await dona.atualizar('saloes', SALAO, { cfg: Object.assign({},
   (await dona.lista('saloes', { id: SALAO }))[0].cfg, { moldura:'reta' }) });
@@ -369,14 +353,11 @@ igual('tocando de novo, o contador vai para 2',
   await p3.evaluate(() =>
     (document.querySelector('#capaLoja .pr-n') || {}).textContent || ''), '2');
 
-/* ⚠ E SEM WHATSAPP A FITA NÃO APARECE. O botão abriria um `wa.me/` quebrado,
-   e botão que leva a lugar nenhum é pior que botão nenhum. */
+/* ⚠ E SEM WHATSAPP? No AgendaPro a fita sumia (ela abria um `wa.me/`). No
+   PediHub ela leva ao pedido, que vai pelo sistema — então fica. */
 await p3.close();
-/* ⚠ OS DOIS CAMPOS, e não só o `whatsapp`. O `zapDoSalao()` cai no
-   `telefone` quando não há whatsapp cadastrado — e está certo: restaurante pequeno
-   usa o mesmo número para as duas coisas, e exigir que ele digite duas vezes
-   é atrito à toa. Limpando só um, a fita continuava aparecendo e a premissa
-   deste teste é que era falsa, não o código. */
+/* Os dois campos, e não só o `whatsapp`: o `zapDoSalao()` cai no `telefone`
+   quando não há whatsapp cadastrado. */
 await dona.atualizar('saloes', SALAO, { whatsapp: null, telefone: null });
 const p5 = await abrir(412, 915);
 const semZap = await p5.evaluate(() => {
@@ -384,7 +365,9 @@ const semZap = await p5.evaluate(() => {
   if(pr) mudarNoCarrinho(pr.id, 1);
   return document.getElementById('carrinhoFita').style.display;
 });
-igual('restaurante sem WhatsApp nenhum não ganha a fita', semZap, 'none');
+/* No PediHub o pedido vai pelo sistema, e não por um `wa.me/`: sem WhatsApp
+   a fita continua, porque ela leva ao "Ver meu pedido", que funciona. */
+verdade('sem WhatsApp a fita continua (o pedido vai pelo sistema)', semZap !== 'none', semZap);
 await p5.close();
 await p2.close();
 
@@ -402,47 +385,7 @@ await dona.atualizar('saloes', SALAO,
 /* ══════════════════════════════════════════════════════════════════════════
    2c — AS CATEGORIAS, E A FORMA DO SLIDE
    ══════════════════════════════════════════════════════════════════════════ */
-secao('As categorias e a forma do slide');
-
-/* ⚠ A CAPA NÃO SEPARA POR CATEGORIA; A TELA DE TODOS OS SERVIÇOS SEPARA.
-   Saíam três títulos para quatro serviços — "NOSSOS SERVIÇOS", "CABELO",
-   "UNHAS" —, e índice de quatro itens não organiza nada: só empurra a
-   vitrine para baixo. A separação ganha sentido onde a lista é longa. */
-await dona.inserir('servicos', { salaoId: SALAO, nome:'Manicure',
-  duracaoMin:60, intervaloMin:0, preco:60, ativo:true, aceitaOnline:true,
-  categoria:'Unhas', foto: arte('#DB2777', '#F9A8D4') });
-
-const pCat = await abrir(412, 915);
-const naCapa = await pCat.evaluate(() => ({
-  subs: document.querySelectorAll('#capaServicos .cat-sub').length,
-  cartoes: document.querySelectorAll('#capaServicos .sv-cartao').length,
-  titulo: (document.querySelector('#capaServicos .cat') || {}).textContent || '',
-}));
-console.log('      capa: ' + JSON.stringify(naCapa));
-igual('a capa não mostra título de categoria nenhum', naCapa.subs, 0);
-verdade('mas mostra os serviços, os dois', naCapa.cartoes >= 2,
-  String(naCapa.cartoes));
-verdade('e o título da seção continua lá', naCapa.titulo.length > 0, naCapa.titulo);
-
-// E na tela de todos os serviços as categorias continuam separando.
-await pCat.click('#btPrincipal');
-await pCat.waitForTimeout(700);
-/* ⚠ `.cat`, E NÃO `.cat-sub`. Na capa o título de categoria é um SUBtítulo,
-   porque acima dele há o "NOSSOS SERVIÇOS". Na tela de todos os serviços a
-   categoria é o título de primeiro nível, e usa `.cat`. Procurei pela classe
-   da capa e achei zero — o que parecia "as categorias sumiram de lá também",
-   e era o seletor errado. */
-const naLista = await pCat.evaluate(() => ({
-  subs: [...document.querySelectorAll('#listaServicos .cat')]
-          .map(e => e.textContent.trim()),
-  opcoes: document.querySelectorAll('#listaServicos button.sv-cartao').length,
-}));
-console.log('      todos: ' + JSON.stringify(naLista));
-verdade('abrindo todos os serviços, as categorias voltam a separar',
-  naLista.subs.length >= 2, JSON.stringify(naLista.subs));
-verdade('e nenhum serviço se perdeu no caminho', naLista.opcoes >= 2,
-  String(naLista.opcoes));
-await pCat.close();
+secao('A forma do slide');
 
 /* ⚠ A FORMA DO SLIDE: `panoramico` é o padrão e NÃO escreve a variável. O CSS
    já tem o 16/8 de reserva; escrever o mesmo valor criaria um estado
@@ -492,13 +435,11 @@ const s2 = await sem.evaluate(() => ({
   temFoto: !!document.querySelector('.hero-foto'),
   temSelo: !!document.querySelector('.marca-selo'),
   temBotao: !!document.getElementById('btPrincipal'),
-  temServico: document.querySelectorAll('#capaServicos .sv-cartao').length,
 }));
 console.log('      ' + JSON.stringify(s2));
 verdade('sem capa, a faixa de foto não é desenhada', !s2.temFoto);
 verdade('a logo continua lá', s2.temSelo);
-verdade('o serviço continua na capa', s2.temServico > 0);
-verdade('e o botão de marcar continua lá', s2.temBotao);
+verdade('e o botão de pedir continua lá', s2.temBotao);
 
 /* ⚠ E O TEXTO DO CARTÃO NÃO PROMETE O QUE O RESTAURANTE NÃO TEM. Este restaurante não
    vende produto; mandar a cliente "conferir nossos produtos" é mandá-la

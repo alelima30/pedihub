@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ===========================================================================
-#  Quebrar os dois módulos de propósito, uma regra por vez.
+#  Quebrar a peneira da vitrine() de propósito, uma regra por vez.
 #
 #    bash tests/bancada/subir.sh        (noutro terminal)
 #    bash tests/mutacoes-modulos.sh
@@ -20,7 +20,7 @@ T=tests/modulos.test.mjs
 export PLAYWRIGHT=${PLAYWRIGHT:-/opt/node22/lib/node_modules/playwright}
 export PGHOST="${PGHOST:-/tmp}" PGPORT="${PGPORT:-5444}" PGUSER="${PGUSER:-postgres}"
 
-ARQS="app.html cardapio.html supabase/25_loja.sql"
+ARQS="supabase/25_loja.sql"
 for a in $ARQS; do cp "$a" "/tmp/mm-$(basename "$a")"; done
 restaurar(){
   for a in $ARQS; do cp "/tmp/mm-$(basename "$a")" "$a"; done
@@ -74,12 +74,14 @@ troca supabase/25_loja.sql \
   "      'loja', coalesce((c.cfg->>'loja')::boolean, true)," \
   && rodar "cfg lido com ::boolean" sql
 
-echo "2. o banco deixa a lista de serviços sair com o módulo desligado"
+echo "2. o banco deixa o cardápio sair com a loja desligada"
 troca supabase/25_loja.sql \
-  "         and lower(btrim(coalesce(c.cfg->>'usaServicos', 'true')))
+  "       where pr.salao_id = s.id and pr.ativo and pr.venda_online
+         and lower(btrim(coalesce(c.cfg->>'loja', 'true')))
                not in ('false', 'f', '0', 'no', 'nao', 'não')), '[]'::jsonb)," \
-  "         ), '[]'::jsonb)," \
-  && rodar "lista saindo com o módulo desligado" sql
+  "       where pr.salao_id = s.id and pr.ativo and pr.venda_online
+         ), '[]'::jsonb)," \
+  && rodar "cardápio saindo com a loja desligada" sql
 
 echo "3. chave ausente passa a valer DESLIGADO"
 troca supabase/25_loja.sql \
@@ -87,126 +89,8 @@ troca supabase/25_loja.sql \
   "      'usaServicos', lower(btrim(coalesce(c.cfg->>'usaServicos', 'false')))" \
   && rodar "ausente valendo desligado" sql
 
-# ⚠ ESTAS DUAS JÁ SOBREVIVERAM UMA VEZ, e a lição virou outra coisa.
-#
-# Elas estragam a cópia de `usaServicos` e `loja` no `bdDaVitrine()`. Na
-# primeira rodada a tela saía igual com a chave certa, errada ou ausente — e
-# eu concluí que as linhas eram inúteis e as apaguei.
-#
-# Estavam mesmo inúteis enquanto o rodapé olhava a LISTA. Só que "lista vazia"
-# tem duas causas — módulo desligado, ou restaurante que acabou de nascer — e tratar
-# as duas igual tirou o botão de entrada de todo restaurante na primeira hora. Quem
-# mostrou foi o `cliente-nuvem.test.mjs`.
-#
-# Agora o rodapé pergunta pelo MÓDULO, as duas linhas voltaram, e as mutações
-# morrem. A lição não é "mutação viva pede teste novo" nem "pede código a
-# menos": é que mutação viva quer dizer que ninguém ainda sabe para que aquela
-# linha serve.
-
-echo "4. o bdDaVitrine() esquece de copiar os serviços"
-troca cardapio.html \
-  "      usaServicos: s.usaServicos !== false," \
-  "      usaServicos: true," \
-  && rodar "módulo não atravessa a ponte"
-
-# ⚠ E AQUI NÃO HÁ MUTAÇÃO 5, de propósito.
-#
-# A gêmea desta de cima seria estragar a cópia do `loja`. Ela SOBREVIVE, e não
-# é buraco na suíte: na nuvem nada lê `salao.loja`. O rodapé pergunta pelo
-# módulo dos SERVIÇOS (é lá que "vazio" é ambíguo) e, do lado dos produtos,
-# pergunta pela lista — que a `vitrine()` já esvaziou quando a loja está
-# desligada. Não existe tela capaz de notar a diferença.
-#
-# A linha fica assim mesmo. O `moduloLigado()` lê as duas chaves do mesmo
-# jeito, e tirar uma faria a próxima pessoa que precisar do estado da loja na
-# nuvem cair exatamente no buraco em que eu caí com os serviços: a chave não
-# está lá, ninguém repara, e o comportamento erra calado.
-#
-# Mutação viva vale registro; nem toda mutação viva vale conserto.
-
-echo "5. o rodapé volta a olhar a lista, e não o módulo"
-# Com a linha de antes: o mesmo "if(casaFazServicos()){" existe também no
-# rodapé dos pacotes, e sem ela o trecho aparecia duas vezes e a mutação
-# simplesmente não rodava.
-troca cardapio.html \
-  "                               } else if(casaFazServicos()){
-                                 bp.textContent = voc('acao');" \
-  "                               } else if(servicosDoSalao().length){
-                                 bp.textContent = voc('acao');" \
-  && rodar "rodapé olhando a lista"
-
-echo "6. produtosDaLoja() deixa de olhar o módulo"
-troca cardapio.html \
-  "const produtosDaLoja = () => (!salao || !casaVendeProdutos() ? []" \
-  "const produtosDaLoja = () => (!salao ? []" \
-  && rodar "consulta sem a peneira"
-
-echo "7. o rodapé volta a apontar sempre para serviços"
-troca cardapio.html \
-  "  if(tela === 'capa'){
-    if(modoPedidos() && produtosDaLoja().length) return irPara('loja');
-    if(casaFazServicos()) return irPara('servico');
-    if(produtosDaLoja().length && zapDoSalao()) return irPara('loja');
-    return;
-  }" \
-  "  if(tela === 'capa')      return irPara('servico');" \
-  && rodar "botão do pé com destino fixo"
-
-echo "8. o cartão promete produtos a quem não vende produto"
-troca cardapio.html \
-  "    : (temSv)          ? 'Escolha o serviço e agende seu horário em poucos toques.'" \
-  "    : (temSv)          ? 'Escolha o serviço, agende seu horário ou confira nossos produtos.'" \
-  && rodar "convite prometendo o que não existe"
-
-echo "9. o salvar usa || e desligar a loja não gruda"
-troca app.html \
-  "    loja:        modLojaEscolhida    ?? true," \
-  "    loja:        modLojaEscolhida    || true," \
-  && rodar "|| no salvar, o Não vira Sim"
-
-echo "10. a régua nasce em Sim, ignorando o que está gravado"
-troca app.html \
-  "    modLojaEscolhida    = usaLojaNoLink();" \
-  "    modLojaEscolhida    = true;" \
-  && rodar "régua sem ler o banco"
-
-echo "11. a equipe volta a aparecer sem agendamento"
-troca cardapio.html \
-  "const profsDoSalao = () => !casaFazServicos() ? [] : bd.profissionais.filter(p =>" \
-  "const profsDoSalao = () => bd.profissionais.filter(p =>" \
-  && rodar "Quem atende numa casa sem agenda"
-
-echo "12. o rótulo 'Quem atende' fica mesmo sem ninguém embaixo"
-troca cardapio.html \
-  "  rotEq.style.display = equipe.length ? '' : 'none';" \
-  "  rotEq.style.display = '';" \
-  && rodar "título em cima de nada"
-
-echo "13. o atalho Meus horários volta sem agendamento"
-troca cardapio.html \
-  "  if((sessao || logada()) && casaFazServicos()){
-    atalhos.push([ 'meus', 'calendario', 'Meus horários'," \
-  "  if((sessao || logada())){
-    atalhos.push([ 'meus', 'calendario', 'Meus horários'," \
-  && rodar "atalho para a agenda desligada"
-
-echo "14. o botão com o nome volta sem agendamento"
-troca cardapio.html \
-  "  if(casaFazServicos() && conhecida && tela !== 'meus' && tela !== 'conta'){" \
-  "  if(conhecida && tela !== 'meus' && tela !== 'conta'){" \
-  && rodar "o nome dela levando à agenda desligada"
-
-echo "15. a prévia ignora o módulo de serviços"
-troca app.html \
-  "  const comServicos = usaServicosNoLink(sl);" \
-  "  const comServicos = true;" \
-  && rodar "prévia com serviços que o link não tem"
-
-echo "16. a prévia mantém o botão de agendar sem agendamento"
-troca app.html \
-  "  if(comServicos) botoes.push(['agendar', vocPrevia(sl, 'acao')]);" \
-  "  botoes.push(['agendar', vocPrevia(sl, 'acao')]);" \
-  && rodar "botão de agendar na prévia de uma loja"
+# (As mutações de tela da capa do salão — agendar, equipe, Meus horários —
+# saíram com os testes do salão. Ficam as três do banco.)
 
 echo ""
 echo "$morta mortas, $viva vivas"
