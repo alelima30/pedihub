@@ -2231,7 +2231,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.6a538f';
+const VERSAO_APP = 'v9.f43e69';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -6362,15 +6362,15 @@ function pintarCaixa(){
     : '<span style="color:var(--txt3)">no dia anterior não houve fechamento</span>';
 
   document.getElementById('kpisCaixa').innerHTML = `
-    <div class="kpi"><div class="v">${comandas.length}</div><div class="r">comandas fechadas</div></div>
+    <div class="kpi"><div class="v">${comandas.length}</div><div class="r">${restaurantePainel() ? 'vendas fechadas' : 'comandas fechadas'}</div></div>
     <div class="kpi"><div class="v">${real(faturamento)}</div><div class="r">faturamento</div></div>
-    ${souGestor() ? `<div class="kpi"><div class="v">${real(comissao)}</div><div class="r">comissões</div></div>` : ''}
+    ${souGestor() && !restaurantePainel() ? `<div class="kpi"><div class="v">${real(comissao)}</div><div class="r">comissões</div></div>` : ''}
     <div class="kpi"><div class="v">${real(comandas.length ? faturamento/comandas.length : 0)}</div>
       <div class="r">ticket médio</div></div>
     <div class="kpi"><div class="v"${abertas.length ? ' style="color:var(--alerta)"' : ''}>${real(emAberto)}</div>
       <div class="r">${abertas.length} em aberto</div></div>
-    <div class="kpi"><div class="v">${real(previsto)}</div>
-      <div class="r">previsto na agenda</div></div>`;
+    ${restaurantePainel() ? '' : `<div class="kpi"><div class="v">${real(previsto)}</div>
+      <div class="r">previsto na agenda</div></div>`}`;
 
   const linhaComp = document.getElementById('compCaixa');
   if(linhaComp) linhaComp.innerHTML = comp;
@@ -12187,13 +12187,27 @@ function pintarSalao(){
     <div class="sub-tela" data-sub="notificacoes">
     <div class="card" id="cartaoAvisosCelular" style="margin-bottom:16px">
       <h3 class="secao" style="margin-top:0">Avisos no celular</h3>
-      <p class="secao-sub">O celular toca, como no WhatsApp, quando chega horário
-        novo pelo link, quando uma cliente cancela e quando entra pedido.
+      <p class="secao-sub">O celular toca, como no WhatsApp, quando chega pedido
+        novo pelo link ou pelo QR da mesa.
         <b>Não gasta nenhuma mensagem do seu plano.</b> Cada pessoa da equipe
         liga no próprio celular — pelo sino, lá no alto.</p>
       <p id="estadoAvisosCelular" class="secao-sub" style="margin:8px 0 12px"></p>
       <button type="button" class="btn btn-p" onclick="abrirAvisosCelular()">Avisos neste celular</button>
     </div>
+    ${restaurantePainel() ? `<div class="card" id="notifPedidos">
+      <h3 class="secao" style="margin-top:0">Mensagens do pedido no WhatsApp</h3>
+      <p class="secao-sub">O cliente recebe no WhatsApp quando o pedido é <b>aceito</b>,
+        quando <b>sai para entrega</b> ou fica <b>pronto para retirar</b>, e se for
+        <b>cancelado</b>. O restaurante pode receber o aviso de <b>pedido novo</b>.
+        Nada de promoção.</p>
+      <p class="secao-sub">Liga e desliga em <b>Pedidos → Entrega e pagamento</b>,
+        em "Avisos no WhatsApp".</p>
+      <div class="aviso info" style="margin:10px 0">O envio pelo WhatsApp do PediHub está
+        sendo preparado. Enquanto isso, o cliente acompanha o pedido pelo link, em
+        "Meus pedidos", e o celular do restaurante toca a cada pedido novo (acima).</div>
+      <button type="button" class="btn" onclick="irPara('pedidos'); abrirConfigPedidos()">Abrir Entrega e pagamento</button>
+    </div>` : ''}
+    <div id="notifAgenda" ${restaurantePainel() ? 'hidden' : ''}>
     <div class="card">
       <h3 class="secao" style="margin-top:0">Mensagens da agenda</h3>
       <p class="secao-sub">Para o cliente: a confirmação e o lembrete antes
@@ -12338,6 +12352,7 @@ function pintarSalao(){
         "pendente" — e pendente quer dizer pendente, não enviada.</p>
       <div id="historicoNotif"></div>
     </div>
+    </div><!-- /notifAgenda: as mensagens da agenda do salão -->
     </div><!-- /sub-tela notificacoes -->
 
     ${Dados.ligado ? '' : `

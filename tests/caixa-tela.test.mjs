@@ -433,8 +433,8 @@ verdade('o painel abre sem erro', !/Não consegui montar/.test(hoje),
 verdade('o dinheiro NÃO se repete aqui — ele mora no Caixa',
   !/faturamento de hoje/.test(hoje) && !/ticket médio/.test(hoje),
   hoje.slice(0, 200));
-verdade('mas quantos vêm hoje continua, que é a pergunta desta tela',
-  /na agenda/.test(hoje), hoje.slice(0, 200));
+verdade('mas quantos pedidos hoje continua, que é a pergunta desta tela',
+  /pedidos? hoje/.test(hoje) && !/na agenda/.test(hoje), hoje.slice(0, 200));
 verdade('e diz que o caixa foi fechado', /não está aberto/.test(hoje),
   hoje.slice(0, 200));
 
@@ -443,133 +443,13 @@ verdade('e diz que o caixa foi fechado', /não está aberto/.test(hoje),
    de lugar. */
 await irPara('caixa');
 const noCaixa = await p.textContent('#tela-caixa');
-verdade('e o Caixa é quem mostra o faturamento, o ticket e o previsto',
+verdade('e o Caixa é quem mostra o faturamento e o ticket — sem comissão nem "previsto na agenda"',
   /faturamento/i.test(noCaixa) && /ticket médio/i.test(noCaixa)
-  && /previsto na agenda/i.test(noCaixa),
+  && !/previsto na agenda/i.test(noCaixa) && !/comissões/i.test(noCaixa),
   noCaixa.slice(0, 260));
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   7) AS REGRAS NOVAS DE COMISSÃO TÊM ONDE SER CADASTRADAS
-
-   Elas nasceram no banco, com teste de banco, e SEM campo em tela nenhuma:
-   comissão fixa, comissão por par e bruto/líquido existiam e eram
-   inalcançáveis pelo dono. Do ponto de vista dele, não existiam.
-
-   E `saloes` não tinha mapa de colunas — todo campo dele era palavra única.
-   `comissaoSobre` iria cru para o PostgREST, que não tem essa coluna, e a
-   gravação inteira do cadastro do restaurante cairia: nome, telefone, endereço,
-   tudo junto.
-   ═══════════════════════════════════════════════════════════════════════════ */
-secao('7) Cadastrar as regras novas de comissão');
-
-await irPara('servicos');
-/* ⚠ O SELETOR NOMEIA A FUNÇÃO, e não só o id do serviço.
-
-   Era `button[onclick*="${serv.id}"]`, e funcionou enquanto havia UM botão
-   por linha. No dia em que a linha ganhou a estrela dos destaques da capa,
-   passaram a ser dois botões com o mesmo id no `onclick` — o Editar e a
-   estrela — e o clique virou ambíguo.
-
-   O `.catch(() => {})` engolia isso calado, e o teste seguia para cobrar um
-   formulário que nunca tinha aberto. Quer dizer: uma mudança na TABELA saiu
-   como reprovação sobre COMISSÃO FIXA, que não tem nada a ver. O catch saiu
-   junto — a linha de baixo já afirma que o formulário abriu, então esconder
-   a falha do clique só atrasa a notícia e manda procurar no lugar errado. */
-await p.click(`button[onclick^="abrirServico('${serv.id}')"]`);
-await p.waitForTimeout(600);
-verdade('o serviço tem campo de comissão fixa',
-  await p.isVisible('#sComFixa'));
-await p.evaluate(() => { try{ fecharModal(); }catch(e){} });
-
-await irPara('salao');
-verdade('Meu negócio deixa escolher bruto ou líquido',
-  await p.isVisible('#cComSobre'));
-verdade('e a data de corte',
-  await p.isVisible('#cComDesde'));
-
-await p.selectOption('#cComSobre', 'liquido');
-await p.fill('#cComDesde', '2026-01-01');
-await p.click('button:has-text("Salvar")');
-await p.waitForTimeout(2500);
-
-const sl = (await banco.query(
-  `select comissao_sobre, comissao_regra_desde from public.saloes where id=$1`,
-  [SALAO])).rows[0];
-verdade('a regra chegou ao banco',
-  sl.comissao_sobre === 'liquido', JSON.stringify(sl));
-verdade('e a data de corte também',
-  !!sl.comissao_regra_desde, JSON.stringify(sl));
-verdade('e o cadastro do restaurante não caiu junto',
-  !avisos.some(a => /NÃO consegui salvar/.test(a)),
-  JSON.stringify(avisos.slice(-2)));
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   8) A EXCEÇÃO POR PAR SERVIÇO+PROFISSIONAL
-
-   `servicos_profissionais` existe desde o primeiro dia e nunca teve tela.
-   Guarda três exceções por dupla — preço, duração e comissão — e as três
-   eram inalcançáveis pelo dono.
-
-   E ela não tinha coluna `id`: medido antes de a tela existir, gravar dois
-   pares gravava UM, sem erro. Por isso este bloco cadastra DOIS, e não um.
-   ═══════════════════════════════════════════════════════════════════════════ */
-secao('8) Preço e comissão por profissional');
-
-// Um segundo serviço, para haver dois pares para gravar de uma vez.
-const serv2 = await dona.inserir('servicos',
-  { salaoId: SALAO, nome:'Escova', duracaoMin: 45, preco: 200 });
-const novo = await carregarNaTela();
-void novo;
-
-await irPara('servicos');
-await p.waitForTimeout(800);
-
-await p.evaluate(sid => abrirServico(sid), serv.id);
-await p.waitForTimeout(600);
-verdade('o formulário do serviço mostra a tabela por profissional',
-  await p.isVisible('.par-in'));
-
-await p.evaluate(pid => {
-  const preco = document.querySelector(`.par-in[data-prof="${pid}"][data-campo="preco"]`);
-  const pct   = document.querySelector(`.par-in[data-prof="${pid}"][data-campo="comissaoPct"]`);
-  preco.value = '150'; pct.value = '70';
-}, prof.id);
-await p.click('#modalPe .btn-p');
-await p.waitForTimeout(2500);
-
-await p.evaluate(sid => abrirServico(sid), serv2.id);
-await p.waitForTimeout(600);
-await p.evaluate(pid => {
-  document.querySelector(`.par-in[data-prof="${pid}"][data-campo="comissaoFixa"]`).value = '25';
-}, prof.id);
-await p.click('#modalPe .btn-p');
-await p.waitForTimeout(2500);
-
-const pares = (await banco.query(
-  `select sp.*, s.nome from public.servicos_profissionais sp
-     join public.servicos s on s.id = sp.servico_id
-    where s.salao_id = $1 order by s.nome`, [SALAO])).rows;
-
-verdade('os DOIS pares foram gravados — não um', pares.length === 2,
-  JSON.stringify(pares.map(x => x.nome)));
-verdade('o preço da Ana no Corte é 150',
-  pares.some(x => Number(x.preco) === 150 && Number(x.comissao_pct) === 70),
-  JSON.stringify(pares));
-verdade('e a comissão fixa dela na Escova é 25',
-  pares.some(x => Number(x.comissao_fixa) === 25),
-  JSON.stringify(pares));
-
-/* E a prova de que serve para alguma coisa: a escada do banco tem que
-   passar a devolver a taxa do par, e não a do serviço nem a da pessoa. */
-const daEscada = (await banco.query(
-  `select pct, fixa from public.comissao_de('servico', $1, null, $2)`,
-  [serv.id, prof.id])).rows[0];
-verdade('a escada do banco passa a usar a taxa do par (70%)',
-  Number(daEscada.pct) === 70, JSON.stringify(daEscada));
-
-verdade('e nada disso derrubou a gravação',
-  !avisos.some(a => /NÃO consegui salvar/.test(a)),
-  JSON.stringify(avisos.slice(-2)));
+/* PediHub: saíram as partes 7 e 8 (as regras de comissão e o preço por
+   profissional, em Serviços) — eram do salão. */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    8b) O ACRÉSCIMO CONTA NO FATURAMENTO DO CAIXA

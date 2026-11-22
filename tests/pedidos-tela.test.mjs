@@ -257,6 +257,17 @@ igual('ligar de novo: aberto', (await cli.chamar('pedidos_da_casa', { p_slug: z�
 await p.evaluate(() => { irPara('produtos'); abrirProduto(); });
 await p.waitForTimeout(400);
 igual('no restaurante, o item novo do cardápio já nasce publicado no link', await p.isChecked('#pOnline'), true);
+await p.evaluate(() => { fecharModal(); irPara('salao'); trocarAbaSalao('notificacoes'); });
+await p.waitForTimeout(800);
+const notif = await p.evaluate(() => {
+  const t = document.querySelector('#painelSalao .sub-tela[data-sub="notificacoes"]');
+  return { pedidos: !!document.getElementById('notifPedidos'),
+           agendaEscondida: !!(document.getElementById('notifAgenda') || {}).hidden,
+           texto: t ? t.innerText : '' };
+});
+verdade('Meu negócio › Notificações fala das mensagens do PEDIDO, e esconde as da agenda',
+  notif.pedidos && notif.agendaEscondida && !/agenda|horário marcado|lembrete antes/i.test(notif.texto),
+  notif.texto.slice(0, 400));
 await ctxP.close();
 
 secao('7. Nada quebrou');
