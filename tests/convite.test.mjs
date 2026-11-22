@@ -128,7 +128,7 @@ verdade('ela vê o nome do restaurante',
     /Restaurante Convite/.test(document.getElementById('convTitulo').textContent)),
   await rita.evaluate(() => document.getElementById('convTitulo').textContent));
 verdade('e para que foi convidada',
-  await rita.evaluate(() => /Recepção/.test(document.body.textContent)));
+  await rita.evaluate(() => /Caixa e balcão/.test(document.body.textContent)));
 verdade('e para quem é o convite',
   await rita.evaluate(() => /Rita da recepção/.test(document.body.textContent)));
 
@@ -163,7 +163,7 @@ const oQueRitaVe = await rita.evaluate(async () => {
 });
 verdade('no restaurante certo', /Restaurante Convite/.test(oQueRitaVe.salao || ''),
   JSON.stringify(oQueRitaVe));
-igual('e com o papel de recepção', (oQueRitaVe.papel || '').trim(), 'Recepção');
+igual('e com o papel de caixa e balcão', (oQueRitaVe.papel || '').trim(), 'Caixa e balcão');
 
 /* ══════════════════════════════════════════════════════════════════════════
    4. O LINK NÃO SERVE DE NOVO

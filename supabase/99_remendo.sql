@@ -2288,7 +2288,7 @@ begin
   if coalesce(public.recurso_bool(p_salao, p_chave), false) then return; end if;
   begin
     select ad.nome,
-           (select pl.nome from public.planos pl where pl.codigo = any(ad.planos)
+           (select pl.nome from public.planos pl where pl.codigo = any(ad.planos) and pl.ativo
              order by pl.preco_mes, pl.ordem limit 1)
       into v_nome, v_minimo
       from public.adicionais ad where ad.recurso = p_chave order by ad.ordem limit 1;
@@ -2299,7 +2299,7 @@ begin
       p_nome, v_nome, coalesce(v_minimo, 'Essencial')
       using errcode = 'check_violation';
   end if;
-  raise exception '% está disponível a partir do plano Básico.', p_nome
+  raise exception '% está disponível a partir do plano Essencial.', p_nome
     using errcode = 'check_violation';
 end $$;
 

@@ -104,9 +104,9 @@ select t_falso('o Essencial sem o módulo não vende no crediário',
 select t_verdade('e a recusa diz que é módulo adicional, a partir do Essencial, em Meu plano',
   erro_de($$select public.exigir_recurso('54600000-0000-0000-0000-00000000000a', 'crediario', 'Vender no crediário')$$)
     like 'Vender no crediário faz parte do módulo adicional Crediário, a partir do plano Essencial. Contrate em Meu plano.');
-select t_verdade('os módulos de plano continuam dizendo "a partir do Básico"',
+select t_verdade('os módulos de plano dizem "a partir do Essencial"',
   erro_de($$select public.exigir_recurso('54600000-0000-0000-0000-00000000000a', 'nao_existe', 'Isto')$$)
-    like 'Isto está disponível a partir do plano Básico.');
+    like 'Isto está disponível a partir do plano Essencial.');
 
 \echo ''
 \echo '2. Contratar'

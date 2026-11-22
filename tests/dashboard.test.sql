@@ -217,7 +217,7 @@ begin
   perform t_verdade('visitante sem login nem chama', e like 'ERRO: permission denied%');
   e := t_como('a6000000-0000-0000-0000-00000000000a',
     $q$select public.dashboard('60000000-0000-0000-0000-00000000000c', '2026-03-01', '2026-03-31')::text$q$);
-  perform t_verdade('no plano Grátis, é do Básico para cima — ' || e, e like 'ERRO: O Ranking está disponível a partir do plano Básico%');
+  perform t_verdade('no plano Grátis, é do Essencial para cima — ' || e, e like 'ERRO: O Ranking está disponível a partir do plano Essencial%');
   e := t_como('a6000000-0000-0000-0000-00000000000a',
     $q$select public.dashboard('60000000-0000-0000-0000-00000000000a', '2026-03-31', '2026-03-01')::text$q$);
   perform t_verdade('datas trocadas são recusadas', e like 'ERRO: Confira as datas%');

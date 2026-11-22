@@ -293,9 +293,9 @@ await pg.evaluate(() => {
   relDe = '2020-01-01'; relAte = '2020-01-31'; prepararRelatorios();
 });
 await pg.waitForTimeout(2000);
-verdade('período sem movimento explica que só comanda fechada conta',
+verdade('período sem movimento explica que o pedido entra quando é marcado Entregue',
   await pg.evaluate(() =>
-    /comanda FECHADA/i.test(document.getElementById('relCorpo').textContent)),
+    /marcado como Entregue/i.test(document.getElementById('relCorpo').textContent)),
   await pg.evaluate(() => document.getElementById('relCorpo').textContent.slice(0,200)));
 
 /* ══════════════════════════════════════════════════════════════════════════

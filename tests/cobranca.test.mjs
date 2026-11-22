@@ -137,14 +137,14 @@ verdade('com a venda ligada, a tela do Plano oferece Pix', ofereceuPix);
 
 /* E a chamada continua funcionando por baixo: esconder botão é arrumação de
    tela, não trava. O caminho não foi descontinuado — só não está à venda. */
-await pg.evaluate(() => assinar('salao', 'pix'));
+await pg.evaluate(() => assinar('time', 'pix'));
 await pg.waitForTimeout(2500);
 
 igual('a borda foi chamada uma vez', pedidos.length, 1);
 const enviado = pedidos[0] || { corpo:{}, auth:'' };
 
 igual('mandou o restaurante', enviado.corpo.salaoId, SALAO);
-igual('e o código do plano', enviado.corpo.plano, 'salao');
+igual('e o código do plano', enviado.corpo.plano, 'time');
 igual('e a forma', enviado.corpo.metodo, 'pix');
 
 /* ⚠ A ASSERÇÃO QUE VALE DINHEIRO.
@@ -171,7 +171,7 @@ secao('O código aparece para pagar');
 const texto = await pg.evaluate(() =>
   (document.getElementById('fundo') || {}).textContent || '');
 verdade('a janela mostra o plano e o valor',
-  /Restaurante/.test(texto) && /R\$/.test(texto), texto.slice(0, 200));
+  /Profissional/.test(texto) && /R\$/.test(texto), texto.slice(0, 200));
 igual('o copia-e-cola está na tela',
   await pg.evaluate(() => (document.getElementById('pixCodigo') || {}).value),
   '00020126580014BR.GOV.BCB.PIX0136teste-copia-e-cola');
@@ -215,7 +215,7 @@ await banco.query(
 
 a = await assinatura();
 igual('o banco ativou', a.status, 'ativa');
-igual('no plano pago', a.plano, 'salao');
+igual('no plano pago', a.plano, 'time');
 
 /* ⚠ SEM TOCAR EM "JÁ PAGUEI". A janela pergunta ao banco a cada 5 s se esta
    cobrança virou paga — o dono pagou no app do banco e volta para a tela,
@@ -239,7 +239,7 @@ verdade('a janela fecha sozinha',
 secao('Um Pix esquecido volta a aparecer');
 
 pedidos = [];
-await pg.evaluate(() => assinar('equipe', 'pix'));
+await pg.evaluate(() => assinar('individual', 'pix'));
 await pg.waitForTimeout(2500);
 await pg.evaluate(() => fecharModal());
 await pg.waitForTimeout(300);
@@ -337,14 +337,14 @@ await pg.route('**/functions/v1/assinar-cartao', async rota => {
     body: JSON.stringify({ ok: true, url: LINK_MP }) });
 });
 
-await pg.evaluate(() => assinarCartao('salao'));
+await pg.evaluate(() => assinarCartao('time'));
 await pg.waitForTimeout(1500);
 
 igual('a borda do cartão foi chamada uma vez', pedidosCartao.length, 1);
 const noCartao = pedidosCartao[0] || { corpo:{}, auth:'' };
 
 igual('mandou o restaurante', noCartao.corpo.salaoId, SALAO);
-igual('e o código do plano', noCartao.corpo.plano, 'salao');
+igual('e o código do plano', noCartao.corpo.plano, 'time');
 
 const vazouCartao = camposProibidos.filter(k => k in noCartao.corpo);
 verdade('e NÃO manda valor nenhum — este seria o débito de todo mês',
@@ -489,7 +489,7 @@ falso('ela nem vê a aba Plano', abas.includes('plano'), JSON.stringify(abas));
 
 pedidos = [];
 recados.length = 0;
-await pg.evaluate(() => assinar('salao', 'pix'));
+await pg.evaluate(() => assinar('time', 'pix'));
 await pg.waitForTimeout(1200);
 igual('e chamar a função na mão não abre cobrança nenhuma', pedidos.length, 0);
 verdade('a tela diz por quê',

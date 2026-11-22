@@ -2087,11 +2087,11 @@ function montarAbas(){
     const travada = MODULO_DA_TELA[k] && !moduloLiberado(MODULO_DA_TELA[k]);
     html += `<button class="aba${k === telaAtual ? ' on' : ''}${travada ? ' aba-travada' : ''}" data-chave="${k}"
                      onclick="irPara('${k}')" ${k === telaAtual ? 'aria-current="page"' : ''}
-                     ${travada ? 'title="Disponível a partir do plano Básico"' : ''}>
+                     ${travada ? 'title="Disponível a partir do plano Essencial"' : ''}>
                <span class="aba-ic" data-ico="${icone}"></span>
                <span class="aba-txt">${rotuloDaTela(k, rotulo)}</span>
                ${k === 'aniversarios' ? seloDeAniversario() : ''}
-               ${travada ? '<span class="aba-cadeado" aria-label="no plano Básico">🔒</span>' : ''}
+               ${travada ? '<span class="aba-cadeado" aria-label="no plano Essencial">🔒</span>' : ''}
              </button>`;
   }
   document.getElementById('abas').innerHTML = html;
@@ -2231,7 +2231,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.e86bb1';
+const VERSAO_APP = 'v9.d49801';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -15789,8 +15789,8 @@ function pintarComanda(){
   }
   if(!moduloLiberado('caixa')){
     alvo.innerHTML = `<div class="aviso info" style="margin:0">
-      <b>Comanda e caixa estão disponíveis a partir do plano Básico.</b><br>
-      No seu plano, o atendimento concluído entra sozinho no faturamento do
+      <b>Comanda e caixa estão disponíveis a partir do plano Essencial.</b><br>
+      No seu plano, o pedido entregue entra sozinho no faturamento do
       dia — você não perde o registro.</div>`;
     return;
   }
@@ -17213,19 +17213,19 @@ const MODULO_DA_TELA = { relatorios:'relatorios', ranking:'relatorios', produtos
                          // Sem a loja no plano não há cardápio no link, e o banco recusa o pedido.
                          pedidos:'loja' };
 const NOME_DO_MODULO = {
-  relatorios: ['Relatórios', 'o faturamento do período, por serviço, por profissional e por forma de pagamento'],
-  loja:       ['Produtos', 'o catálogo de produtos, a loja no seu link e o estoque'],
-  pacotes:    ['Pacotes', 'pacotes de sessões para vender às clientes'],
-  cupons:     ['Cupons', 'cupons de desconto no link e na loja'],
+  relatorios: ['Relatórios', 'o faturamento do período, por item do cardápio e por forma de pagamento'],
+  loja:       ['Cardápio', 'o cardápio no seu link, os pedidos e o estoque'],
+  pacotes:    ['Pacotes', 'pacotes para vender aos clientes'],
+  cupons:     ['Cupons', 'cupons de desconto nos pedidos do link'],
   aparencia:  ['Aparência do link', 'cores, fundo, capa com fotos e o visual da sua página'],
 };
 function avisoDeModulo(chave){
   const [nome, oQue] = NOME_DO_MODULO[chave] || [chave, ''];
   return `<div class="card trava-plano">
-    <h3 style="font-size:18px;margin-bottom:6px">${escapar(nome)} — a partir do plano Básico</h3>
-    <p style="color:var(--txt2)">No plano Grátis você usa a agenda, as clientes e o
-      link simples. ${escapar(oQue.charAt(0).toUpperCase() + oQue.slice(1))} fazem
-      parte do plano Básico e dos maiores.</p>
+    <h3 style="font-size:18px;margin-bottom:6px">${escapar(nome)} — a partir do plano Essencial</h3>
+    <p style="color:var(--txt2)">No plano Grátis você recebe até 50 pedidos por mês
+      pelo link, com até 40 itens no cardápio. ${escapar(oQue.charAt(0).toUpperCase() + oQue.slice(1))} fazem
+      parte do plano Essencial e do Profissional.</p>
     <p style="color:var(--txt2);font-size:13px">O que você já tinha cadastrado
       continua guardado e volta assim que assinar.</p>
     ${OFERTA_DE_PLANO
@@ -17420,11 +17420,11 @@ function pintarMedidoresDoPlano(){
     ? `<div style="font-size:12.5px;color:var(--txt2);margin-top:5px" id="restamMensagens">Restam
         <b>${Math.max(Number(m.teto) - Number(m.usado || 0), 0)}</b> mensagens neste mês.${
         diaQueRenova(m) ? ` Renova em <b>${diaQueRenova(m)}</b>.` : ''}</div>` : '';
+  // PediHub: sem "Serviços" (era do salão); os produtos SÃO o cardápio.
   alvo.innerHTML = linha('Clientes na ficha', u.clientes)
-                 + linha('Serviços no cardápio', u.servicos)
                  // O banco já cobra o teto de produtos (`tg_limite_produtos`);
                  // a tela não dizia, e o dono descobria no recuso.
-                 + linha('Produtos no catálogo', u.produtos)
+                 + linha('Itens no cardápio', u.produtos)
                  + linha('Mensagens usadas no mês', m) + restam
                  + avisoDeMensagens(m);
 }
