@@ -16,7 +16,7 @@
 /* Sobe a cada correção publicada, e tem que andar junto com o VERSAO_APP do
    app.html: o carimbo na lateral mostra aquele, e dois números divergentes
    fariam a tela afirmar uma versão que não é a que está servindo. */
-const VERSAO = 'pedihub-v9.0e2151';
+const VERSAO = 'pedihub-v9.2ef277';
 
 const ESSENCIAIS = [
   './',

@@ -381,11 +381,12 @@ secao('9) O limite de mensagens do plano');
 
 const C = await montar('Cota', 1);
 await banco.query(
-  `update public.assinaturas set plano='individual' where salao_id=$1`, [C.salao]);
+  `update public.assinaturas set plano='time' where salao_id=$1`, [C.salao]);
 
-igual('o plano Individual (Essencial) dá 500 mensagens no mês',
+// PediHub (66): quem tem mensagens é o Profissional, 1.000 por mês (o Essencial não tem).
+igual('o plano Profissional dá 1.000 mensagens no mês',
   Number((await banco.query(`select public.teto_mensagens($1) as t`, [C.salao])).rows[0].t),
-  500);
+  1000);
 verdade('e com zero enviadas, pode enviar',
   (await banco.query(`select public.pode_enviar($1) as p`, [C.salao])).rows[0].p);
 
@@ -394,11 +395,11 @@ await banco.query(
   `insert into public.notificacoes
      (salao_id, tipo, destino, quando, corpo, chave, status, enviado_em)
    select $1, 'lembrete', '11999', now(), 'x', 'cheia:' || g, 'enviado', now()
-     from generate_series(1, 500) g`, [C.salao]);
+     from generate_series(1, 1000) g`, [C.salao]);
 
-igual('quinhentas enviadas contam quinhentas',
+igual('mil enviadas contam mil',
   Number((await banco.query(`select public.mensagens_no_mes($1) as n`, [C.salao])).rows[0].n),
-  500);
+  1000);
 verdade('no teto, o banco recusa novos envios',
   (await banco.query(`select public.pode_enviar($1) as p`, [C.salao])).rows[0].p === false);
 
@@ -426,7 +427,7 @@ igual('no mês novo o contador zera',
 igual('e o histórico não foi apagado',
   Number((await banco.query(
     `select count(*)::int as n from public.notificacoes
-      where salao_id=$1 and chave like 'cheia:%'`, [C.salao])).rows[0].n), 500);
+      where salao_id=$1 and chave like 'cheia:%'`, [C.salao])).rows[0].n), 1000);
 
 /* ══════════════════════════════════════════════════════════════════════════
    AS OUTRAS COTAS — itens 25, 30 e 33
@@ -440,7 +441,7 @@ const uso = await C.d.chamar('uso_do_plano', { p_salao: C.salao });
 verdade('o uso do plano vem num jsonb só, com usado e teto',
   uso.clientes && uso.servicos && uso.mensagens && uso.profissionais,
   JSON.stringify(uso));
-igual('e o teto de clientes do Individual é 500', uso.clientes.teto, 500);
+igual('e o teto de clientes do Profissional é 20.000', uso.clientes.teto, 20000);
 
 // Um plano apertado, para a recusa acontecer de verdade. O teto de verdade
 // é guardado e devolvido no fim: escrever um número à mão aqui deixava o

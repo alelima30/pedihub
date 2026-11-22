@@ -12,7 +12,7 @@
      1. O botão está no topo, à vista no celular, e com tamanho de dedo.
      2. Abre o número certo, já dizendo o restaurante e a tela em que a pessoa está
         — e a tela é a de AGORA, não a de quando o painel abriu.
-     3. Também está no menu, e não cobre nada da agenda.
+     3. Também está no menu, e não cobre nada da tela de Pedidos.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -89,7 +89,7 @@ secao('2) Abre o WhatsApp do suporte, dizendo o restaurante e a tela');
 let u = await abrir('#btAjuda');
 verdade('abre o número do suporte', u.startsWith('https://wa.me/' + NUMERO), u);
 verdade('a conversa já diz o restaurante', texto(u).includes(NOME), texto(u));
-verdade('e a tela em que a pessoa está', /Tela: Agenda/.test(texto(u)), texto(u));
+verdade('e a tela em que a pessoa está', /Tela: Pedidos/.test(texto(u)), texto(u));
 await p.evaluate(() => irPara('clientes')); await p.waitForTimeout(900);
 u = await abrir('#btAjuda');
 verdade('trocou de tela, a conversa acompanha (Clientes)', /Tela: Clientes/.test(texto(u)), texto(u));

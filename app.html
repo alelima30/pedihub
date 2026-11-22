@@ -2231,7 +2231,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.0e2151';
+const VERSAO_APP = 'v9.2ef277';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -11155,10 +11155,10 @@ function pintarSalao(){
       <p class="secao-sub">É o que aparece para o cliente no cardápio do
         link, e o que vai na cobrança.</p>
 
-      <p style="margin:0 0 16px">
+      ${sl.tipo !== 'restaurante' ? `<p style="margin:0 0 16px">
         <button type="button" class="btn btn-peq" onclick="abrirPrimeiroDia(1)"
                 id="btPrimeiroDia">Refazer o passo a passo do primeiro dia</button>
-      </p>
+      </p>` : ''}
 
       <div class="dupla">
         <div class="campo"><label for="cNome">Nome</label>
