@@ -9,8 +9,8 @@
      1. "Copiar" o link do restaurante copiava, mas no site de verdade (https) o
         botão nunca dizia "Copiado": ele procurava o botão no `event` global,
         que já não existe quando o navigator.clipboard responde.
-     2. O "Tirar" de uma cliente do pacote levava o NOME dela escrito dentro
-        do onclick. O escapar() não protege ali (o parser de HTML desfaz o
+     2. (Saiu no PediHub: o "Tirar" de uma cliente do pacote, do salão.) Levava
+        o NOME dela escrito dentro do onclick. O escapar() não protege ali (o parser de HTML desfaz o
         &#39; antes de o JS ler): "Joana D'Arc" quebrava o botão, e um nome
         montado no link de agendamento rodava código no painel do dono.
      3. Na página da plataforma (admin.html), o "Suspender"/"Religar" levava
@@ -63,35 +63,7 @@ console.log('\n1. "Copiar" o link diz "Copiado" — também quando a cópia resp
   await ctx.close();
 }
 
-console.log('\n2. "Tirar do pacote" com nome que tem apóstrofo — e com nome montado');
-{
-  const ctx = await nav.newContext({ viewport: { width: 1280, height: 860 } });
-  const p = await ctx.newPage();
-  const erros = [], dialogos = [];
-  p.on('pageerror', e => erros.push(e.message));
-  p.on('dialog', d => { dialogos.push(d.message()); d.dismiss(); });
-  await p.goto(BASE + 'app.html?demo=1'); await p.waitForTimeout(1200);
-  for(const nome of ["Joana D'Arc", "x');window.__invadido=1;('", 'Ana "Nina" <b>Souza</b>']){
-    dialogos.length = 0;
-    await p.evaluate(nome => {
-      if(typeof pdFechar === 'function') try{ pdFechar(true); }catch(e){}
-      const venda = (bd.pacote_clientes || [])[0];
-      const c = bd.clientes.find(x => x.id === venda.clienteId);
-      c.nome = nome;
-      irPara('pacotes');
-    }, nome);
-    await p.waitForTimeout(400);
-    const bt = p.locator('#tela-pacotes button:has-text("Tirar")').first();
-    const tem = await bt.count();
-    if(tem) await bt.click();
-    await p.waitForTimeout(250);
-    diz(tem && dialogos.length === 1 && dialogos[0].startsWith('Tirar ' + nome + ' do pacote?'),
-        `o botão funciona e a pergunta traz o nome exato — ${JSON.stringify(nome)}`, JSON.stringify(dialogos));
-  }
-  diz(await p.evaluate(() => window.__invadido === undefined), 'o nome montado não roda como código');
-  diz(erros.length === 0, 'sem erro de JavaScript', erros.join(' | '));
-  await ctx.close();
-}
+// PediHub: saiu a parte 2 ("Tirar do pacote" — o pacote era do salão).
 
 console.log('\n3. A plataforma: "Suspender" e "Religar" chamam com o nome certo');
 {

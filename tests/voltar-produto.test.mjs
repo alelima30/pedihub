@@ -57,7 +57,7 @@ const dona = aba();
 await dona.criarConta({ email:`vp-${m}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
 const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante Megatop',
-  p_tipo:'salao', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
+  p_tipo:'restaurante', p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
 const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
 for(let i = 0; i <= 6; i++)
@@ -95,32 +95,7 @@ const pe = p => p.evaluate(() => {
 const tocarVoltar = async p => { await p.click('#btSecundario'); await p.waitForTimeout(400); };
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('1 e 2. O Voltar escrito em cada passo do agendamento');
-{
-  const { p, ctx } = await aparelho();
-  await p.click('.boas-cta'); await p.waitForTimeout(400);
-  const a = await pe(p);
-  igual('Serviço: "Voltar" ao lado do botão de seguir', [a.tela, a.voltar, a.lado], ['servico', 'Voltar', true]);
-  await p.click('#listaServicos .sv-cartao'); await p.click('#btPrincipal'); await p.waitForTimeout(400);
-  const b = await pe(p);
-  igual('Para quem (sem Continuar): o Voltar aparece sozinho, largo', [b.tela, b.voltar, b.principal, b.largo],
-    ['quem', 'Voltar', null, true]);
-  await p.click('#quemMim'); await p.waitForTimeout(800);
-  const c = await pe(p);
-  igual('Com quem: Voltar ao lado do Continuar', [c.tela, c.voltar, c.lado], ['prof', 'Voltar', true]);
-  await p.click('#btPrincipal'); await p.waitForTimeout(2000);
-  igual('Quando: o Voltar continua lá', [(await pe(p)).tela, (await pe(p)).voltar], ['quando', 'Voltar']);
-  await p.locator('#listaDias .dia:not(.sem)').nth(1).click();
-  await p.waitForFunction(() => document.querySelectorAll('#listaHoras .hora').length > 0, null, { timeout: 10000 });
-  await p.click('#listaHoras .hora'); await p.click('#btPrincipal'); await p.waitForTimeout(800);
-  igual('Seu cadastro: também', [(await pe(p)).tela, (await pe(p)).voltar], ['dados', 'Voltar']);
-  const caminho = [];
-  for(let i = 0; i < 6 && (await p.evaluate(() => tela)) !== 'capa'; i++){ await tocarVoltar(p); caminho.push(await p.evaluate(() => tela)); }
-  igual('tocando Voltar, volta um passo por vez até a capa', caminho, ['quando', 'prof', 'quem', 'servico', 'capa']);
-  igual('e na capa o Voltar some (não há para onde)', (await pe(p)).voltar, null);
-  igual('a 390px nada vaza para o lado', await p.evaluate(() => document.documentElement.scrollWidth - innerWidth <= 0), true);
-  await ctx.close();
-}
+// PediHub: saíram as partes 1 e 2 (o Voltar em cada passo do agendamento).
 
 /* ══════════════════════════════════════════════════════════════════════════ */
 secao('3 a 5. A loja e o produto aberto');
@@ -128,7 +103,7 @@ secao('3 a 5. A loja e o produto aberto');
   const { p, ctx } = await aparelho(360);
   await p.evaluate(() => irPara('loja')); await p.waitForTimeout(500);
   const l = await pe(p);
-  igual('Loja: Voltar ao lado de "Escolha pelo menos 1 produto"', [l.voltar, l.lado, /produto/.test(l.principal || '')], ['Voltar', true, true]);
+  igual('Cardápio: Voltar ao lado de "Escolha pelo menos 1 item"', [l.voltar, l.lado, /item/.test(l.principal || '')], ['Voltar', true, true]);
 
   // O Adicionar do cartão só adiciona.
   await p.locator('#listaProdutos .loja-add').first().click(); await p.waitForTimeout(300);

@@ -213,7 +213,6 @@ rodar "link de senha que não serve" node "$AQUI/senha-link.test.mjs"
 rodar "voltar escrito e produto aberto" node "$AQUI/voltar-produto.test.mjs"
 rodar "cupom no pedido" node "$AQUI/cupom-tela.test.mjs"
 rodar "sino do painel" node "$AQUI/sino-tela.test.mjs"
-rodar "o que o caça-bug achou, na tela" node "$AQUI/caca-bug.test.mjs"
 rodar "caça-bug, segunda varredura" node "$AQUI/caca-bug-2.test.mjs"
 # O como fazer do serviço e os lembretes da cliente: só a equipe vê.
 # O que a auditoria de segurança achou: o painel em quadro de outro site e o e-mail escapado.

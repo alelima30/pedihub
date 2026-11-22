@@ -60,8 +60,9 @@ const SLUG = cr[0].slug;
 const EMAIL = `cliente-${m}@t.com`, VELHA = 'senhavelha12', NOVA = 'senhanova123';
 await aba().criarConta({ email: EMAIL, senha: VELHA, nome:'Maria',
   telefone:'+5551' + (900000000 + (Date.now() % 89999999)) });
-const VOLTA = 'cardapio.html?salao=' + SLUG;
-const COM_VOLTA = BASE + '/nova-senha.html?volta=' + encodeURIComponent(VOLTA);
+// PediHub: só o DONO tem senha (o cliente pede sem conta) — o link é o do painel.
+const VOLTA = 'app.html';
+const COM_VOLTA = BASE + '/nova-senha.html';
 const pescar = () => fetch(BASE + '/_recuperacao?email=' + encodeURIComponent(EMAIL)).then(r => r.json());
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
@@ -116,14 +117,14 @@ secao('2. O texto da barra de endereço não vira HTML');
 }
 
 /* ══════════════════════════════════════════════════════════════════════════ */
-secao('3. A cliente do link do restaurante');
+secao('3. O dono, pelo link do e-mail');
 {
   const { p, ctx } = await abrir(COM_VOLTA);
   const t = await p.evaluate(() => ({ sub: document.getElementById('sub').textContent,
     volta: document.getElementById('voltarLink').getAttribute('href'),
     rotulo: document.getElementById('voltarLink').textContent }));
-  igual('textos dela, e o caminho de volta é o restaurante', [/link do restaurante/.test(t.sub), t.volta, t.rotulo],
-    [true, VOLTA, 'Voltar para o restaurante']);
+  igual('textos do painel, e o caminho de volta é a tela de entrar', [/painel/.test(t.sub), t.volta, t.rotulo],
+    [true, 'entrar.html', 'Voltar para a tela de entrar']);
   verdade('sem o link do e-mail: "Falta o link", e o pedido ali mesmo', /Falta o link do e-mail/.test(await aviso(p))
     && await visivel(p, 'repedir'));
   await ctx.close();
@@ -146,8 +147,8 @@ secao('4. Pedir outro link na própria tela');
   verdade('e-mail incompleto: avisa, e não pede nada', /Confira o e-mail/.test(await aviso(p)) && !pedidos.length);
   await p.fill('#emailNovo', EMAIL);
   await p.click('#btRepedir'); await p.waitForTimeout(900);
-  verdade('o link novo também volta para o restaurante', pedidos.length === 1
-    && pedidos[0].includes('nova-senha.html?volta=' + encodeURIComponent(VOLTA)), pedidos.join(' | '));
+  verdade('o link novo também volta para a tela de senha nova', pedidos.length === 1
+    && pedidos[0].includes('nova-senha.html'), pedidos.join(' | '));
   const t = await aviso(p);
   verdade('e a resposta não diz se o e-mail existe, e manda usar o mais recente',
     /Se houver conta com/.test(t) && /mais recente/.test(t), t);
@@ -197,9 +198,9 @@ secao('5. O link com código: abrir não gasta');
 
   await A.p.fill('#senha', NOVA); await A.p.fill('#senha2', NOVA);
   await A.p.click('#btSalvar');
-  await A.p.waitForURL(u => /cardapio\.html\?salao=/.test(String(u)), { timeout: 8000 }).catch(() => {});
+  await A.p.waitForURL(u => /app\.html/.test(String(u)), { timeout: 8000 }).catch(() => {});
   await A.p.waitForTimeout(1500);
-  igual('salvar gasta o código, troca a senha e volta para o restaurante, já dentro',
+  igual('salvar gasta o código, troca a senha e abre o painel, já dentro',
     [A.verifica.length, new URL(A.p.url()).pathname + new URL(A.p.url()).search,
      await A.p.evaluate(() => !!(window.Dados && Dados.sessaoAtual && Dados.sessaoAtual()))],
     [1, '/' + VOLTA, true]);
