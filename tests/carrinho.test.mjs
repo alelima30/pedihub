@@ -175,7 +175,7 @@ const naLoja = await contas();
 verdade('o botão de enviar fica DESLIGADO', !naLoja.ligado,
   'botão "' + naLoja.botao + '" ligado — mandaria um pedido vazio');
 verdade('e diz o que falta, em vez de ficar cinza mudo',
-  /produto/i.test(naLoja.botao), JSON.stringify(naLoja.botao));
+  /pelo menos 1 item/i.test(naLoja.botao), JSON.stringify(naLoja.botao));
 
 /* ══════════════════════════════════════════════════════════════════════════
    4 — E O QUE FICOU GUARDADO VOLTA QUANDO O PRODUTO VOLTA

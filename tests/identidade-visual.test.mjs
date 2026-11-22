@@ -64,16 +64,10 @@ const dona = novaAba();
 await dona.criarConta({ email:`vis-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Rita Alves', telefone:'+5511' + (900000000 + (Date.now() % 89999999)) });
 const cr = await dona.chamar('criar_salao', { p_nome_salao:'Casa ' + marca,
-  p_tipo:'salao', p_telefone:'(11) 3222-1100', p_documento:null, p_origem:null });
+  p_tipo:'restaurante', p_telefone:'(11) 3222-1100', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
-
-const prof = (await dona.lista('profissionais', { salaoId: SALAO }))[0];
-for(let i = 0; i <= 6; i++){
-  await dona.inserir('jornadas', { profissionalId: prof.id, diaSemana:i,
-                                   inicio:'09:00', fim:'18:00' });
-}
-await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte', duracaoMin:30,
-  intervaloMin:0, preco:100, ativo:true, aceitaOnline:true });
+await dona.inserir('produtos', { salaoId: SALAO, nome:'X-Burger', preco:30, custo:0, estoque:0,
+  ativo:true, vendaOnline:true });
 
 /* ⚠ UMA CHAVE DE OUTRA TELA, POSTA ANTES DE TUDO. O pedido em maiúsculas era
    "não apague nada", e o jeito de provar isso não é ler o código: é deixar no
@@ -119,7 +113,7 @@ async function olharCapa(){
       seloRaio: selo ? getComputedStyle(selo).borderRadius : null,
       // A prova de que a página continua sendo a mesma página.
       botao: (document.getElementById('btPrincipal') || {}).textContent || '',
-      servicos: document.querySelectorAll('#capaServicos .sv-cartao').length,
+      servicos: document.querySelectorAll('.pr-cartao').length,   // PediHub: os itens do cardápio na capa
     };
   });
   await c.close();
@@ -145,7 +139,7 @@ igual('nem marca de formato de logo', zero.logo, null);
 igual('e a cor dos ícones não é definida', zero.ico, '');
 igual('nem o gradiente', zero.grad, '');
 verdade('o corpo não tem classe de gradiente', !zero.temGradiente);
-verdade('a capa desenha o serviço, como sempre', zero.servicos > 0,
+verdade('a capa desenha o cardápio, como sempre', zero.servicos > 0,
   JSON.stringify(zero));
 verdade('e o botão de marcar continua lá', zero.botao.length > 0, zero.botao);
 
@@ -313,7 +307,7 @@ igual('o logo fica quadrado', vestido.seloRaio, '4px');
 
 /* ⚠ E A PÁGINA CONTINUA SENDO A MESMA. É o pedido inteiro em duas linhas: a
    camada nova é visual, e nada do agendamento pode ter mudado. */
-verdade('o serviço continua na capa', vestido.servicos > 0, JSON.stringify(vestido));
+verdade('o cardápio continua na capa', vestido.servicos > 0, JSON.stringify(vestido));
 verdade('e o botão de marcar continua lá', vestido.botao.length > 0, vestido.botao);
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -495,7 +489,7 @@ const LADOS = [
   ['nome do restaurante',   '.marca-salao h2',   '#previaFone .fone-topo b',  'color'],
   ['endereço',        '.marca-end .rua',   '#previaFone .fone-topo span','color'],
   ['título de seção', '.cat',              '#previaFone .fone-rot',     'color'],
-  ['fundo do cartão', '.sv-cartao',        '#previaFone .fone-cartao',  'backgroundColor'],
+  ['fundo do cartão', '.pr-cartao',        '#previaFone .fone-cartao',  'backgroundColor'],
   ['botão',           '.boas-cta',         '#previaFone .fone-cta',     'backgroundColor'],
 ];
 

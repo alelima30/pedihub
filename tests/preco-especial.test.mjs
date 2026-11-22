@@ -88,9 +88,9 @@ igual('o Pix do restaurante normal sai com o preço do plano',
     [NORMAL.salao, NORMAL.dona])).v), precoPlano);
 
 secao('3) O especial vale só para o plano marcado');
-const precoDuo = Number((await um(`select preco_mes from public.planos where codigo='duo'`)).preco_mes);
+const precoDuo = Number((await um(`select preco_mes from public.planos where codigo='time'`)).preco_mes);
 igual('outro plano, no mesmo restaurante, sai pelo preço normal',
-  Number((await um(`select (public.abrir_cobranca($1,'duo','pix',$2)).valor as v`,
+  Number((await um(`select (public.abrir_cobranca($1,'time','pix',$2)).valor as v`,
     [ESPECIAL.salao, ESPECIAL.dona])).v), precoDuo);
 await banco.query(`update public.assinaturas set precos_especiais = '{"individual": "1"}'
                     where salao_id = $1`, [ESPECIAL.salao]);

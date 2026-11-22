@@ -72,12 +72,12 @@ const SALAO = cr[0].salao_id;
 
 /* O caso difícil: cartão LIGADO e um Pix em aberto ao mesmo tempo. As duas
    coisas moravam dentro do cartão de oferta que acabou de sair da tela. */
-sql(`update public.assinaturas set plano='equipe', status='ativa',
+sql(`update public.assinaturas set plano='time', status='ativa',
        mp_preapproval='pre-teste-${marca}', cartao_desde=now()
      where salao_id='${SALAO}'`);
 sql(`insert into public.cobrancas
        (salao_id, plano, valor, metodo, status, vence_em, mp_id, pix_copia_cola)
-     values ('${SALAO}','equipe', 97, 'pix', 'pendente', now() + interval '2 days',
+     values ('${SALAO}','time', 119.90, 'pix', 'pendente', now() + interval '2 days',
              'mp-${marca}', '00020126580014BR.GOV.BCB.PIX-TESTE-${marca}')`);
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
@@ -172,13 +172,14 @@ e('mas o valor da cobrança em aberto CONTINUA — '
   + (precos.naCobranca.join(', ') || 'nenhum'),
   precos.naCobranca.length > 0,
   'pedir que o dono pague um Pix sem dizer quanto é pior que mostrar preço');
-e('nem "por mês"', !/por mês/i.test(tela.texto));
+// "por mês" pode estar na lista do que o plano inclui (ex.: "até 50 pedidos por mês");
+// o que não pode é PREÇO por mês, que é oferta.
+e('nem preço "por mês"', !/R\$\s*[\d.,]+\s*(\/\s*mês|por mês)/i.test(tela.texto));
 
 console.log('\n── O QUE FICOU ─────────────────────────────────────────────');
-e('o nome do plano continua', /Equipe|Grátis|Teste/i.test(tela.texto),
+e('o nome do plano continua', /Profissional|Grátis|Teste/i.test(tela.texto),
   tela.texto.slice(0, 200));
 e('os medidores de uso continuam (' + tela.medidores + ')', tela.medidores > 0);
-e('e dizem quantos profissionais cabem', /[Pp]rofissiona/.test(tela.texto));
 e('a caixa da assinatura no cartão existe', tela.temCartaoAssin,
   'quem está no cartão ficaria preso, sem botão de desligar a renovação');
 e('a caixa da cobrança em aberto existe', tela.temCobranca,
@@ -330,9 +331,9 @@ sql(`update public.assinaturas set mp_preapproval = null, cartao_desde = null,
 await abrirPlano(p, '?oferta=1');
 let pe = await p.evaluate(() => (document.getElementById('tela-plano') || {}).innerText || '');
 e('o Essencial aparece a R$ 1,00 para este restaurante', /R\$\s*1,00/.test(pe), pe.slice(0, 300));
-await p.evaluate(() => { planoEscolhido = 2; pintarPlano(); });
+await p.click('#reguaPlanos button:has-text("Profissional")');
 await p.waitForTimeout(600);
-const precoDupla = Number(sql(`select preco_mes from public.planos where codigo='duo'`));
+const precoDupla = Number(sql(`select preco_mes from public.planos where codigo='time'`));
 pe = await p.evaluate(() => (document.getElementById('cartaoPlano') || {}).innerText || '');
 e('e outro plano, no mesmo restaurante, pelo preço normal',
   pe.includes(precoDupla.toFixed(2).replace('.', ',')) && !/R\$\s*1,00/.test(pe), pe.slice(0, 200));
@@ -344,9 +345,9 @@ sql(`update public.assinaturas set precos_especiais = '{}' where salao_id='${SAL
    de levar a um plano, e cada plano pago com mensagens a um botão. */
 console.log('\n── A RÉGUA DE PROFISSIONAIS ────────────────────────────────');
 await abrirPlano(p, '?oferta=1');
-const comMensagem = sql(`select string_agg(nome, '|' order by max_profissionais)
-  from public.planos where codigo not in ('trial','gratuito')
-   and coalesce((recursos->>'mensagens_mes')::int, 0) > 0`).split('|');
+// PediHub: os planos pagos À VENDA (os do AgendaPro estão desligados).
+const comMensagem = sql(`select string_agg(nome, '|' order by preco_mes)
+  from public.planos where codigo not in ('trial','gratuito') and ativo`).split('|');
 const rotulos = await p.evaluate(() =>
   [...document.querySelectorAll('#reguaPlanos button')].map(b => b.textContent.trim()));
 const vistos = [];
@@ -361,8 +362,8 @@ e('um botão por tamanho de plano — ' + rotulos.join(', '),
 e('e cada botão leva a um plano diferente: ' + vistos.join(', '),
   JSON.stringify(vistos) === JSON.stringify(comMensagem),
   'esperava ' + JSON.stringify(comMensagem));
-e('o último é o Restaurante, para até 12', vistos[vistos.length - 1] === 'Restaurante'
-  && /12/.test(rotulos[rotulos.length - 1]), JSON.stringify([rotulos, vistos]));
+e('Essencial e Profissional, nessa ordem', JSON.stringify(vistos) === JSON.stringify(['Essencial', 'Profissional']),
+  JSON.stringify([rotulos, vistos]));
 
 console.log('\n── ERROS ───────────────────────────────────────────────────');
 e('sem erro de JavaScript', erros.length === 0, erros.slice(0,3).join(' | '));
