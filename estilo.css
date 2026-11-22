@@ -5331,6 +5331,25 @@ body.tem-cor-produtos .loja-cat.on{
 .mesa-tag{ font-size:11.5px; font-weight:800; padding:2px 8px; border-radius:var(--r-pill);
   background:var(--alerta); color:#fff }
 .mesa-tag.pronto{ background:var(--ok) }
+/* Tempo de preparo (74): o que passou do prazo fica vermelho. */
+.mesa-tag.atrasado{ background:var(--erro) }
+.mesa-cartao.atrasada{ border:2px solid var(--erro) }
+.pedido-cartao.pedido-atrasado{ border-color:var(--erro); box-shadow:0 0 0 2px color-mix(in srgb, var(--erro) 25%, transparent) }
+.tag.t-atrasado{ background:var(--erro); color:#fff }
+.pedido-itens li{ align-items:center }
+.pedido-itens .pi-nome{ flex:1; min-width:0 }
+.pedido-itens .relogio{ display:inline-block; margin-top:3px; font-size:11.5px; font-weight:800; padding:1px 7px;
+  border-radius:var(--r-pill); background:var(--painel2); color:var(--txt2); white-space:nowrap }
+.pedido-itens .item-atrasado{ color:var(--erro); font-weight:700 }
+.pedido-itens .item-atrasado .relogio{ background:var(--erro); color:#fff }
+.pedido-itens .item-pronto{ color:var(--txt3) }
+.pedido-itens .item-pronto .relogio{ background:var(--ok); color:#fff }
+.item-check{ width:26px; height:26px; flex:none; border-radius:50%; border:1.5px solid var(--borda);
+  background:var(--painel); color:var(--txt3); font-weight:900; cursor:pointer; padding:0 }
+.item-pronto .item-check{ background:var(--ok); border-color:var(--ok); color:#fff }
+.np-linha.item-atrasado > span > b:first-child, .np-linha.item-atrasado{ color:var(--erro) }
+.relogio-txt{ color:inherit }
+.np-linha.item-atrasado .relogio-txt{ color:var(--erro) }
 .garcom-cardapio{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px;
   max-height:46vh; overflow:auto; padding:2px }
 .garcom-item{ display:flex; flex-direction:column; gap:6px; padding:8px; border:1px solid var(--borda);

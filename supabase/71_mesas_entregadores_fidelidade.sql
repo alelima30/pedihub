@@ -31,8 +31,11 @@ begin
 end $$;
 alter table public.pedidos add constraint pedidos_tipo_entrega_check
   check (tipo_entrega in ('entrega', 'retirada', 'mesa'));
+-- Já com débito e crédito (72): colado de novo num banco que JÁ TEM pedido
+-- no débito, uma lista sem eles é recusada pelo banco ("violated by some
+-- row") e derruba a colagem inteira do 98_modulos.sql.
 alter table public.pedidos add constraint pedidos_pagamento_check
-  check (pagamento in ('pix', 'dinheiro', 'cartao', 'na_mesa'));
+  check (pagamento in ('pix', 'dinheiro', 'debito', 'credito', 'cartao', 'na_mesa'));
 
 -- ---------------------------------------------------------------------------
 -- 1) A CONFIGURAÇÃO (a do 37, com mesas, entregadores e fidelidade)

@@ -139,6 +139,7 @@ preparar() {
   carregar "$RAIZ/supabase/71_mesas_entregadores_fidelidade.sql"
   carregar "$RAIZ/supabase/72_debito_credito.sql"
   carregar "$RAIZ/supabase/73_conta_da_mesa_garcom.sql"
+  carregar "$RAIZ/supabase/74_tempo_de_preparo.sql"
   carregar "$AQUI/00_ajuda.sql"
 }
 
@@ -187,6 +188,16 @@ for vez in 1 2; do
   else
     echo "  ✓ ${vez}ª passada, sem erro"
   fi
+  # Entre uma colagem e outra, a casa já vendeu: pedido no débito, no crédito
+  # e na mesa. Uma regra antiga recolocada no caminho recusa essas linhas e
+  # derruba a segunda colagem (foi o que o 71 fazia com débito/crédito).
+  [ "$vez" = 1 ] && psql -q -d "${BANCO}_2x" -c "
+    insert into public.saloes (id, slug, nome, status, fuso) values
+      ('59990000-0000-0000-0000-00000000000a', 'casa-2x', 'Casa 2x', 'ativo', 'America/Sao_Paulo');
+    insert into public.pedidos (salao_id, numero, nome, telefone, tipo_entrega, mesa, subtotal, taxa_entrega, total, pagamento, status) values
+      ('59990000-0000-0000-0000-00000000000a', 1, 'A', '11999990001', 'retirada', null, 10, 0, 10, 'debito', 'entregue'),
+      ('59990000-0000-0000-0000-00000000000a', 2, 'B', '11999990002', 'retirada', null, 10, 0, 10, 'credito', 'entregue'),
+      ('59990000-0000-0000-0000-00000000000a', 3, 'C', '', 'mesa', '1', 10, 0, 10, 'na_mesa', 'recebido');" >/dev/null
 done
 psql -q -d postgres -c "drop database if exists ${BANCO}_2x;" >/dev/null 2>&1 || true
 

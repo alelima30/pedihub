@@ -121,7 +121,9 @@ const COLUNAS = {
                    avisadoEm:'avisado_em', criadoEm:'criado_em' },
   produtos:      { salaoId:'salao_id', comissaoPct:'comissao_pct',
                    comissaoFixa:'comissao_fixa', vendaOnline:'venda_online',
-                   precoVisivel:'preco_visivel' },
+                   precoVisivel:'preco_visivel',
+                   // Minutos na cozinha; passou, o pedido fica vermelho (74).
+                   tempoPreparo:'tempo_preparo' },
   pacotes:       { salaoId:'salao_id', validadeDias:'validade_dias',
                    soNosDias:'so_nos_dias', criadoEm:'criado_em',
                    // Excluído depois de vendido: sai da lista, o histórico fica (50).

@@ -15,7 +15,10 @@
         sai com o nome dele, e a conta da mesa mostra "Wilson · na cozinha";
         o mapa pinta a mesa 7 com o total;
      5. fecha a conta: 10% de serviço, dividida por 2, no crédito — o banco
-        fecha a conta, a venda entra no caixa e a mesa fica livre.
+        fecha a conta, a venda entra no caixa e a mesa fica livre;
+     6. o dono põe 15 minutos de preparo na picanha; o garçom lança na mesa 3;
+        aos 20 minutos o mapa, a conta e a tela de Pedidos acusam em vermelho;
+        a cozinha marca o item pronto e o vermelho some.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -191,6 +194,55 @@ igual('no banco: conta fechada no crédito, serviço 14, total 154, a venda no c
   [conta.fechada, conta.pagamento, conta.servico, conta.total, conta.vendas], [true, 'credito', '14.00', '154.00', 1]);
 await p.waitForTimeout(300);
 igual('a mesa 7 voltou a ficar livre no mapa', limpo(await p.textContent('#mesasMapa .mesa-cartao:has-text("Mesa 7") .mesa-info')), 'livre');
+
+secao('6. O tempo de preparo e o atrasado (74)');
+const picanhaId = (await um(`select id from public.produtos where salao_id = $1 and nome = 'Picanha na chapa'`, [salaoId])).id;
+await pd.evaluate(id => abrirProduto(id), picanhaId);
+await pd.waitForSelector('#pTempo');
+await pd.fill('#pTempo', '15');
+await pd.click('#modalPe .btn-p');
+await pd.waitForTimeout(1500);
+igual('o dono pôs 15 minutos na picanha, e gravou',
+  (await um(`select tempo_preparo from public.produtos where id = $1`, [picanhaId])).tempo_preparo, 15);
+await p.click('#mesasPracas button:has-text("Praça 1")');
+await p.click('#mesasMapa .mesa-cartao:has-text("Mesa 3")');
+await p.click('#modalPe button:has-text("Lançar itens")');
+await p.waitForSelector('#npCardapio .garcom-item');
+await p.click('#npCardapio .garcom-item:has-text("Picanha") button:has-text("+ Pôr")');
+await p.click('#modalPe button:has-text("Mandar para a cozinha")');
+await p.waitForSelector('#modalPe button:has-text("Fechar conta")', { timeout: 8000 }).catch(() => {});
+igual('acabou de lançar: 0 de 15 min, sem vermelho', await p.$$eval('.mesa-itens .np-linha', e => e.map(x =>
+  x.className.includes('item-atrasado') + ' ' + x.querySelector('small').textContent.replace(/\s+/g, ' ').trim())),
+  ['false Wilson · na cozinha · 0 de 15 min']);
+await p.click('#modalPe button:has-text("Fechar")');
+await banco.query(`update public.pedidos set aceito_em = now() - interval '20 minutes 5 seconds' where salao_id = $1 and mesa = '3'`, [salaoId]);
+await p.evaluate(() => carregarMesas());
+await p.waitForTimeout(800);
+igual('20 minutos depois, a mesa 3 acusa no mapa', limpo(await p.textContent('#mesasMapa .mesa-cartao.atrasada .mesa-tag')), '1 atrasado');
+await foto(p, '6-mapa-com-atrasado');
+await p.click('#mesasMapa .mesa-cartao:has-text("Mesa 3")');
+await p.waitForSelector('.mesa-itens .np-linha');
+igual('na conta, o item em vermelho: ATRASADO · 20 de 15 min', await p.$$eval('.mesa-itens .np-linha', e => e.map(x =>
+  x.className.includes('item-atrasado') + ' ' + x.querySelector('small').textContent.replace(/\s+/g, ' ').trim())),
+  ['true Wilson · na cozinha · ATRASADO · 20 de 15 min']);
+verdade('e o aviso para cobrar a cozinha', /1 item\(ns\) atrasado\(s\): cobre a cozinha/.test(await p.textContent('#modalCorpo .secao-sub')));
+await foto(p, '7-conta-com-atrasado');
+await p.click('#modalPe button:has-text("Fechar")');
+
+await pd.evaluate(() => { irPara('pedidos'); return carregarPedidos(); });
+await pd.waitForTimeout(800);
+const cartao = '.pedido-cartao.pedido-atrasado';
+igual('na tela de Pedidos, o cartão vermelho com "1 atrasado"', limpo(await pd.textContent(cartao + ' .t-atrasado')), '1 atrasado');
+igual('e o item: atrasado · 20 de 15 min', limpo(await pd.textContent(cartao + ' .item-atrasado .relogio')), 'atrasado · 20 de 15 min');
+await foto(pd, '8-pedido-atrasado');
+await pd.click(cartao + ' .item-check');
+await pd.waitForTimeout(1500);
+verdade('a cozinha marca o item pronto: gravou no banco', (await um(`select i.pronto_em is not null pronto from public.pedido_itens i
+  join public.pedidos x on x.id = i.pedido_id where x.salao_id = $1 and x.mesa = '3'`, [salaoId])).pronto);
+verdade('e o vermelho some', !(await pd.$('.pedido-cartao.pedido-atrasado')));
+await p.evaluate(() => carregarMesas());
+await p.waitForTimeout(800);
+verdade('no celular do garçom, a mesa 3 também sai do vermelho', !(await p.$('#mesasMapa .mesa-cartao.atrasada')));
 
 igual('nenhum erro de JavaScript', erros, []);
 await nav.close(); await banco.end();

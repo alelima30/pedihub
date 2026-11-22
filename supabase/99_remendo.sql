@@ -1996,6 +1996,8 @@ alter table public.servicos add column if not exists procedimento text;
 
 alter table public.servicos add column if not exists ficha jsonb;
 
+alter table public.produtos add column if not exists tempo_preparo smallint;
+
 create or replace function public.vitrine(p_slug text)
 returns jsonb
 language sql stable security definer set search_path = public as $$

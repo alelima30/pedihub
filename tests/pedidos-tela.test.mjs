@@ -7,7 +7,7 @@
    O banco é cobrado no `pedidos.test.mjs`. Aqui é o caminho de gente:
 
      1. o link do restaurante diz "Faça seu pedido" e "Cardápio", não
-        "Agendar horário" — e o do restaurante continua exatamente como era;
+        "Agendar horário" — e no PediHub toda casa é restaurante (64);
      2. a cliente monta o pedido, escolhe entrega, bairro, pagamento e troco,
         confere a conta (com a taxa do bairro) e confirma;
      3. ela acompanha o andamento, e o aviso da capa a leva de volta;
@@ -102,12 +102,12 @@ verdade('a capa não oferece serviço nem equipe', await c.evaluate(() =>
 verdade('a vitrine da capa é "Do cardápio", com o botão do cardápio completo',
   /Do cardápio/.test(await c.textContent('#capaLoja')) && /Ver o cardápio completo/.test(await c.textContent('#capaLoja')));
 {
+  // No PediHub não existe mais salão: a casa criada como salão vira
+  // restaurante (64) e o link dela também é de pedido.
   const s = await link(salao.slug);
-  igual('o restaurante continua com "Agendar horário" no pé', limpo(await s.textContent('#btPrincipal')), 'Agendar horário');
-  verdade('e com "Produtos em destaque" na capa', /Produtos em destaque/.test(await s.textContent('#capaLoja')));
-  await s.evaluate(() => irPara('loja'));
-  await s.evaluate(() => mudarNoCarrinho(produtosDaLoja()[0].id, 1));
-  igual('e a loja dele continua mandando pelo WhatsApp', limpo(await s.textContent('#btPrincipal')), 'Enviar pedido no WhatsApp');
+  igual('a outra casa também é de pedido: "Faça seu pedido" no pé', limpo(await s.textContent('#btPrincipal')), 'Faça seu pedido');
+  const visivel = await s.innerText('body');
+  verdade('e nada de "Agendar" à vista na capa', !/Agendar/i.test(visivel), (visivel.match(/.{0,40}agendar.{0,40}/i) || [''])[0]);
   await s.context().close();
 }
 
@@ -193,7 +193,7 @@ await p.waitForFunction(() => telaAtual === 'pedidos' && document.querySelectorA
   null, { timeout: 15000 }).catch(() => {});
 igual('o restaurante abre direto na tela de Pedidos', await p.evaluate(() => telaAtual), 'pedidos');
 const abas = await p.evaluate(() => [...document.querySelectorAll('#abas .aba')].map(a => a.dataset.chave));
-verdade('com Pedidos no menu, antes da Agenda', abas.indexOf('pedidos') >= 0 && abas.indexOf('pedidos') < abas.indexOf('agenda'), abas.join(','));
+verdade('com Pedidos no menu, e sem Agenda', abas.indexOf('pedidos') >= 0 && abas.indexOf('agenda') < 0, abas.join(','));
 igual('e os produtos se chamam Cardápio', await p.evaluate(() =>
   document.querySelector('#abas .aba[data-chave="produtos"] .aba-txt').textContent.trim()), 'Cardápio');
 igual('o selo do menu conta o pedido esperando aceite', await p.evaluate(() =>
@@ -237,7 +237,9 @@ await p.waitForSelector('#pcTaxa');
 await p.fill('#pcTaxa', '6');
 await p.fill('#pcMinimo', '30');
 await p.fill('#pcTempo', '30 a 45 min');
-await p.locator('.pcPag[value="cartao"]').uncheck();
+// Cartão é débito e crédito, separados (72); a dona tira os dois.
+await p.locator('.pcPag[value="debito"]').uncheck();
+await p.locator('.pcPag[value="credito"]').uncheck();
 await p.click('#modalPe button:has-text("Salvar")');
 await p.waitForTimeout(1500);
 const conf = await cli.chamar('pedidos_da_casa', { p_slug: zé.slug });

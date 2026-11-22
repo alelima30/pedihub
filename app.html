@@ -2231,7 +2231,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.615f09';
+const VERSAO_APP = 'v9.2413bb';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -10239,6 +10239,11 @@ function abrirProduto(pid){
         <input type="number" id="pEstoque" value="${p ? p.estoque : 0}" step="1">
         <span style="font-size:12px;color:var(--txt2)">Opcional. Baixa sozinho a
           cada venda entregue.</span></div>
+      <div class="campo"><label for="pTempo">Tempo de preparo (min)</label>
+        <input type="number" id="pTempo" value="${p && p.tempoPreparo ? p.tempoPreparo : ''}" min="1" max="600" step="1"
+               placeholder="ex.: 15">
+        <span style="font-size:12px;color:var(--txt2)">Passou disso na cozinha, o
+          item fica vermelho nos pedidos e nas mesas. Em branco: não conta.</span></div>
       <div class="campo" style="display:none"><label>Comissão (%)</label>
         <input type="number" id="pCom" value="${p && p.comissaoPct != null ? p.comissaoPct : 0}"
                min="0" max="100">
@@ -10480,6 +10485,8 @@ async function salvarProduto(pid){
     preco: parseFloat(document.getElementById('pPreco').value) || 0,
     custo: parseFloat(document.getElementById('pCusto').value) || 0,
     estoque: parseFloat(document.getElementById('pEstoque').value) || 0,
+    // Em branco (ou zero) é nulo: o item não tem prazo e nunca "atrasa".
+    tempoPreparo: (t => t >= 1 ? Math.min(600, t) : null)(parseInt(document.getElementById('pTempo').value, 10)),
     /* ⚠ ZERO, e não null — ao contrário de `servicos`.
 
        `produtos.comissao_pct` é `not null default 0`, e `servicos.comissao_pct`
@@ -23438,6 +23445,24 @@ function enderecoDoPedido(p){
     .filter(Boolean).join(' · ') + (e.referencia ? ` (ref.: ${e.referencia})` : '');
 }
 
+/* O relógio do item na cozinha (74): "20 de 15 min", vermelho se passou.
+   Os minutos e o "atrasado" vêm do banco (o relógio do celular pode estar
+   errado); a tela relê a cada 20 segundos. */
+function relogioDoItem(i, minutos){
+  if(i.pronto) return '<small class="relogio">pronto</small>';
+  if(minutos == null || !i.tempo) return '';
+  return `<small class="relogio">${i.atrasado ? 'atrasado · ' : ''}${minutos} de ${i.tempo} min</small>`;
+}
+async function marcarItemPronto(pid, iid, pronto){
+  const ped = (pedidosLista || []).find(x => x.id === pid);
+  const it = ped && (ped.itens || []).find(x => x.id === iid);
+  try{ await Dados.chamar('marcar_item_pronto', { p_item: iid, p_pronto: !!pronto }); }
+  catch(e){ alert('Não consegui marcar: ' + limparRecusa(e.message)); return; }
+  if(it){ it.pronto = !!pronto; if(pronto) it.atrasado = false; }
+  desenharPedidos();
+  carregarPedidos();
+}
+
 function cartaoDePedido(p){
   const tel = String(p.telefone || '').replace(/\D/g, '');
   const zap = tel ? 'https://wa.me/' + (tel.length > 11 ? tel : '55' + tel) : '';
@@ -23446,16 +23471,20 @@ function cartaoDePedido(p){
         p.entrega === 'entrega' ? 'Saiu para entrega' : 'Pronto para retirar', 'btn-p'], ['entregue', 'Entregue', '']]
     : (p.status === 'saiu' || p.status === 'pronto') ? [['entregue', 'Entregue', 'btn-p']] : [];
   const vivo = !['entregue', 'cancelado'].includes(p.status);
-  return `<div class="card pedido-cartao${pedidosNovos.has(p.id) ? ' pedido-novo' : ''}" data-pedido="${p.id}">
+  const atrasados = (p.itens || []).filter(i => i.atrasado).length;
+  return `<div class="card pedido-cartao${pedidosNovos.has(p.id) ? ' pedido-novo' : ''}${atrasados ? ' pedido-atrasado' : ''}" data-pedido="${p.id}">
     <div class="pedido-topo">
       <b>#${escapar(String(p.numero))}</b>
       <span class="tag ${p.status === 'cancelado' ? 't-canc' : p.status === 'entregue' ? 't-conc' : p.status === 'recebido' ? 't-pend' : 't-conf'}">${PEDIDO_ETAPA[p.status] || p.status}</span>
+      ${atrasados ? `<span class="tag t-atrasado">${atrasados} atrasado${atrasados > 1 ? 's' : ''}</span>` : ''}
       <span class="pedido-hora">${p.origem && p.origem !== 'link' ? `<span class="tag">${p.origem === 'telefone' ? 'telefone' : p.origem === 'mesa' ? 'mesa' : 'balcão'}</span> ` : ''}${horaDoPedido(p.criado_em)}${vivo ? ' · ' + haQuanto(p.criado_em) : ''}</span>
     </div>
     <div class="pedido-quem"><b>${escapar(p.nome)}</b>${zap
       ? ` · <a href="${zap}" target="_blank" rel="noopener">${escapar(telefoneNaTela(tel))}</a>` : ''}</div>
-    <ul class="pedido-itens">${(p.itens || []).map(i => `<li><b>${i.quantidade}×</b> ${escapar(i.nome)}${
-      i.observacao ? ` <small>(${escapar(i.observacao)})</small>` : ''}<span>${real(Number(i.preco) * i.quantidade)}</span></li>`).join('')}</ul>
+    <ul class="pedido-itens">${(p.itens || []).map(i => `<li class="${i.atrasado ? 'item-atrasado' : ''}${i.pronto ? ' item-pronto' : ''}">${
+      p.status === 'em_preparo' && i.id ? `<button type="button" class="item-check" title="${i.pronto ? 'Desmarcar' : 'Marcar este item pronto'}"
+        aria-pressed="${i.pronto ? 'true' : 'false'}" onclick="marcarItemPronto('${p.id}', '${i.id}', ${!i.pronto})">✓</button>` : ''}<div class="pi-nome"><b>${i.quantidade}×</b> ${escapar(i.nome)}${
+      i.observacao ? ` <small>(${escapar(i.observacao)})</small>` : ''}${(r => r ? `<div>${r}</div>` : '')(relogioDoItem(i, p.status === 'em_preparo' ? p.minutos : null))}</div><span>${real(Number(i.preco) * i.quantidade)}</span></li>`).join('')}</ul>
     ${p.observacao ? `<p class="pedido-obs"><b>Observação:</b> ${escapar(p.observacao)}</p>` : ''}
     <p class="pedido-entrega">${p.entrega === 'entrega'
       ? '🛵 <b>Entrega</b> — ' + escapar(enderecoDoPedido(p)) + (p.entregador ? ' · com <b>' + escapar(p.entregador) + '</b>' : '')
@@ -23827,10 +23856,11 @@ function desenharMesas(){
   for(let n = de; n <= ate; n++){
     const m = porMesa[String(n)];
     const minutos = m ? Math.max(0, Math.round((Date.now() - new Date(m.abertaEm)) / 60000)) : 0;
-    html += `<button type="button" class="mesa-cartao ${m ? 'ocupada' : ''} ${m && m.esperando ? 'alerta' : ''}" onclick="abrirMesa('${n}')">
+    html += `<button type="button" class="mesa-cartao ${m ? 'ocupada' : ''} ${m && m.esperando ? 'alerta' : ''} ${m && m.atrasados ? 'atrasada' : ''}" onclick="abrirMesa('${n}')">
       <b>Mesa ${n}</b>
       ${m ? `<span class="mesa-total">${real(Number(m.total))}</span>
              <span class="mesa-info">${m.itens} item(ns) · ${minutos < 60 ? minutos + ' min' : Math.floor(minutos / 60) + 'h' + String(minutos % 60).padStart(2, '0')}</span>
+             ${m.atrasados ? `<span class="mesa-tag atrasado">${m.atrasados} atrasado${m.atrasados > 1 ? 's' : ''}</span>` : ''}
              ${m.esperando ? '<span class="mesa-tag">pedido novo</span>' : m.prontos ? '<span class="mesa-tag pronto">pronto p/ servir</span>' : ''}`
           : '<span class="mesa-info">livre</span>'}
     </button>`;
@@ -23852,10 +23882,12 @@ async function abrirMesa(mesa){
   const ETAPA = { recebido:'novo', em_preparo:'na cozinha', pronto:'pronto', saiu:'saiu', entregue:'servido' };
   abrirModal('Mesa ' + mesa, `
     ${conta.aberta ? `<p class="secao-sub">Conta aberta às ${escapar(new Date(conta.abertaEm).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }))}${
-        conta.esperando ? ' · <b style="color:var(--alerta)">' + conta.esperando + ' pedido(s) esperando Aceitar (tela de Pedidos)</b>' : ''}</p>
-      <div class="mesa-itens">${itens.map(i => `<div class="np-linha">
+        conta.esperando ? ' · <b style="color:var(--alerta)">' + conta.esperando + ' pedido(s) esperando Aceitar (tela de Pedidos)</b>' : ''}${
+        conta.atrasados ? ' · <b style="color:var(--erro)">' + conta.atrasados + ' item(ns) atrasado(s): cobre a cozinha</b>' : ''}</p>
+      <div class="mesa-itens">${itens.map(i => `<div class="np-linha${i.atrasado ? ' item-atrasado' : ''}">
           <span><b>${i.quantidade}×</b> ${escapar(i.nome)}${i.observacao ? ` <small>(${escapar(i.observacao)})</small>` : ''}
-            <small style="display:block;color:var(--txt2)">${escapar(i.garcom || '—')} · ${escapar(ETAPA[i.status] || i.status)}</small></span>
+            <small style="display:block;color:var(--txt2)">${escapar(i.garcom || '—')} · ${escapar(i.pronto && i.status === 'em_preparo' ? 'pronto' : ETAPA[i.status] || i.status)}${
+              i.minutos != null && i.tempo ? ` · <b class="relogio-txt">${i.atrasado ? 'ATRASADO · ' : ''}${i.minutos} de ${i.tempo} min</b>` : ''}</small></span>
           <b>${real(Number(i.preco) * i.quantidade)}</b></div>`).join('')}</div>
       <div class="np-total">Total da mesa <span><b>${real(Number(conta.total))}</b></span></div>`
     : '<p class="secao-sub">Mesa livre. Lance os primeiros itens para abrir a conta.</p>'}`,
