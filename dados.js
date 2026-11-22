@@ -254,6 +254,9 @@ const VAZIO_E_NULO = new Set([
      precisa virar null — se virasse `''`, o Postgres recusaria a gravação
      inteira do serviço, não só o campo. */
   'comissao_fixa', 'comissao_regra_desde',
+  /* O tempo de preparo do prato (74): em branco é "não conta prazo". Um `''`
+     num smallint derrubaria a gravação inteira do item do cardápio. */
+  'tempo_preparo',
   /* As duas do 27_pacotes.sql, cobradas pelo `colunas.test.js` no minuto em
      que o módulo entrou.
 
