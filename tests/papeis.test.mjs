@@ -14,11 +14,13 @@
    lendo o valor do plano e a comissão das colegas, e levando erro em inglês
    quando tentava salvar algo que a própria tela deixou ela abrir.
 
-   ── E UM PIOR, NA AGENDA ───────────────────────────────────────────────────
-   Quem atende recebe do RLS só os atendimentos dela. Com as colunas das
-   colegas desenhadas assim mesmo, a agenda MENTE: a coluna da Bia aparece
-   vazia o dia inteiro, e quem olha conclui que a Bia está livre. Dizer a uma
-   cliente "a Bia tem 14h" com a Bia cheia é pior do que não mostrar a Bia.
+   ── NO RESTAURANTE ───────────────────────────────────────────────────────
+     dona            tudo
+     caixa/balcão    Pedidos, Mesas, Caixa, Clientes e o Cardápio; sem Plano,
+                     Meu negócio, Equipe, Relatórios e Hoje (faturamento)
+     garçom          Pedidos e Mesas; sem Caixa (a gaveta é do restaurante)
+   Esconder a aba não é proteger o dado: o BANCO recusa o relatório para o
+   balcão e o caixa para o garçom.
 
    ── COMO ELA MEDE ──────────────────────────────────────────────────────────
    Três pessoas de verdade, três navegadores separados, no MESMO restaurante. Não
@@ -28,6 +30,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import pg from './pg.mjs';
 
 const exigir = createRequire(import.meta.url);
 const { chromium } = exigir(process.env.PLAYWRIGHT || 'playwright');
@@ -57,74 +60,41 @@ function novaAba(){
 const marca = Date.now().toString(36) + Math.floor(Math.random()*1000);
 const tel = () => '+5511' + (100000000 + Math.floor(Math.random()*89999999));
 
-// ── A dona monta o restaurante ───────────────────────────────────────────────────
+// ── A dona monta o restaurante ───────────────────────────────────────────────
 const dDona = novaAba();
 await dDona.criarConta({ email:`p-dona-${marca}@teste.com`, senha:'minhasenhaboa',
   nome:'Ju Barbosa', telefone: tel() });
 const cr = await dDona.chamar('criar_salao', { p_nome_salao:'Restaurante Papéis ' + marca,
-  p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
+  p_tipo:'restaurante', p_telefone:'(11) 3333-4444', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id;
 
-import pg from './pg.mjs';
 const banco = new pg.Client({ host: process.env.PGHOST || '/tmp',
   port: +(process.env.PGPORT || 5444), user: process.env.PGUSER || 'postgres',
   database: process.env.PGBANCO || 'app' });
 await banco.connect();
-await banco.query(
-  `update public.assinaturas set plano='time', status='ativa' where salao_id=$1`,
-  [SALAO]);
+await banco.query(`update public.assinaturas set plano='time', status='ativa', vence_em = current_date + 30
+  where salao_id=$1`, [SALAO]);
+await dDona.inserir('produtos', { salaoId: SALAO, nome:'X-Burger', preco:30, custo:0, estoque:0,
+  ativo:true, vendaOnline:true });
+await dDona.atualizar('saloes', SALAO, { cfg:{ pedidos:{ mesas: 6 } } });
 
-const P1 = (await dDona.lista('profissionais', { salaoId: SALAO }))[0];
-const P2 = await dDona.inserir('profissionais', { salaoId: SALAO, nome:'Bia',
-  ativo:true, aceitaOnline:true, comissaoPct:40, cor:'#7C3AED' });
-for(const p of [P1, P2])
-  for(let i = 0; i <= 6; i++)
-    await dDona.inserir('jornadas', { profissionalId: p.id, diaSemana:i,
-                                      inicio:'08:00', fim:'18:00' });
-await dDona.inserir('servicos', { salaoId: SALAO, nome:'Corte', duracaoMin:60,
-  intervaloMin:0, preco:80, ativo:true, aceitaOnline:true });
-
-// ── Convida a recepção e uma profissional ──────────────────────────────────
-async function convidar(papel, nome, email, ficha){
+// ── Convida o caixa/balcão e um garçom ────────────────────────────────────
+// O garçom tem ficha na Equipe (é ela que leva o nome a cada item lançado).
+async function convidar(papel, nome, email){
+  const ficha = papel === 'profissional'
+    ? (await dDona.inserir('profissionais', { salaoId: SALAO, nome, ativo:true })).id : null;
   const r = await dDona.chamar('criar_convite',
-    { p_salao: SALAO, p_papel: papel, p_para_quem: nome,
-      p_profissional: ficha || null });
+    { p_salao: SALAO, p_papel: papel, p_para_quem: nome, p_profissional: ficha });
   const d = novaAba();
   await d.criarConta({ email, senha:'minhasenhaboa', nome, telefone: tel() });
   await d.chamar('aceitar_convite', { p_token: r.token });
   return d;
 }
-const dRecep = await convidar('recepcao', 'Rita Recep',
-                              `p-recep-${marca}@teste.com`);
-/* O convite de quem atende diz DE QUEM É A AGENDA, e é o aceite que amarra o
-   login à ficha. Antes eu amarrava isso com um UPDATE aqui no teste — e um
-   teste que arruma o estado na mão passa por um caminho que não existe no ar.
-   Foi assim que o buraco escapou: o convite saía sem ficha, a pessoa entrava,
-   e a agenda dela abria em branco. */
-const dProf  = await convidar('profissional', 'Bia',
-                              `p-prof-${marca}@teste.com`, P2.id);
-
-const euBia = (dProf.sessaoAtual() || {}).usuarioId;
-const ligada = await banco.query(
-  `select perfil_id from public.profissionais where id=$1`, [P2.id]);
-verdade('aceitar o convite ligou o login da Bia à agenda dela',
-  ligada.rows[0].perfil_id === euBia,
-  'sem esse elo o RLS não entrega atendimento nenhum e a agenda abre vazia');
-
-// Cada uma com um atendimento, amanhã.
-const AMANHA = new Date(Date.now() + 864e5).toISOString().slice(0,10);
-const desl = new Intl.DateTimeFormat('en-US', { timeZone:'America/Sao_Paulo',
-  timeZoneName:'longOffset' }).formatToParts(new Date(AMANHA + 'T12:00:00Z'))
-  .find(x => x.type === 'timeZoneName').value.replace('GMT','');
-let n = 0;
-for(const [prof, hora] of [[P1,'09:00'], [P2,'11:00']]){
-  const c = await dDona.inserir('clientes', { salaoId: SALAO,
-    nome:'Cliente ' + (++n), telefone:'11' + (900000000 + Math.floor(Math.random()*99999999)) });
-  await dDona.inserir('agendamentos', { salaoId: SALAO, clienteId: c.id,
-    profissionalId: prof.id, inicio:`${AMANHA}T${hora}:00${desl}`,
-    fim:`${AMANHA}T${hora.replace(/^(\d+)/, m => String(+m+1).padStart(2,'0'))}:00${desl}`,
-    status:'confirmado', origem:'recepcao', valorPrevisto: 80 });
-}
+const dRecep  = await convidar('recepcao', 'Rita Caixa', `p-recep-${marca}@teste.com`);
+const dGarcom = await convidar('profissional', 'Wilson Garçom', `p-garcom-${marca}@teste.com`);
+igual('os dois convites viraram vínculo ativo',
+  Number((await banco.query(`select count(*) n from public.vinculos where salao_id=$1 and status='ativo'
+    and papel in ('recepcao','profissional')`, [SALAO])).rows[0].n), 2);
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
@@ -143,9 +113,11 @@ async function abrirPainel(dados, rotulo){
   await p.waitForTimeout(4000);
   return p;
 }
-
 const abasDe = p => p.evaluate(() =>
   [...document.querySelectorAll('#abas .aba')].map(b => b.dataset.chave));
+const recusa = (p, fn, args) => p.evaluate(async ([fn, args]) => {
+  try{ await Dados.chamar(fn, args); return null; }catch(e){ return e.message || 'recusado'; }
+}, [fn, args]);
 
 /* ══════════════════════════════════════════════════════════════════════════
    1. A DONA VÊ TUDO
@@ -153,225 +125,70 @@ const abasDe = p => p.evaluate(() =>
 secao('A dona');
 const pgDona = await abrirPainel(dDona, 'dona');
 const abasDona = await abasDe(pgDona);
-/* Contado a partir do TELAS, e não escrito à mão.
-
-   Estava "as 9 abas", e a aba Hoje entrou: o teste reprovaria dizendo que a
-   dona vê 10 quando devia ver 9 — culpando a mudança certa. Número escrito
-   à mão num teste envelhece igual ao de qualquer outro lugar, com o
-   agravante de que aqui ele parece uma asserção.
-
-   O que importa não é quantas são: é que a dona veja TODAS. */
-/* "Todas" quer dizer as que valem para ESTE tipo de negócio: a aba Pedidos só
-   existe no restaurante (37_pedidos), e este restaurante é de beleza. E a aba
-   Crediário (47_crediario) só aparece com o módulo adicional — ou, para a
-   gestão, quando ele está à venda, para poder contratar. A regra é a da
-   própria tela (`crediarioNaAba`); a aba tem o teste dela, no
-   crediario-tela.test.mjs. */
-/* E os Pedidos da loja (53_pedidos_loja) só aparecem com produto à venda no
-   link (`lojaRecebePedidos`); a aba tem o teste dela, no
-   pedidos-loja-tela.test.mjs. */
-const totalDeTelas = await pgDona.evaluate(() => TELAS.filter(t => t[0] !== 'pedidos'
-  && (t[0] !== 'crediario' || crediarioNaAba())
-  && (t[0] !== 'pedidosloja' || lojaRecebePedidos())).length);
-igual('vê todas as abas do sistema', abasDona.length, totalDeTelas);
-verdade('inclusive Plano e Meu negócio',
-  abasDona.includes('plano') && abasDona.includes('salao'));
-verdade('e o painel do dia, que é dela',
-  abasDona.includes('hoje'), JSON.stringify(abasDona));
-verdade('e os Relatórios, que trazem faturamento e comissão da casa',
-  abasDona.includes('relatorios'), JSON.stringify(abasDona));
+/* "Todas" contado a partir da própria regra da tela (minhasTelas), e não
+   escrito à mão: número escrito num teste envelhece. O que importa é que ela
+   veja as do dia a dia E as da gestão. */
+igual('vê todas as abas do sistema', abasDona.length, await pgDona.evaluate(() => minhasTelas().length));
+verdade('Pedidos, Mesas e Caixa', ['pedidos','mesas','caixa'].every(k => abasDona.includes(k)), JSON.stringify(abasDona));
+verdade('e a gestão: Hoje, Relatórios, Equipe, Meu negócio e Plano',
+  ['hoje','relatorios','equipe','salao','plano'].every(k => abasDona.includes(k)), JSON.stringify(abasDona));
+verdade('e nada do salão (agenda, serviços, pacotes, ranking)',
+  !['agenda','servicos','pacotes','ranking','procedimentos'].some(k => abasDona.includes(k)), JSON.stringify(abasDona));
 igual('e o papel dela aparece na lateral',
   (await pgDona.evaluate(() =>
-    (document.getElementById('latQuemPapel') || {}).textContent) || '').trim(),
-  'Proprietário');
+    (document.getElementById('latQuemPapel') || {}).textContent) || '').trim(), 'Proprietário');
 
 /* ══════════════════════════════════════════════════════════════════════════
-   2. A RECEPÇÃO
+   2. O CAIXA / BALCÃO
    ══════════════════════════════════════════════════════════════════════════ */
-secao('A recepção');
+secao('O caixa e balcão');
 const pgRecep = await abrirPainel(dRecep, 'recepcao');
 const abasRecep = await abasDe(pgRecep);
-
-verdade('trabalha: agenda, caixa e clientes',
-  ['agenda','caixa','clientes'].every(k => abasRecep.includes(k)),
-  JSON.stringify(abasRecep));
-verdade('NÃO vê o Plano', !abasRecep.includes('plano'), JSON.stringify(abasRecep));
-verdade('NÃO vê Meu negócio', !abasRecep.includes('salao'), JSON.stringify(abasRecep));
-verdade('NÃO vê Equipe — que traz a comissão das colegas',
-  !abasRecep.includes('equipe'), JSON.stringify(abasRecep));
-verdade('NÃO vê Relatórios — faturamento do mês não é assunto do balcão',
-  !abasRecep.includes('relatorios'), JSON.stringify(abasRecep));
-verdade('NÃO vê Hoje — que traz o faturamento do dia e a comissão',
-  !abasRecep.includes('hoje'), JSON.stringify(abasRecep));
-
-/* ⚠ E ESCONDER A ABA NÃO É PROTEGER O DADO.
-   Quem barra é o banco: `relatorio()` é `security definer` com `e_gestor()`
-   na porta. Sem esta linha o teste aprovaria uma tela escondida sobre uma
-   função aberta — que é o furo que a gente já teve uma vez, no placar da
-   campanha. */
-const relRecusado = await pgRecep.evaluate(async s => {
-  try{ await Dados.chamar('relatorio',
-         { p_salao:s, p_de:'2026-01-01', p_ate:'2026-12-31' });
-       return null;
-  }catch(e){ return e.message || 'recusado'; }
-}, SALAO);
-verdade('e o BANCO recusa o relatório para ela, não só a tela',
-  relRecusado !== null, 'a recepção leu o faturamento do restaurante inteiro');
-
-// A lista de serviços continua: ela precisa conferir preço no balcão.
-verdade('vê a lista de Serviços', abasRecep.includes('servicos'));
-await pgRecep.evaluate(() => irPara('servicos'));
-await pgRecep.waitForTimeout(600);
-verdade('com os preços à vista',
-  await pgRecep.evaluate(() => /80/.test(
-    document.getElementById('listaServicos').textContent)));
-verdade('mas SEM botão de criar serviço',
-  await pgRecep.evaluate(() => {
-    const b = document.getElementById('btNovoServico');
-    return !b || getComputedStyle(b).display === 'none';
-  }));
-verdade('e sem botão de editar',
-  await pgRecep.evaluate(() =>
-    !document.querySelector('#listaServicos button')));
-
-// Digitar a aba escondida na mão não abre a tela.
+verdade('trabalha: Pedidos, Mesas, Caixa e Clientes',
+  ['pedidos','mesas','caixa','clientes'].every(k => abasRecep.includes(k)), JSON.stringify(abasRecep));
+verdade('NÃO vê o Plano nem Meu negócio',
+  !abasRecep.includes('plano') && !abasRecep.includes('salao'), JSON.stringify(abasRecep));
+verdade('NÃO vê Equipe', !abasRecep.includes('equipe'), JSON.stringify(abasRecep));
+verdade('NÃO vê Relatórios nem Hoje — faturamento não é assunto do balcão',
+  !abasRecep.includes('relatorios') && !abasRecep.includes('hoje'), JSON.stringify(abasRecep));
+verdade('e o BANCO recusa o relatório para ele, não só a tela',
+  (await recusa(pgRecep, 'relatorio', { p_salao: SALAO, p_de:'2026-01-01', p_ate:'2026-12-31' })) !== null,
+  'o balcão leu o faturamento do restaurante inteiro');
 await pgRecep.evaluate(() => irPara('plano'));
 await pgRecep.waitForTimeout(400);
-igual('e chamar a aba escondida cai na agenda',
-  await pgRecep.evaluate(() => telaAtual), 'agenda');
-
-// Na agenda ela vê a casa inteira — é o trabalho dela.
-await pgRecep.evaluate(dd => { diaAtual = dd; pintar(); }, AMANHA);
-await pgRecep.waitForTimeout(600);
-igual('e na agenda ela vê as DUAS colunas da equipe',
-  await pgRecep.evaluate(() => document.querySelectorAll('.grade .col').length), 2);
-igual('com os dois atendimentos do dia',
-  await pgRecep.evaluate(() => document.querySelectorAll('.ag').length), 2);
+igual('e chamar a aba escondida cai em Pedidos', await pgRecep.evaluate(() => telaAtual), 'pedidos');
 
 /* ══════════════════════════════════════════════════════════════════════════
-   3. QUEM ATENDE
+   3. O GARÇOM
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Quem atende');
-const pgProf = await abrirPainel(dProf, 'profissional');
-const abasProf = await abasDe(pgProf);
-
-verdade('vê a agenda', abasProf.includes('agenda'), JSON.stringify(abasProf));
-verdade('NÃO vê Plano, Meu negócio, Equipe nem Relatórios',
-  !['plano','salao','equipe','relatorios'].some(k => abasProf.includes(k)),
-  JSON.stringify(abasProf));
-
-await pgProf.evaluate(dd => { diaAtual = dd; pintar(); }, AMANHA);
-await pgProf.waitForTimeout(700);
-
-igual('e a grade dela tem UMA coluna: a dela',
-  await pgProf.evaluate(() => document.querySelectorAll('.grade .col').length), 1);
-
-/* ⚠ A PERGUNTA MUDOU DE LUGAR: DO CABEÇALHO PARA A COLUNA.
-
-   Antes daqui se cobrava o NOME "Bia" no `.col-h .nm`. Isso deixou de valer
-   quando a grade passou a esconder o cabeçalho num restaurante de uma pessoa só —
-   e para ela é uma pessoa só, porque a colega é filtrada. Dizer o nome de
-   quem está olhando a própria agenda é dizer o óbvio ocupando uma faixa de
-   tela, que no celular é o que mais falta.
-
-   Mas o ponto desta seção continua de pé, e ele é sério: sem a filtragem, a
-   coluna da colega apareceria VAZIA — o RLS não entrega os atendimentos dela
-   — e a agenda MENTIRIA dizendo que a colega está livre.
-
-   ⚠ E SE EU SÓ TIVESSE APAGADO A VERIFICAÇÃO DO NOME, a seguinte passaria
-   por engano: "nenhum `.col-h .nm` com Ju Barbosa" é verdade trivialmente
-   quando não existe cabeçalho nenhum. Teste verde sem testar nada é pior que
-   teste vermelho.
-
-   Então a identidade passa a sair da COLUNA, que a carrega no `data-prof` e
-   existe sempre, com cabeçalho ou sem. */
-const colunas = await pgProf.evaluate(() =>
-  [...document.querySelectorAll('.grade .col[data-prof]')]
-    .map(c => c.getAttribute('data-prof')));
-/* `join`, e não o array: o `igual` deste arquivo compara com `===`, e dois
-   arrays de conteúdo igual nunca são `===` um ao outro. Passei por isso: a
-   reprovação saiu com os dois lados idênticos na tela, que é o jeito mais
-   confuso possível de um teste falhar. */
-igual('e é a coluna DELA, pelo id — não a de uma colega',
-  colunas.join(','), P2.id);
-verdade('nenhuma coluna de colega aparecendo vazia',
-  !colunas.includes(P1.id),
-  'coluna vazia de colega faz a agenda mentir sobre quem está livre');
-
-/* ══════════════════════════════════════════════════════════════════════════
-   4. O DINHEIRO DA CASA NÃO É DE QUEM ATENDE
-
-   Esta seção nasceu de dois botões medidos no navegador, com uma conta de
-   profissional de verdade, os dois terminando na MESMA frase:
-
-       "O banco não autorizou esta gravação para a sua conta.
-        Se você acabou de trocar de restaurante, entre de novo."
-
-   Que é um conselho impossível de seguir: não era sessão velha, era o RLS
-   fazendo exatamente o que foi escrito para fazer. Entrar de novo devolve a
-   pessoa ao mesmo lugar, agora achando que o sistema está quebrado.
-
-   As policies sempre estiveram certas — `caixas` e `comandas` pedem
-   `ve_agenda_toda`, que não inclui `profissional`. Quem discordava era a
-   tela. Por isso cada verificação abaixo vem em par: a tela não oferece, E o
-   banco recusa. Sozinha, a primeira aprovaria uma aba escondida sobre uma
-   porta aberta; sozinha, a segunda aprovaria um botão que só serve para dar
-   erro.
-   ══════════════════════════════════════════════════════════════════════════ */
-secao('O caixa e a comanda, para quem atende');
-
+secao('O garçom');
+const pgGarcom = await abrirPainel(dGarcom, 'garcom');
+const abasGarcom = await abasDe(pgGarcom);
+verdade('vê Pedidos e Mesas', ['pedidos','mesas'].every(k => abasGarcom.includes(k)), JSON.stringify(abasGarcom));
+verdade('NÃO vê Plano, Meu negócio, Equipe, Relatórios nem Hoje',
+  !['plano','salao','equipe','relatorios','hoje'].some(k => abasGarcom.includes(k)), JSON.stringify(abasGarcom));
 verdade('NÃO vê a aba Caixa — a gaveta é dinheiro do restaurante inteiro',
-  !abasProf.includes('caixa'), JSON.stringify(abasProf));
-
-await pgProf.evaluate(() => irPara('caixa'));
-await pgProf.waitForTimeout(400);
-igual('e digitar a aba na mão cai na agenda',
-  await pgProf.evaluate(() => telaAtual), 'agenda');
-
-const caixaRecusado = await pgProf.evaluate(async s => {
-  try{ await Dados.inserir('caixas',
-         { salaoId:s, valorAbertura:100, abertoEm:new Date().toISOString() });
-       return null;
-  }catch(e){ return e.message || 'recusado'; }
-}, SALAO);
-verdade('e o BANCO recusa abrir o caixa para ela, não só a tela',
-  caixaRecusado !== null, 'quem atende abriu a gaveta do restaurante');
-
-// Volta para a agenda dela e abre a ficha do atendimento.
-await pgProf.evaluate(dd => { irPara('agenda'); diaAtual = dd; pintar(); }, AMANHA);
-await pgProf.waitForTimeout(700);
-await pgProf.evaluate(() => document.querySelector('.ag').click());
-await pgProf.waitForTimeout(600);
-
-/* Só os botões do RODAPÉ do modal. Perguntar a `document` traria a barra
-   lateral inteira junto, e o detalhe da reprova — cortado em doze itens —
-   mostraria "Agenda, Caixa, Clientes…" para um defeito que não é esse. */
-const botoesFicha = await pgProf.evaluate(() =>
-  [...document.querySelectorAll('#modalPe button')].map(b => b.textContent.trim()));
-verdade('a ficha do atendimento NÃO oferece "Abrir comanda"',
-  !botoesFicha.some(t => /Abrir comanda/i.test(t)), JSON.stringify(botoesFicha));
-
-/* E o que ela PODE continua lá: sem isto o conserto viraria uma tela
-   inútil, que é o outro jeito de errar a mesma decisão. */
-verdade('mas continua podendo mudar o status e arquivar o dela',
-  botoesFicha.some(t => /^Salvar$/.test(t))
-    && botoesFicha.some(t => /^Arquivar$/.test(t)),
-  JSON.stringify(botoesFicha));
-
-const comandaRecusada = await pgProf.evaluate(async s => {
-  try{ await Dados.inserir('comandas', { salaoId:s, status:'aberta' });
-       return null;
-  }catch(e){ return e.message || 'recusado'; }
-}, SALAO);
-verdade('e o BANCO recusa criar comanda para ela',
-  comandaRecusada !== null, 'quem atende abriu comanda no caixa da casa');
-
-await pgProf.evaluate(() => fecharModal());
+  !abasGarcom.includes('caixa'), JSON.stringify(abasGarcom));
+await pgGarcom.evaluate(() => irPara('caixa'));
+await pgGarcom.waitForTimeout(400);
+igual('e digitar a aba na mão cai em Pedidos', await pgGarcom.evaluate(() => telaAtual), 'pedidos');
+const idGarcom = (dGarcom.sessaoAtual() || {}).usuarioId;
+const caixaGarcom = await banco.query(`select set_config('request.jwt.claim.sub', $1, true)`, [idGarcom])
+  .then(async () => {
+    try{ await banco.query(`begin; set local role authenticated;
+      select set_config('request.jwt.claim.sub', '${idGarcom}', true);
+      insert into public.caixas (salao_id) values ('${SALAO}');`); await banco.query('rollback'); return null; }
+    catch(e){ await banco.query('rollback').catch(() => {}); return e.message; }
+  });
+verdade('e o BANCO recusa abrir o caixa para ele, não só a tela', caixaGarcom !== null, 'o garçom abriu o caixa');
+verdade('e o papel dele aparece na lateral como garçom',
+  /garçom/i.test((await pgGarcom.evaluate(() =>
+    (document.getElementById('latQuemPapel') || {}).textContent) || '')),
+  await pgGarcom.evaluate(() => (document.getElementById('latQuemPapel') || {}).textContent));
 
 secao('Sem erro de JavaScript');
 igual('nenhum erro no console', erros.length, 0, erros.join(' | '));
-
 await nav.close();
 await banco.end();
-console.log(`\n${passou} passaram, ${falhou} falharam`);
+console.log(`\n${falhou ? '✗' : '✓'} ${passou} de ${passou + falhou} passaram.`);
 process.exit(falhou ? 1 : 0);
