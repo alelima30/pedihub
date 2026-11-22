@@ -5045,6 +5045,32 @@ function calcularOpcoes(pid, sel){
   return { preco: Math.round(preco * 100) / 100, texto: partes.join(' · '), ids, falta };
 }
 
+/* ── MEUS PEDIDOS ───────────────────────────────────────────────────────────
+   Os últimos pedidos feitos NESTE celular (o segredo de cada um fica no
+   aparelho), com o que foi pedido e como está — inclusive os já entregues.
+   Tocar abre o acompanhamento. */
+function folhaMeusPedidos(){
+  setTimeout(carregarMeusPedidos, 0);
+  return `${cabecaDaFolha('carrinho', 'Meus pedidos', 'Os feitos neste celular')}
+    <div id="meusPedidosCorpo"><p class="sub">Carregando…</p></div>`;
+}
+async function carregarMeusPedidos(){
+  const alvo = document.getElementById('meusPedidosCorpo'); if(!alvo) return;
+  const lista = meusPedidosGuardados().slice(0, 8);
+  const linhas = await Promise.all(lista.map(async x => {
+    try{ const d = await Dados.chamar('meu_pedido', { p_token: x.token }); return d ? { token: x.token, d } : null; }
+    catch(e){ return null; }
+  }));
+  const vale = linhas.filter(Boolean);
+  if(!vale.length){ alvo.innerHTML = '<p class="sub">Nenhum pedido encontrado.</p>'; return; }
+  alvo.innerHTML = vale.map(({ token, d }) => `<button type="button" class="op-item" onclick="fecharFolha(true);abrirAcompanhar('${escapar(token)}')">
+      <span class="op-nome"><b>#${escapar(String(d.numero))}</b> · ${escapar(new Date(d.criado_em).toLocaleDateString('pt-BR'))}
+        <small style="display:block;color:var(--txt2)">${escapar((d.itens || []).map(i => i.quantidade + '× ' + i.nome).join(', ').slice(0, 90))}</small></span>
+      <span class="op-preco"><b>${escapar(d.status === 'entregue' && d.entrega === 'retirada' ? 'Retirado'
+        : d.status === 'entregue' && d.entrega === 'mesa' ? 'Servido' : (ETAPAS_PEDIDO[d.status] || d.status))}</b><br>${real(Number(d.total))}</span>
+    </button>`).join('');
+}
+
 function abrirEscolhaDeOpcoes(pid){
   escolhaOpcoes = { pid, sel: {}, qtd: 1 };
   abrirFolha('opcoes:' + pid);
@@ -5329,6 +5355,7 @@ function abrirFolha(qual, origem){
               : tipo === 'ficha'      ? folhaFicha(a1)
               : tipo === 'comparar'   ? folhaComparar(a1, a2)
               : tipo === 'opcoes'     ? folhaOpcoes(a1)
+              : tipo === 'meuspedidos' ? folhaMeusPedidos()
               : folhaInformacoes();
   if(!miolo) return;
   const f = document.createElement('div');
@@ -6258,7 +6285,8 @@ function ehRestaurante(){ return !!(salao && salao.tipo === 'restaurante' && NA_
 function modoPedidos(){ return ehRestaurante() && (!pedidosCasa || pedidosCasa.ligado === true); }
 function lojaTemSaida(){ return modoPedidos() || !!zapDoSalao(); }
 function pedidosAbertos(){ return !pedidosCasa || pedidosCasa.aberto !== false; }
-const PAGAMENTOS_PEDIDO = { pix:'Pix', dinheiro:'Dinheiro', cartao:'Cartão na entrega', na_mesa:'Pagar na mesa, no fim' };
+const PAGAMENTOS_PEDIDO = { pix:'Pix', dinheiro:'Dinheiro', debito:'Cartão de débito', credito:'Cartão de crédito',
+  cartao:'Cartão', na_mesa:'Pagar na mesa, no fim' };
 
 /* ── A MESA DO QR (71) ──────────────────────────────────────────────────────
    O QR de cada mesa abre ?salao=…&mesa=5. Vale só se a casa tem essa mesa
@@ -6316,7 +6344,7 @@ function formDoPedido(){
   pedidoForm = Object.assign({ nome: (sessao && sessao.nome) || '', tel: '', rua: '', numero: '',
     complemento: '', bairro: '', referencia: '', troco: '', obs: '' }, eu, {
     entrega: so([c.entrega !== false && 'entrega', c.retirada !== false && 'retirada'].filter(Boolean)),
-    pagamento: so((c.pagamentos || ['pix', 'dinheiro', 'cartao'])),
+    pagamento: so((c.pagamentos || ['pix', 'dinheiro', 'debito', 'credito'])),
     troco: '', obs: '' });
   if(pedidoForm.entrega === null && c.entrega !== false && eu.rua) pedidoForm.entrega = 'entrega';
   if(mesaDoLink()){ pedidoForm.entrega = 'mesa'; pedidoForm.pagamento = 'na_mesa'; }
@@ -6434,8 +6462,8 @@ function desenharPedido(){
   const mesa = mesaDoLink();
   const modos = mesa ? [['mesa', 'Mesa ' + mesa]]
     : [c.entrega !== false && ['entrega', 'Entrega'], c.retirada !== false && ['retirada', 'Retirar no local']].filter(Boolean);
-  const pags = mesa ? ['na_mesa'].concat(c.pagamentos || ['pix', 'dinheiro', 'cartao'])
-    : (c.pagamentos || ['pix', 'dinheiro', 'cartao']);
+  const pags = mesa ? ['na_mesa'].concat(c.pagamentos || ['pix', 'dinheiro', 'debito', 'credito'])
+    : (c.pagamentos || ['pix', 'dinheiro', 'debito', 'credito']);
   /* Montados fora do HTML de baixo: o `campo()` já escapa o que escreve, e o
      varredor do seguranca.test não precisa de exceção para isso. */
   const linhaDoNumero = campo('pdNumero', 'Número <span class="obrig">*</span>', 'numero', 'inputmode="numeric"')
@@ -6648,13 +6676,23 @@ async function cancelarPedidoDaCliente(){
 function desenharPedidoNaCapa(){
   const alvo = document.getElementById('capaPedido');
   if(!alvo) return;
-  if(!modoPedidos() || !ultimoPedido){ alvo.innerHTML = ''; return; }
+  if(!modoPedidos()){ alvo.innerHTML = ''; return; }
+  const guardados = meusPedidosGuardados();
+  const outros = guardados.length > (ultimoPedido ? 1 : 0);
+  const verTodos = outros ? `<button class="link" style="margin-top:6px" onclick="abrirFolha('meuspedidos')">
+      Ver meus pedidos (${guardados.length})</button>` : '';
+  if(!ultimoPedido){
+    alvo.innerHTML = guardados.length ? `<button class="pd-aviso" onclick="abrirFolha('meuspedidos')">
+        <span><b>Meus pedidos</b><span>Veja o que pediu e como está cada um</span></span>
+        <span class="pd-aviso-ir">Ver ›</span></button>` : '';
+    return;
+  }
   const d = ultimoPedido.dados || {};
   alvo.innerHTML = `<button class="pd-aviso" onclick="abrirAcompanhar('${escapar(ultimoPedido.token)}')">
       <span><b>Seu pedido #${escapar(String(d.numero || ''))}</b>
         <span>${escapar(ETAPAS_PEDIDO[d.status] || 'Acompanhar')}</span></span>
       <span class="pd-aviso-ir">Acompanhar ›</span>
-    </button>`;
+    </button>${verTodos}`;
 }
 
 function acaoPrincipal(){

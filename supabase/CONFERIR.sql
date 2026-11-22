@@ -1704,6 +1704,15 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or pg_get_functiondef(to_regprocedure('public.registrar_pedido(uuid,jsonb,text)')) not like '%FIDELIDADE%'
               then 'cole o 98_modulos.sql (71_mesas_entregadores_fidelidade)' else '' end
   union all
+  /* PediHub (72): cartão de débito ou crédito. */
+  select 88, 'Cartão de débito ou de crédito, separados',
+         case when not exists (select 1 from pg_constraint where conrelid = 'public.pedidos'::regclass
+                                 and pg_get_constraintdef(oid) like '%debito%')
+              then 'FALTA' else 'certo' end,
+         case when not exists (select 1 from pg_constraint where conrelid = 'public.pedidos'::regclass
+                                 and pg_get_constraintdef(oid) like '%debito%')
+              then 'cole o 98_modulos.sql (72_debito_credito)' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um

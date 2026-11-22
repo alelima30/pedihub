@@ -121,3 +121,14 @@ select t_texto('o seguinte não ganha de novo (o prêmio foi usado)', :'f2'::jso
 select t_texto('o acompanhamento diz quanto falta (3 entregues: faltam 3 para o próximo)',
   (t_como(null, format('select public.meu_pedido(%L::uuid)',
      (select token from public.pedidos where id = t_id(:'f2'::jsonb))))->'fidelidade'->>'faltam'), '3');
+
+\echo ''
+\echo '4. Débito ou crédito (72)'
+select t_link('{"entrega":"retirada","telefone":"11971000040","pagamento":"debito"}') as d1 \gset
+select t_dono(format('select public.mudar_status_pedido(%L::uuid, %L)', t_id(:'d1'::jsonb), 'em_preparo'));
+select t_dono(format('select public.mudar_status_pedido(%L::uuid, %L)', t_id(:'d1'::jsonb), 'entregue'));
+select t_texto('o débito entra no caixa como débito',
+  (select pg.forma from public.pedidos p join public.pagamentos pg on pg.comanda_id = p.comanda_id
+    where p.id = t_id(:'d1'::jsonb)), 'debito');
+select t_texto('crédito também vale (a lista padrão tem os dois)',
+  erro_de($$select (select t_dono($q$select to_jsonb(1)$q$)) || t_link('{"entrega":"retirada","telefone":"11971000041","pagamento":"credito"}')$$), null);
