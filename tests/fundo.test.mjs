@@ -341,9 +341,9 @@ secao('5 · A prévia do painel pinta o mesmo fundo que a página');
 
   /* ⚠ SEM NADA ESCOLHIDO, NO ESCURO. A prévia caía no cinza do painel
      (#141416) em vez do que a página mostra atrás do conteúdo — a coluna,
-     #131C2E. */
+     #1C1917 (o cartão do escuro do PediHub). */
   igual('sem escolha, no escuro: o mesmo fundo que a página mostra atrás do conteúdo',
-    (await previa("escolherFundoTipo('cor'); escolherTema('escuro')")).cor, '#131C2E');
+    (await previa("escolherFundoTipo('cor'); escolherTema('escuro')")).cor, '#1C1917');
   igual('cor escolhida', (await previa("escolherPapelPronto('#F2E4DA')")).cor, '#F2E4DA');
   const g = await previa("escolherGradientePronto('#FBF6EC', '#E9D6B0')");
   verdade('gradiente: a prévia desenha as duas cores',

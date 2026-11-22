@@ -62,11 +62,11 @@ const marca = Date.now().toString(36) + Math.floor(Math.random() * 1000);
 const dona = novaAba();
 await dona.criarConta({ email:`bb-${marca}@teste.com`, senha:'minhasenhaboa', nome:'Rita Alves',
   telefone:'+5511' + (100000000 + Math.floor(Math.random() * 89999999)) });
-const cr = await dona.chamar('criar_salao', { p_nome_salao:'Navalha Barbearia ' + marca, p_tipo:'barbearia',
+const cr = await dona.chamar('criar_salao', { p_nome_salao:'Lanchonete Navalha ' + marca, p_tipo:'restaurante',
   p_telefone:'(11) 98111-3251', p_documento:null, p_origem:null });
 const SALAO = cr[0].salao_id, SLUG = cr[0].slug;
-await dona.inserir('servicos', { salaoId: SALAO, nome:'Corte masculino', duracaoMin:30, intervaloMin:0,
-  preco:45, ativo:true, aceitaOnline:true });
+await dona.inserir('produtos', { salaoId: SALAO, nome:'X-Burger', preco:25, custo:0, estoque:0,
+  ativo:true, vendaOnline:true });
 const SEMANA = [0,1,2,3,4,5,6].reduce((o, d) => (o[d] = [['00:00','00:00']], o), {});
 const BOTAO = '#1F2937';                       // a Cor dos botões, escolhida
 const BASE_CFG = { cor:'#7C3AED', tema:'claro', funcionamento: SEMANA, pagamentos:{ formas:['pix'] } };
@@ -123,25 +123,16 @@ let linkAntes;
 {
   const { p, fechar } = await link();
   linkAntes = await noLink(p);
-  igual('no link: "Agendar horário", na Cor dos botões, sem classe nova',
-    [linkAntes.rot, HEX(linkAntes.fundo), linkAntes.classes], ['Agendar horário', BOTAO, []]);
-  linkAntes.palavras = await p.evaluate(() => [
-    (document.querySelector('#capaServicos .cat') || {}).textContent,
-    (document.getElementById('rotuloEquipe') || {}).textContent,
-    (document.querySelector('.boas .boas-cta:not(.boas-produtos)') || {}).textContent].map(x => String(x || '').trim()));
-  igual('e a barbearia fala "Nossos serviços", "Quem atende" e "Agendar horário" — nada de "corte"',
-    linkAntes.palavras, ['Nossos serviços', 'Quem atende', 'Agendar horário']);
+  igual('no link: "Faça seu pedido", na Cor dos botões, sem classe nova',
+    [linkAntes.rot, HEX(linkAntes.fundo), linkAntes.classes], ['Faça seu pedido', BOTAO, []]);
   await fechar();
 }
 let previaAntes;
 {
   const { p, fechar } = await painel();
   previaAntes = await naPrevia(p);
-  igual('a prévia mostra o botão de baixo: "Agendar horário", na Cor dos botões, letra branca',
-    previaAntes && [previaAntes.rot, HEX(previaAntes.fundo), HEX(previaAntes.letra)], ['Agendar horário', BOTAO, '#FFFFFF']);
-  igual('e as mesmas palavras do link nos títulos e no botão do Bem-vindo',
-    await p.evaluate(() => ['.fone-rot[data-cfg="tituloServicos"]', '.fone-rot[data-cfg="tituloEquipe"]', '.fone-cta[data-cfg="agendar"]']
-      .map(s => String((document.querySelector('#previaFone ' + s) || {}).textContent || '').trim())), linkAntes.palavras);
+  igual('a prévia mostra o botão de baixo: "Faça seu pedido", na Cor dos botões, letra branca',
+    previaAntes && [previaAntes.rot, HEX(previaAntes.fundo), HEX(previaAntes.letra)], ['Faça seu pedido', BOTAO, '#FFFFFF']);
   const linhas = await p.evaluate(() => ['rodape', 'letraRodape'].map(k => {
     const l = document.querySelector(`#coresRodape .cor-linha[data-chave="${k}"]`);
     return l ? [l.querySelector('b').textContent, l.querySelector('button').style.display] : null; }));
