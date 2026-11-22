@@ -2289,7 +2289,7 @@ function desenhar(){
                                  : 'Escolha pelo menos 1 produto'; }
   if(tela === 'produto')     { desenharProduto(); trilhaAte(0);
                                const p = produtosDaLoja().find(x => x.id === produtoAbertoId);
-                               const n = p ? (carrinho[p.id] || 0) : 0;
+                               const n = p ? qtdDoProduto(p.id) : 0;
                                if(!p || !lojaTemSaida()) rodape.style.display = 'none';
                                bp.textContent = n ? 'Ver meu pedido' : 'Adicionar ao pedido'; }
   // Botão desabilitado que DIZ o que falta. Cinza mudo faz a pessoa procurar
@@ -5066,8 +5066,7 @@ async function carregarMeusPedidos(){
   alvo.innerHTML = vale.map(({ token, d }) => `<button type="button" class="op-item" onclick="fecharFolha(true);abrirAcompanhar('${escapar(token)}')">
       <span class="op-nome"><b>#${escapar(String(d.numero))}</b> · ${escapar(new Date(d.criado_em).toLocaleDateString('pt-BR'))}
         <small style="display:block;color:var(--txt2)">${escapar((d.itens || []).map(i => i.quantidade + '× ' + i.nome).join(', ').slice(0, 90))}</small></span>
-      <span class="op-preco"><b>${escapar(d.status === 'entregue' && d.entrega === 'retirada' ? 'Retirado'
-        : d.status === 'entregue' && d.entrega === 'mesa' ? 'Servido' : (ETAPAS_PEDIDO[d.status] || d.status))}</b><br>${real(Number(d.total))}</span>
+      <span class="op-preco"><b>${escapar(etapaDoMeuPedido(d))}</b><br>${real(Number(d.total))}</span>
     </button>`).join('');
 }
 
@@ -5149,6 +5148,17 @@ function confirmarOpcoes(){
   escolhaOpcoes = null;
   fecharFolha();
   desenhar();
+  avisoAdicionado(((bd.produtos || []).find(q => q.id === e.pid) || {}).nome, calc.texto);
+}
+// "✓ Água mineral — Tipo: Com gás" por dois segundos, em cima do rodapé.
+function avisoAdicionado(nome, detalhe){
+  if(!nome) return;
+  let a = document.getElementById('avisoAdicionado');
+  if(!a){ a = document.createElement('div'); a.id = 'avisoAdicionado'; a.setAttribute('role', 'status'); document.body.appendChild(a); }
+  a.textContent = '✓ ' + nome + (detalhe ? ' — ' + detalhe : '') + ' no pedido';
+  a.classList.add('on');
+  clearTimeout(avisoAdicionado.t);
+  avisoAdicionado.t = setTimeout(() => a.classList.remove('on'), 2200);
 }
 
 function mudarNoCarrinho(pid, delta){
@@ -5751,7 +5761,7 @@ function desenharLojaNaCapa(){
   alvo.innerHTML = `
     <div class="cat">${modoPedidos() ? 'Do cardápio' : 'Produtos em destaque'}</div>
     <div class="pr-grade">${mostrar.map(p => {
-      const n = carrinho[p.id] || 0;
+      const n = qtdDoProduto(p.id);
       return `<div class="pr-cartao abre-produto" onclick="abrirProduto('${p.id}', event)">
         <!-- ⚠ A URL VAI NA VARIAVEL --pr-foto, E NAO EM background-image.
              A foto aparece inteira (contain) sobre uma copia borrada dela
@@ -5837,7 +5847,21 @@ function escolherCategoriaLoja(i){
   desenharLoja();
 }
 
+/* Quantos deste produto há no pedido, CONTANDO as combinações de
+   complementos: "Água — Com gás" fica no carrinho como `id~opção`, e olhar
+   só `carrinho[id]` dava zero — o cartão seguia dizendo "Adicionar" e a tela
+   do produto não virava "Ver meu pedido": a pessoa adicionava e ficava presa. */
+function qtdDoProduto(pid){
+  return Object.keys(carrinho).reduce((s, k) =>
+    s + (k === pid || k.startsWith(pid + '~') ? (Number(carrinho[k]) || 0) : 0), 0);
+}
 function botaoDoProduto(p, n){
+  // Com complementos, cada combinação é uma linha: aqui só diz quantos já
+  // foram e oferece pôr outro (o "−" fica no carrinho, linha por linha).
+  if(n && temOpcoes(p.id)){
+    return `<span class="loja-qtd-op"><b>✓ ${n} no pedido</b>
+         <button class="btn btn-peq" onclick="mudarNoCarrinho('${p.id}',1)" aria-label="Pôr outro ${escapar(p.nome)}">+ Outro</button></span>`;
+  }
   return n
     ? `<span class="loja-qtd" role="group" aria-label="Quantidade de ${escapar(p.nome)}">
          <button class="btn btn-peq" onclick="mudarNoCarrinho('${p.id}',-1)" aria-label="Tirar um">−</button>
@@ -5882,7 +5906,7 @@ function desenharProduto(){
       <div class="prod-preco">${precoDoProduto(p)}</div>
       ${p.descricao ? `<p class="prod-desc">${escapar(p.descricao)}</p>`
                     : '<p class="prod-desc prod-sem">O restaurante ainda não escreveu sobre este produto.</p>'}
-      <div class="prod-qtd">${botaoDoProduto(p, carrinho[p.id] || 0)}</div>
+      <div class="prod-qtd">${botaoDoProduto(p, qtdDoProduto(p.id))}</div>
     </div>`;
   if(window.aplicarIcones) aplicarIcones(alvo);
 }
@@ -5964,11 +5988,11 @@ function desenharLoja(){
           ${p.marca ? `<span class="loja-marca">${escapar(p.marca)}</span>` : ''}
           ${p.descricao ? `<span class="loja-desc">${escapar(p.descricao)}</span>` : ''}
           <b class="loja-preco">${preco(p)}</b>
-          ${botaoDe(p, carrinho[p.id] || 0)}
+          ${botaoDe(p, qtdDoProduto(p.id))}
         </div>
       </div>`).join('')}</div>`
     : lista.map(p => {
-    const n = carrinho[p.id] || 0;
+    const n = qtdDoProduto(p.id);
     return `<div class="bloco abre-produto" style="display:flex;gap:12px;align-items:flex-start"
       onclick="abrirProduto('${p.id}', event)">
       <div style="flex:0 0 64px;width:64px;height:64px;border-radius:9px;
@@ -6299,6 +6323,13 @@ function mesaDoLink(){
 }
 const ETAPAS_PEDIDO = { recebido:'Recebido', em_preparo:'Em preparo', saiu:'Saiu para entrega',
   pronto:'Pronto para retirar', entregue:'Entregue', cancelado:'Cancelado' };
+// A etapa com as palavras de cada jeito de receber: na mesa não se "retira".
+function etapaDoMeuPedido(d){
+  if(d.entrega === 'mesa' && d.status === 'pronto') return 'Pronto, já vai para a mesa';
+  if(d.entrega === 'mesa' && d.status === 'entregue') return 'Servido';
+  if(d.entrega === 'retirada' && d.status === 'entregue') return 'Retirado';
+  return ETAPAS_PEDIDO[d.status] || d.status;
+}
 
 function chaveDosPedidos(){ return 'pedihub.pedidos.' + (salao ? salao.id : 'sem-salao'); }
 function meusPedidosGuardados(){
@@ -6690,7 +6721,7 @@ function desenharPedidoNaCapa(){
   const d = ultimoPedido.dados || {};
   alvo.innerHTML = `<button class="pd-aviso" onclick="abrirAcompanhar('${escapar(ultimoPedido.token)}')">
       <span><b>Seu pedido #${escapar(String(d.numero || ''))}</b>
-        <span>${escapar(ETAPAS_PEDIDO[d.status] || 'Acompanhar')}</span></span>
+        <span>${escapar(d.status ? etapaDoMeuPedido(d) : 'Acompanhar')}</span></span>
       <span class="pd-aviso-ir">Acompanhar ›</span>
     </button>${verTodos}`;
 }
@@ -6710,7 +6741,7 @@ function acaoPrincipal(){
   if(tela === 'pedido')    return confirmarPedido();
   if(tela === 'acompanhar'){ historico = []; return irPara('capa', true); }
   if(tela === 'produto'){
-    const n = carrinho[produtoAbertoId] || 0;
+    const n = qtdDoProduto(produtoAbertoId);
     return n ? irPara('loja') : mudarNoCarrinho(produtoAbertoId, 1);
   }
   if(tela === 'servico')   return irPara('quem');

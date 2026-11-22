@@ -97,10 +97,9 @@ const casa = await cliente.chamar('pedidos_da_casa', { p_slug: pizza.slug });
 igual('o restaurante recebe, aberto, com os padrões de quem acabou de abrir',
   [casa.ligado, casa.aberto, casa.entrega, casa.retirada, Number(casa.taxaPadrao), Number(casa.minimo),
    casa.pagamentos, casa.servicosTambem],
-  [true, true, true, true, 0, 0, ['pix', 'dinheiro', 'cartao'], false]);
-igual('o restaurante de beleza não recebe pedido', (await cliente.chamar('pedidos_da_casa', { p_slug: salao.slug })).ligado, false);
-const doSalao = await recusa(() => cliente.chamar('fazer_pedido', { p_slug: salao.slug, p_pedido: pedido() }));
-verdade('e o banco recusa um pedido para ele', /não recebe pedidos pelo link/.test(doSalao || ''), doSalao);
+  [true, true, true, true, 0, 0, ['pix', 'dinheiro', 'debito', 'credito'], false]);
+// No PediHub toda casa é restaurante (64): a que nasceu como "salão" também recebe.
+igual('a outra casa também é restaurante e recebe pedido', (await cliente.chamar('pedidos_da_casa', { p_slug: salao.slug })).ligado, true);
 
 /* ══════════════════════════════════════════════════════════════════════════
    2 — O PREÇO É O DO BANCO
@@ -197,8 +196,10 @@ await cfg(pizza, {}, { funcionamento: agoraAberto });
 verdade('aberto o dia todo ("00:00" a "00:00"): passa', !!(await fazer(pizza)).token);
 await limparPedidos(pizza);
 await q(`update public.assinaturas set plano = 'gratuito', status = 'ativa', vence_em = null where salao_id = $1`, [pizza.salao]);
-verdade('no plano Grátis (sem loja): recusa', /não estão disponíveis/.test(await recusa(() => fazer(pizza)) || ''));
-igual('e a página fica sabendo', (await cliente.chamar('pedidos_da_casa', { p_slug: pizza.slug })).ligado, false);
+// PediHub (66): o Grátis RECEBE pedido pelo link (até 50 no mês — cobrado no planos_pedihub.test.sql).
+verdade('no plano Grátis: recebe pedido pelo link', !!(await fazer(pizza)).token);
+igual('e a página sabe que está ligado', (await cliente.chamar('pedidos_da_casa', { p_slug: pizza.slug })).ligado, true);
+await limparPedidos(pizza);
 await q(`update public.assinaturas set plano = 'trial', status = 'trial', trial_ate = current_date + 7 where salao_id = $1`, [pizza.salao]);
 
 secao('6. Limite contra pedido de mentira');

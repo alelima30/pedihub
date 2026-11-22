@@ -4934,6 +4934,16 @@ body.com-folha{ overflow:hidden }
 #listaProdutos .loja-add .ic-svg, #produtoAberto .loja-add .ic-svg{ color:inherit }
 /* Com o produto no carrinho: − n +, no contorno e na letra da cor. */
 #listaProdutos .loja-qtd, #produtoAberto .loja-qtd{ display:inline-flex; align-items:center; gap:9px }
+/* Item com complementos já no pedido: "✓ 2 no pedido" + "+ Outro". */
+.loja-qtd-op{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap }
+.loja-qtd-op b{ color:var(--ok); font-size:13.5px }
+.loja-cartao .loja-qtd-op{ margin-top:auto; width:100% }
+/* O aviso de que o item entrou no pedido (cardapio.html). */
+#avisoAdicionado{ position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); z-index:9000;
+  transform:translate(-50%, 12px); opacity:0; pointer-events:none; transition:opacity .2s, transform .2s;
+  max-width:calc(100vw - 32px); padding:10px 16px; border-radius:var(--r-pill); background:var(--txt); color:var(--painel);
+  font-weight:700; font-size:14px; box-shadow:var(--sombra-md); text-align:center }
+#avisoAdicionado.on{ opacity:1; transform:translate(-50%, 0) }
 #listaProdutos .loja-qtd b, #produtoAberto .loja-qtd b{ min-width:1.4em; text-align:center }
 #listaProdutos .loja-qtd .btn, #produtoAberto .loja-qtd .btn{
   color:var(--ac-600); font-weight:750; background:var(--painel);

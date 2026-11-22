@@ -128,11 +128,8 @@ troca cardapio.html \
   "  return !!(cupomLoja && cupomLoja.chave === chaveDoCupomLoja());" \
   && rodar "o limite da loja chega duas vezes mais rápido"
 
-echo "12. painel: Hoje volta à lista simples"
-troca app.html \
-  "       <div class=\"dia-lista\">\${aindaVem.map(cartaoDoDia).join('')}</div>\`" \
-  "       <div>\${aindaVem.map(a => a.id).join('')}</div>\`" \
-  && rodar "Hoje diferente do mês"
+# 12 saiu: protegia o "Quem ainda vem" (a agenda do salão) no Hoje. No
+# PediHub o Hoje mostra os pedidos em andamento.
 
 echo "13. painel: Dashboard de outro restaurante"
 troca app.html \
