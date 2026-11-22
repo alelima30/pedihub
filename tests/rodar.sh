@@ -140,6 +140,7 @@ preparar() {
   carregar "$RAIZ/supabase/72_debito_credito.sql"
   carregar "$RAIZ/supabase/73_conta_da_mesa_garcom.sql"
   carregar "$RAIZ/supabase/74_tempo_de_preparo.sql"
+  carregar "$RAIZ/supabase/75_entregadores.sql"
   carregar "$AQUI/00_ajuda.sql"
 }
 

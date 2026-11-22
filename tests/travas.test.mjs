@@ -33,7 +33,7 @@ const nav = await chromium.launch({ executablePath: CHROMIUM });
 /* ══════════════════════════════════════════════════════════════════════════ */
 secao('1 e 2. Dentro de um quadro de outro site');
 const SENSIVEIS = ['app.html?demo=1', 'admin.html', 'entrar.html', 'criar.html',
-                   'nova-senha.html', 'convite.html?t=x'];
+                   'nova-senha.html', 'convite.html?t=x', 'entregador.html?t=x'];
 for(const pagina of SENSIVEIS.concat(['cardapio.html?salao=qualquer'])){
   const ctx = await nav.newContext();
   const p = await ctx.newPage();

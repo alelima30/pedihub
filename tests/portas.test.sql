@@ -80,6 +80,8 @@ insert into porta_aberta values
   ('fazer_pedido',            'o pedido do link: preço, taxa e limites conferidos lá dentro'),
   ('pedidos_da_casa',         'taxas, mínimo e se está aberto — o que a página já mostra'),
   ('opcoes_da_casa',          'os complementos do cardápio à venda — o que a página já mostra (67)'),
+  ('entregas_do_entregador',  'o link do entregador: as entregas com ELE, pelo token secreto (75)'),
+  ('entregador_entregou',     'o entregador marca "Entregue" pelo token — só pedido com ele, a caminho (75)'),
   ('cupom_do_pedido_previa',  'a prévia do cupom no link: sem telefone e sem o id do cupom (68)'),
   ('casa_tem_cupom',          'sim ou não: o link mostra o campo do cupom (68)'),
 

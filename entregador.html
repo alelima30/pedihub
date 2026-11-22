@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<!-- NAO ABRE DENTRO DE OUTRO SITE: a pagina mostra endereco e telefone de
+     cliente. Mesma trava das outras telas privadas. -->
+<script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href);}catch(e){}}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Minhas entregas — PediHub</title>
+<meta name="description" content="As entregas que estão com você, com o endereço e o mapa." />
+<!-- Link privado, com o token no endereço: fora do buscador, e sem mandar o
+     endereço desta página para o Maps/Waze/WhatsApp quando ele toca neles. -->
+<meta name="robots" content="noindex, nofollow" />
+<meta name="referrer" content="no-referrer" />
+<link rel="icon" type="image/png" href="icones/icone-192.png" />
+<link rel="stylesheet" href="estilo.css" />
+<style>
+body{ background:var(--fundo, #f7f3ee) }
+.ent-topo{ position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:10px;
+  padding:12px 16px; background:var(--painel); border-bottom:1px solid var(--borda) }
+.ent-topo div{ flex:1; min-width:0 }
+.ent-topo b{ display:block; font-size:17px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.ent-topo span{ font-size:13px; color:var(--txt2) }
+.ent{ max-width:560px; margin:0 auto; padding:14px 16px 24px }
+.ent h2{ font-size:16px; margin:18px 0 8px; display:flex; align-items:center; gap:8px }
+.ent-qtd{ font-size:12px; font-weight:800; padding:2px 9px; border-radius:var(--r-pill); background:var(--marca); color:#fff }
+.ent-cartao{ background:var(--painel); border:1px solid var(--borda); border-radius:var(--r-lg, 14px);
+  box-shadow:var(--sombra); padding:14px; margin-bottom:12px }
+.ent-cab{ display:flex; justify-content:space-between; gap:8px; align-items:baseline }
+.ent-cab b{ font-size:17px }
+.ent-cab small{ color:var(--txt2); white-space:nowrap }
+.ent-end{ font-size:16px; font-weight:700; margin:8px 0 2px; line-height:1.35 }
+.ent-ref{ font-size:14px; color:var(--txt2) }
+.ent-botoes{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0 }
+.ent-botoes a{ display:flex; align-items:center; justify-content:center; min-height:46px; border-radius:12px;
+  border:1px solid var(--borda); background:var(--painel2, #faf7f3); color:var(--txt); font-weight:700;
+  text-decoration:none; font-size:15px }
+.ent-pag{ border-radius:12px; padding:10px 12px; background:var(--painel2, #faf7f3); font-size:15px; line-height:1.45 }
+.ent-pag.dinheiro{ background:color-mix(in srgb, var(--ok) 14%, var(--painel)); }
+.ent-pag b{ font-size:17px }
+.ent-itens{ font-size:14px; color:var(--txt2); margin:10px 0 0; padding-left:18px }
+.ent-obs{ font-size:14px; margin:8px 0 0 }
+.ent-entregue{ width:100%; min-height:52px; margin-top:12px; font-size:17px; font-weight:800; border:0;
+  border-radius:12px; background:var(--ok); color:#fff; cursor:pointer }
+.ent-entregue[disabled]{ opacity:.6 }
+.ent-vazio{ color:var(--txt2); background:var(--painel); border:1px dashed var(--borda); border-radius:12px;
+  padding:16px; text-align:center }
+.ent-hoje{ display:grid; grid-template-columns:1fr 1fr; gap:8px }
+.ent-hoje div{ background:var(--painel); border:1px solid var(--borda); border-radius:12px; padding:10px 12px }
+.ent-hoje span{ display:block; font-size:12.5px; color:var(--txt2) }
+.ent-hoje b{ font-size:17px }
+.ent-hoje .ent-saldo{ grid-column:1 / -1 }
+.ent-lista{ list-style:none; padding:0; margin:10px 0 0; font-size:14px }
+.ent-lista li{ display:flex; justify-content:space-between; gap:8px; padding:7px 0; border-bottom:1px solid var(--borda) }
+.ent-dica{ font-size:13px; color:var(--txt2); margin:6px 0 0 }
+.ent-erro{ margin-top:30px }
+.rodape-legal{ max-width:560px; margin:10px auto 24px; padding:0 16px; font-size:11px; color:var(--txt3); text-align:center }
+</style>
+</head>
+<body>
+
+<header class="ent-topo">
+  <div><b id="entCasa">Minhas entregas</b><span id="entQuem">Abrindo…</span></div>
+  <button type="button" class="btn btn-peq" id="entAtualizar" onclick="carregar()">Atualizar</button>
+</header>
+<main class="ent" id="ent">
+  <p class="ent-vazio">Abrindo as suas entregas…</p>
+</main>
+<p class="rodape-legal">PediHub · Todos os direitos reservados. Software protegido por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, distribuição ou uso não autorizado são proibidos.</p>
+
+<script src="config.js"></script>
+<script src="dados.js"></script>
+<script>
+/* ===========================================================================
+   O link do entregador (75_entregadores.sql).
+
+   Sem login: o motoboy muitas vezes é freelancer. O restaurante manda pelo
+   WhatsApp um link com um token secreto, um por entregador. Aqui ele vê SÓ
+   as entregas que estão com ele ("saiu para entrega"): o endereço, os botões
+   do mapa e do WhatsApp do cliente, o que cobrar e o troco — e marca
+   "Entregue". O resumo do dia diz quanto recebeu em dinheiro, quanto ganha e
+   o acerto com o caixa. Quem calcula tudo é o banco.
+
+   A localização em tempo real fica com o WhatsApp do próprio entregador
+   (clipe → Localização → em tempo real): funciona com a tela desligada e não
+   custa nada.
+   =========================================================================== */
+const TOKEN = new URLSearchParams(location.search).get('t') || '';
+const $ = i => document.getElementById(i);
+const esc = t => String(t == null ? '' : t)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const real = v => Number(v || 0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+const hora = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }); };
+const PAGAMENTO = {
+  dinheiro: 'Dinheiro', pix: 'Pix', debito: 'Cartão de débito', credito: 'Cartão de crédito', cartao: 'Cartão',
+};
+let dados = null, ocupado = false;
+
+function telefone55(t){
+  const d = String(t || '').replace(/\D/g, '');
+  return !d ? '' : d.length > 11 ? d : '55' + d;
+}
+function enderecoEmLinha(p){
+  const e = p.endereco || {};
+  return [[e.rua, e.numero].filter(Boolean).join(', '), e.complemento, e.bairro || p.bairro].filter(Boolean).join(' · ');
+}
+function buscaDoMapa(p){
+  const e = p.endereco || {};
+  return [[e.rua, e.numero].filter(Boolean).join(', '), e.bairro || p.bairro, dados.cidade].filter(Boolean).join(', ');
+}
+function quadroDoPagamento(p){
+  const total = Number(p.total), troco = Number(p.troco || 0);
+  if(p.pagamento === 'dinheiro'){
+    return `<div class="ent-pag dinheiro">Cobrar <b>${real(total)}</b> em dinheiro${troco > total
+      ? `<br>O cliente paga com ${real(troco)}: leve <b>${real(troco - total)}</b> de troco` : ''}</div>`;
+  }
+  if(p.pagamento === 'pix') return `<div class="ent-pag">Pix — <b>${real(total)}</b>. Não cobra em dinheiro.</div>`;
+  return `<div class="ent-pag">${esc(PAGAMENTO[p.pagamento] || p.pagamento)} — <b>${real(total)}</b>. Leve a maquininha.</div>`;
+}
+function cartao(p){
+  const tel = telefone55(p.telefone);
+  const primeiro = String(p.nome || '').trim().split(/\s+/)[0] || '';
+  const msg = `Olá${primeiro ? ', ' + primeiro : ''}! Sou ${dados.entregador}, da ${dados.casa}. Estou a caminho com o seu pedido #${p.numero}.`;
+  const q = encodeURIComponent(buscaDoMapa(p));
+  const ref = (p.endereco || {}).referencia;
+  return `<div class="ent-cartao" data-pedido="${esc(p.id)}">
+    <div class="ent-cab"><b>#${esc(p.numero)} · ${esc(p.nome)}</b><small>saiu ${esc(hora(p.saiuEm))}</small></div>
+    <div class="ent-end">${esc(enderecoEmLinha(p))}</div>
+    ${ref ? `<div class="ent-ref">Referência: ${esc(ref)}</div>` : ''}
+    <div class="ent-botoes">
+      <a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener noreferrer">Google Maps</a>
+      <a href="https://waze.com/ul?q=${q}&navigate=yes" target="_blank" rel="noopener noreferrer">Waze</a>
+      ${tel ? `<a href="https://wa.me/${tel}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+               <a href="tel:+${tel}">Ligar</a>` : ''}
+    </div>
+    ${quadroDoPagamento(p)}
+    <ul class="ent-itens">${(p.itens || []).map(i => `<li>${esc(i.quantidade)}× ${esc(i.nome)}</li>`).join('')}</ul>
+    ${p.observacao ? `<p class="ent-obs"><b>Observação:</b> ${esc(p.observacao)}</p>` : ''}
+    <button type="button" class="ent-entregue" onclick="entreguei('${esc(p.id)}', '${esc(p.numero)}')">✓ Entregue</button>
+  </div>`;
+}
+function desenhar(){
+  const d = dados;
+  $('entCasa').textContent = d.casa;
+  $('entQuem').textContent = 'Entregas de ' + d.entregador;
+  document.title = 'Entregas de ' + d.entregador + ' — ' + d.casa;
+  const h = d.hoje || {}, saldo = Number(h.saldo || 0);
+  $('ent').innerHTML = `
+    <h2>A caminho <span class="ent-qtd">${d.caminho.length}</span></h2>
+    ${d.caminho.length ? d.caminho.map(cartao).join('')
+      : '<p class="ent-vazio">Nenhuma entrega com você agora. Quando o restaurante marcar "Saiu para entrega" com o seu nome, ela aparece aqui sozinha.</p>'}
+    ${d.caminho.length ? '<p class="ent-dica">Dica: no WhatsApp do cliente, toque no clipe → Localização → "em tempo real" para ele acompanhar você.</p>' : ''}
+    <h2>Hoje</h2>
+    <div class="ent-hoje">
+      <div><span>Entregas</span><b>${Number(h.entregas || 0)}</b></div>
+      <div><span>Recebeu em dinheiro</span><b>${real(h.dinheiro)}</b></div>
+      <div><span>Você ganha</span><b>${real(h.ganha)}</b></div>
+      <div><span>Troco que levou</span><b>${real(h.troco)}</b></div>
+      <div class="ent-saldo"><span>Acerto com o caixa</span><b>${saldo > 0 ? 'Devolver ' + real(saldo)
+        : saldo < 0 ? 'Receber ' + real(-saldo) : 'Nada a acertar'}</b></div>
+    </div>
+    ${(d.entregues || []).length ? `<ul class="ent-lista">${d.entregues.map(x => `<li><span>#${esc(x.numero)} · ${esc(x.bairro || '')}</span>
+      <span>${real(x.total)} · ${esc(PAGAMENTO[x.pagamento] || x.pagamento)} · ${esc(hora(x.entregueEm))}</span></li>`).join('')}</ul>` : ''}`;
+}
+function semLink(){
+  $('entQuem').textContent = '';
+  $('entAtualizar').style.display = 'none';
+  $('ent').innerHTML = '<div class="aviso ent-erro">Este link de entregas não vale mais. Peça um novo ao restaurante.</div>';
+}
+
+async function carregar(){
+  if(!/^[0-9a-f-]{36}$/i.test(TOKEN)){ semLink(); return; }
+  try{
+    const r = await Dados.chamar('entregas_do_entregador', { p_token: TOKEN });
+    if(!r || !r.ok){ dados = null; semLink(); return; }
+    dados = r;
+    if(!ocupado) desenhar();
+  }catch(e){
+    if(!dados) $('ent').innerHTML = '<div class="aviso ent-erro">Sem conexão agora. Tente de novo em instantes.</div>';
+  }
+}
+async function entreguei(id, numero){
+  if(!confirm('Confirmar que o pedido #' + numero + ' foi entregue?')) return;
+  ocupado = true;
+  const bt = document.querySelector(`.ent-cartao[data-pedido="${CSS.escape(id)}"] .ent-entregue`);
+  if(bt){ bt.disabled = true; bt.textContent = 'Marcando…'; }
+  try{ await Dados.chamar('entregador_entregou', { p_token: TOKEN, p_pedido: id }); }
+  catch(e){ alert('Não deu para marcar: ' + String(e && e.message || e).replace(/^.*?:\s*/, '')); }
+  ocupado = false;
+  await carregar();
+}
+
+carregar();
+setInterval(() => { if(!document.hidden) carregar(); }, 30000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) carregar(); });
+</script>
+</body>
+</html>

@@ -1739,6 +1739,18 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or pg_get_functiondef(to_regprocedure('public.mesas_abertas(uuid)')) not like '%atrasados%'
               then 'cole o 98_modulos.sql (74_tempo_de_preparo)' else '' end
   union all
+  /* PediHub (75): acerto do dinheiro, quanto o motoboy ganha, link do entregador. */
+  select 91, 'Entregadores: acerto do dinheiro e o link de cada um',
+         case when to_regclass('public.entregador_links') is null
+                or to_regprocedure('public.entregas_do_entregador(uuid)') is null
+                or to_regprocedure('public.entregador_entregou(uuid,uuid)') is null
+                or to_regprocedure('public.link_do_entregador(uuid,text,boolean)') is null
+                or pg_get_functiondef(to_regprocedure('public.acerto_entregadores(uuid,date,date)')) not like '%contas_dos_entregadores%'
+              then 'FALTA' else 'certo' end,
+         case when to_regclass('public.entregador_links') is null
+                or to_regprocedure('public.entregas_do_entregador(uuid)') is null
+              then 'cole o 98_modulos.sql (75_entregadores)' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um
