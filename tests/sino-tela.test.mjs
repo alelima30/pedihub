@@ -8,11 +8,11 @@
    notificações do sistema".
 
      1. o admin publica um aviso para os restaurantes (e a lista diz que está no ar);
-     2. no painel da dona, o sino aparece com o número: o horário a confirmar,
-        o pedido da loja e o aviso do PediHub;
+     2. no painel da dona, o sino aparece com o número: o pedido novo
+        (esperando Aceitar) e o aviso do PediHub;
      3. aberto, cada item diz o que é e leva à tela dele; o aviso se marca
         como lido (e sai do sino, e fica gravado);
-     4. resolvido, some: confirmou o horário, o número desce;
+     4. resolvido, some: aceitou o pedido, o número desce;
      5. no computador, a lista abre embaixo do sino, dentro da tela;
      6. banco sem o 54 (o SQL não foi colado): o sino fica escondido, sem erro.
    =========================================================================== */
@@ -58,21 +58,15 @@ const tel = () => String(900000000 + Math.floor(Math.random() * 89999999));
 const dona = novaAba();
 await dona.criarConta({ email:`sino-${m}@teste.com`, senha:'minhasenhaboa', nome:'Ana Sino', telefone:'+5511' + tel() });
 const cr = await dona.chamar('criar_salao', { p_nome_salao:'Restaurante do Sino ' + m,
-  p_tipo:'salao', p_telefone:'(11) 3333-4444', p_documento:'11222333000181', p_origem:null });
+  p_tipo:'restaurante', p_telefone:'(11) 3333-4444', p_documento:'11222333000181', p_origem:null });
 const SALAO = cr[0].salao_id;
 const plat = novaAba();
 await plat.criarConta({ email:`plat-${m}@teste.com`, senha:'minhasenhaboa', nome:'Plataforma', telefone:'+5511' + tel() });
 await banco.query(`update public.perfis set super_admin = true where email = $1`, [`plat-${m}@teste.com`]);
 
-// Um horário marcado pelo link, esperando o "sim"; e um pedido da loja.
-const CLI = (await linha(`insert into public.clientes (salao_id, nome, telefone) values ($1, 'Maria Lima', $2) returning id`,
-  [SALAO, '11' + tel()])).id;
-const PROF = (await linha(`select id from public.profissionais where salao_id = $1 and ativo order by criado_em limit 1`, [SALAO]))?.id
-  || (await linha(`insert into public.profissionais (salao_id, nome) values ($1, 'Ana') returning id`, [SALAO])).id;
-const AG = (await linha(`insert into public.agendamentos (salao_id, cliente_id, profissional_id, inicio, fim, status, origem, valor_previsto)
-  values ($1, $2, $3, now() + interval '2 days', now() + interval '2 days 45 minutes', 'pendente', 'online', 50) returning id`,
-  [SALAO, CLI, PROF])).id;
-await banco.query(`insert into public.pedidos_loja (salao_id, numero, cliente_id, status) values ($1, 1, $2, 'novo')`, [SALAO, CLI]);
+// Um pedido do link, esperando "Aceitar".
+const PED = (await linha(`insert into public.pedidos (salao_id, numero, nome, telefone, tipo_entrega, subtotal, taxa_entrega, total, pagamento, status)
+  values ($1, 1, 'Maria Lima', $2, 'retirada', 30, 0, 30, 'pix', 'recebido') returning id`, [SALAO, '11' + tel()])).id;
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
@@ -143,16 +137,16 @@ verdade('o sino aparece no topo, ao lado da Ajuda', await pc.evaluate(() => {
 const avisosVivos = Number((await linha(`select count(*) n from public.avisos_plataforma
   where arquivado_em is null and para = 'gestao' and (ate is null or ate >= current_date)
     and (salao_id is null or salao_id = $1)`, [SALAO])).n);
-const esperado = 2 + avisosVivos;
-igual('o número: 1 horário a confirmar + 1 pedido da loja + os avisos do PediHub',
+const esperado = 1 + avisosVivos;
+igual('o número: 1 pedido novo + os avisos do PediHub',
   await numeroDoSino(pc), esperado > 9 ? '9+' : String(esperado));
 
 secao('3. Aberto: o que é cada um, e para onde leva');
 await pc.click('#btSino');
 await pc.waitForSelector('#sinoPainel:not([hidden]) .sino-item', { timeout: 10000 });
 const painel = await texto(pc, '#sinoPainel');
-verdade('a lista diz: "1 horário espera sua confirmação", "1 pedido novo da loja" e o aviso, com "Marcar como lido"',
-  /1 horário espera sua confirmação/.test(painel) && /1 pedido novo da loja/.test(painel)
+verdade('a lista diz: "1 pedido novo" e o aviso, com "Marcar como lido"',
+  /1 pedido novo/.test(painel) && !/horário/.test(painel)
   && painel.includes('Novidade: o sino ' + m) && /AVISO DO PEDIHUB/.test(painel) && /Marcar como lido/.test(painel), painel);
 verdade('   e o aviso que foi só para este restaurante também está lá', painel.includes('Só para o seu restaurante ' + m), painel);
 verdade('   a 390px a lista cabe na tela', await pc.evaluate(() => {
@@ -170,27 +164,24 @@ verdade('marcou como lido: sai da lista, o número desce, e fica gravado',
 const idAvisoSalao = (await linha(`select id from public.avisos_plataforma where titulo = $1`, ['Só para o seu restaurante ' + m])).id;
 await pc.click(`#sinoAviso-${idAvisoSalao} button:has-text("Marcar como lido")`);
 await pc.waitForTimeout(800);
-await pc.click('#sinoPainel .sino-item:has-text("pedido novo da loja")');
-await pc.waitForTimeout(600);
-igual('o pedido leva à aba Pedidos, e o sino fecha',
-  await pc.evaluate(() => [telaAtual, document.getElementById('sinoPainel').hidden]), ['pedidosloja', true]);
+await pc.evaluate(() => { fecharSino(); irPara('clientes'); });
+await pc.waitForTimeout(300);
 await pc.click('#btSino');
 await pc.waitForSelector('#sinoPainel:not([hidden]) .sino-item');
-await pc.click('#sinoPainel .sino-item:has-text("horário espera")');
+await pc.click('#sinoPainel .sino-item:has-text("pedido novo")');
 await pc.waitForTimeout(600);
-igual('o horário leva à agenda, onde está o "espera sua confirmação"',
-  await pc.evaluate(() => [telaAtual, !!document.getElementById('aConfirmar')]), ['agenda', true]);
+igual('o pedido leva à aba Pedidos, e o sino fecha',
+  await pc.evaluate(() => [telaAtual, document.getElementById('sinoPainel').hidden]), ['pedidos', true]);
 await pc.click('#btSino'); await pc.waitForTimeout(200);
 await pc.click('h1#tituloTela'); await pc.waitForTimeout(200);
 igual('   tocar fora fecha a lista', await pc.evaluate(() => document.getElementById('sinoPainel').hidden), true);
 
 secao('4. Resolvido, some');
-await banco.query(`update public.agendamentos set status = 'confirmado' where id = $1`, [AG]);
-await banco.query(`update public.pedidos_loja set status = 'cancelado' where salao_id = $1`, [SALAO]);
+await banco.query(`update public.pedidos set status = 'em_preparo', aceito_em = now() where id = $1`, [PED]);
 await pc.evaluate(() => pedirSino(true));
 await pc.waitForTimeout(1500);
 const restam = avisosVivos - 2;
-igual('confirmou o horário e o pedido saiu: só os outros avisos (se houver) contam',
+igual('aceitou o pedido: só os outros avisos (se houver) contam',
   await numeroDoSino(pc), restam > 0 ? (restam > 9 ? '9+' : String(restam)) : '');
 if(restam === 0){
   await pc.click('#btSino');
@@ -201,7 +192,7 @@ await ctxC.close();
 
 /* ══════════════════════════════════════════════════════════════════════════ */
 secao('5. No computador');
-await banco.query(`update public.agendamentos set status = 'pendente' where id = $1`, [AG]);
+await banco.query(`update public.pedidos set status = 'recebido', aceito_em = null where id = $1`, [PED]);
 {
   const { ctx, p } = await abrirPainel(1280);
   await p.waitForFunction(() => getComputedStyle(document.getElementById('btSino')).display !== 'none', null, { timeout: 15000 }).catch(() => {});
@@ -242,41 +233,8 @@ secao('7. Tela estreita (320px): o topo cabe com o sino');
   await ctx.close();
 }
 
-/* ══════════════════════════════════════════════════════════════════════════ */
-secao('8. A cliente excluiu a conta: o sino avisa, e a ficha mostra');
-{
-  // A Vera cria conta pelo link (a ficha nasce), tem horário marcado, e exclui a conta.
-  const vera = novaAba();
-  await vera.criarConta({ email:`vera-${m}@t.com`, senha:'senhadavera1', nome:'Vera Exclui', telefone:'+5511' + tel() });
-  await vera.chamar('cadastrar_minha_ficha', { p_salao: SALAO });
-  const fichaVera = (await linha(`select id from public.clientes where salao_id = $1 and nome = 'Vera Exclui'`, [SALAO])).id;
-  await banco.query(`insert into public.agendamentos (salao_id, cliente_id, profissional_id, inicio, fim, status, origem, valor_previsto)
-    values ($1, $2, $3, now() + interval '4 days', now() + interval '4 days 45 minutes', 'confirmado', 'online', 50)`, [SALAO, fichaVera, PROF]);
-  await vera.chamar('excluir_minha_conta', { p_confirmacao: 'EXCLUIR' });
-  igual('excluiu: a ficha fica, desligada, com o dia em que a conta sumiu',
-    await linha(`select perfil_id is null as solta, conta_excluida_em is not null as marcada from public.clientes where id = $1`, [fichaVera]),
-    { solta: true, marcada: true });
-  const { ctx, p } = await abrirPainel(390);
-  await p.waitForFunction(() => getComputedStyle(document.getElementById('btSino')).display !== 'none', null, { timeout: 15000 }).catch(() => {});
-  await p.click('#btSino');
-  await p.waitForSelector('#sinoPainel:not([hidden]) .sino-item', { timeout: 10000 }).catch(() => {});
-  const txt = await texto(p, '#sinoPainel');
-  verdade('o sino diz "Vera Exclui excluiu a conta do link", e que ela ainda tem horário marcado',
-    /Vera Exclui excluiu a conta do link/.test(txt) && /Ainda tem horário marcado/.test(txt), txt);
-  await p.click('#sinoPainel .sino-item:has-text("excluiu a conta do link")');
-  await p.waitForTimeout(1500);
-  igual('   tocar leva a Clientes, e o aviso sai do sino (visto)',
-    [await p.evaluate(() => telaAtual),
-     !!(await linha(`select conta_excluida_vista_em from public.clientes where id = $1`, [fichaVera])).conta_excluida_vista_em,
-     await p.evaluate(() => ((sinoDados || {}).itens || []).some(i => i.tipo === 'conta_excluida'))],
-    ['clientes', true, false]);
-  await p.evaluate(async () => { const novo = await carregarTudo(); if(novo){ bd = novo; pintar(); } });
-  await p.waitForTimeout(800);
-  verdade('   e em Clientes a ficha dela mostra "excluiu a conta do link em …"',
-    await p.evaluate(() => [...document.querySelectorAll('#listaClientes tbody tr')]
-      .some(tr => /Vera Exclui/.test(tr.innerText) && /excluiu a conta do link em \d\d\/\d\d/.test(tr.innerText))));
-  await ctx.close();
-}
+/* PediHub: saiu a parte 8 (a cliente que excluiu a conta do link com horário
+   marcado) — o link do restaurante não tem conta de cliente. */
 
 // Os avisos deste teste saem do ar: a bancada é dividida com os outros testes.
 await banco.query(`update public.avisos_plataforma set arquivado_em = now()

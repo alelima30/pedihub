@@ -2231,7 +2231,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.2ef277';
+const VERSAO_APP = 'v9.bd0308';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -19438,7 +19438,7 @@ function desenharSino(){
         Nada esperando por você agora. Quando algo pedir sua atenção, aparece aqui.</div>` : ''}
     ${AvisosCelular.suportado() || AvisosCelular.iphoneSemInstalar() ? `<button type="button" class="sino-item" id="sinoAvisosCelular"
         onclick="fecharSino(); abrirAvisosCelular()"><span class="sino-ic">${ico('sino')}</span>
-        <span><b>Avisos no celular</b><small>Receba horário novo e cancelamento na tela do celular</small></span></button>` : ''}`;
+        <span><b>Avisos no celular</b><small>Receba pedido novo na tela do celular</small></span></button>` : ''}`;
   painel._linhas = linhas;
 }
 
