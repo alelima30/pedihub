@@ -11,6 +11,10 @@
 <meta property="og:title" content="PediHub — cardápio digital com pedidos, sem comissão">
 <meta property="og:description" content="O seu cardápio no link, os pedidos numa tela só, entrega por bairro, caixa e relatórios. Sem comissão por pedido.">
 <meta property="og:url" content="https://alelima30.github.io/pedihub/conheca.html">
+<meta property="og:image" content="https://alelima30.github.io/pedihub/icones/compartilhar.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" type="image/png" href="icones/icone-192.png">
 <link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
 <style>
@@ -369,5 +373,23 @@ footer a{ color:var(--txt2) }
     <a href="entrar.html">Entrar</a> · <a href="criar.html?origem=pagina">Criar conta</a>
   </div>
 </footer>
+<script>
+/* A ORIGEM DO ANÚNCIO VAI JUNTO. O anúncio chega aqui com `utm_source`
+   (e `fbclid`, `gclid`…), e o cadastro grava de onde a pessoa veio em "Como
+   você nos conheceu?". Sem isto, todo botão "Criar conta" levava só
+   `origem=pagina` e o anúncio do Instagram virava "Página do PediHub" — não
+   dava para saber qual anúncio trouxe restaurante. Só os parâmetros de
+   campanha passam; o resto do endereço fica. */
+(function(){
+  const q = new URLSearchParams(location.search), leva = new URLSearchParams();
+  for(const [k, v] of q) if(/^(utm_[a-z]+|fbclid|gclid|ttclid)$/.test(k) && v) leva.set(k, v.slice(0, 120));
+  if(![...leva.keys()].length) return;
+  document.querySelectorAll('a[href^="criar.html"]').forEach(a => {
+    const u = new URL(a.getAttribute('href'), location.href);
+    for(const [k, v] of leva) u.searchParams.set(k, v);
+    a.setAttribute('href', 'criar.html' + u.search);
+  });
+})();
+</script>
 </body>
 </html>

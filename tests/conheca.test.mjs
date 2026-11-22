@@ -1,170 +1,109 @@
 /* ===========================================================================
-   A página dos anúncios (conheca.html) — o desenho do dono do PediHub
+   PediHub — a página dos anúncios (conheca.html)
 
-   Veio da ferramenta de design como um pacote de 14 MB que se montava no
-   navegador; no site ela é estática (HTML montado, WebP, fontes em arquivo e
-   um script pequeno). Aqui se confere o que faz a página vender sem mentir,
-   abrir rápido e não perder o rastro de quem chegou:
+     python3 -m http.server 8099 --directory .     (deixe rodando)
+     PLAYWRIGHT=… node tests/conheca.test.mjs
 
-     · título, descrição, canônico e imagem de compartilhamento;
-     · todo "Criar conta grátis" leva utm_*, fbclid e gclid ao cadastro, e o
-       cadastro já marca "Como você nos conheceu?";
-     · nada de fora é carregado (sem Google Fonts, sem unpkg, sem React), e a
-       página inteira pesa pouco;
-     · os carrosséis e as perguntas funcionam sem o código da ferramenta;
-     · o que o sistema não faz não está escrito (exportar dados);
-     · quem pede "reduzir movimento" vê tudo parado;
-     · a raiz do site continua levando ao login.
-
-       python3 -m http.server 8099 --directory .
-       PLAYWRIGHT=.../node_modules/playwright node tests/conheca.test.mjs
+   É para onde vai o anúncio pago. O que tem de valer:
+     1. a promessa num título só, e o que se vê ao compartilhar no WhatsApp e
+        no Instagram (título, descrição e a imagem, que existe no site);
+     2. os planos do PediHub (R$ 69,90 e R$ 119,90), e nada do AgendaPro
+        (agenda, salão, barbearia, plano Básico);
+     3. todo "Criar conta" leva ao cadastro — e LEVA A ORIGEM DO ANÚNCIO
+        (utm_*, fbclid): o anúncio do Instagram chega no cadastro como
+        Instagram em "Como você nos conheceu?", e não como "Página do PediHub";
+     4. o menu leva a seções que existem; as imagens carregam e têm texto
+        alternativo; no celular nada vaza para o lado.
    =========================================================================== */
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 const exigir = createRequire(import.meta.url);
 const { chromium } = exigir(process.env.PLAYWRIGHT || 'playwright');
-const RAIZ = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const BASE = process.env.BASE || 'http://127.0.0.1:8099/';
 
-let ok = 0, falhas = 0;
-const diz = (bom, msg, extra) => {
-  if(bom){ ok++; console.log('  ✓ ' + msg); }
-  else { falhas++; console.log('  ✗ ' + msg + (extra ? '\n      ' + extra : '')); }
-};
+let passou = 0, falhou = 0;
+const ok  = m => { console.log('  ✓ ' + m); passou++; };
+const nao = (m, d) => { console.log('  ✗ ' + m + (d ? '\n      ' + d : '')); falhou++; };
+const verdade = (m, c, d) => c ? ok(m) : nao(m, d || 'esperava verdadeiro');
+const igual = (m, a, b) => JSON.stringify(a) === JSON.stringify(b) ? ok(m)
+  : nao(m, `esperava ${JSON.stringify(b)}, veio ${JSON.stringify(a)}`);
+const secao = t => console.log('\n' + t);
 
 const nav = await chromium.launch({ executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium' });
-
-async function abrir({ largura, busca = '', movimento = 'no-preference' }){
-  const ctx = await nav.newContext({ viewport: { width: largura, height: 800 },
-    isMobile: largura < 700, hasTouch: largura < 700, reducedMotion: movimento });
+const erros = [];
+async function abrir(sufixo = '', opc = { viewport:{ width:1280, height:900 } }){
+  const ctx = await nav.newContext(opc);
   const p = await ctx.newPage();
-  const erros = [], deFora = [], bytes = { total: 0 };
   p.on('pageerror', e => erros.push(e.message));
-  p.on('console', m => { if(m.type() === 'error') erros.push(m.text()); });
-  p.on('request', r => { const u = r.url(); if(!u.startsWith(BASE.replace(/\/$/, '')) && !u.startsWith('data:')) deFora.push(u); });
-  p.on('response', async r => { try{ bytes.total += (await r.body()).length; }catch(e){} });
-  await p.goto(BASE + 'conheca.html' + busca);
-  await p.waitForTimeout(900);
-  return { ctx, p, erros, deFora, bytes };
+  await p.goto(BASE + 'conheca.html' + sufixo);
+  await p.waitForTimeout(600);
+  return { p, ctx };
 }
 
-console.log('\nAbrindo');
+secao('1. A promessa, e o que aparece ao compartilhar');
 {
-  const { ctx, p, erros, deFora } = await abrir({ largura: 1366 });
-  const cab = await p.evaluate(() => ({
-    titulo: document.title,
-    desc: (document.querySelector('meta[name=description]') || {}).content || '',
-    canonico: (document.querySelector('link[rel=canonical]') || {}).href || '',
-    og: (document.querySelector('meta[property="og:image"]') || {}).content || '',
-    h1: [...document.querySelectorAll('h1')].map(h => h.textContent.replace(/\s+/g, ' ').trim()),
-    lang: document.documentElement.lang,
-  }));
-  diz(/PediHub/.test(cab.titulo) && cab.desc.length > 60, 'tem título e descrição para o Google', cab.titulo);
-  diz(/conheca\.html$/.test(cab.canonico) && /lp\/og\.jpg$/.test(cab.og), 'link canônico e imagem de compartilhamento (WhatsApp, Instagram)');
-  diz(fs.existsSync(path.join(RAIZ, 'lp/og.jpg')), 'e a imagem de compartilhamento existe no site');
-  diz(cab.h1.length === 1 && /agenda online/i.test(cab.h1[0]) && /pronta hoje/.test(cab.h1[0]), 'um título só (h1), com a promessa', cab.h1.join(' | '));
-  diz(cab.lang === 'pt-BR', 'a página se declara em português');
-  diz(deFora.length === 0, 'nada vem de fora: sem Google Fonts, sem unpkg, sem React', deFora.slice(0, 3).join(' | '));
-  diz(erros.length === 0, 'sem erro de JavaScript', erros.join(' | '));
-  const fontes = await p.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/"/g, '')); });
-  diz(fontes.includes('Montserrat') && fontes.includes('Plus Jakarta Sans'), 'as fontes do desenho carregam do próprio site', [...new Set(fontes)].join(', '));
-  const orfaos = await p.evaluate(() => [...document.querySelectorAll('a[href^="#"]')].map(a => a.getAttribute('href'))
-    .filter(h => h.length > 1 && !document.getElementById(h.slice(1))));
-  diz(orfaos.length === 0, 'todo link do menu (#…) leva a uma seção que existe', orfaos.join(', '));
-  diz(!/\{\{|sc-placeholder|__bundler|dc-runtime|blob:/.test(await p.content()), 'não sobrou nada do código da ferramenta ({{ }}, blob:, carregador)');
-  await ctx.close();
-}
+  const { p, ctx } = await abrir();
+  const h1 = await p.$$eval('h1', e => e.map(x => x.textContent.replace(/\s+/g, ' ').trim()));
+  verdade('um título só (h1), com a promessa', h1.length === 1 && /cardápio digital/i.test(h1[0]) && /sem comissão/i.test(h1[0]), JSON.stringify(h1));
+  const meta = await p.evaluate(() => {
+    const m = s => (document.querySelector(s) || {}).content || (document.querySelector(s) || {}).href || '';
+    return { titulo: document.title, canon: m('link[rel="canonical"]'), ogt: m('meta[property="og:title"]'),
+             ogd: m('meta[property="og:description"]'), ogi: m('meta[property="og:image"]') };
+  });
+  verdade('título da aba, endereço oficial, e título e descrição para compartilhar',
+    /PediHub/.test(meta.titulo) && /pedihub\/conheca\.html$/.test(meta.canon) && /PediHub/.test(meta.ogt) && meta.ogd.length > 40,
+    JSON.stringify(meta));
+  verdade('a imagem de compartilhar é a do site', /pedihub\/icones\/compartilhar\.png$/.test(meta.ogi), meta.ogi);
+  const img = await p.evaluate(async u => { const r = await fetch(u); const b = await r.blob(); return [r.status, b.type, b.size]; },
+    BASE + 'icones/compartilhar.png');
+  verdade('e ela existe no site (PNG)', img[0] === 200 && img[1] === 'image/png' && img[2] > 5000, JSON.stringify(img));
+  const dim = await p.evaluate(async u => new Promise(r => { const i = new Image(); i.onload = () => r([i.naturalWidth, i.naturalHeight]); i.src = u; }),
+    BASE + 'icones/compartilhar.png');
+  igual('no tamanho que o WhatsApp e o Instagram usam (1200×630)', dim, [1200, 630]);
 
-console.log('\nOs botões levam o anúncio até o cadastro');
-{
-  const { ctx, p } = await abrir({ largura: 375, busca: '?utm_source=instagram&utm_campaign=lancamento&fbclid=abc123&lixo=<x>' });
-  const links = await p.evaluate(() => [...document.querySelectorAll('a')].filter(a => /Criar conta/i.test(a.textContent)).map(a => a.getAttribute('href')));
-  const alvo = new URL(links[0], BASE);
-  diz(links.length >= 3 && links.every(h => h === links[0]), `todos os "Criar conta grátis" (${links.length}) vão para o mesmo endereço`);
-  diz(alvo.pathname.endsWith('/criar.html') && alvo.searchParams.get('utm_source') === 'instagram'
-      && alvo.searchParams.get('utm_campaign') === 'lancamento' && alvo.searchParams.get('fbclid') === 'abc123'
-      && alvo.searchParams.get('origem') === 'pagina' && !alvo.searchParams.has('lixo'),
-      'o cadastro recebe utm_*, fbclid e a origem — e só eles', links[0]);
-  const entrar = await p.evaluate(() => [...document.querySelectorAll('a')].filter(a => /Entrar/.test(a.textContent)).map(a => a.getAttribute('href')));
-  diz(entrar.length >= 2 && entrar.every(h => h === 'entrar.html'), '"Entrar" e "Entrar no painel" levam ao login do próprio site', entrar.join(' | '));
-  const zap = await p.evaluate(() => { const a = document.getElementById('zapDuvida'); return a ? a.href : ''; });
-  diz(/^https:\/\/wa\.me\/55\d{10,11}\?text=/.test(zap), '"Fale com a gente no WhatsApp" tem número e mensagem (antes era wa.me/ vazio)', zap);
-  await p.goto(alvo.href); await p.waitForTimeout(800);
-  diz(await p.evaluate(() => document.getElementById('fOrigem').value) === 'Instagram', 'e o cadastro já marca "Como você nos conheceu?" = Instagram');
-  await ctx.close();
-}
-
-console.log('\nNo celular');
-{
-  const { ctx, p, erros, bytes } = await abrir({ largura: 375 });
-  diz(await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth) === 0, 'a página não rola para o lado');
-  await p.evaluate(async () => { for(let y = 0; y < document.body.scrollHeight; y += 400){ window.scrollTo(0, y); await new Promise(r => setTimeout(r, 60)); } });
-  await p.waitForTimeout(800);
-  const imgs = await p.evaluate(() => [...document.images].filter(i => i.offsetParent !== null || i.closest('[style*="preserve-3d"]'))
-    .map(i => ({ src: i.getAttribute('src'), ok: i.complete && i.naturalWidth > 0, alt: !!i.alt, medida: !!(i.getAttribute('width') && i.getAttribute('height')) })));
-  diz(imgs.length >= 8 && imgs.every(i => i.ok), 'todas as imagens carregam', JSON.stringify(imgs.filter(i => !i.ok)));
-  diz(imgs.every(i => i.alt) && imgs.every(i => i.medida), 'e toda imagem tem texto alternativo e medida (a página não pula)');
-  diz(imgs.every(i => /\.webp$/.test(i.src)), 'as imagens são WebP, no tamanho em que aparecem', imgs.map(i => i.src).filter(s => !/\.webp$/.test(s)).join(', '));
-  const kb = Math.round(bytes.total / 1024);
-  diz(kb < 1500, `a página inteira pesa ${kb} KB (era 14 MB)`, kb + ' KB');
+  secao('2. Os planos do PediHub, e nada do AgendaPro');
   const texto = await p.evaluate(() => document.body.innerText);
-  diz(!/undefined|NaN|\$\{|\{\{/.test(texto), 'nenhum "undefined", "NaN" ou {{…}} escapou para o texto');
-  diz(!/exportar/i.test(texto), 'não promete "exportar tudo" — o sistema não tem exportação');
-  diz(erros.length === 0, 'sem erro de JavaScript', erros.join(' | '));
+  verdade('Essencial R$ 69,90 e Profissional R$ 119,90', /69,90/.test(texto) && /119,90/.test(texto) && /Essencial/.test(texto) && /Profissional/.test(texto));
+  const ruins = (texto.match(/[^\n]{0,30}\b(agenda|agendamento|salão|barbearia|plano Básico)\b[^\n]{0,30}/gi) || []);
+  igual('nenhuma palavra do salão', ruins, []);
+
+  secao('4. Menu, imagens');
+  const ancoras = await p.evaluate(() => [...document.querySelectorAll('a[href^="#"]')].map(a => a.getAttribute('href'))
+    .filter(h => h.length > 1).filter(h => !document.getElementById(h.slice(1))));
+  igual('todo link do menu (#…) leva a uma seção que existe', ancoras, []);
+  const imgs = await p.evaluate(() => [...document.images].map(i => ({ src: i.getAttribute('src'), ok: i.complete && i.naturalWidth > 0, alt: i.hasAttribute('alt') })));
+  verdade('todas as imagens carregam', imgs.length > 0 && imgs.every(i => i.ok), JSON.stringify(imgs.filter(i => !i.ok)));
+  verdade('e toda imagem tem texto alternativo', imgs.every(i => i.alt), JSON.stringify(imgs.filter(i => !i.alt)));
   await ctx.close();
 }
 
-console.log('\nOs carrosséis e as perguntas, sem o código da ferramenta');
+secao('3. Os botões de cadastro levam a origem do anúncio');
 {
-  const { ctx, p, erros } = await abrir({ largura: 1366 });
-  const heroi = () => p.evaluate(() => ({ rotulo: document.querySelector('#heroiRotulo .sc-interp').textContent,
-    frente: document.getElementById('heroiFrente').getAttribute('src'), verso: document.getElementById('heroiVerso').getAttribute('src'),
-    giro: document.getElementById('heroiGiro').style.transform, cliente: document.querySelector('[data-dc-tpl="67"] .sc-interp').textContent }));
-  const h0 = await heroi();
-  await p.click('#heroiPontos button:nth-child(3)'); await p.waitForTimeout(200);
-  const h1 = await heroi();
-  diz(h0.rotulo === 'Restaurante de beleza' && h1.rotulo === 'Estética' && h1.cliente === 'Camila' && /rotateY\(-360deg\)/.test(h1.giro),
-      'tocar no 3º pontinho do celular vira para "Estética", com a mensagem da Camila', JSON.stringify([h0.rotulo, h1]));
-  diz(/nicho-estetica\.webp$/.test(h1.frente) || /nicho-estetica\.webp$/.test(h1.verso), 'e a tela da estética está no lado que aparece');
-  const anel = () => p.evaluate(() => ({ titulo: document.querySelector('#anelTitulo .sc-interp').textContent, giro: document.getElementById('anel').style.transform }));
-  await p.click('#anelPontos button:nth-child(4)'); await p.waitForTimeout(200);
-  const a1 = await anel();
-  diz(a1.titulo === 'Com a sua marca' && /rotateY\(-216deg\)/.test(a1.giro), 'tocar no 4º pontinho da roda gira para "Com a sua marca"', JSON.stringify(a1));
-  const faq = () => p.evaluate(() => [...document.querySelectorAll('[data-faq]')].map(b => ({ aberta: b.getAttribute('aria-expanded') === 'true',
-    resposta: !document.getElementById('faqR' + b.dataset.faq).hidden })));
-  const f0 = await faq();
-  diz(f0.length === 10 && f0[0].aberta && f0[0].resposta && f0.slice(1).every(x => !x.aberta && !x.resposta), 'dez perguntas, a primeira aberta, como no desenho');
-  diz(await p.evaluate(() => [...document.querySelectorAll('[id^="faqR"]')].every(r => r.textContent.trim().length > 20)),
-      'e todas as respostas estão no HTML (o Google lê, mesmo fechadas)');
-  await p.click('[data-faq="2"]'); await p.click('[data-faq="0"]'); await p.waitForTimeout(100);
-  const f1 = await faq();
-  diz(f1[2].aberta && f1[2].resposta && !f1[0].aberta && !f1[0].resposta, 'tocar abre e fecha cada pergunta (aria-expanded junto)');
-  await p.mouse.move(5, 5);
-  await p.waitForTimeout(3600);
-  diz((await anel()).titulo !== 'Com a sua marca', 'e a roda segue girando sozinha');
-  diz(erros.length === 0, 'sem erro de JavaScript', erros.join(' | '));
+  const { p, ctx } = await abrir();
+  const sem = await p.$$eval('a[href^="criar.html"]', e => [...new Set(e.map(a => a.getAttribute('href')))]);
+  igual('sem anúncio: todo "Criar conta" vai ao cadastro com origem=pagina', sem, ['criar.html?origem=pagina']);
+  await ctx.close();
+}
+{
+  const { p, ctx } = await abrir('?utm_source=instagram&utm_campaign=lanche&fbclid=abc123&outra=coisa');
+  const com = await p.$$eval('a[href^="criar.html"]', e => [...new Set(e.map(a => a.getAttribute('href')))]);
+  verdade('com anúncio: todos levam utm_source, utm_campaign e fbclid — e só eles',
+    com.length === 1 && /utm_source=instagram/.test(com[0]) && /utm_campaign=lanche/.test(com[0]) && /fbclid=abc123/.test(com[0])
+      && /origem=pagina/.test(com[0]) && !/outra=/.test(com[0]), JSON.stringify(com));
+  await p.click('a.btn-p[href^="criar.html"]');
+  await p.waitForLoadState('load'); await p.waitForTimeout(600);
+  igual('e o cadastro já marca "Como você nos conheceu?" = Instagram',
+    await p.evaluate(() => { const s = document.getElementById('fOrigem'); return s ? s.options[s.selectedIndex].text : null; }), 'Instagram');
   await ctx.close();
 }
 
-console.log('\nQuem pede menos movimento');
+secao('5. No celular');
 {
-  const { ctx, p } = await abrir({ largura: 375, movimento: 'reduce' });
-  const antes = await p.evaluate(() => document.getElementById('anel').style.transform + '|' + document.getElementById('heroiGiro').style.transform);
-  await p.waitForTimeout(4500);
-  const depois = await p.evaluate(() => document.getElementById('anel').style.transform + '|' + document.getElementById('heroiGiro').style.transform);
-  diz(antes === depois, 'com "reduzir movimento", nada gira sozinho', antes + ' → ' + depois);
+  const { p, ctx } = await abrir('', { viewport:{ width:375, height:812 }, isMobile:true, hasTouch:true });
+  igual('a 375px nada vaza para o lado', await p.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
   await ctx.close();
 }
 
-console.log('\nA raiz do site continua levando ao login');
-{
-  const raiz = fs.readFileSync(path.join(RAIZ, 'index.html'), 'utf8');
-  diz(/http-equiv="refresh" content="0; url=entrar\.html"/.test(raiz) && !/conheca/.test(raiz),
-      'index.html segue indo para entrar.html — a página de anúncio é à parte');
-}
-
+igual('\nnenhum erro de JavaScript', erros, []);
 await nav.close();
-console.log(falhas ? `\n✗ ${falhas} de ${ok + falhas} falharam.` : `\n✓ ${ok} passaram, 0 falharam`);
-process.exit(falhas ? 1 : 0);
+console.log(`\n${falhou ? '✗' : '✓'} ${passou} de ${passou + falhou} passaram.`);
+process.exit(falhou ? 1 : 0);

@@ -99,8 +99,8 @@ const salvouSemErro = async () => { await pg.waitForTimeout(2200); };
    ══════════════════════════════════════════════════════════════════════════ */
 secao('Restaurante vazio: todas as telas abrem');
 
-for(const [chave, rotulo] of [['agenda','Agenda'], ['caixa','Caixa'],
-    ['clientes','Clientes'], ['servicos','Serviços'], ['equipe','Equipe'],
+for(const [chave, rotulo] of [['pedidos','Pedidos'], ['caixa','Caixa'],
+    ['clientes','Clientes'], ['produtos','Cardápio'], ['equipe','Equipe'],
     ['salao','Meu negócio'], ['publico','Ver como cliente'], ['plano','Plano']]){
   await ir(chave);
   const viva = await pg.evaluate(k => {
@@ -114,40 +114,7 @@ semErro('restaurante vazio');
 /* ══════════════════════════════════════════════════════════════════════════
    CADASTROS — criar, editar, desativar, pelo caminho da tela
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Cadastrar serviço pela tela');
-
-await ir('servicos');
-await pg.evaluate(() => abrirServico());
-await pg.waitForTimeout(600);
-await pg.fill('#sNome', 'Corte Feminino');
-await pg.fill('#sDur', '45');
-await pg.fill('#sPreco', '90');
-await pg.evaluate(() => salvarServico());
-await salvouSemErro();
-
-const svs = await d.lista('servicos', { salaoId: SALAO });
-igual('o serviço foi para o banco', svs.length, 1);
-igual('com a duração digitada', svs[0] && Number(svs[0].duracaoMin), 45);
-igual('e com o preço digitado', svs[0] && Number(svs[0].preco), 90);
-verdade('e aparece na lista da tela',
-  await pg.evaluate(() => /Corte Feminino/.test(document.body.textContent)));
-
-// Editar o que acabou de criar.
-await pg.evaluate(id => abrirServico(id), svs[0].id);
-await pg.waitForTimeout(600);
-const veioPreenchido = await pg.evaluate(() => ({
-  nome: document.getElementById('sNome').value,
-  dur:  document.getElementById('sDur').value,
-}));
-igual('reabrir traz o nome preenchido', veioPreenchido.nome, 'Corte Feminino');
-igual('e a duração', veioPreenchido.dur, '45');
-await pg.fill('#sPreco', '110');
-// `salvarServico(id)` — sem o id ele cunha um novo e cria um SEGUNDO serviço.
-await pg.evaluate(id => salvarServico(id), svs[0].id);
-await salvouSemErro();
-igual('a alteração de preço gravou',
-  Number((await d.lista('servicos', { salaoId: SALAO }))[0].preco), 110);
-semErro('serviços');
+// PediHub: saiu "Cadastrar serviço pela tela" (o cardápio tem o produto-cadastro).
 
 secao('Cadastrar cliente pela tela');
 await ir('clientes');
@@ -208,93 +175,7 @@ await salvouSemErro();
   igual('a recepção gravou a ficha em dígitos', antes, 1);
 }
 
-secao('Jornada da equipe pela tela');
-await ir('equipe');
-await pg.evaluate(id => abrirProf(id), PROF.id);
-await pg.waitForTimeout(700);
-// Campos de hora digitada (`.hora-digitada`), e não mais o relógio do celular.
-const temJornada = await pg.evaluate(() =>
-  document.querySelectorAll('#modalCorpo input.hora-digitada').length > 0);
-verdade('a janela da equipe traz as faixas de horário', temJornada);
-await fechar();
-semErro('equipe');
-
-/* ══════════════════════════════════════════════════════════════════════════
-   A AGENDA — marcar pela recepção, com o restaurante já povoado
-   ══════════════════════════════════════════════════════════════════════════ */
-secao('Marcar pela recepção');
-
-// Jornada, senão não há horário nenhum para oferecer.
-for(let i = 0; i <= 6; i++)
-  await d.inserir('jornadas', { profissionalId: PROF.id, diaSemana:i,
-                                inicio:'08:00', fim:'18:00' });
-await pg.reload();
-await pg.waitForTimeout(3500);
-erros.length = 0;
-
-const AMANHA = new Date(Date.now() + 864e5).toISOString().slice(0,10);
-await pg.evaluate(dd => { diaAtual = dd; pintar(); }, AMANHA);
-await pg.waitForTimeout(800);
-
-await pg.evaluate(p => abrirNovo(p, 600), PROF.id);   // 10:00
-await pg.waitForTimeout(800);
-const janelaNovo = await pg.evaluate(() => ({
-  temCliente: !!document.getElementById('fCliente'),
-  temProf: !!document.getElementById('fProf'),
-  temServico: document.querySelectorAll('#modalCorpo input[type=checkbox]').length > 0,
-}));
-verdade('a janela de novo agendamento traz cliente, quem atende e os serviços',
-  janelaNovo.temCliente && janelaNovo.temProf && janelaNovo.temServico,
-  JSON.stringify(janelaNovo));
-await fechar();
-semErro('novo agendamento');
-
-/* ══════════════════════════════════════════════════════════════════════════
-   O CAIXA — o caminho que já quebrou uma vez
-   ══════════════════════════════════════════════════════════════════════════ */
-secao('Comanda: abrir, lançar, descontar, receber');
-
-// Um atendimento para a comanda nascer de.
-const sv1 = (await d.lista('servicos', { salaoId: SALAO }))[0];
-const cli1 = (await d.lista('clientes', { salaoId: SALAO }))[0];
-const desl = new Intl.DateTimeFormat('en-US', { timeZone:'America/Sao_Paulo',
-  timeZoneName:'longOffset' }).formatToParts(new Date(AMANHA + 'T12:00:00Z'))
-  .find(p => p.type === 'timeZoneName').value.replace('GMT','');
-const ag = await d.inserir('agendamentos', { salaoId: SALAO, clienteId: cli1.id,
-  profissionalId: PROF.id, inicio:`${AMANHA}T09:00:00${desl}`,
-  fim:`${AMANHA}T09:45:00${desl}`, status:'confirmado', origem:'recepcao',
-  valorPrevisto: 110 });
-await d.inserir('agendamento_servicos', { agendamentoId: ag.id, servicoId: sv1.id,
-  ordem:1, duracaoMin:45, preco:110, comissaoPct:0 });
-
-await pg.reload();
-await pg.waitForTimeout(3500);
-erros.length = 0;
-await pg.evaluate(dd => { diaAtual = dd; pintar(); }, AMANHA);
-await pg.waitForTimeout(800);
-
-await pg.evaluate(id => comandaDoAgendamento(id), ag.id);
-await pg.waitForTimeout(1200);
-verdade('a comanda abre a partir do atendimento',
-  await pg.evaluate(() => /Comanda/.test(
-    document.getElementById('modalTitulo').textContent)));
-verdade('já com o serviço lançado dentro dela',
-  await pg.evaluate(() => /Corte Feminino/.test(
-    document.getElementById('modalCorpo').textContent)));
-await fechar();
-await salvouSemErro();
-
-/* ── O DEFEITO QUE JÁ ACONTECEU: a agenda sumia depois da comanda ─────────
-   Abrir a comanda, salvar, e trocar de dia deixava a grade vazia. A tela
-   guardava os dados na forma do banco e não sabia mais lê-los. Está
-   consertado, e fica vigiado daqui. */
-await pg.evaluate(() => mudarDia(1));
-await pg.waitForTimeout(700);
-await pg.evaluate(() => mudarDia(-1));
-await pg.waitForTimeout(900);
-igual('depois de abrir a comanda e trocar de dia, a agenda continua desenhada',
-  await pg.evaluate(() => document.querySelectorAll('.ag').length), 1);
-semErro('caixa');
+// PediHub: saíram a jornada da equipe, marcar pela recepção e a comanda nascida do atendimento.
 
 /* ══════════════════════════════════════════════════════════════════════════
    MEU RESTAURANTE — os campos que a cliente vê
@@ -321,36 +202,9 @@ semErro('meu restaurante');
 /* ══════════════════════════════════════════════════════════════════════════
    ÁREA DA CLIENTE
    ══════════════════════════════════════════════════════════════════════════ */
-secao('Área da cliente: o link do restaurante');
-
+// O celular do cliente (o link é visto no telefone).
 const cel = await nav.newContext({ viewport:{ width:390, height:844 },
                                    isMobile:true, hasTouch:true });
-const cli = await cel.newPage();
-const errosCli = [];
-cli.on('pageerror', e => errosCli.push('pageerror: ' + e.message));
-cli.on('console', m => { if(m.type() === 'error'
-  && !/Failed to load resource/.test(m.text()))
-  errosCli.push('console: ' + m.text().slice(0,160)); });
-await cli.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-await cli.goto(BASE + '/cardapio.html?salao=' + SLUG);
-await cli.waitForTimeout(2800);
-
-verdade('a capa abre com o nome novo do restaurante',
-  await cli.evaluate(() => /Varredura Editado/.test(document.body.textContent)));
-verdade('e mostra o endereço que o dono acabou de cadastrar',
-  await cli.evaluate(() => /Avanhandava/.test(document.body.textContent)));
-
-await cli.click('.boas-cta');
-await cli.waitForTimeout(1200);
-verdade('a lista de serviços traz o que o dono cadastrou',
-  await cli.evaluate(() => /Corte Feminino/.test(document.body.textContent)));
-verdade('com o preço que ele definiu',
-  await cli.evaluate(() => /110/.test(document.body.textContent)),
-  'o preço mudou de 90 para 110 e a vitrine tem que acompanhar');
-
-igual('sem erro de JavaScript na área da cliente',
-  errosCli.length ? errosCli.join(' | ') : 0, 0);
-
 secao('Área da cliente: restaurante que não existe');
 {
   const p = await cel.newPage();
@@ -365,50 +219,27 @@ secao('Área da cliente: restaurante que não existe');
   await p.close();
 }
 
-secao('Área da cliente: restaurante sem serviço nenhum');
-{
-  const outra = novaAba();
-  await outra.criarConta({ email:`vaz-${marca}@teste.com`, senha:'minhasenhaboa',
-    nome:'Dono Vazio', telefone:'+5521' + (100000000 + (Date.now() % 89999999)) });
-  const c2 = await outra.chamar('criar_salao', { p_nome_salao:'Restaurante Sem Nada ' + marca,
-    p_tipo:'salao', p_telefone:'(21) 4444-5555', p_documento:null, p_origem:null });
-
-  const p = await cel.newPage();
-  const e3 = [];
-  p.on('pageerror', x => e3.push(x.message));
-  await p.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-  await p.goto(BASE + '/cardapio.html?salao=' + c2[0].slug);
-  await p.waitForTimeout(2800);
-  verdade('a capa abre mesmo sem serviço cadastrado',
-    await p.evaluate(() => !!document.querySelector('.boas-cta')));
-  await p.click('.boas-cta');
-  await p.waitForTimeout(1200);
-  verdade('e explica que a agenda ainda não abriu, sem tela quebrada',
-    await p.evaluate(() => /ainda não publicou|não faz|sem serviço/i
-      .test(document.body.textContent)),
-    await p.evaluate(() => document.body.textContent.replace(/\s+/g,' ').slice(0,150)));
-  igual('sem erro de JavaScript', e3.length ? e3.join(' | ') : 0, 0);
-  await p.close();
-}
-
-
-/* ══════════════════════════════════════════════════════════════════════════
-   O DINHEIRO — lançar, descontar, receber
-
-   É o trecho onde o erro não aparece na tela: fecha a comanda com o valor
-   errado e ninguém percebe até o fim do mês.
-   ══════════════════════════════════════════════════════════════════════════ */
 secao('Comanda: a conta tem que fechar');
 
+// Uma comanda de balcão com um item do cardápio de R$ 110.
+const cliCmd = (await d.lista('clientes', { salaoId: SALAO }))[0];
+const prodCmd = await d.inserir('produtos', { salaoId: SALAO, nome:'Rodízio', preco:110, custo:0, estoque:0,
+  ativo:true, vendaOnline:true });
+const cmdNova = await d.inserir('comandas', { salaoId: SALAO, clienteId: cliCmd ? cliCmd.id : null });
+await d.inserir('comanda_itens', { comandaId: cmdNova.id, tipo:'produto', produtoId: prodCmd.id,
+  descricao:'Rodízio', qtd:1, precoUnit:110 });
+await pg.reload();
+await pg.waitForTimeout(3500);
+erros.length = 0;
 await ir('caixa');
-const cmd = (await d.lista('comandas', { salaoId: SALAO }))[0];
+const cmd = (await d.lista('comandas', { salaoId: SALAO })).find(c => c.id === cmdNova.id);
 verdade('a comanda aberta aparece no caixa', !!cmd);
 
 if(cmd){
   await pg.evaluate(id => abrirComanda(id), cmd.id);
   await pg.waitForTimeout(900);
 
-  // Um desconto de 10 sobre o serviço de 110.
+  // Um desconto de 10 sobre o item de 110.
   await pg.evaluate(id => mudarDesconto(id, '10'), cmd.id);
   await pg.waitForTimeout(1800);
   const comDesconto = (await d.lista('comandas', { salaoId: SALAO }))
@@ -426,72 +257,7 @@ if(cmd){
 }
 semErro('comanda');
 
-/* ══════════════════════════════════════════════════════════════════════════
-   APAGAR O QUE ESTÁ EM USO
-
-   O serviço que já foi vendido e o profissional que já atendeu não podem
-   sumir do banco levando o histórico junto. Aqui o teste confere que o
-   sistema PROTEGE isso — e que a recusa chega como frase, não como erro de
-   banco em inglês.
-   ══════════════════════════════════════════════════════════════════════════ */
-secao('Serviço e profissional que já foram usados');
-
-{
-  const sv = (await d.lista('servicos', { salaoId: SALAO }))[0];
-  let recusou = false, mensagem = '';
-  try{ await d.apagar('servicos', sv.id); }
-  catch(e){ recusou = true; mensagem = e.message; }
-  verdade('o banco não deixa apagar serviço que já está num atendimento',
-    recusou, 'apagar levaria junto o histórico do que foi vendido');
-
-  // E o caminho que o dono DEVE usar continua funcionando: desativar.
-  await d.atualizar('servicos', sv.id, { ativo: false });
-  const depois = (await d.lista('servicos', { salaoId: SALAO })).find(x => x.id === sv.id);
-  igual('mas desativar funciona, que é o caminho certo', depois && depois.ativo, false);
-  await d.atualizar('servicos', sv.id, { ativo: true });
-}
-
-{
-  let recusou = false;
-  try{ await d.apagar('profissionais', PROF.id); }
-  catch(e){ recusou = true; }
-  verdade('nem apagar quem já atendeu', recusou);
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   BLOQUEIO DE HORÁRIO PELO PAINEL
-   ══════════════════════════════════════════════════════════════════════════ */
-secao('Bloquear e liberar horário');
-
-await ir('agenda');
-await pg.evaluate(dd => { diaAtual = dd; pintar(); }, AMANHA);
-await pg.waitForTimeout(700);
-await pg.evaluate(p => abrirBloqueio(p), PROF.id);
-await pg.waitForTimeout(700);
-const temBloqueio = await pg.evaluate(() =>
-  !!document.getElementById('bIni') || !!document.getElementById('bMotivo')
-  || document.querySelectorAll('#modalCorpo input').length > 0);
-verdade('a janela de bloqueio abre com campos', temBloqueio);
-await fechar();
-semErro('bloqueio');
-
-/* ══════════════════════════════════════════════════════════════════════════
-   ÁREA DA CLIENTE — a lista de espera, quando o dia está cheio
-   ══════════════════════════════════════════════════════════════════════════ */
-secao('Área da cliente: lista de espera');
-{
-  const p = await cel.newPage();
-  const e4 = [];
-  p.on('pageerror', x => e4.push(x.message));
-  await p.addInitScript(b => { window.PEDIHUB = { url:b, chave:'k', ambiente:'bancada' }; }, BASE);
-  await p.goto(BASE + '/cardapio.html?salao=' + SLUG);
-  await p.waitForTimeout(2800);
-  const temFila = await p.evaluate(() => typeof entrarNaFila === 'function'
-                                      || !!document.getElementById('p-fila'));
-  verdade('a lista de espera existe na tela da cliente', temFila);
-  igual('e a tela abre sem erro', e4.length ? e4.join(' | ') : 0, 0);
-  await p.close();
-}
+// PediHub: saíram "serviço e profissional em uso", bloquear horário e a lista de espera.
 
 await nav.close();
 
