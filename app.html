@@ -21492,7 +21492,7 @@ function pdDesenhar1(){
   const end = Endereco.normalizar(sl.endereco);
   return pdAvisoDoPlano() + `
     <div class="campo"><label for="pdNome">Nome do estabelecimento</label>
-      <input id="pdNome" value="${escapar(sl.nome || '')}" placeholder="Studio Bella">
+      <input id="pdNome" value="${escapar(sl.nome || '')}" placeholder="Ex.: Lanchonete do Zé">
     </div>
     <div class="campo"><label for="pdTipo">O que é o seu negócio?</label>
       <select id="pdTipo">
