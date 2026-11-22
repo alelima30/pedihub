@@ -71,10 +71,11 @@ select t_texto('mesa sem número',
 select t_texto('"paga na mesa" fora da mesa é recusado',
   erro_de($$select t_link('{"entrega":"retirada","telefone":"11971000099","pagamento":"na_mesa"}')$$),
   'Escolha como vai pagar.');
-select t_dono(format('select public.pagamento_da_mesa(%L::uuid, %L)', t_id(:'m1'::jsonb), 'pix'));
 select t_dono(format('select public.mudar_status_pedido(%L::uuid, %L)', t_id(:'m1'::jsonb), 'em_preparo'));
 select t_dono(format('select public.mudar_status_pedido(%L::uuid, %L)', t_id(:'m1'::jsonb), 'entregue'));
-select t_texto('entregue: a venda da mesa entra no Pix, 50',
+-- 73: pedido de mesa é da CONTA da mesa; vira venda quando a conta fecha.
+select t_dono($q$select public.fechar_conta_mesa('57100000-0000-0000-0000-00000000000a', '5', 'pix', 0, null)$q$);
+select t_texto('conta fechada: a venda da mesa entra no Pix, 50',
   (select pg.forma || ' ' || pg.valor from public.pedidos p join public.pagamentos pg on pg.comanda_id = p.comanda_id
     where p.id = t_id(:'m1'::jsonb)), 'pix 50.00');
 

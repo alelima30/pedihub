@@ -806,6 +806,15 @@ span.ajuda{display:block;margin-top:5px}
 
   <!-- ══════════ PRODUTOS ══════════ -->
   <!-- ══════════ PEDIDOS (restaurante) ══════════ -->
+  <section class="tela" id="tela-mesas">
+    <div class="barra">
+      <div class="mesas-pracas" id="mesasPracas"></div>
+      <span class="espaco"></span>
+      <button class="btn" onclick="carregarMesas()">Atualizar</button>
+    </div>
+    <div id="mesasMapa"></div>
+  </section>
+
   <section class="tela on" id="tela-pedidos">
     <div class="barra">
       <label class="check pedido-chave"><input type="checkbox" id="pdRecebendo"
@@ -1908,6 +1917,9 @@ const TELAS = [
      primeiro da lista — é a tela que ele deixa aberta o dia inteiro. A
      equipe toda vê, como a agenda: quem atende o balcão é quem aceita. */
   ['pedidos',  'Pedidos',          'carrinho',   'Dia a dia', EQUIPE],
+  /* Mesas (73): o mapa das mesas por praça, a conta de cada uma e o lançar
+     do garçom. Só aparece quando a casa tem mesas (Entrega e pagamento). */
+  ['mesas',    'Mesas',            'casa',       'Dia a dia', EQUIPE],
   /* Os pedidos da LOJA (53_pedidos_loja): o carrinho que a cliente mandou
      pelo link, gravado, para o balcão conferir e vender (no crediário
      também). Dos outros tipos; é BALCAO porque é venda — dinheiro da casa. */
@@ -2047,7 +2059,8 @@ const minhasTelas = () => {
                         && (t[0] !== 'pedidosloja' || (!restaurante && lojaRecebePedidos()))
                         && (!restaurante || t[0] !== 'procedimentos')
                         // PediHub: sem agenda, serviços e pacotes de restaurante.
-                        && !TELAS_DE_SALAO.includes(t[0]));
+                        && !TELAS_DE_SALAO.includes(t[0])
+                        && (t[0] !== 'mesas' || (typeof cfgPedidosDoSalao === 'function' && cfgPedidosDoSalao().mesas > 0)));
 };
 // O Ranking sai até valer para o pedido (hoje conta a agenda). Os Cupons voltaram: valem no pedido (68).
 const TELAS_DE_SALAO = ['agenda', 'servicos', 'procedimentos', 'pacotes', 'pedidosloja', 'ranking'];
@@ -2218,7 +2231,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.43b43b';
+const VERSAO_APP = 'v9.615f09';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -5007,13 +5020,13 @@ const contarTrabalho = h =>
 const PAPEIS_CONVITE = [
   ['recepcao',     'Caixa e balcão',
    'Aceita pedidos, lança venda e cuida do caixa. Não mexe em preço, cardápio nem equipe.'],
-  ['profissional', 'Atendente',
+  ['profissional', 'Atendente / garçom',
    'Vê os pedidos do restaurante e acompanha o andamento de cada um.'],
   ['admin',        'Administra',
    'Faz tudo o que você faz, menos tirar o seu acesso de dono.'],
 ];
 const NOME_PAPEL = { dono:'Proprietário', admin:'Administra',
-                     recepcao:'Caixa e balcão', profissional:'Atendente' };
+                     recepcao:'Caixa e balcão', profissional:'Atendente / garçom' };
 
 let acessosDoSalao = null;   // cache do que o banco devolveu
 
@@ -10828,6 +10841,7 @@ function pintar(){
   aplicarTravaDaTela(telaAtual);
   if(telaAtual === 'agenda')   pintarAgenda();
   if(telaAtual === 'pedidos')  pintarPedidos();
+  if(telaAtual === 'mesas')    pintarMesas();
   if(telaAtual === 'pedidosloja') pintarPedidosLoja();
   if(telaAtual === 'clientes') pintarClientes();
   if(telaAtual === 'aniversarios') pintarAniversarios();
@@ -23229,7 +23243,12 @@ function npPintarTotal(){
   const sub = npItens.reduce((s, x) => s + x.preco * x.qtd, 0);
   const ent = (document.querySelector('input[name="npModo"]:checked') || {}).value === 'entrega';
   const taxa = ent ? Number((document.getElementById('npTaxa') || {}).value || 0) : 0;
-  alvo.innerHTML = `Subtotal <b>${real(sub)}</b>${ent ? ` · entrega <b>${real(taxa)}</b>` : ''} · <span>Total <b>${real(sub + taxa)}</b></span>`;
+  // Na mesa (o garçom) não há entrega: só quantos itens e o total.
+  if(!document.querySelector('input[name="npModo"]')){
+    alvo.innerHTML = `${npItens.reduce((s, x) => s + x.qtd, 0)} item(ns) <span>Total <b>${real(sub)}</b></span>`;
+    return;
+  }
+  alvo.innerHTML = `Subtotal <b>${real(sub)}</b>${ent ? ` · entrega <b>${real(taxa)}</b>` : ''} <span>Total <b>${real(sub + taxa)}</b></span>`;
 }
 
 async function lancarNovoPedido(){
@@ -23271,6 +23290,7 @@ function cfgPedidosDoSalao(){
     pagamentos: Array.isArray(p.pagamentos) && p.pagamentos.length ? p.pagamentos.flatMap(x => x === 'cartao' ? ['debito', 'credito'] : [x]) : ['pix', 'dinheiro', 'debito', 'credito'],
     avisarCliente: p.avisarCliente !== false, avisarCasa: p.avisarCasa !== false,
     mesas: Math.min(200, Math.max(0, parseInt(p.mesas, 10) || 0)),
+    pracas: Array.isArray(p.pracas) ? p.pracas.filter(x => x && x.nome) : [],
     entregadores: Array.isArray(p.entregadores) ? p.entregadores.map(x => String(x).trim()).filter(Boolean) : [],
     fidelidade: Object.assign({ ligado:false, pedidos:10, desconto:10 }, p.fidelidade || {}),
   };
@@ -23439,7 +23459,7 @@ function cartaoDePedido(p){
     ${p.observacao ? `<p class="pedido-obs"><b>Observação:</b> ${escapar(p.observacao)}</p>` : ''}
     <p class="pedido-entrega">${p.entrega === 'entrega'
       ? '🛵 <b>Entrega</b> — ' + escapar(enderecoDoPedido(p)) + (p.entregador ? ' · com <b>' + escapar(p.entregador) + '</b>' : '')
-      : p.entrega === 'mesa' ? '🍽️ <b>Mesa ' + escapar(p.mesa || '') + '</b>'
+      : p.entrega === 'mesa' ? '🍽️ <b>Mesa ' + escapar(p.mesa || '') + '</b>' + (p.garcom ? ' · garçom <b>' + escapar(p.garcom) + '</b>' : '')
       : '🏪 <b>Retirada</b> no balcão'}</p>
     <p class="pedido-pag">${escapar(PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento)}${
       p.troco ? ' · troco para ' + real(Number(p.troco)) + ' (levar ' + real(Number(p.troco) - Number(p.total)) + ')' : ''}
@@ -23560,7 +23580,7 @@ async function mudarPedidoAgora(id, status){
     }
   }
   /* Mesa que paga no fim: como pagou, antes de virar venda (71). */
-  if(status === 'entregue' && ped.pagamento === 'na_mesa'){
+  if(status === 'entregue' && ped.pagamento === 'na_mesa' && !ped.conta){
     const forma = await perguntaRapida('Como a mesa pagou?', 'Mesa ' + (ped.mesa || '') + ' — pedido #' + ped.numero + '.',
       [['pix', 'Pix'], ['dinheiro', 'Dinheiro'], ['debito', 'Débito'], ['credito', 'Crédito']]);
     if(forma === null) return;
@@ -23602,7 +23622,7 @@ function imprimirPedido(id){
       + '  ' + real(Number(i.preco) * i.quantidade)),
     '', p.observacao ? 'Obs.: ' + p.observacao : '',
     p.entrega === 'entrega' ? 'ENTREGA: ' + enderecoDoPedido(p) + (p.entregador ? ' — ' + p.entregador : '')
-      : p.entrega === 'mesa' ? '*** MESA ' + (p.mesa || '') + ' ***' : 'RETIRADA no balcão',
+      : p.entrega === 'mesa' ? '*** MESA ' + (p.mesa || '') + ' ***' + (p.garcom ? '  garçom: ' + p.garcom : '') : 'RETIRADA no balcão',
     (PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento) + (p.troco ? ' · troco para ' + real(Number(p.troco)) : ''),
     Number(p.desconto) ? 'Cupom ' + (p.cupom || '') + ': -' + real(Number(p.desconto)) : '',
     Number(p.taxa) ? 'Taxa de entrega: ' + real(Number(p.taxa)) : '', 'TOTAL: ' + real(Number(p.total))]
@@ -23675,6 +23695,9 @@ function abrirConfigPedidos(){
       <input id="pcMesas" type="number" min="0" max="200" step="1" value="${c.mesas || ''}" placeholder="0 = não atende mesa">
       <p class="ajuda">Quantas mesas recebem pedido pelo QR. O cliente lê o QR da mesa e pede sem endereço,
         sem taxa e pode pagar no fim. ${c.mesas ? `<a href="#" onclick="imprimirQrDasMesas(); return false">Imprimir os QR das mesas</a>` : ''}</p></div>
+    <div class="campo"><label for="pcPracas">Praças do salão (uma por linha)</label>
+      <textarea id="pcPracas" rows="3" placeholder="Praça 1: 1-5&#10;Praça 2: 6-10&#10;Varanda: 11-14">${escapar(c.pracas.map(x => x.nome + ': ' + x.de + '-' + x.ate).join('\n'))}</textarea>
+      <p class="ajuda">O garçom toca na praça dele e vê só as mesas dela — o freelancer se acha no primeiro dia.</p></div>
     <div class="campo"><label for="pcEntregadores">Entregadores (um por linha)</label>
       <textarea id="pcEntregadores" rows="3" placeholder="Lu&#10;Beto">${escapar(c.entregadores.join('\n'))}</textarea>
       <p class="ajuda">Ao marcar "Saiu para entrega" você escolhe quem levou, e o acerto do dia soma as entregas e as taxas de cada um.</p></div>
@@ -23713,10 +23736,16 @@ function salvarConfigPedidos(){
     avisarCliente: !!v('pcAvisaCliente').checked, avisarCasa: !!v('pcAvisaCasa').checked,
     mesas: Math.min(200, Math.floor(num('pcMesas'))),
     entregadores: String(v('pcEntregadores').value || '').split('\n').map(x => x.trim()).filter(Boolean).slice(0, 30),
+    pracas: String(v('pcPracas').value || '').split('\n').map(l => {
+      const m = l.match(/^\s*(.+?)\s*:\s*(\d{1,3})\s*[-a]\s*(\d{1,3})\s*$/i);
+      return m ? { nome: m[1].slice(0, 30), de: Math.min(+m[2], +m[3]), ate: Math.max(+m[2], +m[3]) } : null;
+    }).filter(Boolean).slice(0, 20),
     fidelidade: { ligado: !!v('pcFid').checked,
                   pedidos: Math.min(50, Math.max(2, Math.floor(num('pcFidN')) || 10)),
                   desconto: Math.min(50, Math.max(1, num('pcFidD') || 10)) } });
   fecharModal();
+  // A aba "Mesas" aparece (ou some) na hora, sem recarregar a página.
+  montarAbas();
   desenharPedidos();
 }
 
@@ -23746,6 +23775,218 @@ function imprimirQrDasMesas(){
   doc.close();
   doc.querySelector('h1').textContent = (sl.nome || '') + ' — QR das mesas';
   setTimeout(() => { try{ q.contentWindow.focus(); q.contentWindow.print(); }catch(e){} }, 150);
+  setTimeout(() => q.remove(), 60000);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MESAS — O GARÇOM (73_conta_da_mesa_garcom.sql)
+
+   Praça → mesas → a conta da mesa. Cada mesa mostra se está livre ou com
+   conta, quanto já deu e há quanto tempo. Tocar abre a conta: o que já foi
+   pedido, ITEM A ITEM com o nome de quem lançou, e o andamento na cozinha.
+   "Lançar itens" abre o cardápio com as fotos grandes — para o garçom (e o
+   freelancer de primeira vez) mostrar o prato ao cliente. Quem lança é quem
+   está logado: o nome vai em cada item, pelo banco.
+   ═══════════════════════════════════════════════════════════════════════════ */
+let mesasLista = [];          // o mapa: mesas com conta aberta (mesas_abertas)
+let mesasPraca = null;        // a praça escolhida (índice), ou null = todas
+let mesasRelogio = null;
+const CHAVE_PRACA = 'pedihub.praca';
+
+async function carregarMesas(){
+  if(!NA_NUVEM){ mesasLista = []; desenharMesas(); return; }
+  try{ mesasLista = await Dados.chamar('mesas_abertas', { p_salao: salaoAtual }) || []; }
+  catch(e){ mesasLista = []; }
+  desenharMesas();
+}
+function pintarMesas(){
+  try{ const g = localStorage.getItem(CHAVE_PRACA); mesasPraca = g === null || g === '' ? null : Number(g); }catch(e){}
+  desenharMesas();
+  carregarMesas();
+  if(!mesasRelogio) mesasRelogio = setInterval(() => { if(telaAtual === 'mesas') carregarMesas(); }, 20000);
+}
+function escolherPraca(i){
+  mesasPraca = i;
+  try{ localStorage.setItem(CHAVE_PRACA, i === null ? '' : String(i)); }catch(e){}
+  desenharMesas();
+}
+function desenharMesas(){
+  const c = cfgPedidosDoSalao();
+  const pr = document.getElementById('mesasPracas');
+  if(pr) pr.innerHTML = c.pracas.length ? [`<button class="btn btn-peq ${mesasPraca === null ? 'btn-p' : ''}" onclick="escolherPraca(null)">Todas</button>`]
+    .concat(c.pracas.map((x, i) => `<button class="btn btn-peq ${mesasPraca === i ? 'btn-p' : ''}" onclick="escolherPraca(${i})">${escapar(x.nome)}</button>`)).join('') : '';
+  const alvo = document.getElementById('mesasMapa'); if(!alvo) return;
+  if(!NA_NUVEM){
+    alvo.innerHTML = '<div class="aviso info">As mesas e as contas ficam no servidor. Na demonstração não há servidor: ligado no Supabase, o mapa das mesas aparece aqui.</div>';
+    return;
+  }
+  const praca = mesasPraca !== null ? c.pracas[mesasPraca] : null;
+  const de = praca ? praca.de : 1, ate = praca ? Math.min(praca.ate, c.mesas) : c.mesas;
+  const porMesa = {}; (mesasLista || []).forEach(m => { porMesa[String(m.mesa)] = m; });
+  let html = '';
+  for(let n = de; n <= ate; n++){
+    const m = porMesa[String(n)];
+    const minutos = m ? Math.max(0, Math.round((Date.now() - new Date(m.abertaEm)) / 60000)) : 0;
+    html += `<button type="button" class="mesa-cartao ${m ? 'ocupada' : ''} ${m && m.esperando ? 'alerta' : ''}" onclick="abrirMesa('${n}')">
+      <b>Mesa ${n}</b>
+      ${m ? `<span class="mesa-total">${real(Number(m.total))}</span>
+             <span class="mesa-info">${m.itens} item(ns) · ${minutos < 60 ? minutos + ' min' : Math.floor(minutos / 60) + 'h' + String(minutos % 60).padStart(2, '0')}</span>
+             ${m.esperando ? '<span class="mesa-tag">pedido novo</span>' : m.prontos ? '<span class="mesa-tag pronto">pronto p/ servir</span>' : ''}`
+          : '<span class="mesa-info">livre</span>'}
+    </button>`;
+  }
+  // Mesa com conta fora do número configurado (ex.: o número diminuiu): aparece também.
+  Object.keys(porMesa).filter(k => !/^\d+$/.test(k) || +k > c.mesas).forEach(k => {
+    html += `<button type="button" class="mesa-cartao ocupada" onclick="abrirMesa('${escapar(k)}')"><b>Mesa ${escapar(k)}</b>
+      <span class="mesa-total">${real(Number(porMesa[k].total))}</span></button>`;
+  });
+  alvo.innerHTML = `<div class="mesas-grade">${html}</div>
+    <p class="ajuda" style="margin-top:10px">Toque numa mesa para ver a conta, lançar itens ou fechar.</p>`;
+}
+
+async function abrirMesa(mesa){
+  let conta = { aberta: false, mesa, itens: [] };
+  try{ conta = await Dados.chamar('conta_da_mesa', { p_salao: salaoAtual, p_mesa: String(mesa) }) || conta; }
+  catch(e){ alert('Não consegui abrir a mesa: ' + limparRecusa(e.message)); return; }
+  const itens = conta.itens || [];
+  const ETAPA = { recebido:'novo', em_preparo:'na cozinha', pronto:'pronto', saiu:'saiu', entregue:'servido' };
+  abrirModal('Mesa ' + mesa, `
+    ${conta.aberta ? `<p class="secao-sub">Conta aberta às ${escapar(new Date(conta.abertaEm).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }))}${
+        conta.esperando ? ' · <b style="color:var(--alerta)">' + conta.esperando + ' pedido(s) esperando Aceitar (tela de Pedidos)</b>' : ''}</p>
+      <div class="mesa-itens">${itens.map(i => `<div class="np-linha">
+          <span><b>${i.quantidade}×</b> ${escapar(i.nome)}${i.observacao ? ` <small>(${escapar(i.observacao)})</small>` : ''}
+            <small style="display:block;color:var(--txt2)">${escapar(i.garcom || '—')} · ${escapar(ETAPA[i.status] || i.status)}</small></span>
+          <b>${real(Number(i.preco) * i.quantidade)}</b></div>`).join('')}</div>
+      <div class="np-total">Total da mesa <span><b>${real(Number(conta.total))}</b></span></div>`
+    : '<p class="secao-sub">Mesa livre. Lance os primeiros itens para abrir a conta.</p>'}`,
+  [['Fechar', 'fecharModal()', ''],
+   ...(conta.aberta ? [['Imprimir conta', `imprimirContaDaMesa('${escapar(mesa)}')`, ''],
+                       ['Fechar conta', `abrirFecharConta('${escapar(mesa)}')`, '']] : []),
+   ['Lançar itens', `abrirLancarNaMesa('${escapar(mesa)}')`, 'btn-p']]);
+}
+
+/* O cardápio do garçom: foto grande, nome, preço; tocar na foto amplia. */
+function abrirLancarNaMesa(mesa){
+  npItens = []; npEscolha = null;
+  const itens = doSalao(bd.produtos || []).filter(x => x.ativo !== false)
+    .sort((a, b) => String(limparCategoria(a.categoria) || 'zz').localeCompare(String(limparCategoria(b.categoria) || 'zz'), 'pt-BR')
+                    || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+  const cats = [...new Set(itens.map(x => limparCategoria(x.categoria)).filter(Boolean))];
+  abrirModal('Mesa ' + mesa + ' — lançar itens', `
+    <input id="npBusca" placeholder="Buscar no cardápio..." oninput="npFiltrar(this.value)" autocomplete="off" style="margin-bottom:8px">
+    ${cats.length ? `<div class="mesas-pracas" style="margin-bottom:8px">${['Todos'].concat(cats).map((c, i) =>
+      `<button type="button" class="btn btn-peq ${i ? '' : 'btn-p'}" onclick="garcomCategoria(this, ${i ? `'${escapar(c)}'` : 'null'})">${escapar(c)}</button>`).join('')}</div>` : ''}
+    <div id="npCardapio" class="garcom-cardapio">${itens.map(x => `
+      <div class="garcom-item np-prod" data-nome="${escapar(semAcentoPainel(x.nome))}" data-cat="${escapar(limparCategoria(x.categoria) || '')}">
+        <button type="button" class="garcom-foto" onclick="verFotoDoItem('${x.id}')" aria-label="Ver a foto de ${escapar(x.nome)}"
+          ${x.foto ? `style="background-image:url('${escapar(x.foto)}')"` : ''}>${x.foto ? '' : '<span data-ico="presente"></span>'}</button>
+        <div class="garcom-txt"><b>${escapar(x.nome)}</b><span>${real(Number(x.preco || 0))}</span></div>
+        <button type="button" class="btn btn-p btn-peq" onclick="npAdicionar('${x.id}')">+ Pôr</button>
+      </div>`).join('') || '<p class="secao-sub">Cadastre itens no Cardápio primeiro.</p>'}</div>
+    <div id="npEscolha"></div>
+    <div id="npLista" class="np-lista"></div>
+    <div class="campo" style="margin-top:8px"><label for="npObs">Observação para a cozinha</label>
+      <input id="npObs" maxlength="300" placeholder="Ex.: sem cebola, ponto da carne"></div>
+    <div class="np-total" id="npTotal"></div>`,
+  [['Voltar', `abrirMesa('${escapar(mesa)}')`, ''], ['Mandar para a cozinha', `lancarNaMesa('${escapar(mesa)}')`, 'btn-p']]);
+  if(window.aplicarIcones) aplicarIcones(document.getElementById('npCardapio'));
+  npPintarLista();
+}
+function garcomCategoria(bt, cat){
+  bt.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('btn-p', b === bt));
+  document.querySelectorAll('#npCardapio .garcom-item').forEach(el => {
+    el.style.display = !cat || el.dataset.cat === cat ? '' : 'none';
+  });
+}
+function verFotoDoItem(pid){
+  const x = acharProduto(pid); if(!x) return;
+  const f = document.createElement('div');
+  f.className = 'garcom-zoom';
+  f.innerHTML = `<div class="garcom-zoom-caixa">
+      ${x.foto ? `<img src="${escapar(x.foto)}" alt="">` : '<div class="garcom-sem-foto">Sem foto</div>'}
+      <b>${escapar(x.nome)}</b><span>${real(Number(x.preco || 0))}</span>
+      ${x.descricao ? `<p>${escapar(x.descricao)}</p>` : ''}
+      <button type="button" class="btn btn-p">Fechar</button></div>`;
+  f.addEventListener('click', () => f.remove());
+  document.body.appendChild(f);
+}
+async function lancarNaMesa(mesa){
+  if(!npItens.length){ alert('Ponha pelo menos um item.'); return; }
+  const obs = ((document.getElementById('npObs') || {}).value || '').trim();
+  // O do rodapé: os "+ Pôr" do cardápio também são .btn-p.
+  const bt = document.querySelector('#modalPe .btn-p:last-child');
+  if(bt){ bt.disabled = true; bt.textContent = 'Mandando…'; }
+  try{
+    await Dados.chamar('lancar_pedido', { p_salao: salaoAtual, p_pedido: {
+      origem: 'mesa', nome: 'Mesa ' + mesa, entrega: 'mesa', mesa: String(mesa), pagamento: 'na_mesa',
+      observacao: obs, itens: npItens.map(x => ({ produto: x.pid, quantidade: x.qtd, opcoes: x.opcoes })) } });
+  }catch(e){
+    alert('Não consegui mandar: ' + limparRecusa(e.message));
+    if(bt){ bt.disabled = false; bt.textContent = 'Mandar para a cozinha'; }
+    return;
+  }
+  npItens = [];
+  await carregarMesas();
+  if(typeof carregarPedidos === 'function') carregarPedidos();
+  abrirMesa(mesa);
+}
+
+function abrirFecharConta(mesa){
+  abrirModal('Fechar a conta — Mesa ' + mesa, `
+    <div id="fcResumo" class="np-total">Carregando…</div>
+    <div class="dupla" style="margin-top:10px">
+      <div class="campo"><label for="fcServ">Taxa de serviço (%)</label>
+        <input id="fcServ" type="number" min="0" max="20" step="1" value="10" oninput="fcPintar()"></div>
+      <div class="campo"><label for="fcPessoas">Dividir por quantas pessoas</label>
+        <input id="fcPessoas" type="number" min="1" max="50" step="1" value="1" oninput="fcPintar()"></div>
+    </div>
+    <div class="campo"><label>Como pagou</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="fcFormas">${[['pix','Pix'],['dinheiro','Dinheiro'],['debito','Débito'],['credito','Crédito']]
+        .map(([k, r], i) => `<button type="button" class="btn ${i ? '' : 'btn-p'}" data-f="${k}" onclick="fcForma(this)">${r}</button>`).join('')}</div></div>`,
+  [['Voltar', `abrirMesa('${escapar(mesa)}')`, ''], ['Fechar a conta', `confirmarFecharConta('${escapar(mesa)}')`, 'btn-p']]);
+  Dados.chamar('conta_da_mesa', { p_salao: salaoAtual, p_mesa: String(mesa) })
+    .then(c => { window._fcTotal = Number((c || {}).total || 0); fcPintar(); }).catch(() => {});
+}
+function fcForma(bt){ bt.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('btn-p', b === bt)); }
+function fcPintar(){
+  const alvo = document.getElementById('fcResumo'); if(!alvo) return;
+  const sub = window._fcTotal || 0;
+  const pct = Math.min(20, Math.max(0, Number((document.getElementById('fcServ') || {}).value || 0)));
+  const pes = Math.max(1, parseInt((document.getElementById('fcPessoas') || {}).value || 1, 10));
+  const serv = Math.round(sub * pct) / 100, total = sub + serv;
+  alvo.innerHTML = `Consumo <b>${real(sub)}</b>${serv ? ` · serviço ${pct}% <b>${real(serv)}</b>` : ''} · Total <b>${real(total)}</b>${
+    pes > 1 ? `<br><span style="float:none">Por pessoa (${pes}): <b>${real(total / pes)}</b></span>` : ''}`;
+}
+async function confirmarFecharConta(mesa){
+  const forma = (document.querySelector('#fcFormas .btn-p') || {}).dataset.f || 'pix';
+  const pct = Math.min(20, Math.max(0, Number((document.getElementById('fcServ') || {}).value || 0)));
+  const pes = Math.max(1, parseInt((document.getElementById('fcPessoas') || {}).value || 1, 10));
+  try{
+    const r = await Dados.chamar('fechar_conta_mesa', { p_salao: salaoAtual, p_mesa: String(mesa), p_forma: forma,
+      p_servico_pct: pct, p_pessoas: pes });
+    fecharModal();
+    await carregarMesas();
+    if(typeof carregarPedidos === 'function') carregarPedidos();
+    setTimeout(() => alert('Mesa ' + mesa + ' fechada: ' + real(Number(r.total)) + (r.porPessoa ? ' (' + real(Number(r.porPessoa)) + ' por pessoa)' : '')
+      + '. Já entrou no caixa, e a mesa está livre.'), 50);
+  }catch(e){ alert('Não consegui fechar: ' + limparRecusa(e.message)); }
+}
+async function imprimirContaDaMesa(mesa){
+  let c;
+  try{ c = await Dados.chamar('conta_da_mesa', { p_salao: salaoAtual, p_mesa: String(mesa) }); }catch(e){ return; }
+  if(!c || !c.aberta) return;
+  const sl = acharSalao(salaoAtual) || {};
+  const total = Number(c.total), serv = Math.round(total * 10) / 100;
+  const linhas = [sl.nome || '', 'CONTA — Mesa ' + mesa, new Date().toLocaleString('pt-BR'), '',
+    ...(c.itens || []).map(i => i.quantidade + 'x ' + i.nome + '  ' + real(Number(i.preco) * i.quantidade) + (i.garcom ? '  (' + i.garcom + ')' : '')),
+    '', 'Consumo: ' + real(total), 'Serviço 10% (opcional): ' + real(serv), 'TOTAL com serviço: ' + real(total + serv)];
+  const q = document.createElement('iframe');
+  q.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+  document.body.appendChild(q);
+  const doc = q.contentWindow.document;
+  doc.open(); doc.write('<!doctype html><html><head><meta charset="utf-8"><title></title><style>@page{margin:4mm}body{margin:0}pre{font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;margin:0;max-width:72mm}</style></head><body><pre></pre></body></html>'); doc.close();
+  doc.querySelector('pre').textContent = linhas.join('\n');
+  setTimeout(() => { try{ q.contentWindow.focus(); q.contentWindow.print(); }catch(e){} }, 50);
   setTimeout(() => q.remove(), 60000);
 }
 
