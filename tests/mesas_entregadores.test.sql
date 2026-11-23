@@ -89,8 +89,10 @@ update public.pedidos set status = 'entregue', entregue_em = now()
  where id in (t_id(:'e1'::jsonb), t_id(:'e2'::jsonb));
 select t_texto('o acerto: Lu fez 2 entregas, R$ 12 de taxa',
   (select x->>'entregador' || ' ' || (x->>'entregas') || ' ' || (x->>'taxas')
-     from jsonb_array_elements(t_dono(format('select public.acerto_entregadores(%L::uuid, current_date, current_date)',
-       '57100000-0000-0000-0000-00000000000a'))) x where x->>'entregador' = 'Lu'),
+     -- O dia DO RESTAURANTE (entre 21h e meia-noite o current_date em UTC já é amanhã).
+     from jsonb_array_elements(t_dono(format('select public.acerto_entregadores(%L::uuid, %L::date, %L::date)',
+       '57100000-0000-0000-0000-00000000000a', (now() at time zone 'America/Sao_Paulo')::date,
+       (now() at time zone 'America/Sao_Paulo')::date))) x where x->>'entregador' = 'Lu'),
   'Lu 2 12.00');
 select t_texto('pedido de mesa não tem entregador',
   erro_de(format($q$select t_dono('select public.definir_entregador(''%s''::uuid, ''Beto'')')$q$, t_id(:'m1'::jsonb))),

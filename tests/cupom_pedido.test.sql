@@ -39,7 +39,8 @@ insert into public.cupons (salao_id, codigo, tipo, valor, vale_agendamento, vale
   ('56800000-0000-0000-0000-00000000000a', 'bemvindo', 'pct', 10, true, false, 2, true),
   ('56800000-0000-0000-0000-00000000000a', 'DEZ', 'valor', 10, true, false, null, false);
 insert into public.cupons (salao_id, codigo, tipo, valor, fim) values
-  ('56800000-0000-0000-0000-00000000000a', 'VELHO', 'pct', 50, current_date - 1);
+  -- Ontem NO RESTAURANTE: entre 21h e meia-noite de Brasília o current_date (UTC) já é amanhã.
+  ('56800000-0000-0000-0000-00000000000a', 'VELHO', 'pct', 50, (now() at time zone 'America/Sao_Paulo')::date - 1);
 grant usage on schema auth to anon, authenticated;
 
 create or replace function t_anon(p_sql text) returns jsonb language plpgsql as $$
@@ -96,7 +97,7 @@ select t_texto('código que não existe',
   erro_de($$select t_pedir('11968000030', 'NAOEXISTE')$$), 'Cupom não encontrado. Confira as letras e os números.');
 select t_texto('cupom vencido diz a data',
   erro_de($$select t_pedir('11968000030', 'VELHO')$$),
-  'Este cupom venceu em ' || to_char(current_date - 1, 'DD/MM/YYYY') || '.');
+  'Este cupom venceu em ' || to_char((now() at time zone 'America/Sao_Paulo')::date - 1, 'DD/MM/YYYY') || '.');
 select t_pedir('11968000030', 'DEZ') as r3 \gset
 select t_texto('R$ 10 fixo: total 100 − 10 + 6 = 96', :'r3'::jsonb->>'total', '96.00');
 
