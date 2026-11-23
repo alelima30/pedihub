@@ -404,6 +404,9 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
       <!-- O convite, logo abaixo do nome. Quem chega pelo WhatsApp veio para
            marcar: o caminho tem que estar à mão antes de qualquer rolagem. -->
       <div id="capaBoas"></div>
+      <!-- As promocoes do dia (79), logo na entrada: o que chama atencao
+           primeiro. Vazio quando nao ha nenhuma. -->
+      <div id="capaPromo"></div>
       <div id="capaFoto"></div>
       <!-- As fotos dos serviços passando. Vem ANTES dos nomes: é a imagem que
            faz a pessoa parar de rolar, e o nome que ela lê em seguida. -->
@@ -5750,7 +5753,37 @@ function folhaInformacoes(){
         </a>`).join('')}</div>` : '');
 }
 
+/* A FAIXA DE PROMOÇÕES, logo abaixo do convite. Cartões lado a lado que
+   rolam para o lado, cada um com o selo e o preço riscado. Tocar abre o
+   item; o + põe no pedido. Some quando não há promoção. */
+function desenharPromoNaCapa(){
+  const alvo = document.getElementById('capaPromo');
+  if(!alvo) return;
+  const lista = produtosDaLoja().filter(emPromocao);
+  if(!lista.length || !lojaTemSaida()){ alvo.innerHTML = ''; return; }
+  alvo.innerHTML = `
+    <div class="promo-faixa">
+      <div class="promo-tit"><span>🔥 PROMOÇÃO</span>
+        <button type="button" class="link" onclick="filtroLoja = '__promo'; irPara('loja')">Ver todas</button></div>
+      <div class="promo-trilho">${lista.map(p => {
+        const n = qtdDoProduto(p.id);
+        return `<div class="pr-cartao promo-cartao abre-produto" onclick="abrirProduto('${p.id}', event)">
+          <span class="pr-foto"${p.foto ? ` style="--pr-foto:url('${escapar(p.foto)}')"` : ''}>
+            ${p.foto ? '' : '<span data-ico="presente"></span>'}${seloPromo(p)}</span>
+          <div class="pr-pe">
+            <span class="pr-txt"><b>${escapar(p.nome)}</b><span>${precoDoProduto(p)}</span></span>
+            <button class="pr-add${n ? ' tem' : ''}" onclick="mudarNoCarrinho('${p.id}', 1)"
+                    aria-label="Adicionar ${escapar(p.nome)} ao pedido">
+              <span data-ico="carrinho"></span>${n ? `<span class="pr-n">${n}</span>` : ''}</button>
+          </div>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  if(window.aplicarIcones) aplicarIcones(alvo);
+}
+
 function desenharLojaNaCapa(){
+  desenharPromoNaCapa();
   const alvo = document.getElementById('capaLoja');
   if(!alvo) return;
   const lista = produtosDaLoja();
@@ -5775,11 +5808,11 @@ function desenharLojaNaCapa(){
              esta pedra aparece no projeto.) -->
         <span class="pr-foto"${p.foto
           ? ` style="--pr-foto:url('${escapar(p.foto)}')"` : ''}>
-          ${p.foto ? '' : '<span data-ico="presente"></span>'}</span>
+          ${p.foto ? '' : '<span data-ico="presente"></span>'}${seloPromo(p)}</span>
         <div class="pr-pe">
           <span class="pr-txt">
             <b>${escapar(p.nome)}</b>
-            <span>${p.preco == null ? 'sob consulta' : real(Number(p.preco))}</span>
+            <span>${p.preco == null ? 'sob consulta' : precoDoProduto(p)}</span>
           </span>
           <button class="pr-add${n ? ' tem' : ''}"
                   onclick="mudarNoCarrinho('${p.id}', 1)"
@@ -5873,8 +5906,9 @@ function botaoDoProduto(p, n){
          Adicionar</button>`;
 }
 function precoDoProduto(p){
-  return p.preco == null
-    ? '<span style="color:var(--txt2);font-weight:600">sob consulta</span>'
+  if(p.preco == null) return '<span style="color:var(--txt2);font-weight:600">sob consulta</span>';
+  return emPromocao(p)
+    ? `<span class="preco-promo"><s>${real(Number(p.precoCheio))}</s> <b>${real(Number(p.preco))}</b></span>`
     : real(Number(p.preco));
 }
 
@@ -5901,6 +5935,8 @@ function desenharProduto(){
          role="img" aria-label="${escapar(p.nome)}">${p.foto ? '' : '<span data-ico="presente"></span>'}</div>
     <div class="prod-corpo">
       ${cat ? `<span class="prod-cat">${escapar(cat)}</span>` : ''}
+      ${emPromocao(p) ? `<div class="prod-promo">${seloPromo(p)}${p.promoAte
+          ? `<span>até ${escapar(String(p.promoAte).slice(8, 10) + '/' + String(p.promoAte).slice(5, 7))}</span>` : ''}</div>` : ''}
       <h2 class="prod-nome">${escapar(p.nome)}</h2>
       ${p.marca ? `<div class="prod-marca">${escapar(p.marca)}</div>` : ''}
       <div class="prod-preco">${precoDoProduto(p)}</div>
@@ -5935,6 +5971,8 @@ function desenharLoja(){
   const todos = produtosDaLoja();
 
   lojaCatsAtuais = categoriasDaLoja(todos);
+  // As promoções viram a primeira "categoria", para achar de uma vez.
+  if(todos.some(emPromocao)) lojaCatsAtuais.unshift({ k: '__promo', rot: '🔥 Promoções' });
   if(filtroLoja && !lojaCatsAtuais.some(c => c.k === filtroLoja)) filtroLoja = null;
   const fileira = document.getElementById('lojaCats');
   if(fileira){
@@ -5945,7 +5983,7 @@ function desenharLoja(){
           onclick="escolherCategoriaLoja(${i - 1})">${escapar(c.rot)}</button>`).join('');
   }
 
-  const lista = todos.filter(p => (!filtroLoja || chaveCategoria(p.categoria) === filtroLoja)
+  const lista = todos.filter(p => (!filtroLoja || (filtroLoja === '__promo' ? emPromocao(p) : chaveCategoria(p.categoria) === filtroLoja))
     && (!busca
       || plano(p.nome).includes(busca)
       || plano(p.marca).includes(busca)));
@@ -5982,7 +6020,7 @@ function desenharLoja(){
         onclick="abrirProduto('${p.id}', event)">
         <span class="pr-foto"${p.foto
           ? ` style="--pr-foto:url('${escapar(p.foto)}')"` : ''}>
-          ${p.foto ? '' : '<span data-ico="presente"></span>'}</span>
+          ${p.foto ? '' : '<span data-ico="presente"></span>'}${seloPromo(p)}</span>
         <div class="loja-corpo">
           <b class="loja-nome">${escapar(p.nome)}</b>
           ${p.marca ? `<span class="loja-marca">${escapar(p.marca)}</span>` : ''}
@@ -5995,12 +6033,13 @@ function desenharLoja(){
     const n = qtdDoProduto(p.id);
     return `<div class="bloco abre-produto" style="display:flex;gap:12px;align-items:flex-start"
       onclick="abrirProduto('${p.id}', event)">
-      <div style="flex:0 0 64px;width:64px;height:64px;border-radius:9px;
+      <div style="flex:0 0 64px;width:64px;height:64px;border-radius:9px;position:relative;
                   overflow:hidden;background:var(--fundo2,rgba(0,0,0,.05));
                   display:flex;align-items:center;justify-content:center">
         ${p.foto ? `<img src="${escapar(p.foto)}" alt="" loading="lazy"
                         style="width:100%;height:100%;object-fit:cover">`
                  : `<span data-ico="presente"></span>`}
+        ${emPromocao(p) ? '<span class="selo-promo selo-mini">PROMO</span>' : ''}
       </div>
       <div style="flex:1;min-width:0">
         <div class="rot" style="margin:0;overflow-wrap:anywhere">${escapar(p.nome)}</div>
@@ -6342,6 +6381,43 @@ function guardarPedido(token, numero){
   try{ localStorage.setItem(chaveDosPedidos(), JSON.stringify(l.slice(0, 10))); }catch(e){}
 }
 
+/* ── A PROMOÇÃO (79) ───────────────────────────────────────────────────
+   O banco manda, em pedidos_da_casa().promocoes, os itens em promoção HOJE:
+   o preço novo e o cheio. O item passa a valer o preço novo em toda a tela
+   (cartão, carrinho, total) e guarda o cheio para riscar. Quem cobra no fim
+   é o banco, com a mesma conta (preco_vigente).
+
+   Sem a lista (demonstração, sem banco), a conta é feita aqui, com os
+   campos do próprio item. Pode rodar de novo: volta ao preço base antes. */
+function aplicarPromocoes(){
+  const lista = pedidosCasa && Array.isArray(pedidosCasa.promocoes) ? pedidosCasa.promocoes : null;
+  const hojeAqui = (d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-'
+    + String(d.getDate()).padStart(2, '0'))(new Date());
+  for(const p of ((bd && bd.produtos) || [])){
+    if(p._precoBase !== undefined) p.preco = p._precoBase;
+    p._precoBase = p.preco;
+    p.precoCheio = null;
+    if(p.preco == null) continue;
+    let novo = null, ate = null;
+    if(lista){
+      const x = lista.find(y => y && y.id === p.id);
+      if(x){ novo = Number(x.preco); ate = x.ate || null; }
+    } else if(p.precoPromo != null && p.precoPromo !== ''
+              && (!p.promoAte || String(p.promoAte).slice(0, 10) >= hojeAqui)){
+      novo = Number(p.precoPromo); ate = p.promoAte || null;
+    }
+    if(novo != null && novo >= 0 && novo < Number(p.preco)){
+      p.precoCheio = Number(p.preco); p.preco = novo; p.promoAte = ate;
+    }
+  }
+}
+const emPromocao = p => !!(p && p.precoCheio != null && Number(p.precoCheio) > Number(p.preco));
+function seloPromo(p){
+  if(!emPromocao(p)) return '';
+  const pct = Math.round((1 - Number(p.preco) / Number(p.precoCheio)) * 100);
+  return `<span class="selo-promo">PROMOÇÃO${pct >= 1 ? ` <i>−${pct}%</i>` : ''}</span>`;
+}
+
 /* A configuração do restaurante (taxas, mínimo, pagamento, aberto) e o pedido
    mais recente deste aparelho, para o aviso da capa. */
 async function carregarPedidosDaCasa(){
@@ -6349,6 +6425,7 @@ async function carregarPedidosDaCasa(){
   if(!ehRestaurante()) return;
   try{ pedidosCasa = await Dados.chamar('pedidos_da_casa', { p_slug: salao.slug }); }
   catch(e){ console.info('[PediHub] pedidos_da_casa:', e.message); pedidosCasa = { ligado: false }; }
+  aplicarPromocoes();
   try{ opcoesCasa = await Dados.chamar('opcoes_da_casa', { p_slug: salao.slug }) || {}; }
   catch(e){ console.info('[PediHub] opcoes_da_casa:', e.message); opcoesCasa = {}; }
   lerCarrinhoOpcoes();

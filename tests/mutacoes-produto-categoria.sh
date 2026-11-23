@@ -58,7 +58,7 @@ troca cardapio.html \
 
 echo "2. o filtro não filtra"
 troca cardapio.html \
-  "(!filtroLoja || chaveCategoria(p.categoria) === filtroLoja)" \
+  "(!filtroLoja || (filtroLoja === '__promo' ? emPromocao(p) : chaveCategoria(p.categoria) === filtroLoja))" \
   "(true)" \
   && rodar "tocar e ver tudo igual"
 

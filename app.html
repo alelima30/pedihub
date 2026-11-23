@@ -1218,6 +1218,21 @@ function hoje(){
     ? instanteParaTela(new Date().toISOString(), s.fuso).data
     : iso(new Date());
 }
+/* A PROMOÇÃO DO ITEM (79). A mesma conta do banco (preco_vigente): vale
+   quando o preço da promoção é menor que o normal e a data de fim, se houver,
+   não passou. Aqui é só para MOSTRAR — quem cobra é o banco. */
+function promoValendo(p){
+  if(!p || p.precoPromo == null || p.precoPromo === '') return false;
+  const pr = Number(p.precoPromo), cheio = Number(p.preco);
+  if(!(pr >= 0) || !(pr < cheio)) return false;
+  return !p.promoAte || String(p.promoAte).slice(0, 10) >= hoje();
+}
+function precoAgora(p){ return promoValendo(p) ? Number(p.precoPromo) : Number((p || {}).preco || 0); }
+function seloPromoPainel(p){
+  if(!promoValendo(p)) return '';
+  return ` <span class="tag t-promo">promoção${p.promoAte
+    ? ' até ' + escapar(String(p.promoAte).slice(8, 10) + '/' + String(p.promoAte).slice(5, 7)) : ''}</span>`;
+}
 function iso(d){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')
        + '-' + String(d.getDate()).padStart(2,'0');
@@ -2231,7 +2246,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.90d605';
+const VERSAO_APP = 'v9.93f692';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -4777,7 +4792,9 @@ function pintarProdutos(){
           limparCategoria(p.categoria)
             ? `<span class="tag-cat"><span data-ico="etiqueta"></span>${escapar(limparCategoria(p.categoria))}</span>`
             : ''}</td>
-      <td>${real(p.preco)}</td>
+      <td>${promoValendo(p)
+          ? `<s style="color:var(--txt3);font-size:12px">${real(p.preco)}</s> <b class="cor-promo">${real(precoAgora(p))}</b>${seloPromoPainel(p)}`
+          : real(p.preco)}</td>
       <td>${p.estoque != null ? p.estoque : '—'}</td>
       <td>${!p.vendaOnline ? '<span style="color:var(--txt3)">fora do link</span>'
           : `<button class="btn btn-peq ${p.ativo ? '' : 'btn-p'}" onclick="alternarEsgotado('${p.id}')"
@@ -10250,6 +10267,19 @@ function abrirProduto(pid){
         <span style="font-size:12px;color:var(--txt2)">Opcional e só seu. Nunca
           aparece para o cliente.</span></div>
     </div>
+    <!-- A PROMOCAO (79): no link o item ganha o selo, o preco normal riscado e
+         entra na faixa de promocoes da entrada. Quem cobra e' o banco. -->
+    <div class="dupla promo-campos">
+      <div class="campo"><label for="pPromo">🔥 Preço na promoção</label>
+        <input type="number" id="pPromo" min="0" step="0.01" placeholder="em branco = sem promoção"
+               value="${p && p.precoPromo != null ? p.precoPromo : ''}">
+        <span style="font-size:12px;color:var(--txt2)">No link, o item ganha o selo
+          PROMOÇÃO, com o preço normal riscado, e aparece logo na entrada.</span></div>
+      <div class="campo"><label for="pPromoAte">Promoção até</label>
+        <input type="date" id="pPromoAte" value="${p && p.promoAte ? escapar(String(p.promoAte).slice(0, 10)) : ''}">
+        <span style="font-size:12px;color:var(--txt2)">Opcional. Depois desse dia
+          o item volta sozinho ao preço normal.</span></div>
+    </div>
     <div class="dupla">
       <div class="campo"><label>Estoque</label>
         <input type="number" id="pEstoque" value="${p ? p.estoque : 0}" step="1">
@@ -10492,6 +10522,13 @@ async function salvarProduto(pid){
 
   const comTxt = document.getElementById('pCom').value;
   const fixaTxt = document.getElementById('pComFixa').value;
+  // A promoção: em branco é "sem promoção"; igual ou acima do preço não é promoção.
+  const promoTxt = document.getElementById('pPromo').value.trim();
+  const precoPromo = promoTxt === '' ? null : Math.round(parseFloat(promoTxt) * 100) / 100;
+  if(precoPromo != null && !(precoPromo >= 0 && precoPromo < (parseFloat(document.getElementById('pPreco').value) || 0))){
+    alert('O preço da promoção precisa ser MENOR que o preço normal do item.\n\nPara tirar a promoção, deixe o campo em branco.');
+    return;
+  }
   const dados = {
     nome,
     marca: document.getElementById('pMarca').value || '',
@@ -10503,6 +10540,8 @@ async function salvarProduto(pid){
     estoque: parseFloat(document.getElementById('pEstoque').value) || 0,
     // Em branco (ou zero) é nulo: o item não tem prazo e nunca "atrasa".
     tempoPreparo: (t => t >= 1 ? Math.min(600, t) : null)(parseInt(document.getElementById('pTempo').value, 10)),
+    precoPromo,
+    promoAte: precoPromo == null ? null : (document.getElementById('pPromoAte').value || null),
     /* ⚠ ZERO, e não null — ao contrário de `servicos`.
 
        `produtos.comissao_pct` é `not null default 0`, e `servicos.comissao_pct`
@@ -23125,7 +23164,7 @@ function abrirNovoPedido(){
       <div id="npCardapio" class="np-cardapio">${itens.map(x => `
         <button type="button" class="np-prod" data-nome="${escapar(semAcentoPainel(x.nome))}"
                 onclick="npAdicionar('${x.id}')">
-          <span>${escapar(x.nome)}</span><b>${real(Number(x.preco || 0))}</b></button>`).join('')
+          <span>${escapar(x.nome)}${promoValendo(x) ? ' <span class="tag t-promo">promoção</span>' : ''}</span><b>${real(precoAgora(x))}</b></button>`).join('')
         || '<p class="secao-sub">Cadastre itens no Cardápio primeiro.</p>'}</div>
       <div id="npEscolha"></div>
       <div id="npLista" class="np-lista"></div>
@@ -23211,7 +23250,7 @@ async function npAdicionar(pid){
   if(!grupos.length){
     const ja = npItens.find(x => x.pid === pid && !x.opcoes.length);
     if(ja) ja.qtd++;
-    else npItens.push({ pid, nome: prod.nome, qtd: 1, opcoes: [], texto: '', preco: Number(prod.preco || 0) });
+    else npItens.push({ pid, nome: prod.nome, qtd: 1, opcoes: [], texto: '', preco: precoAgora(prod) });
     npPintarLista();
     return;
   }
@@ -23221,7 +23260,7 @@ async function npAdicionar(pid){
 
 function npCalcular(){
   const e = npEscolha, prod = acharProduto(e.pid) || {};
-  let preco = Number(prod.preco || 0); const partes = [], ids = []; let falta = null;
+  let preco = precoAgora(prod); const partes = [], ids = []; let falta = null;
   for(const g of e.grupos){
     const esc = (g.opcoes || []).filter(o => (e.sel[g.id] || []).includes(o.id));
     if(esc.length < Number(g.min || 0) && !falta) falta = `Escolha em "${g.nome}".`;
@@ -23981,7 +24020,7 @@ function abrirLancarNaMesa(mesa){
       <div class="garcom-item np-prod" data-nome="${escapar(semAcentoPainel(x.nome))}" data-cat="${escapar(limparCategoria(x.categoria) || '')}">
         <button type="button" class="garcom-foto" onclick="verFotoDoItem('${x.id}')" aria-label="Ver a foto de ${escapar(x.nome)}"
           ${x.foto ? `style="background-image:url('${escapar(x.foto)}')"` : ''}>${x.foto ? '' : '<span data-ico="presente"></span>'}</button>
-        <div class="garcom-txt"><b>${escapar(x.nome)}</b><span>${real(Number(x.preco || 0))}</span></div>
+        <div class="garcom-txt"><b>${escapar(x.nome)}</b><span>${promoValendo(x) ? '🔥 ' : ''}${real(precoAgora(x))}</span></div>
         <button type="button" class="btn btn-p btn-peq" onclick="npAdicionar('${x.id}')">+ Pôr</button>
       </div>`).join('') || '<p class="secao-sub">Cadastre itens no Cardápio primeiro.</p>'}</div>
     <div id="npEscolha"></div>
@@ -24005,7 +24044,7 @@ function verFotoDoItem(pid){
   f.className = 'garcom-zoom';
   f.innerHTML = `<div class="garcom-zoom-caixa">
       ${x.foto ? `<img src="${escapar(x.foto)}" alt="">` : '<div class="garcom-sem-foto">Sem foto</div>'}
-      <b>${escapar(x.nome)}</b><span>${real(Number(x.preco || 0))}</span>
+      <b>${escapar(x.nome)}</b><span>${real(precoAgora(x))}</span>
       ${x.descricao ? `<p>${escapar(x.descricao)}</p>` : ''}
       <button type="button" class="btn btn-p">Fechar</button></div>`;
   f.addEventListener('click', () => f.remove());

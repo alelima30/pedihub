@@ -111,6 +111,8 @@
   --su-500:#15803D; --su-soft:rgba(21,128,61,.10);
   --wa-500:#A16207; --wa-soft:rgba(161,98,7,.10);   /* PediHub: longe do laranja da marca */
   --er-500:#DC2626; --er-soft:rgba(220,38,38,.09);
+  /* A promoção (79): o selo é sempre o mesmo vermelho vivo, com letra branca. */
+  --promo:#E11D48; --promo-txt:#E11D48; --promo-soft:rgba(225,29,72,.10);
 
   /* ── Tokens que as telas já usavam, redirecionados ─────────────────── */
   --ac-500:var(--az-500); --ac-600:var(--az-texto); --ac-700:var(--az-800);
@@ -246,6 +248,7 @@
   --lat-card:var(--painel2);
 
   --su-500:#4ADE80; --wa-500:#FBBF24; --er-500:#F87171;
+  --promo-txt:#FB7185; --promo-soft:rgba(251,113,133,.14);
   --su-soft:rgba(74,222,128,.12); --wa-soft:rgba(251,191,36,.12);
   --er-soft:rgba(248,113,113,.12);
 
@@ -5650,3 +5653,41 @@ label.pedido-chave{ font-weight:600 }
 .ficha-duv-linha{ display:grid; gap:6px; padding:10px; margin-bottom:8px;
                   border:1px dashed var(--borda); border-radius:10px }
 .ficha-duv-linha .btn{ justify-self:start }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A PROMOÇÃO (79): o selo, o preço riscado e a faixa da entrada
+   O vermelho do selo não segue o tema do restaurante de propósito: é o sinal
+   de "promoção" que a cliente já conhece de qualquer cardápio.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.selo-promo{
+  display:inline-flex; align-items:center; gap:4px; padding:3px 8px;
+  border-radius:999px; background:var(--promo); color:#fff;
+  font-size:11px; font-weight:850; letter-spacing:.04em; line-height:1.25;
+  box-shadow:0 2px 8px rgba(225,29,72,.35); white-space:nowrap;
+}
+.selo-promo i{ font-style:normal; font-weight:800; opacity:.95 }
+.pr-foto > .selo-promo{ position:absolute; top:8px; left:8px; z-index:3 }
+.selo-promo.selo-mini{ position:absolute; top:3px; left:3px; padding:1px 5px; font-size:9px; box-shadow:none }
+.preco-promo s{ color:var(--txt3); font-weight:600; font-size:.82em; margin-right:3px }
+.preco-promo b, .pr-txt .preco-promo b{
+  display:inline; font-size:inherit; font-weight:800; color:var(--promo-txt);
+  -webkit-line-clamp:unset;
+}
+.pr-txt .preco-promo, .pr-txt .preco-promo s{ display:inline }
+.prod-promo{ display:flex; align-items:center; gap:8px; margin:8px 0 0; font-size:12.5px; color:var(--txt2) }
+.promo-faixa{
+  margin:14px 0 8px; padding:12px 0 2px; border-radius:var(--r, 14px);
+  background:linear-gradient(135deg, var(--promo-soft), rgba(249,115,22,.08));
+  border:1px solid var(--promo-soft);
+}
+.promo-tit{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 12px 8px }
+.promo-tit > span{ font-size:15px; font-weight:900; letter-spacing:.06em; color:var(--promo-txt) }
+.promo-trilho{
+  display:flex; gap:10px; overflow-x:auto; padding:0 12px 12px;
+  scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.promo-trilho::-webkit-scrollbar{ display:none }
+.promo-cartao{ flex:0 0 44%; max-width:190px; scroll-snap-align:start }
+.t-promo{ background:var(--promo-soft) !important; color:var(--promo-txt) !important }
+.cor-promo{ color:var(--promo-txt) }

@@ -123,7 +123,7 @@ const COLUNAS = {
                    comissaoFixa:'comissao_fixa', vendaOnline:'venda_online',
                    precoVisivel:'preco_visivel',
                    // Minutos na cozinha; passou, o pedido fica vermelho (74).
-                   tempoPreparo:'tempo_preparo' },
+                   tempoPreparo:'tempo_preparo', precoPromo:'preco_promo', promoAte:'promo_ate' },
   pacotes:       { salaoId:'salao_id', validadeDias:'validade_dias',
                    soNosDias:'so_nos_dias', criadoEm:'criado_em',
                    // Excluído depois de vendido: sai da lista, o histórico fica (50).
@@ -257,6 +257,8 @@ const VAZIO_E_NULO = new Set([
   /* O tempo de preparo do prato (74): em branco é "não conta prazo". Um `''`
      num smallint derrubaria a gravação inteira do item do cardápio. */
   'tempo_preparo',
+  'preco_promo',
+  'promo_ate',
   /* As duas do 27_pacotes.sql, cobradas pelo `colunas.test.js` no minuto em
      que o módulo entrou.
 
@@ -350,7 +352,7 @@ function listaJsonb(r){
 const NUMERICAS = new Set([
   'comissao_fixa', 'valor_abertura', 'valor_contado',
   'comissao_pct', 'comissao_total', 'comissao_valor', 'custo', 'desconto',
-  'estoque', 'preco', 'preco_mes', 'preco_unit', 'qtd', 'sinal_exigido',
+  'estoque', 'preco', 'preco_mes', 'preco_promo', 'preco_unit', 'qtd', 'sinal_exigido',
   'sinal_pago', 'subtotal', 'taxa', 'total', 'valor', 'valor_previsto',
   /* ⚠ COLUNA DE DINHEIRO NOVA TEM QUE ENTRAR AQUI, SEMPRE.
      `acrescimo` nasceu na Fase 2A e ficou de fora desta lista. O PostgREST
