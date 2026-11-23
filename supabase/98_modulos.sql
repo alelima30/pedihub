@@ -13550,6 +13550,11 @@ begin
 end $$;
 revoke all on function public.tg_push_pedido() from public, anon, authenticated;
 
+create or replace function public.telefone_nacional(p_tel text)
+returns text language sql immutable set search_path = public as $$
+  select case when length(d) >= 12 and left(d, 2) = '55' then substr(d, 3) else d end
+    from (select public.so_digitos(p_tel) as d) t
+$$;
 create or replace function public.registrar_pedido(p_salao uuid, p_pedido jsonb, p_origem text)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare

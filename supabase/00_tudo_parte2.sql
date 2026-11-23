@@ -16333,6 +16333,15 @@ revoke all on function public.tg_push_pedido() from public, anon, authenticated;
 -- de chamar (telefone55, enviar-notificacoes).
 -- ===========================================================================
 
+-- 0) A conta do formato nacional (a mesma do 09). Repetida aqui porque quem
+--    ATUALIZA um banco antigo pelo 98_modulos.sql pode não ter o 09 — e o
+--    acerto dos pedidos, lá embaixo, chama esta função na hora.
+create or replace function public.telefone_nacional(p_tel text)
+returns text language sql immutable set search_path = public as $$
+  select case when length(d) >= 12 and left(d, 2) = '55' then substr(d, 3) else d end
+    from (select public.so_digitos(p_tel) as d) t
+$$;
+
 -- 1) O núcleo do pedido (o do 72), com o celular no formato nacional.
 create or replace function public.registrar_pedido(p_salao uuid, p_pedido jsonb, p_origem text)
 returns jsonb language plpgsql security definer set search_path = public as $$
