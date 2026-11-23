@@ -63,11 +63,18 @@ s=$(SUPABASE_DB_URL="postgresql://postgres:abc?def@db.xyz.supabase.co:5432/postg
 e "senha do banco com ? no endereço: diz para trocar a senha" "$([ $r -ne 0 ] && echo "$s" | grep -q 'caractere especial' && echo 1)" "$s"
 s=$(SUPABASE_DB_URL="postgresql://postgres:abcdef@db.xyz.supabase.co:5432/postgres" BACKUP_SENHA="$SENHA" bash supabase/backup.sh "$TMP/a" 2>&1); r=$?
 e "endereço Direct connection: diz para usar o Session pooler" "$([ $r -ne 0 ] && echo "$s" | grep -q 'Session pooler' && echo 1)" "$s"
+s=$(SUPABASE_DB_URL="minhaSenha123" BACKUP_SENHA="$SENHA" bash supabase/backup.sh "$TMP/a" 2>&1); r=$?
+e "o que não é endereço (só a senha, outro formato): diz que precisa começar com postgresql://" \
+  "$([ $r -ne 0 ] && echo "$s" | grep -q 'precisa começar com postgresql://' && echo 1)" "$s"
 
 echo ""
 echo "2. A cópia"
 s=$(SUPABASE_DB_URL="$URL" BACKUP_SENHA="$SENHA" DIA=teste bash supabase/backup.sh "$TMP/b" 2>&1); r=$?
 e "copiou e trancou" "$([ $r -eq 0 ] && [ -s "$TMP/b/pedihub-teste.dump.gpg" ] && echo 1)" "$s"
+# Colado com aspas e espaços em volta, como acontece ao copiar da tela: funciona igual.
+s=$(SUPABASE_DB_URL="  \"$URL\"
+" BACKUP_SENHA="$SENHA" DIA=aspas bash supabase/backup.sh "$TMP/c" 2>&1); r=$?
+e "colado com aspas e espaços em volta, copia do mesmo jeito" "$([ $r -eq 0 ] && [ -s "$TMP/c/pedihub-aspas.dump.gpg" ] && echo 1)" "$s"
 e "e diz o tamanho e quantas tabelas" "$(echo "$s" | grep -q 'tabelas com dados' && echo 1)" "$s"
 e "a cópia aberta não fica na pasta" "$([ ! -e "$TMP/b/banco.dump" ] && [ "$(ls "$TMP/b" | wc -l)" -eq 1 ] && echo 1)" "$(ls "$TMP/b")"
 

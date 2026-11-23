@@ -37,6 +37,20 @@ if [ "${#BACKUP_SENHA}" -lt 16 ]; then
   exit 1
 fi
 
+# Colado com aspas, espaço ou quebra de linha em volta (ou com o "psql" da
+# frente, como a tela do Supabase às vezes mostra): limpa. Sem isso o pg_dump
+# lê o texto como NOME de banco e tenta um banco local — "No such file or
+# directory", que não diz nada a quem colou.
+SUPABASE_DB_URL="$(printf '%s' "$SUPABASE_DB_URL" | tr -d '\r\n' \
+  | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//; s/^psql[[:space:]]+//' \
+  | sed -E "s/^[\"']//; s/[\"']$//")"
+case "$SUPABASE_DB_URL" in
+  postgresql://*|postgres://*) ;;
+  *)
+    echo "::error::O SUPABASE_DB_URL não é um endereço: ele precisa começar com postgresql:// . No Supabase, em Connect, escolha \"Session pooler\" no formato URI, copie, troque [YOUR-PASSWORD] pela senha (sem os colchetes) e atualize o segredo." >&2
+    exit 1 ;;
+esac
+
 # Os dois erros de quem cola o endereço pela primeira vez, ditos com o que
 # fazer (o pg_dump responderia "missing key/value separator", que não ajuda):
 #   · a senha do banco com ? # / @ — dentro do endereço, eles cortam a senha;
