@@ -6418,6 +6418,24 @@ function seloPromo(p){
   return `<span class="selo-promo">PROMOÇÃO${pct >= 1 ? ` <i>−${pct}%</i>` : ''}</span>`;
 }
 
+/* ── O CARTÃO FIDELIDADE NO ACOMPANHAMENTO ──────────────────────────────
+   O banco conta só os pedidos ENTREGUES deste celular neste restaurante — e o
+   pedido que a cliente acabou de fazer ainda não está entregue. "Faltam 3",
+   sozinho, parecia conta errada para quem já tinha feito mais pedidos. Agora
+   diz quantos já contaram, mostra os selos, e avisa que este entra quando
+   for entregue. */
+function cartaoFidelidade(d){
+  const f = d.fidelidade || {};
+  const meta = Math.max(1, Number(f.pedidos) || 1), faltam = Math.min(meta, Math.max(0, Number(f.faltam) || 0));
+  const feitos = meta - faltam;
+  const selos = meta <= 20
+    ? `<div class="fid-selos" aria-hidden="true">${'<span class="on">★</span>'.repeat(feitos)}${'<span>☆</span>'.repeat(faltam)}</div>` : '';
+  const este = !['entregue', 'cancelado'].includes(d.status)
+    ? '<br><small>Este pedido entra na conta quando for entregue.</small>' : '';
+  return `⭐ <b>Cartão fidelidade:</b> ${feitos} de ${meta} pedidos entregues.${selos}`
+    + `Faltam ${faltam} para ganhar ${Number(f.desconto)}% de desconto.${este}`;
+}
+
 /* A configuração do restaurante (taxas, mínimo, pagamento, aberto) e o pedido
    mais recente deste aparelho, para o aviso da capa. */
 async function carregarPedidosDaCasa(){
@@ -6764,9 +6782,9 @@ function desenharAcompanhar(){
         · ${escapar(PAGAMENTOS_PEDIDO[d.pagamento] || d.pagamento || '')}${
         d.troco ? ' (troco para ' + real(Number(d.troco)) + ')' : ''}</p>
     </div>
-    ${d.fidelidade ? `<div class="recado" style="margin:12px 0">${d.fidelidade.temDesconto
+    ${d.fidelidade ? `<div class="recado fid-cartao" style="margin:12px 0">${d.fidelidade.temDesconto
         ? `🎉 <b>Você ganhou ${Number(d.fidelidade.desconto)}% de desconto</b> no próximo pedido (sai sozinho).`
-        : `⭐ <b>Fidelidade:</b> faltam ${d.fidelidade.faltam} pedido(s) para ganhar ${Number(d.fidelidade.desconto)}% de desconto.`}</div>` : ''}
+        : cartaoFidelidade(d)}</div>` : ''}
     ${zapUrl ? `<a class="link" href="${zapUrl}" target="_blank" rel="noopener">Falar com o restaurante no WhatsApp</a>` : ''}
     ${d.status === 'recebido' ? `<p style="margin-top:14px">
         <button class="link" style="color:var(--erro)" onclick="cancelarPedidoDaCliente()">Cancelar este pedido</button></p>` : ''}`;

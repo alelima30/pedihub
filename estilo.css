@@ -5691,3 +5691,7 @@ label.pedido-chave{ font-weight:600 }
 .promo-cartao{ flex:0 0 44%; max-width:190px; scroll-snap-align:start }
 .t-promo{ background:var(--promo-soft) !important; color:var(--promo-txt) !important }
 .cor-promo{ color:var(--promo-txt) }
+
+/* O cartão fidelidade no acompanhamento do pedido: os selos já ganhos e os que faltam. */
+.fid-selos{ display:flex; flex-wrap:wrap; gap:3px; margin:6px 0; font-size:18px; line-height:1; color:var(--txt3) }
+.fid-selos .on{ color:var(--ac-600, var(--acao)) }
