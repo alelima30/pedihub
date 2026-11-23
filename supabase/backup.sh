@@ -67,7 +67,7 @@ pg_dump --dbname="$SUPABASE_DB_URL" --format=custom --no-owner --no-privileges \
 # Conferir ANTES de trancar: uma cópia vazia que diz "backup ok" é pior que
 # nenhuma, porque ninguém vai atrás dela.
 pg_restore --list "$CRU" > "$SAIDA/indice.txt"
-for t in saloes agendamentos clientes profissionais servicos assinaturas; do
+for t in saloes clientes produtos pedidos pedido_itens assinaturas; do
   if ! grep -q "TABLE DATA public $t " "$SAIDA/indice.txt"; then
     echo "::error::A cópia não tem os dados de public.$t — nada foi guardado." >&2
     exit 1

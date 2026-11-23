@@ -21,10 +21,10 @@
 name: Backup do banco
 
 on:
-  # DESLIGADO até guardar os dois segredos acima. Sem eles, toda noite falhava
-  # e mandava e-mail. Para religar, apague o "#" das duas linhas abaixo.
-  # schedule:
-  #   - cron: '17 6 * * *'        # 06:17 UTC = 03:17 em Brasília
+  # Ligado em 23/11/2026, com os dois segredos guardados e a primeira cópia
+  # conferida. Se precisar desligar, ponha "#" na frente das duas linhas.
+  schedule:
+    - cron: '17 6 * * *'        # 06:17 UTC = 03:17 em Brasília
   workflow_dispatch:
 
 permissions:
