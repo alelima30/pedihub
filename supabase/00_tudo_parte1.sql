@@ -10670,3 +10670,1310 @@ comment on table public.notificacoes is
   'Fila das mensagens que nascem da agenda: confirmação, lembrete, resumo e aviso ao profissional.';
 comment on function public.gerar_resumos(timestamptz) is
   'Põe o resumo do dia na fila para os restaurantes cuja hora já chegou. Idempotente por dia.';
+
+-- ###########################################################################
+-- ## 22_cotas.sql
+-- ###########################################################################
+
+-- ===========================================================================
+-- PediHub — 22: as cotas do plano e o consumo de mensagem
+--
+-- ── O QUE JÁ EXISTIA, E POR QUE ESTE ARQUIVO NÃO REESCREVE NADA ───────────
+-- O sistema já tinha o mecanismo certo: `planos.recursos` é um jsonb, e
+-- `recurso_num()` / `recurso_bool()` leem uma chave dele. `max_profissionais`
+-- já é aplicado por gatilho, e `agendamentos_mes` também. Nada disso muda.
+--
+-- O que faltava eram três cotas — cliente, serviço e mensagem — e um
+-- contador de consumo. Entram como CHAVES NOVAS no mesmo jsonb, aplicadas
+-- pelo mesmo padrão de gatilho. Nenhum número novo espalhado pelo código: a
+-- lista está na seção 1 e em mais lugar nenhum.
+--
+-- ── UMA DIVERGÊNCIA QUE PRECISA FICAR ESCRITA ─────────────────────────────
+-- O pedido descreve quatro planos — START, ESSENCIAL, PRO e MARKETING, de
+-- R$ 0 a R$ 159,90. O sistema no ar tem SETE, de R$ 57 a R$ 297, com restaurante
+-- assinando. Renomear e reprecificar plano de quem já paga é decisão
+-- comercial, não técnica, e desfazer isso depois é bem mais caro do que
+-- fazer.
+--
+-- Então este arquivo implementa a ESTRUTURA que o pedido descreve — cota
+-- central, configurável, sem número solto — sobre os planos que existem. As
+-- cotas foram mapeadas por tamanho: o grátis recebe as do START, e os pagos
+-- recebem escala crescente até o Restaurante. Trocar qualquer uma é editar a
+-- seção 1.
+--
+-- ── O QUE NÃO ENTRA AQUI ──────────────────────────────────────────────────
+-- Nada apaga dado. O item 33 do pedido é regra deste arquivo: se o restaurante
+-- descer de plano e ficar acima do teto, o que existe CONTINUA existindo — só
+-- não dá para incluir mais. Nenhum gatilho deste arquivo faz delete.
+-- ===========================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1) AS COTAS, NUM LUGAR SÓ
+--
+-- `max_clientes`, `max_servicos` e `mensagens_mes` entram no `recursos` de
+-- cada plano. Ausente = sem teto, que é a convenção que `recurso_num()` já
+-- usava para `agendamentos_mes`.
+--
+-- `mensagens_mes: 0` é diferente de ausente: zero quer dizer "este plano não
+-- tem WhatsApp", e é o que o pedido pede para o START.
+-- ---------------------------------------------------------------------------
+update public.planos set recursos = recursos || jsonb_build_object(
+    'max_clientes',   30, 'max_servicos',   5, 'mensagens_mes',   0,
+    'agendamentos_mes', 20)
+  where codigo = 'gratuito';
+
+/* ── O GRÁTIS É SÓ PARA CONHECER, E O BÁSICO É O SISTEMA SEM MENSAGEM ──────
+   Pedido do dono: "o plano grátis tem que ser bem limitado, mas bem limitado
+   mesmo" — antes ele tinha o sistema inteiro menos a mensagem, e quem não
+   precisa de lembrete nunca pagaria.
+
+     Grátis     R$ 0      1 profissional, 20 horários/mês, 30 clientes,
+                          5 serviços, sem produtos; agenda, clientes e o link
+                          simples (sem personalizar, com o selo PediHub)
+     Básico     R$ 49,90  1 profissional, o sistema inteiro, sem mensagens
+                          automáticas (o botão manual do WhatsApp segue)
+     Essencial  R$ 97     o Básico + 500 mensagens
+
+   Os módulos travados no Grátis viram chaves de `recursos`, conferidas pelo
+   banco (`exigir_recurso`, logo abaixo): caixa (com comanda), relatorios, loja
+   (produtos no link), pacotes, cupons, aparencia. Nada se apaga: quem desce
+   para o Grátis guarda tudo, só não lança coisa nova no que travou. */
+/* A TRAVA DE MÓDULO POR PLANO. O Grátis é só para conhecer (agenda, clientes
+   e o link simples); caixa, relatórios, produtos, pacotes, cupons e a
+   aparência do link são do Básico para cima (logo abaixo). Quem recusa é o
+   banco — num gatilho ou no começo da função —, nunca só a tela: o console
+   do navegador não passa por aba escondida. Chave ausente no plano = não. */
+create or replace function public.exigir_recurso(p_salao uuid, p_chave text, p_nome text)
+returns void language plpgsql stable set search_path = public as $$
+begin
+  if not coalesce(public.recurso_bool(p_salao, p_chave), false) then
+    raise exception '% está disponível a partir do plano Básico.', p_nome
+      using errcode = 'check_violation';
+  end if;
+end $$;
+
+/* OS DIAS DE TESTE, NO DIA DO RESTAURANTE. O prazo do teste grátis passou a ser
+   contado no fuso do restaurante (criar_salao, 03): depois das 21h em Brasília o
+   servidor já está no dia seguinte, e a conta pelo `current_date` dele dava
+   um dia a menos. A vista é refeita AQUI, num módulo, e não só no 03: é este
+   arquivo que entra também no caminho de quem atualiza (98_modulos). */
+create or replace view public.minha_assinatura
+with (security_invoker = true) as
+  select a.salao_id,
+         s.nome        as salao_nome,
+         s.slug,
+         s.tipo,
+         a.plano,
+         pl.nome       as plano_nome,
+         pl.preco_mes,
+         pl.max_profissionais,
+         a.status,
+         a.trial_ate,
+         a.vence_em,
+         (select count(*) from public.profissionais p
+           where p.salao_id = a.salao_id and p.ativo) as profissionais_ativos,
+         case when a.status = 'trial' and a.trial_ate is not null
+              then greatest(a.trial_ate - (now() at time zone coalesce(s.fuso, 'America/Sao_Paulo'))::date, 0)
+         end as dias_de_teste
+    from public.assinaturas a
+    join public.saloes s  on s.id = a.salao_id
+    join public.planos pl on pl.codigo = a.plano;
+grant select on public.minha_assinatura to authenticated;
+
+/* O PLANO, PARA A EQUIPE. A assinatura só o gestor lê (preço e vencimento são
+   conta do dono). Sem ela, a tela da recepção e da profissional achava que o
+   restaurante estava no Grátis e trancava o caixa de quem paga o Básico. Isto
+   devolve SÓ o código do plano em vigor — nada de preço, nada de data — e só
+   para quem é da equipe daquele restaurante. */
+create or replace function public.plano_do_salao(p_salao uuid)
+returns text language sql stable security definer set search_path = public as $$
+  select case when public.e_equipe(p_salao) then public.plano_efetivo(p_salao) end
+$$;
+revoke all on function public.plano_do_salao(uuid) from public, anon;
+grant execute on function public.plano_do_salao(uuid) to authenticated;
+
+insert into public.planos (codigo, nome, max_profissionais, preco_mes, ordem, recursos)
+values ('basico', 'Básico', 1, 49.90, 2, '{}'::jsonb)
+on conflict (codigo) do update set nome = excluded.nome;
+-- preço é decisão comercial: não reseta. O NOME volta sempre — colado uma vez
+-- com os acentos trocados, só assim o "Básico" se conserta colando de novo.
+
+update public.planos set recursos = recursos || jsonb_build_object(
+    'max_clientes',  500, 'max_servicos',  50, 'mensagens_mes', 0,
+    'agenda_online', true, 'lembrete_whatsapp', false)
+  where codigo = 'basico';
+
+update public.planos set recursos = recursos || jsonb_build_object(
+    'caixa', true, 'relatorios', true, 'loja', true,
+    'pacotes', true, 'cupons', true, 'aparencia', true)
+  where codigo <> 'gratuito';
+
+update public.planos set recursos = recursos || jsonb_build_object(
+    'caixa', false, 'relatorios', false, 'loja', false,
+    'pacotes', false, 'cupons', false, 'aparencia', false)
+  where codigo = 'gratuito';
+
+/* ── A FRANQUIA DE MENSAGENS, REVISTA PELO USO DE VERDADE ─────────────────
+   Cada atendimento gasta duas mensagens da cliente (confirmação e lembrete).
+   Com 300, um profissional sozinho que atende 6 por dia acabava a franquia no
+   fim do mês — e o lembrete é justamente o que ele paga para ter. A conta
+   nova cobre ~300–350 por profissional, que é o que a cliente gasta:
+
+     Teste grátis   100   (7 dias; custo máximo ~R$ 5 por teste)
+     Essencial      500   Dupla   800   Time  1.100
+     Equipe       2.000   Restaurante 3.600
+
+   A ~R$ 0,05 por mensagem, a franquia usada inteira fica entre 26% e 36% da
+   mensalidade — e quase ninguém usa inteira. Quando chega ao fim, as do restaurante
+   param antes (seção 2b), e as últimas ficam para a cliente. */
+update public.planos set recursos = recursos || jsonb_build_object(
+    'max_clientes',  500, 'max_servicos',  50, 'mensagens_mes', 100)
+  where codigo = 'trial';
+
+update public.planos set recursos = recursos || jsonb_build_object(
+    'max_clientes',  500, 'max_servicos',  50, 'mensagens_mes', 500)
+  where codigo = 'individual';
+
+update public.planos set recursos = recursos || jsonb_build_object(
+    'max_clientes', 1000, 'max_servicos', 100, 'mensagens_mes', 800)
+  where codigo = 'duo';
+
+update public.planos set recursos = recursos || jsonb_build_object(
+    'max_clientes', 2000, 'max_servicos', 200, 'mensagens_mes',1100)
+  where codigo = 'time';
+
+update public.planos set recursos = recursos || jsonb_build_object(
+    'max_clientes', 3500, 'max_servicos', 350, 'mensagens_mes',2000)
+  where codigo = 'equipe';
+
+update public.planos set recursos = recursos || jsonb_build_object(
+    'max_clientes', 5000, 'max_servicos', 500, 'mensagens_mes',3600)
+  where codigo = 'salao';
+
+-- ---------------------------------------------------------------------------
+-- 1b) A ESCADA DE PREÇO, RECALCULADA PELO CUSTO REAL
+--
+-- ── O DEFEITO QUE ESTAVA NA TABELA ────────────────────────────────────────
+-- A franquia de mensagem subia mais rápido que o preço, então a margem PIORAVA
+-- conforme o cliente crescia — o contrário do que uma escada de planos deve
+-- fazer. Com a mensagem de utilidade a R$ 0,045 no Brasil:
+--
+--                    antes                        depois
+--   Individual  R$  57 / 300 msgs = 31,6% de custo    R$  97 / 300 = 13,9%
+--   Duo         R$  87 / 600      = 41,4%             R$ 157 / 500 = 14,3%
+--   Time        R$ 127 /1000      = 47,2%             R$ 197 / 700 = 16,0%
+--   Equipe      R$ 187 /1500      = 48,1%  ←pior      R$ 297 /1200 = 18,2%
+--   Restaurante       R$ 297 /2000      = 40,4%             R$ 497 /2200 = 19,9%
+--
+-- O Equipe entregava quase METADE da mensalidade em WhatsApp. E o Restaurante dava
+-- 20 vagas por R$ 297 — R$ 14,85 por profissional, o cliente maior sendo o
+-- pior negócio.
+--
+-- ── POR QUE COM `where preco_mes = <o valor antigo>` ──────────────────────
+-- O `insert ... on conflict` do 01_schema NÃO atualiza `preco_mes`, e isso é
+-- deliberado: preço é decisão comercial e não pode ser resetado por recolagem.
+-- Esta migração respeita a mesma regra. Ela casa pelo preço ANTIGO, então roda
+-- uma vez; se amanhã você mudar um preço à mão, recolar isto não desfaz.
+-- ---------------------------------------------------------------------------
+
+/* ⚠ Reduzir vaga de plano em uso deixaria restaurante acima do teto. O Restaurante vai de
+   20 para 12 vagas, e o Equipe de 5 para 6 (esse só cresce, é seguro).
+
+   Nenhum gatilho deste projeto desativa profissional — quem está acima do teto
+   continua trabalhando, só não cadastra mais. Ainda assim, cortar vaga de
+   alguém que está usando é decisão comercial, não migração: esta trava recusa
+   a mudança inteira em vez de fazer isso em silêncio. */
+do $$
+declare v_estourando int;
+begin
+  select count(*) into v_estourando from (
+    select a.salao_id
+      from public.assinaturas a
+      join public.profissionais pr on pr.salao_id = a.salao_id and pr.ativo
+     where a.plano = 'salao'
+     group by a.salao_id
+    having count(*) > 12) x;
+
+  if v_estourando > 0 then
+    /* ⚠ `||` e não literais colados. Concatenação implícita ('a' 'b') só vale
+       com quebra de linha entre eles — e este arquivo tem que sobreviver a ser
+       colado NUMA LINHA SÓ, que é como ele chega quando alguém copia no
+       celular. O teste de colagem pegou isto na primeira execução. */
+    raise exception '%',
+      'Há ' || v_estourando || ' restaurante(ões) no plano Restaurante com mais de 12 '
+      || 'profissionais ativos. Reduzir a vaga agora os deixaria acima do '
+      || 'teto. Resolva com eles antes, ou mantenha 20 vagas e ajuste só o '
+      || 'preço.'
+      using errcode = 'check_violation';
+  end if;
+end $$;
+
+update public.planos set nome = 'Essencial', preco_mes = 97.00
+ where codigo = 'individual' and preco_mes = 57.00;
+
+update public.planos set nome = 'Dupla', preco_mes = 157.00
+ where codigo = 'duo' and preco_mes = 87.00;
+
+update public.planos set preco_mes = 197.00
+ where codigo = 'time' and preco_mes = 127.00;
+
+update public.planos set preco_mes = 297.00, max_profissionais = 6
+ where codigo = 'equipe' and preco_mes = 187.00;
+
+update public.planos set preco_mes = 497.00, max_profissionais = 12
+ where codigo = 'salao' and preco_mes = 297.00;
+
+-- ---------------------------------------------------------------------------
+-- 2) O CONSUMO DO MÊS
+--
+-- Conta o que SAIU, não o que foi criado. Uma mensagem parada na fila porque
+-- a conta da Meta ainda não existe não gasta cota de ninguém — e no dia em
+-- que passar a sair, aí sim conta.
+--
+-- O mês é o do RESTAURANTE. Sem isso, um envio das 22h do dia 31 em São Paulo
+-- cairia no mês seguinte, porque o servidor fala UTC. É o mesmo cuidado do
+-- `checar_limite_agendamentos`, e o mesmo defeito que já apareceu duas vezes
+-- neste projeto.
+--
+-- ⚠ O resumo do dia conta UM, com dez atendimentos dentro — e conta um porque
+-- é uma linha, não porque exista um contador especial para ele.
+-- ---------------------------------------------------------------------------
+/* ⚠ E A CAMPANHA CONTA TAMBÉM (2c). Mensagem de campanha sai pelo mesmo
+   número e é paga do mesmo jeito; uma franquia que não a contasse seria uma
+   franquia com porta dos fundos. Hoje nenhuma sai (nenhum plano libera),
+   então o número não muda — mas no dia em que liberar, já conta. */
+/* ── O MÊS DA FRANQUIA É O DA ASSINATURA ──────────────────────────────────
+   "Conta a partir do dia da assinatura." Antes o contador zerava todo dia 1º:
+   quem assinava no dia 20 tinha as 500 por dez dias, e outras 500 no dia 1º.
+   Agora o mês vai do dia da assinatura ao mesmo dia do mês seguinte.
+
+   A âncora é o `vence_em`: o pagamento o leva para o mesmo dia do mês
+   seguinte (13_cobranca), então o dia dele É o dia da assinatura. Pagar
+   adiantado não zera nada — o vencimento só anda um mês, e o dia fica.
+   Pagar atrasado recomeça de hoje, e a franquia também.
+
+     · assinatura ativa com vencimento → do dia do vencimento, mês a mês;
+     · teste grátis → o teste inteiro num ciclo só, até o dia seguinte ao
+       fim dele (as 100 são do teste, e o último dia não ganha outras 100);
+     · o resto (Grátis, sem vencimento) → o mês do calendário, como antes.
+
+   Dia 31 em mês curto vira o último dia do mês: os dois limites saem da
+   MESMA âncora (âncora menos k meses), então um ciclo termina exatamente
+   onde o seguinte começa. Devolve o começo e o fim, no fuso do restaurante.
+   `p_hoje` existe para o teste poder fixar o dia. */
+create or replace function public.ciclo_mensagens(p_salao uuid, p_hoje date default null)
+returns table (ini timestamptz, fim timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+declare
+  v_fuso   text;
+  v_hoje   date;
+  v_ancora date;
+  v_ini    date;
+  v_fim    date;
+  k        int;
+begin
+  select coalesce(s.fuso, 'America/Sao_Paulo') into v_fuso
+    from public.saloes s where s.id = p_salao;
+  v_fuso := coalesce(v_fuso, 'America/Sao_Paulo');
+  v_hoje := coalesce(p_hoje, (now() at time zone v_fuso)::date);
+
+  select case when a.status = 'ativa' then a.vence_em
+              when a.status = 'trial' then a.trial_ate + 1 end
+    into v_ancora
+    from public.assinaturas a where a.salao_id = p_salao;
+
+  if v_ancora is null then
+    v_ini := date_trunc('month', v_hoje)::date;
+    v_fim := (v_ini + interval '1 month')::date;
+  else
+    k := (extract(year from v_ancora)::int - extract(year from v_hoje)::int) * 12
+       + extract(month from v_ancora)::int - extract(month from v_hoje)::int;
+    v_ini := (v_ancora - make_interval(months => k))::date;
+    if v_ini > v_hoje then
+      k := k + 1;
+      v_ini := (v_ancora - make_interval(months => k))::date;
+    end if;
+    v_fim := (v_ancora - make_interval(months => k - 1))::date;
+  end if;
+
+  return query select v_ini::timestamp at time zone v_fuso,
+                      v_fim::timestamp at time zone v_fuso;
+end $$;
+
+revoke all on function public.ciclo_mensagens(uuid, date) from public, anon, authenticated;
+
+create or replace function public.mensagens_no_mes(p_salao uuid)
+returns int language sql stable security definer set search_path = public as $$
+  with mes as (select c.ini from public.ciclo_mensagens(p_salao) c)
+  select ((select count(*)
+             from public.notificacoes n, mes
+            where n.salao_id = p_salao
+              and n.status in ('enviado','entregue','lido')
+              and n.enviado_em >= mes.ini)
+        + (select count(*)
+             from public.campanha_destinatarios d, mes
+            where d.salao_id = p_salao
+              and d.status = 'enviado'
+              and d.enviado_em >= mes.ini))::int
+$$;
+
+/* O teto do plano. Null = sem teto; zero = plano sem WhatsApp. Os dois são
+   estados legítimos e diferentes, e quem lê precisa distinguir. */
+create or replace function public.teto_mensagens(p_salao uuid)
+returns int language sql stable set search_path = public as $$
+  select public.recurso_num(p_salao, 'mensagens_mes')
+$$;
+
+create or replace function public.pode_enviar(p_salao uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select case
+    when public.teto_mensagens(p_salao) is null then true
+    else public.mensagens_no_mes(p_salao) < public.teto_mensagens(p_salao)
+  end
+$$;
+
+-- Nem quem tem conta chama estas três: o uso e o teto de UM restaurante são dele,
+-- e conta qualquer um cria. Quem lê é o `uso_do_plano()`, que confere o
+-- gestor, e o worker (service_role). Ver o 57_plano_fechado.sql.
+revoke all on function public.mensagens_no_mes(uuid) from public, anon, authenticated;
+revoke all on function public.teto_mensagens(uuid)   from public, anon, authenticated;
+revoke all on function public.pode_enviar(uuid)      from public, anon, authenticated;
+grant execute on function public.mensagens_no_mes(uuid) to service_role;
+grant execute on function public.teto_mensagens(uuid)   to service_role;
+grant execute on function public.pode_enviar(uuid)      to service_role;
+
+-- ---------------------------------------------------------------------------
+-- 2b) A RESERVA DA CLIENTE
+--
+-- Quando a franquia está no fim, nem toda mensagem vale o mesmo. A cliente
+-- que não recebe o lembrete é a que falta; o restaurante tem a agenda aberta no
+-- celular. Então as mensagens PARA O RESTAURANTE — aviso de horário novo, lembrete
+-- para o restaurante, resumo do dia — usam até 90% da franquia, e os últimos 10%
+-- ficam só para a confirmação e o lembrete da cliente.
+--
+-- No teto, para tudo, como antes: a franquia é o que o plano paga, e passar
+-- dela é custo que ninguém cobriu.
+--
+-- Tipo que não seja da cliente cai na regra do restaurante, inclusive um que ainda
+-- não existe: errar para o lado de gastar menos.
+-- ---------------------------------------------------------------------------
+create or replace function public.teto_mensagens_salao(p_salao uuid)
+returns int language sql stable set search_path = public as $$
+  select case when x.t is null then null else floor(x.t * 0.9)::int end
+    from (select public.teto_mensagens(p_salao) as t) x
+$$;
+
+create or replace function public.pode_enviar_tipo(p_salao uuid, p_tipo text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select case
+    when public.teto_mensagens(p_salao) is null then true
+    when p_tipo in ('confirmacao', 'lembrete')
+      then public.mensagens_no_mes(p_salao) < public.teto_mensagens(p_salao)
+    else public.mensagens_no_mes(p_salao) < public.teto_mensagens_salao(p_salao)
+  end
+$$;
+
+-- Só o worker (service_role) e o `uso_do_plano()` (security definer) leem.
+revoke all on function public.teto_mensagens_salao(uuid)   from public, anon, authenticated;
+revoke all on function public.pode_enviar_tipo(uuid, text) from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 2c) A CAMPANHA NÃO PASSA POR FORA DO LIMITE
+--
+-- As campanhas (promoção, aniversário — 10_campanhas) tinham fila própria, e
+-- o `fila_proxima()` não perguntava por cota nenhuma: um restaurante no Grátis,
+-- pelo console do navegador, montava uma campanha para a clientela inteira
+-- e ela sairia pelo número do PediHub, sem limite e sem contar no mês —
+-- e mensagem de promoção é a mais cara (~R$ 0,35) e a que mais arrisca o
+-- número, que é um só para todos os restaurantes. Não há tela de campanha hoje;
+-- a porta estava aberta pelo banco.
+--
+-- Agora: campanha só sai se o PLANO tiver `campanhas_whatsapp` ligado (nenhum
+-- tem — ausente é não), e ainda assim dentro da franquia, pela regra das
+-- mensagens do restaurante (para nos 90%, a reserva fica para a cliente). Quem
+-- confere é o banco, no `iniciar_campanha()` e no `fila_proxima()` — a tela
+-- não decide nada.
+-- ---------------------------------------------------------------------------
+create or replace function public.campanha_liberada(p_salao uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select public.recurso_bool(p_salao, 'campanhas_whatsapp')
+     and public.pode_enviar_tipo(p_salao, 'campanha')
+$$;
+revoke all on function public.campanha_liberada(uuid) from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 3) OS TETOS DE CADASTRO
+--
+-- Mesmo padrão do `max_profissionais` que já existia: gatilho `before insert`,
+-- que sai na primeira linha quando o plano não tem teto.
+--
+-- ⚠ Só no INSERT. Editar uma ficha que já existe não pode ser bloqueado por
+-- cota — senão o restaurante que desceu de plano fica sem conseguir corrigir o
+-- telefone da própria cliente, que é castigo sem propósito.
+-- ---------------------------------------------------------------------------
+create or replace function public.checar_limite_clientes()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare teto int; usados int;
+begin
+  teto := public.recurso_num(new.salao_id, 'max_clientes');
+  if teto is null then return new; end if;
+  select count(*) into usados from public.clientes where salao_id = new.salao_id;
+  if usados >= teto then
+    raise exception 'O seu plano cobre % clientes, e o restaurante já tem %. Mude de plano para cadastrar mais.',
+      teto, usados using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists tg_limite_clientes on public.clientes;
+create trigger tg_limite_clientes before insert on public.clientes
+  for each row execute function public.checar_limite_clientes();
+
+create or replace function public.checar_limite_servicos()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare teto int; usados int;
+begin
+  teto := public.recurso_num(new.salao_id, 'max_servicos');
+  if teto is null then return new; end if;
+  select count(*) into usados from public.servicos where salao_id = new.salao_id;
+  if usados >= teto then
+    raise exception 'O seu plano cobre % serviços, e o restaurante já tem %. Mude de plano para cadastrar mais.',
+      teto, usados using errcode = 'check_violation';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists tg_limite_servicos on public.servicos;
+create trigger tg_limite_servicos before insert on public.servicos
+  for each row execute function public.checar_limite_servicos();
+
+-- ---------------------------------------------------------------------------
+-- 4) O QUE A TELA "MEU PLANO" MOSTRA
+--
+-- Um jsonb só, pelo mesmo motivo do `painel_hoje()`: quatro perguntas em
+-- quatro chamadas seriam quatro idas ao servidor para montar uma tela.
+--
+-- Devolve usado e teto de cada coisa. Teto null vira null no jsonb — a tela
+-- desenha "sem limite" em vez de uma barra que nunca enche.
+-- ---------------------------------------------------------------------------
+create or replace function public.uso_do_plano(p_salao uuid)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+declare
+  v_plano text;
+  v_nome  text;
+  v_preco numeric;
+begin
+  if not public.e_gestor(p_salao) then
+    raise exception 'Sem permissão neste restaurante.' using errcode = 'insufficient_privilege';
+  end if;
+
+  select a.plano, pl.nome, pl.preco_mes into v_plano, v_nome, v_preco
+    from public.assinaturas a
+    join public.planos pl on pl.codigo = a.plano
+   where a.salao_id = p_salao;
+
+  return jsonb_build_object(
+    'plano', v_plano, 'nome', v_nome, 'precoMes', v_preco,
+    'profissionais', jsonb_build_object(
+      'usado', (select count(*) from public.profissionais
+                 where salao_id = p_salao and ativo),
+      'teto',  (select max_profissionais from public.planos where codigo = v_plano)),
+    'clientes', jsonb_build_object(
+      'usado', (select count(*) from public.clientes where salao_id = p_salao),
+      'teto',  public.recurso_num(p_salao, 'max_clientes')),
+    'servicos', jsonb_build_object(
+      'usado', (select count(*) from public.servicos where salao_id = p_salao),
+      'teto',  public.recurso_num(p_salao, 'max_servicos')),
+    'mensagens', jsonb_build_object(
+      'usado', public.mensagens_no_mes(p_salao),
+      'teto',  public.teto_mensagens(p_salao),
+      -- até onde vão as do restaurante; o resto é a reserva da cliente (22, 2b)
+      'tetoSalao', public.teto_mensagens_salao(p_salao)));
+end $$;
+
+revoke all on function public.uso_do_plano(uuid) from public, anon;
+grant execute on function public.uso_do_plano(uuid) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- 5) A FILA, DO LADO DO WORKER
+--
+-- ⚠ TUDO NESTA SEÇÃO É SÓ PARA `service_role`.
+--
+-- Estas funções contornam o RLS de propósito: o worker não é dono de restaurante
+-- nenhum e precisa atender todos. Se alguma aparecer concedida a
+-- `authenticated`, dá para varrer o telefone de qualquer restaurante da plataforma.
+-- ---------------------------------------------------------------------------
+
+/* Pega o próximo da fila e marca 'enviando' NA MESMA transação.
+
+   `for update skip locked` é o que torna isto seguro com mais de um worker:
+   quem chega depois pula a linha travada em vez de esperar por ela, e a
+   mesma mensagem nunca é entregue duas vezes.
+
+   Três filtros que não são detalhe:
+
+     · hora chegada — `quando <= now()`;
+     · não venceu — mensagem parada há mais de seis horas NÃO sai. "Seu
+       horário é daqui a duas horas", entregue no dia seguinte, é pior que
+       silêncio;
+     · o restaurante pode enviar — cota do plano, conferida AQUI, no servidor. A
+       tela também mostra, mas quem recusa é esta linha. Conferida POR TIPO:
+       perto do fim, as do restaurante param antes e as da cliente seguem (2b).
+
+   E um quarto, que as seis horas não pegavam: a mensagem de um horário que
+   JÁ COMEÇOU não sai. Um lembrete das 12h para as 14h, parado pela
+   franquia, ainda estava "dentro do prazo" às 17h — e sairia, se um
+   `falhou` devolvesse crédito, três horas depois do atendimento. */
+/* ⚠ O tipo de retorno mudou: entrou `modelo` e `variaveis`. Postgres não troca
+   assinatura de função que devolve tabela com `create or replace` — tem que
+   derrubar antes. */
+drop function if exists public.notificacao_proxima(int);
+create or replace function public.notificacao_proxima(p_lote int default 1)
+returns table (id uuid, salao_id uuid, destino text, corpo text, tipo text,
+               modelo text, variaveis jsonb)
+language plpgsql security definer set search_path = public as $$
+begin
+  -- Primeiro, aposenta o que venceu: sai da fila sem sair para ninguém.
+  update public.notificacoes
+     set status = 'cancelado', motivo = 'venceu antes de ser enviada'
+   where status = 'pendente' and quando < now() - interval '6 hours';
+
+  -- E o que é de um horário que já começou. O resumo não tem agendamento
+  -- (fala do dia inteiro) e por isso não entra aqui. Os tipos vão escritos
+  -- para que uma mensagem futura de DEPOIS do atendimento não caia nisto.
+  update public.notificacoes n
+     set status = 'cancelado', motivo = 'o horário já passou'
+    from public.agendamentos a
+   where n.status = 'pendente'
+     and n.tipo in ('confirmacao', 'lembrete', 'novo', 'lembrete_equipe')
+     and n.agendamento_id = a.id
+     and a.inicio <= now();
+
+  /* ⚠ A MENSAGEM QUE FICOU "ENVIANDO" E NINGUÉM RESPONDEU.
+
+     O worker marca 'enviando' aqui e só depois manda e devolve o resultado.
+     Se ele cair no meio — o teto de tempo da plataforma, a rede na hora de
+     gravar o resultado —, a linha ficava 'enviando' PARA SEMPRE: não saía,
+     não era cancelada pelos filtros de cima (que só olham 'pendente') e o
+     histórico do painel dizia "enviando" eternamente. Achado pelo caça-bug.
+
+     Por isso a tomada abaixo deixa um PRAZO em `proxima_em` (dez minutos,
+     muito acima dos segundos de um envio), e aqui o que passou do prazo vira
+     'falhou' — e não volta para a fila. A mensagem pode ter chegado: o envio
+     começou, só a resposta se perdeu. Repetir arriscaria a cliente receber
+     duas vezes; marcar 'enviado' seria afirmar o que não se sabe. Então
+     'falhou', com o motivo escrito, e sem `enviado_em` — não gasta franquia.
+
+     A linha antiga, presa antes deste prazo existir, tem `proxima_em` nulo:
+     ela cai pela hora marcada, uma hora depois. */
+  update public.notificacoes
+     set status = 'falhou', erro_codigo = 'sem_resposta',
+         erro_msg = 'O envio começou e o servidor não respondeu. Não dá para '
+                 || 'saber se chegou — por isso não foi repetida, para não '
+                 || 'mandar duas vezes.'
+   where status = 'enviando'
+     and coalesce(proxima_em, quando + interval '1 hour') < now();
+
+  return query
+  with alvo as (
+    select n.id
+      from public.notificacoes n
+     where n.status = 'pendente'
+       and n.quando <= now()
+       and (n.proxima_em is null or n.proxima_em <= now())
+       and public.pode_enviar_tipo(n.salao_id, n.tipo)
+       /* ⚠ O SERVIÇO AINDA NÃO CHEGOU. O painel grava o agendamento e os
+          serviços dele em duas chamadas, uma logo depois da outra. Tomada
+          entre as duas, a confirmação saía com "Serviço: atendimento" e o
+          valor sem os itens. Espera até um minuto pelos serviços — com a
+          fila passando a cada 15 segundos, cair nesse intervalo deixou de
+          ser raro. Agendamento que nunca terá serviço sai depois do minuto. */
+       and not (n.agendamento_id is not null
+                and n.quando > now() - interval '1 minute'
+                and not exists (select 1 from public.agendamento_servicos s
+                                 where s.agendamento_id = n.agendamento_id))
+     order by n.quando
+     limit greatest(1, p_lote)
+     for update skip locked)
+  update public.notificacoes n
+     set status = 'enviando', tentativas = n.tentativas + 1,
+         proxima_em = now() + interval '10 minutes'   -- o prazo de cima
+    from alvo
+   where n.id = alvo.id
+  returning n.id, n.salao_id, n.destino, n.corpo, n.tipo,
+            n.modelo, n.variaveis;
+end $$;
+
+/* O worker devolve o que aconteceu. `enviado_em` só é carimbado no sucesso —
+   é dele que sai o consumo do mês, e carimbar no erro faria a falha custar
+   cota.
+
+   Três tentativas, com espera crescente. Depois disso a mensagem é dada por
+   perdida: retentar para sempre é como uma fila entope. */
+create or replace function public.notificacao_resultado(
+  p_id uuid, p_ok boolean, p_wam_id text default null,
+  p_codigo text default null, p_msg text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare v public.notificacoes%rowtype;
+begin
+  select * into v from public.notificacoes where id = p_id;
+  if v.id is null then return; end if;
+
+  if p_ok then
+    update public.notificacoes
+       set status = 'enviado', enviado_em = now(), wam_id = p_wam_id,
+           erro_codigo = null, erro_msg = null
+     where id = p_id;
+  elsif v.tentativas >= 3 then
+    update public.notificacoes
+       set status = 'falhou', erro_codigo = p_codigo, erro_msg = p_msg
+     where id = p_id;
+  else
+    update public.notificacoes
+       set status = 'pendente', erro_codigo = p_codigo, erro_msg = p_msg,
+           proxima_em = now() + make_interval(mins => v.tentativas * 5)
+     where id = p_id;
+  end if;
+end $$;
+
+/* O webhook de status da Meta casa pelo `wam_id`. Três avisos entram por aqui:
+
+     delivered → entregue
+     read      → lido
+     failed    → falhou
+
+   ── POR QUE O `failed` VALE MAIS DO QUE PARECE ─────────────────────────────
+   Os dois primeiros são informação. O terceiro é correção.
+
+   `failed` é a Meta dizendo que ACEITOU a mensagem — devolveu `wam_id`, e por
+   isso a linha já está 'enviado' e já custou cota — e depois não conseguiu
+   entregar: número que não tem WhatsApp, bloqueio, aparelho que nunca voltou.
+   Sem tratá-lo, a linha diz "enviado" para sempre, e o restaurante continua achando
+   que avisou.
+
+   E a cota volta sozinha: `mensagens_no_mes()` conta só enviado/entregue/
+   lido, então sair para 'falhou' devolve o crédito sem nenhuma conta a mais.
+   Mensagem que não chegou não pode custar.
+
+   `sent` chega junto e é ignorado de propósito: o worker já escreveu
+   'enviado' quando a API respondeu OK, e é ele quem sabe a hora certa. */
+drop function if exists public.notificacao_status(text, text);
+create or replace function public.notificacao_status(
+  p_wam_id text, p_status text,
+  p_codigo text default null, p_msg text default null)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  /* Só cai para 'falhou' quem ainda está em 'enviado'. Depois de entregue ou
+     lido, um `failed` atrasado é ruído: a mensagem chegou, e alguém leu. */
+  if p_status = 'falhou' then
+    update public.notificacoes
+       set status = 'falhou', erro_codigo = p_codigo, erro_msg = p_msg
+     where wam_id = p_wam_id and status = 'enviado';
+    return;
+  end if;
+
+  if p_status not in ('entregue','lido') then return; end if;
+  update public.notificacoes
+     set status = p_status
+   where wam_id = p_wam_id
+     -- Nunca para trás: 'lido' não volta a ser 'entregue' se o webhook
+     -- chegar fora de ordem, o que a Meta não garante.
+     and status in ('enviado','entregue')
+     and (p_status = 'lido' or status = 'enviado');
+end $$;
+
+revoke all on function public.notificacao_proxima(int)
+  from public, anon, authenticated;
+revoke all on function public.notificacao_resultado(uuid, boolean, text, text, text)
+  from public, anon, authenticated;
+revoke all on function public.notificacao_status(text, text, text, text)
+  from public, anon, authenticated;
+
+/* ⚠ E de volta para quem precisa. O worker e o webhook falam como
+   `service_role`, e o `revoke ... from public` acima tira o acesso dele
+   junto — ser função de borda não dá privilégio nenhum: `service_role`
+   contorna o RLS, não a permissão de EXECUTE. */
+grant execute on function public.notificacao_proxima(int) to service_role;
+grant execute on function public.notificacao_resultado(uuid, boolean, text, text, text)
+  to service_role;
+grant execute on function public.notificacao_status(text, text, text, text)
+  to service_role;
+
+comment on function public.uso_do_plano(uuid) is
+  'Uso e teto de profissionais, clientes, serviços e mensagens do mês, num jsonb só.';
+comment on function public.notificacao_proxima(int) is
+  'Fila do worker. Só service_role: contorna o RLS para atender todos os restaurantes.';
+comment on function public.notificacao_status(text, text, text, text) is
+  'Webhook de status da Meta: entregue, lido e falhou, casados pelo wam_id. Nunca anda para trás.';
+
+-- ###########################################################################
+-- ## 23_assinatura_cartao.sql
+-- ###########################################################################
+
+-- ===========================================================================
+-- PediHub — 23: assinatura no cartão, que se renova sozinha
+--
+-- ── O PROBLEMA QUE ISTO RESOLVE ───────────────────────────────────────────
+-- Pix não renova. Todo mês o dono do restaurante precisa lembrar, abrir o painel,
+-- gerar um Pix e pagar. Uma parte simplesmente não faz — e essa parte não sai
+-- por insatisfação, sai por atrito. É a pior forma de perder cliente, porque
+-- não aparece em lugar nenhum: some.
+--
+-- As duas funções do fim do 13_cobranca.sql (`assinaturas_a_vencer`,
+-- `vencer_cobrancas`) existem para correr atrás desse esquecimento. Elas são
+-- o reconhecimento do problema em código.
+--
+-- ── O DESENHO, E POR QUE ESTE E NÃO O OUTRO ───────────────────────────────
+-- Assinaturas do Mercado Pago (pré-aprovação), NÃO tokenização de cartão.
+--
+-- O dono autoriza uma vez, numa página do próprio Mercado Pago. Nenhum dado
+-- de cartão encosta no PediHub: não há formulário de cartão no nosso HTML,
+-- não há número de cartão passando pelo nosso servidor, e não há nós
+-- respondendo se algo vazar. O que volta para cá é um identificador.
+--
+-- De quebra, quem lida com cartão vencido, cartão trocado, tentativa que
+-- falhou e nova tentativa é o Mercado Pago. Essa lista inteira é código que
+-- não existe aqui.
+--
+-- ── O QUE ESTE ARQUIVO REAPROVEITA ────────────────────────────────────────
+-- Quase tudo. Uma cobrança recorrente é só mais um pagamento:
+--
+--   registrar_pagamento()   idempotente pelo mp_id único, confere o valor,
+--                           estende vence_em em um mês, e soma ao saldo de
+--                           quem paga antes de vencer
+--   cobrancas               uma linha por pagamento, com `metodo`
+--   webhook-mp              o HMAC e a releitura na API já valem igual
+--
+-- ── ⚠ O BURACO QUE A AUDITORIA ACHOU ──────────────────────────────────────
+-- Na SEGUNDA cobrança do cartão, o Mercado Pago avisa um pagamento que não
+-- tem cobrança nossa: `abrir_cobranca()` só roda quando alguém clica, e
+-- ninguém clica no mês 2.
+--
+-- `registrar_pagamento()` responderia `cobranca_desconhecida` e a assinatura
+-- NÃO renovaria. O mês 1 funcionaria e o mês 2 falharia em silêncio — defeito
+-- que só aparece trinta dias depois, com o restaurante achando que está em dia.
+--
+-- É por isso que existe `registrar_recorrencia()` aqui: ela CRIA a linha do
+-- mês a partir da pré-aprovação e só então entrega para o caminho que já
+-- funciona. A idempotência continua vindo do `mp_id` único, não de lógica
+-- nova.
+-- ===========================================================================
+
+-- ---------------------------------------------------------------------------
+-- 1) O CARTÃO ENTRA NO DOMÍNIO
+-- ---------------------------------------------------------------------------
+
+/* `metodo` era um check de dois valores. Boleto continua aceito de propósito
+   — saiu da VENDA, não do histórico, e cobrança antiga precisa continuar
+   sendo lida. Ver a nota no abrir_cobranca(). */
+alter table public.cobrancas drop constraint if exists cobrancas_metodo_check;
+alter table public.cobrancas
+  add constraint cobrancas_metodo_check
+  check (metodo in ('pix','boleto','cartao'));
+
+/* ── ⚠ A COBRANÇA DE CARTÃO NÃO OCUPA A VAGA DA PENDENTE ──────────────────
+   O `ux_cobranca_aberta` garante UMA cobrança pendente por restaurante. O motivo
+   dele está escrito no 13_cobranca.sql, e é sobre o dono CLICANDO: sem o
+   índice, cada clique em "Assinar" abria um Pix novo, e ele ficava com seis
+   na mão sem saber qual valia.
+
+   Cobrança de cartão não é clicada — é o registro de uma tentativa
+   automática. E o teste mostrou o estrago de deixá-la disputar a mesma vaga:
+   uma recorrência recusada fica `pendente`, e a cobrança do MÊS SEGUINTE bate
+   no índice, a função estoura, o webhook devolve 500, o Mercado Pago reenvia
+   para sempre — e a assinatura nunca mais renova.
+
+   Um mês falhando travaria todos os seguintes. O índice passa a valer só para
+   o que o dono pode pagar na mão; a de cartão morre sozinha pelo
+   `vencer_cobrancas()`. */
+drop index if exists public.ux_cobranca_aberta;
+create unique index if not exists ux_cobranca_aberta
+  on public.cobrancas(salao_id)
+  where (status = 'pendente' and metodo <> 'cartao');
+
+/* E pelo mesmo motivo ela não aparece como "pague isto" no painel: não tem
+   Pix para copiar nem boleto para abrir, e mostrar uma cobrança que o dono
+   não tem como pagar é pedir para ele ligar perguntando o que fazer. */
+create or replace function public.minha_cobranca(p_salao uuid)
+returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.e_gestor(p_salao) then
+    raise exception 'Sem permissão neste restaurante.'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  return jsonb_build_object(
+    'aberta', (
+      select to_jsonb(x) from (
+        select c.id, c.plano, c.valor, c.metodo, c.vence_em, c.itens,
+               c.pix_copia_cola, c.pix_qr_base64, c.boleto_url, c.linha_digitavel
+          from public.cobrancas c
+         where c.salao_id = p_salao and c.status = 'pendente'
+           and c.metodo <> 'cartao'
+           and c.vence_em > now()
+         order by c.criada_em desc limit 1) x),
+    'historico', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', h.id, 'plano', h.plano, 'valor', h.valor,
+               'metodo', h.metodo, 'status', h.status, 'itens', h.itens,
+               'pagaEm', h.paga_em, 'criadaEm', h.criada_em)
+             order by h.criada_em desc)
+        from (select * from public.cobrancas
+               where salao_id = p_salao and status in ('paga','devolvida')
+               order by criada_em desc limit 12) h), '[]'::jsonb));
+end $$;
+
+/* O vínculo com a assinatura recorrente lá no Mercado Pago.
+
+   Fica em `assinaturas` e não em `cobrancas` porque é UM por restaurante e dura
+   enquanto o cartão durar — cobranças são muitas, uma por mês. */
+alter table public.assinaturas
+  add column if not exists mp_preapproval text;
+alter table public.assinaturas
+  add column if not exists cartao_desde timestamptz;
+
+/* Único: uma pré-aprovação pertence a um restaurante só. Sem isto, um aviso
+   recorrente casaria com dois restaurantes e estenderia o plano do errado. */
+create unique index if not exists ux_assinatura_preapproval
+  on public.assinaturas(mp_preapproval)
+  where mp_preapproval is not null;
+
+-- ---------------------------------------------------------------------------
+-- 2) PEDIR, LIGAR E DESLIGAR O CARTÃO
+--
+-- Três momentos, e vale reparar em qual deles NÃO liga nada:
+--
+--   preparar_cartao   o dono clicou. Confere permissão e devolve à borda o
+--                     preço e o e-mail do pagador. Não escreve nada.
+--   ligar_cartao      o Mercado Pago confirmou a autorização. Só o webhook.
+--   cancelar_cartao   o dono desistiu da renovação automática.
+-- ---------------------------------------------------------------------------
+
+/* ⚠ POR QUE ISTO EXISTE EM VEZ DE A BORDA MONTAR O PEDIDO SOZINHA.
+   Ela precisa de três coisas para falar com o Mercado Pago: se esta pessoa
+   pode assinar por este restaurante, quanto custa o plano, e para qual e-mail
+   endereçar a assinatura. As três moram no banco, e as três já têm dono aqui.
+
+   O preço em especial: `transaction_amount` da pré-aprovação é o valor que
+   vai ser debitado todo mês, para sempre. Se ele viesse do navegador, o
+   checkout seria um formulário onde o cliente escolhe a própria mensalidade —
+   e desta vez de forma recorrente. É a mesma regra do `abrir_cobranca()`.
+
+   Ela é `stable` e não escreve: quem escreve é o webhook, depois. */
+create or replace function public.preparar_cartao(
+  p_salao uuid, p_plano text, p_quem uuid)
+returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare
+  v_preco numeric(10,2);
+  v_nome  text;
+  v_pre   text;
+  v_pag   jsonb;
+begin
+  if p_quem is null then
+    raise exception 'Assinatura sem responsável.' using errcode = 'check_violation';
+  end if;
+  if not exists (
+        select 1 from public.vinculos v
+         where v.perfil_id = p_quem and v.salao_id = p_salao
+           and v.status = 'ativo' and v.papel in ('dono','admin'))
+     and not public.is_super() then
+    raise exception 'Sem permissão neste restaurante.'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  select preco_mes, nome into v_preco, v_nome
+    from public.planos where codigo = p_plano;
+  -- Com o preço especial do restaurante, se houver (13_cobranca, 1b), e os módulos
+  -- adicionais dele (46_adicionais): a mensalidade do cartão nasce aqui e se
+  -- repete todo mês.
+  if v_preco is not null then v_preco := public.valor_da_mensalidade(p_salao, p_plano); end if;
+  if v_preco is null then
+    raise exception 'Plano não encontrado.' using errcode = 'check_violation';
+  end if;
+  if v_preco <= 0 then
+    raise exception 'Este plano não é pago.' using errcode = 'check_violation';
+  end if;
+
+  /* ⚠ E SEM LINHA EM `assinaturas` NÃO SE CRIA PRÉ-APROVAÇÃO NENHUMA.
+
+     Esta é a metade que PREVINE; o `returning` do `ligar_cartao` é a metade
+     que denuncia. Sem ela, um restaurante sem assinatura passava por aqui, a borda
+     criava a pré-aprovação no Mercado Pago, e o cartão do dono começava a ser
+     debitado todo mês — sem linha nenhuma para o `registrar_recorrencia`
+     encontrar depois. Cobrança de verdade, renovação nenhuma.
+
+     A conferência é pela LINHA, não pela coluna: `mp_preapproval` nulo é o
+     estado legítimo de quem ainda não pôs cartão. */
+  select mp_preapproval into v_pre
+    from public.assinaturas where salao_id = p_salao;
+  if not found then
+    raise exception 'Este restaurante não tem assinatura para renovar.'
+      using errcode = 'check_violation';
+  end if;
+
+  v_pag := public.dados_do_pagador(p_salao);
+
+  /* `jaLigado` é o que faz a borda recusar em vez de criar uma segunda
+     pré-aprovação. Duas ativas no mesmo restaurante é cobrança dobrada todo mês, e
+     o dono só descobre na fatura. Trocar de plano no cartão é cancelar e
+     assinar de novo — dois cliques, e nenhum deles cobra em duplicidade. */
+  return jsonb_build_object(
+    'plano',     p_plano,
+    'nomePlano', v_nome,
+    'valor',     v_preco,
+    'email',     v_pag->>'email',
+    'nome',      v_pag->>'nome',
+    'jaLigado',  v_pre is not null);
+end $$;
+
+create or replace function public.ligar_cartao(
+  p_salao uuid, p_preapproval text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_dono   uuid;
+  v_atual  text;
+  v_tocado uuid;
+begin
+  if p_salao is null or coalesce(p_preapproval,'') = '' then
+    raise exception 'Faltou o restaurante ou a pré-aprovação.'
+      using errcode = 'check_violation';
+  end if;
+
+  /* ⚠ Uma pré-aprovação já usada por OUTRO restaurante é sinal de id trocado no
+     caminho, não de renovação. Recusa em vez de mover plano alheio. */
+  select salao_id into v_dono from public.assinaturas
+   where mp_preapproval = p_preapproval;
+  if v_dono is not null and v_dono <> p_salao then
+    return jsonb_build_object('ok', false, 'motivo', 'preapproval_de_outro');
+  end if;
+
+  /* ⚠ E o restaurante que JÁ TEM uma pré-aprovação não troca por outra por baixo.
+
+     Sobrescrever aqui seria o pior desfecho silencioso do módulo: as duas
+     continuam ativas no Mercado Pago, as duas debitam todo mês, e a gente
+     perde o identificador da primeira — que é justamente o que a borda
+     precisa para cancelá-la. O dono descobre na fatura, e ninguém consegue
+     desligar a cobrança que sobrou.
+
+     O mesmo aviso chegando de novo NÃO cai aqui: o Mercado Pago reenvia com o
+     mesmo id, e id igual passa direto para o update, que é idempotente. Só id
+     DIFERENTE é recusado — e isso a borda já impede antes, no
+     `preparar_cartao`. Se chegar mesmo assim, é anomalia, e anomalia tem que
+     aparecer no log em vez de virar cobrança dobrada. */
+  select mp_preapproval into v_atual from public.assinaturas
+   where salao_id = p_salao;
+  if v_atual is not null and v_atual <> p_preapproval then
+    return jsonb_build_object('ok', false, 'motivo', 'ja_tem_outro');
+  end if;
+
+  /* ⚠ E O `returning` NÃO É ENFEITE: sem ele, esta função respondia
+     `{"ok": true}` depois de atualizar ZERO linhas.
+
+     Um restaurante sem linha em `assinaturas` fazia o UPDATE não achar nada, e a
+     função jurava ter ligado. O webhook gravava sucesso no log, o Mercado Pago
+     passava a debitar o cartão todo mês, e o `registrar_recorrencia` nunca
+     achava esse restaurante — respondia `preapproval_desconhecida` para sempre. O
+     dono pagava e o plano vencia assim mesmo, sem nada no sistema explicando.
+
+     "Não deveria acontecer" não é mecanismo. Quando acontecer, a função tem
+     que dizer, e é este `returning` que faz ela dizer. */
+  update public.assinaturas
+     set mp_preapproval = p_preapproval,
+         cartao_desde   = coalesce(cartao_desde, now()),
+         atualizado_em  = now()
+   where salao_id = p_salao
+  returning salao_id into v_tocado;
+
+  if v_tocado is null then
+    return jsonb_build_object('ok', false, 'motivo', 'salao_sem_assinatura');
+  end if;
+
+  return jsonb_build_object('ok', true, 'salao', p_salao);
+end $$;
+
+/* ⚠ O IDENTIFICADOR DA PRÉ-APROVAÇÃO, PARA A BORDA PODER CANCELAR NA FONTE.
+
+   Cancelar só aqui no banco não cancela nada: quem debita o cartão todo mês é
+   o Mercado Pago, e ele não lê a nossa tabela. Um `cancelar_cartao()` sozinho
+   daria o pior desfecho possível — o painel dizendo "renovação desligada" e a
+   fatura do dono continuando a vir, todo mês, sem nada no sistema explicando.
+
+   Então a ordem é: a borda LÊ o id aqui, cancela lá, e só depois chama o
+   `cancelar_cartao()`. Efeito externo primeiro, estado local depois. Se o
+   Mercado Pago recusar, nada mudou deste lado e o dono pode tentar de novo —
+   não há o que desfazer.
+
+   Ela é separada do `meu_cartao()` de propósito: aquele é a tela do dono e
+   NÃO devolve o identificador. Este devolve, e por isso está fechado para o
+   navegador. Um `p_quem` inventado no console viraria o id que move a
+   assinatura de qualquer restaurante. */
+create or replace function public.cartao_do_salao(p_salao uuid, p_quem uuid)
+returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare v_pre text;
+begin
+  if p_quem is null then
+    raise exception 'Consulta sem responsável.' using errcode = 'check_violation';
+  end if;
+  if not exists (
+        select 1 from public.vinculos v
+         where v.perfil_id = p_quem and v.salao_id = p_salao
+           and v.status = 'ativo' and v.papel in ('dono','admin'))
+     and not public.is_super() then
+    raise exception 'Sem permissão neste restaurante.'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  select mp_preapproval into v_pre
+    from public.assinaturas where salao_id = p_salao;
+
+  return jsonb_build_object(
+    'ligado', v_pre is not null, 'preapproval', v_pre);
+end $$;
+
+/* Desligar. O plano NÃO cai na hora: o dono pagou o mês, e o mês é dele.
+   Cancelar aqui só interrompe a renovação — `vence_em` continua valendo, e
+   quando chegar lá a assinatura vence como qualquer outra. */
+create or replace function public.cancelar_cartao(p_salao uuid, p_quem uuid)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare v_tocado uuid;
+begin
+  if p_quem is null then
+    raise exception 'Cancelamento sem responsável.' using errcode = 'check_violation';
+  end if;
+  if not exists (
+        select 1 from public.vinculos v
+         where v.perfil_id = p_quem and v.salao_id = p_salao
+           and v.status = 'ativo' and v.papel in ('dono','admin'))
+     and not public.is_super() then
+    raise exception 'Sem permissão neste restaurante.'
+      using errcode = 'insufficient_privilege';
+  end if;
+
+  /* Mesmo `returning` do `ligar_cartao`, pelo mesmo motivo — e aqui o estrago
+     é ainda mais direto: a borda só limpa o nosso lado DEPOIS de o Mercado
+     Pago confirmar o cancelamento, e confia neste retorno para dizer ao dono
+     que desligou. Um `ok` sem linha tocada seria a tela afirmando o oposto do
+     que o banco sabe. */
+  update public.assinaturas
+     set mp_preapproval = null,
+         cartao_desde   = null,
+         atualizado_em  = now()
+   where salao_id = p_salao
+  returning salao_id into v_tocado;
+
+  if v_tocado is null then
+    return jsonb_build_object('ok', false, 'motivo', 'salao_sem_assinatura');
+  end if;
+
+  return jsonb_build_object('ok', true);
+end $$;
+
+/* ⚠ E QUANDO O CANCELAMENTO VEM DO OUTRO LADO.
+
+   O dono pode cancelar a assinatura dentro da conta dele no Mercado Pago, sem
+   passar pelo nosso painel. E o Mercado Pago cancela sozinho depois de
+   tentativas demais num cartão que não passa.
+
+   Nos dois casos o débito para e ninguém nos avisa por dentro. Se o
+   `mp_preapproval` continuasse preenchido, o `assinaturas_a_vencer()` seguiria
+   pulando este restaurante — "está no cartão, renova sozinho" — e ele venceria em
+   silêncio, sem cobrança, sem lembrete e sem ninguém entender por quê. É
+   exatamente o silêncio que aquelas funções existem para quebrar.
+
+   Por isso esta é chamada pelo webhook, com o id que veio da API deles, e NÃO
+   pede `p_quem`: não há pessoa nenhuma nesse caminho. A permissão dela é ser
+   inalcançável de fora — só `service_role`, e só por um identificador que o
+   Mercado Pago devolveu. */
+create or replace function public.desligar_cartao(p_preapproval text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare v_salao uuid;
+begin
+  if coalesce(p_preapproval,'') = '' then
+    return jsonb_build_object('ok', false, 'motivo', 'sem_preapproval');
+  end if;
+
+  update public.assinaturas
+     set mp_preapproval = null,
+         cartao_desde   = null,
+         atualizado_em  = now()
+   where mp_preapproval = p_preapproval
+  returning salao_id into v_salao;
+
+  if v_salao is null then
+    -- Aviso de uma assinatura que não é deste sistema, ou repetido depois de
+    -- já termos desligado. A borda responde 200 assim mesmo.
+    return jsonb_build_object('ok', true, 'motivo', 'nada_a_desligar');
+  end if;
+
+  return jsonb_build_object('ok', true, 'salao', v_salao);
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 3) A COBRANÇA DO MÊS
+--
+-- ⚠ Esta é a função que o buraco da auditoria exigiu. Ver o cabeçalho.
+--
+-- O Mercado Pago manda um pagamento por mês, cada um com id próprio, e nenhum
+-- deles tem cobrança nossa esperando. Aqui a linha nasce — com o preço lido
+-- do PLANO, nunca do aviso — e o resto é o caminho que já existia.
+-- ---------------------------------------------------------------------------
+create or replace function public.registrar_recorrencia(
+  p_preapproval text, p_mp_id text, p_valor numeric, p_status text)
+returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  a public.assinaturas;
+  v_preco numeric(10,2);
+  v_itens jsonb;
+begin
+  select * into a from public.assinaturas
+   where mp_preapproval = p_preapproval
+   for update;
+
+  if not found then
+    -- Aviso de uma assinatura que não é deste sistema. A borda responde 200
+    -- assim mesmo: 4xx faz o Mercado Pago reenviar para sempre.
+    return jsonb_build_object('ok', false, 'motivo', 'preapproval_desconhecida');
+  end if;
+
+  /* Já registrado? O mesmo aviso chega várias vezes por desenho. A trava é o
+     `mp_id` único da tabela, e conferir aqui evita até criar a linha. */
+  if exists (select 1 from public.cobrancas where mp_id = p_mp_id) then
+    return jsonb_build_object('ok', true, 'motivo', 'ja_registrada');
+  end if;
+
+  -- O mesmo preço que a pré-aprovação nasceu (13_cobranca, 1b): sem isso o
+  -- restaurante de preço especial teria a 2ª mensalidade recusada por divergir.
+  if coalesce(public.preco_do_plano(a.salao_id, a.plano), 0) <= 0 then
+    return jsonb_build_object('ok', false, 'motivo', 'plano_sem_preco');
+  end if;
+  -- E com os módulos adicionais: a composição que bate com o que o Mercado
+  -- Pago cobrou (46_adicionais, `itens_que_batem`).
+  v_itens := public.itens_que_batem(a.salao_id, a.plano, p_valor);
+  v_preco := public.soma_dos_itens(v_itens);
+
+  /* ⚠ A linha nasce com o preço do PLANO, e o `registrar_pagamento` logo
+     abaixo compara com o que veio da API do Mercado Pago. Se divergirem, ele
+     recusa — é a mesma trava que impede pagar R$ 57 e levar o plano de
+     R$ 497, agora valendo também para a recorrência. */
+  insert into public.cobrancas
+    (salao_id, plano, valor, metodo, status, vence_em, mp_id, mp_status, itens)
+  values (a.salao_id, a.plano, v_preco, 'cartao', 'pendente',
+          now() + interval '7 days', p_mp_id, p_status, v_itens);
+
+  -- E daqui em diante é o caminho de sempre: ele confere o valor, marca a
+  -- cobrança como paga e estende `vence_em` em um mês.
+  return public.registrar_pagamento(p_mp_id, p_valor, p_status);
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 4) QUEM ESTÁ NO CARTÃO NÃO É COBRADO POR PIX
+--
+-- Sem isto, o dono que acabou de pôr o cartão receberia, cinco dias antes do
+-- vencimento, um aviso pedindo para gerar um Pix — de uma conta que vai ser
+-- debitada sozinha. Ele pagaria duas vezes, e a culpa seria nossa.
+-- ---------------------------------------------------------------------------
+create or replace function public.assinaturas_a_vencer(p_dias int default 5)
+returns table (salao_id uuid, salao text, whatsapp text, plano text,
+               valor numeric, vence_em date)
+language sql security definer set search_path = public as $$
+  select a.salao_id, s.nome, s.whatsapp, a.plano, pl.preco_mes, a.vence_em
+    from public.assinaturas a
+    join public.saloes s  on s.id = a.salao_id
+    join public.planos pl on pl.codigo = a.plano
+   where a.status = 'ativa'
+     and a.vence_em is not null
+     and a.vence_em <= current_date + p_dias
+     and pl.preco_mes > 0
+     -- O cartão renova sozinho. Quem está nele não tem o que fazer.
+     and a.mp_preapproval is null
+     /* ⚠ E a cobrança de CARTÃO não conta como "já tem uma pendente".
+        Este é o terceiro lugar do projeto que precisa da mesma distinção — o
+        índice de cobrança aberta e o `minha_cobranca` são os outros dois. A
+        regra é sempre a mesma: pendente que o dono PODE PAGAR na mão suprime
+        a cobrança; tentativa automática de cartão, não.
+        Sem isto, um restaurante que saiu do cartão com uma recorrência recusada
+        atrás ficava invisível na lista de renovação — e vencia sem ninguém
+        avisar, que é exatamente o silêncio que estas funções existem para
+        quebrar. */
+     and not exists (
+       select 1 from public.cobrancas c
+        where c.salao_id = a.salao_id and c.status = 'pendente'
+          and c.metodo <> 'cartao'
+          and c.vence_em > now())
+   order by a.vence_em;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 5) O QUE A TELA PRECISA SABER
+--
+-- Só leitura, e só do próprio restaurante. O `mp_preapproval` NÃO sai daqui: é o
+-- identificador que move dinheiro no Mercado Pago, e a tela não precisa dele
+-- para nada — só precisa saber que existe.
+-- ---------------------------------------------------------------------------
+create or replace function public.meu_cartao(p_salao uuid)
+returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare a public.assinaturas;
+begin
+  if not public.e_gestor(p_salao) then
+    raise exception 'Sem permissão neste restaurante.'
+      using errcode = 'insufficient_privilege';
+  end if;
+  select * into a from public.assinaturas where salao_id = p_salao;
+  if a.salao_id is null then return jsonb_build_object('ligado', false); end if;
+
+  return jsonb_build_object(
+    'ligado',   a.mp_preapproval is not null,
+    'desde',    a.cartao_desde,
+    'proxima',  a.vence_em,
+    'plano',    a.plano);
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- 6) QUEM PODE CHAMAR O QUÊ
+--
+-- `ligar_cartao` e `registrar_recorrencia` movem assinatura: só a borda.
+-- `cancelar_cartao` e `preparar_cartao` conferem o `p_quem` por dentro, mas
+-- quem chama continua sendo a borda — o painel não fala com o banco sobre
+-- dinheiro. E `preparar_cartao`, que nem escreve, fica igualmente fechada:
+-- ela devolve o e-mail do dono, e um `p_quem` inventado no navegador viraria
+-- uma consulta de e-mail de qualquer restaurante pelo id.
+--
+-- ⚠ E o `grant ... to service_role` ao lado de cada revoke. Sem ele, o
+-- `revoke ... from public` tranca a porta com o carteiro do lado de fora, e
+-- o produto responde 42501 em produção sem nenhum teste reprovar. Já
+-- aconteceu neste projeto, com oito funções. O `bordas.test.sql` cobra.
+-- ---------------------------------------------------------------------------
+revoke all on function public.preparar_cartao(uuid, text, uuid)
+  from public, anon, authenticated;
+revoke all on function public.cartao_do_salao(uuid, uuid)
+  from public, anon, authenticated;
+revoke all on function public.ligar_cartao(uuid, text) from public, anon, authenticated;
+revoke all on function public.cancelar_cartao(uuid, uuid) from public, anon, authenticated;
+revoke all on function public.desligar_cartao(text) from public, anon, authenticated;
+revoke all on function public.registrar_recorrencia(text, text, numeric, text)
+  from public, anon, authenticated;
+
+grant execute on function public.preparar_cartao(uuid, text, uuid) to service_role;
+grant execute on function public.cartao_do_salao(uuid, uuid) to service_role;
+grant execute on function public.ligar_cartao(uuid, text) to service_role;
+grant execute on function public.cancelar_cartao(uuid, uuid) to service_role;
+grant execute on function public.desligar_cartao(text) to service_role;
+grant execute on function public.registrar_recorrencia(text, text, numeric, text)
+  to service_role;
+
+-- A tela lê a sua própria situação; a função já confere `e_gestor`.
+revoke all on function public.meu_cartao(uuid) from public, anon;
+grant execute on function public.meu_cartao(uuid) to authenticated, service_role;
+
+comment on function public.registrar_recorrencia(text, text, numeric, text) is
+  'A cobrança mensal do cartão: cria a linha do mês e entrega ao registrar_pagamento.';
+comment on function public.meu_cartao(uuid) is
+  'Se o restaurante está no cartão e quando é a próxima. Não devolve o id da pré-aprovação.';

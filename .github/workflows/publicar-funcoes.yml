@@ -38,6 +38,9 @@ on:
       - 'supabase/functions/cancelar-cartao/**'
       - 'supabase/functions/adicional/**'
       - 'supabase/functions/saude/**'
+      - 'supabase/functions/mp-conectar/**'
+      - 'supabase/functions/pix-pedido/**'
+      - 'supabase/functions/_mp/**'
       # O próprio robô: consertar a publicação já publica de novo. Foi o caso do
       # `--yes`, que a ferramenta do Supabase passou a exigir fora do terminal
       # ("Confirmation required ... Nothing was changed") — a função nova
@@ -114,3 +117,16 @@ jobs:
       # do que está errado —, e o banco só deixa o service_role perguntar.
       - name: saude
         run: supabase functions deploy saude --project-ref "$PROJETO" --yes --no-verify-jwt
+
+      # O Pix online do pedido (81). SEM verificação de JWT: quem chama é a
+      # página da cliente, sem login, e o aviso do Mercado Pago. A porta é o
+      # token do pedido; e o aviso só confirma depois de conferir o pagamento
+      # no próprio Mercado Pago, com a credencial do restaurante.
+      - name: pix-pedido
+        run: supabase functions deploy pix-pedido --project-ref "$PROJETO" --yes --no-verify-jwt
+
+      # Conectar o Mercado Pago do restaurante (81). SEM verificação de JWT:
+      # a volta do Mercado Pago chega sem token. A ida confere a sessão do dono
+      # no /auth/v1/user e chama o banco como ele.
+      - name: mp-conectar
+        run: supabase functions deploy mp-conectar --project-ref "$PROJETO" --yes --no-verify-jwt

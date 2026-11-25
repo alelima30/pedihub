@@ -1793,6 +1793,15 @@ with conferencia(ordem, item, veredito, detalhe) as (
          case when to_regclass('public.avaliacoes') is null
               then 'cole o 98_modulos.sql (80_avaliacoes)' else '' end
   union all
+  /* PediHub (81): Pix online no link, na conta do restaurante. */
+  select 97, 'Pix online no link (Mercado Pago do restaurante)',
+         case when to_regclass('public.mp_contas') is null
+                or to_regprocedure('public.pix_confirmar(uuid,text,numeric)') is null
+                or pg_get_functiondef(to_regprocedure('public.registrar_pedido(uuid,jsonb,text)')) not like '%pix_online%'
+              then 'FALTA' else 'certo' end,
+         case when to_regclass('public.mp_contas') is null
+              then 'cole o 98_modulos.sql (81_pix_online)' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um

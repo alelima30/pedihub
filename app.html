@@ -2261,7 +2261,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.e73325';
+const VERSAO_APP = 'v9.50d569';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23386,6 +23386,8 @@ function cfgPedidosDoSalao(){
   const p = ((acharSalao(salaoAtual) || {}).cfg || {}).pedidos || {};
   return {
     aceitando: p.aceitando !== false, entrega: p.entrega !== false, retirada: p.retirada !== false,
+    // 81: oferecer Pix online no link (só vale com o Mercado Pago conectado).
+    pixOnline: p.pixOnline === true,
     taxaPadrao: Number(p.taxaPadrao) || 0,
     taxas: Array.isArray(p.taxas) ? p.taxas.filter(t => t && String(t.bairro || '').trim()) : [],
     minimo: Number(p.minimo) || 0, tempo: p.tempo || '',
@@ -23399,6 +23401,62 @@ function cfgPedidosDoSalao(){
     fidelidade: Object.assign({ ligado:false, pedidos:10, desconto:10 }, p.fidelidade || {}),
   };
 }
+/* ── O PIX ONLINE (81) ─────────────────────────────────────────────────
+   "Conectar Mercado Pago" leva o dono ao Mercado Pago (login e Autorizar) e
+   o traz de volta com ?mp=conectado. A credencial nunca passa por esta tela:
+   fica no banco, e só o servidor a lê. Daqui só se vê "conectado". */
+async function pintarMpConfig(c){
+  const alvo = document.getElementById('pcMpEstado');
+  if(!alvo) return;
+  if(!NA_NUVEM){ alvo.innerHTML = '<p class="ajuda">Disponível com o PediHub na nuvem.</p>'; return; }
+  let st = null;
+  try{ st = await Dados.chamar('mp_conta_status', { p_salao: salaoAtual }); }catch(e){ st = null; }
+  if(!document.getElementById('pcMpEstado')) return;
+  if(st && st.conectado){
+    alvo.innerHTML = `<p class="mp-ok">✓ Mercado Pago conectado${st.conta ? ' (conta final ' + escapar(String(st.conta)) + ')' : ''}</p>
+      <label class="check"><input type="checkbox" id="pcPixOnline" ${c.pixOnline ? 'checked' : ''}>
+        <span>Oferecer <b>Pix online</b> no link: o cliente paga na hora e o pedido chega <b>PAGO</b></span></label>
+      <p class="ajuda">O dinheiro cai direto na conta do Mercado Pago do restaurante. Pedido não pago em 30 minutos é cancelado sozinho.</p>
+      ${souGestor() ? '<button type="button" class="btn btn-peq" onclick="desconectarMercadoPago()">Desconectar o Mercado Pago</button>' : ''}`;
+  } else {
+    alvo.innerHTML = `<p class="ajuda">Conecte a conta do <b>Mercado Pago</b> do restaurante e o cliente paga o Pix
+        na hora de pedir: o pedido chega na cozinha já <b>PAGO</b>, sem troco e sem calote. O dinheiro cai direto
+        na sua conta. São três toques: Conectar, entrar no Mercado Pago e Autorizar.</p>
+      ${souGestor() ? '<button type="button" class="btn btn-p btn-peq" id="btConectarMp" onclick="conectarMercadoPago()">Conectar Mercado Pago</button>'
+                    : '<p class="ajuda">Peça a quem responde pelo restaurante para conectar.</p>'}`;
+  }
+}
+async function conectarMercadoPago(){
+  const bt = document.getElementById('btConectarMp');
+  if(bt){ bt.disabled = true; bt.textContent = 'Abrindo o Mercado Pago…'; }
+  try{
+    const r = await Dados.borda('mp-conectar', { salaoId: salaoAtual });
+    location.href = r.url;
+  }catch(e){
+    alert(e.message || 'Não consegui abrir o Mercado Pago agora.');
+    if(bt){ bt.disabled = false; bt.textContent = 'Conectar Mercado Pago'; }
+  }
+}
+async function desconectarMercadoPago(){
+  if(!confirm('Desconectar o Mercado Pago?\n\nO Pix online sai do seu link na hora. Os pedidos já pagos continuam pagos.')) return;
+  try{ await Dados.chamar('mp_desconectar', { p_salao: salaoAtual }); }
+  catch(e){ alert(e.message); return; }
+  pintarMpConfig(cfgPedidosDoSalao());
+}
+// A volta do Mercado Pago: ?mp=conectado | cancelado | expirou | erro.
+(function(){
+  let mp = null;
+  try{ mp = new URLSearchParams(location.search).get('mp'); }catch(e){}
+  if(!mp) return;
+  try{ history.replaceState(null, '', location.pathname + location.hash); }catch(e){}
+  const frase = {
+    conectado: '✓ Mercado Pago conectado!\n\nO Pix online já aparece no seu link: o cliente paga na hora e o pedido chega PAGO.\nDá para desligar em Pedidos → Entrega e pagamento.',
+    cancelado: 'A conexão com o Mercado Pago foi cancelada. Quando quiser, toque em "Conectar Mercado Pago" de novo.',
+    expirou: 'A conexão demorou demais e expirou. Toque em "Conectar Mercado Pago" de novo.',
+  }[mp] || 'Não consegui conectar o Mercado Pago agora. Tente de novo em alguns minutos.';
+  setTimeout(() => alert(frase), 1200);
+})();
+
 function gravarCfgPedidos(mudancas){
   const sl = acharSalao(salaoAtual);
   if(!sl) return;
@@ -23588,7 +23646,7 @@ function cartaoDePedido(p){
       ? '🛵 <b>Entrega</b> — ' + escapar(enderecoDoPedido(p)) + (p.entregador ? ' · com <b>' + escapar(p.entregador) + '</b>' : '')
       : p.entrega === 'mesa' ? '🍽️ <b>Mesa ' + escapar(p.mesa || '') + '</b>' + (p.garcom ? ' · garçom <b>' + escapar(p.garcom) + '</b>' : '')
       : '🏪 <b>Retirada</b> no balcão'}</p>
-    <p class="pedido-pag">${escapar(PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento)}${
+    <p class="pedido-pag">${p.pagoOnline ? '<b class="pago-online">✓ PAGO · Pix online</b>' : escapar(PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento)}${
       p.troco ? ' · troco para ' + real(Number(p.troco)) + ' (levar ' + real(Number(p.troco) - Number(p.total)) + ')' : ''}
       · ${Number(p.desconto) ? 'cupom ' + escapar(p.cupom || '') + ' − ' + real(Number(p.desconto)) + ' · ' : ''}${
       Number(p.taxa) ? 'taxa ' + real(Number(p.taxa)) + ' · ' : ''}<b>Total ${real(Number(p.total))}</b></p>
@@ -23750,7 +23808,7 @@ function imprimirPedido(id){
     '', p.observacao ? 'Obs.: ' + p.observacao : '',
     p.entrega === 'entrega' ? 'ENTREGA: ' + enderecoDoPedido(p) + (p.entregador ? ' — ' + p.entregador : '')
       : p.entrega === 'mesa' ? '*** MESA ' + (p.mesa || '') + ' ***' + (p.garcom ? '  garçom: ' + p.garcom : '') : 'RETIRADA no balcão',
-    (PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento) + (p.troco ? ' · troco para ' + real(Number(p.troco)) : ''),
+    (p.pagoOnline ? 'PAGO - Pix online' : (PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento)) + (p.troco ? ' · troco para ' + real(Number(p.troco)) : ''),
     Number(p.desconto) ? 'Cupom ' + (p.cupom || '') + ': -' + real(Number(p.desconto)) : '',
     Number(p.taxa) ? 'Taxa de entrega: ' + real(Number(p.taxa)) : '', 'TOTAL: ' + real(Number(p.total))]
     .filter((l, i, a) => l !== '' || a[i - 1] !== '');
@@ -23811,6 +23869,11 @@ function abrirConfigPedidos(){
       <label class="check"><input type="checkbox" class="pcPag" value="debito" ${marcado(c.pagamentos.includes('debito'))}> <span>Cartão de débito</span></label>
       <label class="check"><input type="checkbox" class="pcPag" value="credito" ${marcado(c.pagamentos.includes('credito'))}> <span>Cartão de crédito</span></label>
     </div>
+    <!-- O PIX ONLINE (81): pago na hora, na conta do Mercado Pago do restaurante.
+         O estado vem do banco depois que a janela abre (pintarMpConfig). -->
+    <div class="campo mp-caixa"><label>Pix online, pago na hora do pedido</label>
+      <div id="pcMpEstado"><p class="ajuda">Conferindo o Mercado Pago…</p></div>
+    </div>
     <div class="campo"><label>Avisos no WhatsApp</label>
       <label class="check"><input type="checkbox" id="pcAvisaCliente" ${marcado(c.avisarCliente)}>
         <span>Avisar a cliente quando aceitar, sair para entrega, ficar pronto ou cancelar</span></label>
@@ -23851,6 +23914,7 @@ function abrirConfigPedidos(){
       <p class="ajuda">Reconhece o cliente pelo WhatsApp do pedido. Não soma com cupom.</p></div>
     <div id="pcRecado"></div>`,
     [['Cancelar', 'fecharModal()', ''], ['Salvar', 'salvarConfigPedidos()', 'btn-p']]);
+  pintarMpConfig(c);
 }
 function linhaTaxaVazia(){
   return `<div class="pd-taxa"><input class="pdBairroNome" placeholder="Bairro">
@@ -23872,6 +23936,8 @@ function salvarConfigPedidos(){
   gravarCfgPedidos({ entrega, retirada, taxaPadrao: num('pcTaxa'), taxas, minimo: num('pcMinimo'),
     tempo: String(v('pcTempo').value || '').trim().slice(0, 40), pagamentos,
     avisarCliente: !!v('pcAvisaCliente').checked, avisarCasa: !!v('pcAvisaCasa').checked,
+    // 81: sem a caixa (Mercado Pago desconectado), fica como estava.
+    pixOnline: document.getElementById('pcPixOnline') ? !!v('pcPixOnline').checked : cfgPedidosDoSalao().pixOnline,
     mesas: Math.min(200, Math.floor(num('pcMesas'))),
     entregadores: String(v('pcEntregadores').value || '').split('\n').map(x => x.trim()).filter(Boolean).slice(0, 30),
     motoboy: { modo: v('pcMotoModo').value === 'fixo' ? 'fixo' : 'taxa',

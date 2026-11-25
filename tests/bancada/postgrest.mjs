@@ -6,6 +6,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
+import * as MP from '../../supabase/functions/_mp/pix.js';
 
 const RAIZ = new URL('../..', import.meta.url).pathname;
 /* ── DATA É TEXTO, COMO O POSTGREST DE VERDADE DEVOLVE ────────────────────
@@ -193,11 +194,128 @@ function corpoDe(req){
     try{ r(s ? JSON.parse(s) : null); }catch(e){ r(null); } }); });
 }
 
+/* ── O MERCADO PAGO DE MENTIRA (81) ───────────────────────────────────────
+   O Pix online passa pelo MESMO arquivo que vai para o ar
+   (supabase/functions/_mp/pix.js); aqui só o `fetch` é trocado por este
+   Mercado Pago falso, e o "banco como servidor" por uma conexão service_role.
+
+     GET  /mp-falso/autorizar?state=…&redirect_uri=…   a tela "Autorizar"
+     POST /mp-falso/pagar { token }                     a cliente pagou o Pix
+                                                        (e o aviso chega) */
+const BANCADA_URL = 'http://127.0.0.1:8123';
+const mpFalso = { pagamentos: new Map(), seq: 0 };
+async function fetchMpFalso(url, opc = {}){
+  const u = new URL(url);
+  const corpo = opc.body ? JSON.parse(opc.body) : {};
+  const resp = (status, obj) => ({ ok: status < 400, status, json: async () => obj });
+  if(u.pathname === '/oauth/token'){
+    if(corpo.client_id !== 'APP-TESTE' || corpo.client_secret !== 'segredo-teste') return resp(401, { error: 'invalid_client' });
+    if(corpo.grant_type === 'authorization_code' && corpo.code === 'CODIGO-FALSO'){
+      return resp(200, { access_token: 'APP_USR-falso-' + (++mpFalso.seq), refresh_token: 'TG-falso',
+        user_id: 123456789, public_key: 'APP_USR-pk-falsa', expires_in: 15552000 });
+    }
+    if(corpo.grant_type === 'refresh_token') return resp(200, { access_token: 'APP_USR-renovado-' + (++mpFalso.seq),
+      refresh_token: 'TG-falso-2', user_id: 123456789, expires_in: 15552000 });
+    return resp(400, { error: 'invalid_grant' });
+  }
+  const token = String((opc.headers || {}).Authorization || '').replace('Bearer ', '');
+  if(!token.startsWith('APP_USR-')) return resp(401, { message: 'unauthorized' });
+  if(u.pathname === '/v1/payments' && opc.method === 'POST'){
+    const idem = (opc.headers || {})['X-Idempotency-Key'];
+    const ja = [...mpFalso.pagamentos.values()].find(x => x.idem === idem);
+    if(ja) return resp(201, ja);
+    if(corpo.payment_method_id !== 'pix' || !(corpo.transaction_amount > 0) || !corpo.payer || !corpo.payer.email){
+      return resp(400, { message: 'pedido de Pix inválido' });
+    }
+    const id = String(90000000 + (++mpFalso.seq));
+    const pg_ = { id, idem, token, status: 'pending', transaction_amount: corpo.transaction_amount,
+      external_reference: corpo.external_reference, notification_url: corpo.notification_url,
+      point_of_interaction: { transaction_data: { qr_code:
+        '00020126580014br.gov.bcb.pix0136pedihub-teste-' + id + '5204000053039865802BR5913PEDIHUB6009SAO PAULO6304ABCD',
+        qr_code_base64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' } } };
+    mpFalso.pagamentos.set(id, pg_);
+    return resp(201, pg_);
+  }
+  const m = u.pathname.match(/^\/v1\/payments\/(\w+)$/);
+  if(m){
+    const pg_ = mpFalso.pagamentos.get(m[1]);
+    // O pagamento é da conta do restaurante: com a credencial de outra, o Mercado Pago não acha.
+    return pg_ && pg_.token === token ? resp(200, pg_) : resp(404, { message: 'not found' });
+  }
+  return resp(404, {});
+}
+async function rpcServidor(nome, args){
+  const nomes = Object.keys(args || {});
+  const cli = await pool.connect();
+  try{
+    await cli.query('begin');
+    await cli.query('set local role service_role');
+    const r = await cli.query(`select public.${nome}(${nomes.map((n, i) => `${n} => $${i + 1}`).join(', ')}) as v`,
+      nomes.map(n => args[n]));
+    await cli.query('commit');
+    return r.rows[0].v;
+  }catch(e){ await cli.query('rollback').catch(() => {}); throw e; }
+  finally{ cli.release(); }
+}
+const ctxMp = {
+  fetch: fetchMpFalso, rpc: rpcServidor,
+  env: { clientId: 'APP-TESTE', clientSecret: 'segredo-teste', pagadorEmail: 'pagador@pedihub.teste',
+         redirectUri: BANCADA_URL + '/functions/v1/mp-conectar', painelUrl: BANCADA_URL + '/app.html',
+         authUrl: BANCADA_URL + '/mp-falso/autorizar', mpApi: 'http://mp-falso',
+         avisoUrl: id => BANCADA_URL + '/functions/v1/pix-pedido?aviso=' + id },
+};
+
 const http_ = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x');
   if(req.method === 'OPTIONS') return json(res, 200, {});
 
   try{
+    // ── O PIX ONLINE E O MERCADO PAGO DE MENTIRA (81) ──
+    if(u.pathname === '/mp-falso/autorizar'){
+      const volta = new URL(u.searchParams.get('redirect_uri'));
+      volta.searchParams.set('code', 'CODIGO-FALSO');
+      volta.searchParams.set('state', u.searchParams.get('state') || '');
+      res.writeHead(302, { Location: volta.toString() });
+      res.end();
+      return;
+    }
+    if(u.pathname === '/mp-falso/pagar'){
+      const b = await corpoDe(req) || {};
+      const ped = await pool.query('select id from public.pedidos where token = $1', [b.token || null]);
+      const pg_ = ped.rowCount && [...mpFalso.pagamentos.values()].find(x => x.external_reference === ped.rows[0].id);
+      if(!pg_) return json(res, 404, { erro: 'Pix não encontrado' });
+      pg_.status = 'approved';
+      if(b.valor != null) pg_.transaction_amount = Number(b.valor);
+      // O aviso do Mercado Pago, como ele manda: só o id do pagamento.
+      if(!b.semAviso){
+        const avisoUrl = new URL(pg_.notification_url);
+        await MP.aviso(ctxMp, avisoUrl.searchParams.get('aviso'), { type: 'payment', data: { id: pg_.id } }, avisoUrl.searchParams);
+      }
+      return json(res, 200, { ok: true, id: pg_.id });
+    }
+    if(u.pathname === '/functions/v1/pix-pedido'){
+      const b = await corpoDe(req) || {};
+      const r = u.searchParams.get('aviso')
+        ? await MP.aviso(ctxMp, u.searchParams.get('aviso'), b, u.searchParams)
+        : await MP.pix(ctxMp, b);
+      return json(res, r.status, r.corpo);
+    }
+    if(u.pathname === '/functions/v1/mp-conectar'){
+      if(req.method === 'GET'){
+        const r = await MP.conectarVolta(ctxMp, u.searchParams);
+        res.writeHead(302, { Location: r.redirect });
+        res.end();
+        return;
+      }
+      if(!usuarioDo(req)) return json(res, 401, { erro: 'Faça login de novo.' });
+      const b = await corpoDe(req) || {};
+      const comoDono = (nome, args) => comPapel(req, cli =>
+        cli.query(`select public.${nome}(${Object.keys(args).map((n, i) => `${n} => $${i + 1}`).join(', ')}) as v`,
+          Object.values(args))).then(r2 => r2.rows[0].v);
+      const r = await MP.conectarInicio(ctxMp, String(b.salaoId || ''), comoDono);
+      return json(res, r.status, r.corpo);
+    }
+
     // ── AUTH ──
     if(u.pathname.startsWith('/auth/v1/')){
       const acao = u.pathname.replace('/auth/v1/','').split('?')[0];

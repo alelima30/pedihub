@@ -978,6 +978,30 @@ const Nuvem = {
     return dados;
   },
 
+  /* ── A BORDA PÚBLICA (81): o link da cliente, sem login ───────────────
+     O Pix online do pedido. Sem `Authorization`: a cliente não tem sessão,
+     e a chave pública vai só no `apikey` (no `Authorization` a plataforma a
+     recusaria, como diz a bancada). A porta da função é o token do pedido. */
+  async bordaPublica(nome, corpo){
+    if(!LIGADO) throw new Error('Sem servidor configurado.');
+    const base = (window.PEDIHUB.url || '').replace(/\/+$/, '');
+    let r;
+    try{
+      r = await fetch(base + '/functions/v1/' + nome, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: window.PEDIHUB.chave },
+        body: JSON.stringify(corpo || {}),
+      });
+    }catch(e){ throw new Error('Não consegui falar com o servidor. Tente de novo.'); }
+    const dados = await r.json().catch(() => ({}));
+    if(!r.ok){
+      const erro = new Error(dados.erro || dados.message || ('Falhou (' + r.status + ')'));
+      erro.status = r.status;
+      throw erro;
+    }
+    return dados;
+  },
+
   /* ── A vitrine, que abre sem login ────────────────────────────────────
      Antes isto lia a vista `saloes_publicos` filtrando pelo apelido. Lia bem,
      e vazava do lado que ninguém olha: quem tirasse o filtro recebia TODOS os

@@ -898,6 +898,7 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
 <script src="endereco.js"></script>
 <script src="funcionamento.js"></script>
 <script src="documento.js"></script>
+<script src="qr.js"></script>
 <script src="demo.js"></script>
 <script src="config.js"></script>
 <script src="dados.js"></script>
@@ -6372,7 +6373,7 @@ function ehRestaurante(){ return !!(salao && salao.tipo === 'restaurante' && NA_
 function modoPedidos(){ return ehRestaurante() && (!pedidosCasa || pedidosCasa.ligado === true); }
 function lojaTemSaida(){ return modoPedidos() || !!zapDoSalao(); }
 function pedidosAbertos(){ return !pedidosCasa || pedidosCasa.aberto !== false; }
-const PAGAMENTOS_PEDIDO = { pix:'Pix', dinheiro:'Dinheiro', debito:'Cartão de débito', credito:'Cartão de crédito',
+const PAGAMENTOS_PEDIDO = { pix_online:'Pix online · pague agora', pix:'Pix', dinheiro:'Dinheiro', debito:'Cartão de débito', credito:'Cartão de crédito',
   cartao:'Cartão', na_mesa:'Pagar na mesa, no fim' };
 
 /* ── A MESA DO QR (71) ──────────────────────────────────────────────────────
@@ -6384,7 +6385,7 @@ function mesaDoLink(){
   const n = parseInt(m, 10), total = Number((pedidosCasa || {}).mesas) || 0;
   return /^[0-9]{1,3}$/.test(m) && n >= 1 && n <= total ? String(n) : null;
 }
-const ETAPAS_PEDIDO = { recebido:'Recebido', em_preparo:'Em preparo', saiu:'Saiu para entrega',
+const ETAPAS_PEDIDO = { aguardando_pagamento:'Aguardando o Pix', recebido:'Recebido', em_preparo:'Em preparo', saiu:'Saiu para entrega',
   pronto:'Pronto para retirar', entregue:'Entregue', cancelado:'Cancelado' };
 // A etapa com as palavras de cada jeito de receber: na mesa não se "retira".
 function etapaDoMeuPedido(d){
@@ -6621,7 +6622,8 @@ function desenharPedido(){
   const modos = mesa ? [['mesa', 'Mesa ' + mesa]]
     : [c.entrega !== false && ['entrega', 'Entrega'], c.retirada !== false && ['retirada', 'Retirar no local']].filter(Boolean);
   const pags = mesa ? ['na_mesa'].concat(c.pagamentos || ['pix', 'dinheiro', 'debito', 'credito'])
-    : (c.pagamentos || ['pix', 'dinheiro', 'debito', 'credito']);
+    // 81: o Pix online (pago na hora) vem primeiro, quando o restaurante conectou o Mercado Pago.
+    : (c.pixOnline ? ['pix_online'] : []).concat(c.pagamentos || ['pix', 'dinheiro', 'debito', 'credito']);
   /* Montados fora do HTML de baixo: o `campo()` já escapa o que escreve, e o
      varredor do seguranca.test não precisa de exceção para isso. */
   const linhaDoNumero = campo('pdNumero', 'Número <span class="obrig">*</span>', 'numero', 'inputmode="numeric"')
@@ -6672,6 +6674,7 @@ function desenharPedido(){
     <div class="pd-ops">${pags.map(v => opcao('pagamento', v, PAGAMENTOS_PEDIDO[v] || v)).join('')}</div>
     ${f.pagamento === 'dinheiro' ? campo('pdTroco', 'Troco para quanto?', 'troco', 'inputmode="decimal" placeholder="Deixe em branco se não precisar"') : ''}
     ${f.pagamento === 'pix' ? '<p class="pista">O restaurante passa a chave Pix quando confirmar.</p>' : ''}
+    ${f.pagamento === 'pix_online' ? '<p class="pista">Na próxima tela aparece o Pix para pagar. Pagou, o pedido vai direto para a cozinha.</p>' : ''}
 
     <div class="campo" style="margin-top:14px">
       <label for="pdObs">Alguma observação?</label>
@@ -6744,6 +6747,83 @@ async function confirmarPedido(){
   irPara('acompanhar');
 }
 
+/* ── O PIX ONLINE (81) ─────────────────────────────────────────────────
+   O pedido nasce esperando o Pix. Aqui aparece o QR (a imagem que o Mercado
+   Pago devolve; o desenho local é a reserva) e o copia-e-cola, com o tempo
+   que falta. A cada 5 s pergunta ao servidor se caiu — o servidor confere no
+   Mercado Pago. Caiu: a tela vira o acompanhamento de sempre, já PAGO. */
+let pixInfo = null, pixRelogio = null, pixConferindo = false;
+function blocoDoPix(d){
+  if(!pixInfo || pixInfo.token !== pedidoAcomp.token){ carregarPix(); return '<div class="pix-caixa"><p class="sub">Gerando o Pix…</p></div>'; }
+  if(pixInfo.erro) return `<div class="pix-caixa"><div class="recado erro">${escapar(pixInfo.erro)}</div>
+    <button type="button" class="btn btn-p" onclick="pixInfo = null; desenhar()">Tentar de novo</button></div>`;
+  if(!pixInfo.copiaCola) return '<div class="pix-caixa"><p class="sub">Gerando o Pix…</p></div>';
+  let figura = '';
+  if(pixInfo.qr) figura = `<img src="data:image/png;base64,${escapar(pixInfo.qr)}" alt="QR Code do Pix">`;
+  else { try{ figura = window.QR ? QR.svg(pixInfo.copiaCola, { rotulo: 'QR Code do Pix' }) : ''; }catch(e){ figura = ''; } }
+  return `<div class="pix-caixa" id="pixCaixa">
+      <b class="pix-tit">Pague o Pix para confirmar o pedido</b>
+      <p class="pix-valor">${real(Number(d.total))}</p>
+      ${figura ? `<div class="pix-qr">${figura}</div>` : ''}
+      <p class="pista">No app do banco, escolha <b>Pix → Copia e cola</b> (ou leia o QR) e cole o código:</p>
+      <div class="pix-codigo" id="pixCodigo">${escapar(pixInfo.copiaCola)}</div>
+      <button type="button" class="btn btn-p pix-copiar" onclick="copiarPix()">Copiar código Pix</button>
+      <p class="pix-espera"><span class="pix-girando"></span> Esperando o pagamento · vence em <b id="pixFalta">${tempoDoPix()}</b></p>
+      <p class="pista">Assim que o Pix cair, o pedido vai sozinho para a cozinha. Não precisa mandar comprovante.</p>
+      <button type="button" class="link" onclick="conferirPix(true)">Já paguei</button>
+    </div>`;
+}
+function tempoDoPix(){
+  const fim = pixInfo && pixInfo.expiraEm ? new Date(pixInfo.expiraEm).getTime() : 0;
+  const s = Math.max(0, Math.round((fim - Date.now()) / 1000));
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+async function carregarPix(){
+  const token = pedidoAcomp && pedidoAcomp.token;
+  if(!token || (pixInfo && pixInfo.token === token)) return;
+  pixInfo = { token };
+  try{
+    const r = await Dados.bordaPublica('pix-pedido', { token, acao: 'criar' });
+    if(r.pago || r.vencido){ pixInfo = null; await lerPedidoAcompanhado(); return; }
+    Object.assign(pixInfo, r);
+  }catch(e){ pixInfo.erro = e.message || 'Não consegui gerar o Pix agora.'; }
+  ligarRelogioDoPix();
+  if(tela === 'acompanhar') desenhar();
+}
+function ligarRelogioDoPix(){
+  clearInterval(pixRelogio);
+  let volta = 0;
+  pixRelogio = setInterval(() => {
+    const d = pedidoAcomp && pedidoAcomp.dados;
+    if(tela !== 'acompanhar' || !d || d.status !== 'aguardando_pagamento'){ clearInterval(pixRelogio); pixRelogio = null; return; }
+    const el = document.getElementById('pixFalta');
+    if(el) el.textContent = tempoDoPix();
+    if(++volta % 5 === 0) conferirPix(false);
+  }, 1000);
+}
+async function conferirPix(pelaCliente){
+  if(pixConferindo || !pedidoAcomp) return;
+  pixConferindo = true;
+  try{
+    const r = await Dados.bordaPublica('pix-pedido', { token: pedidoAcomp.token, acao: 'status' });
+    if(r.pago || r.vencido){ pixInfo = null; clearInterval(pixRelogio); pixRelogio = null; await lerPedidoAcompanhado(); }
+    else if(pelaCliente) alert('Ainda não chegou. O Pix costuma cair em poucos segundos — a tela muda sozinha quando cair.');
+  }catch(e){ if(pelaCliente) alert(e.message); }
+  pixConferindo = false;
+}
+async function copiarPix(){
+  const t = pixInfo && pixInfo.copiaCola;
+  if(!t) return;
+  let ok = false;
+  try{ await navigator.clipboard.writeText(t); ok = true; }catch(e){}
+  if(!ok){
+    const el = document.getElementById('pixCodigo');
+    if(el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  }
+  const bt = document.querySelector('#pixCaixa .pix-copiar');
+  if(bt){ bt.textContent = ok ? '✓ Código copiado' : 'Selecionei o código: copie'; setTimeout(() => { if(bt.isConnected) bt.textContent = 'Copiar código Pix'; }, 2500); }
+}
+
 function abrirAcompanhar(token){
   pedidoAcomp = { token, dados: null };
   avNota = 0; avTexto = ''; avEditando = false; avErro = '';
@@ -6799,6 +6879,7 @@ function desenharAcompanhar(){
     ${d.status === 'cancelado' ? `<div class="recado erro"><b>Pedido cancelado.</b> ${
         d.cancelado_por === 'cliente' ? 'Você cancelou este pedido.'
         : 'Motivo: ' + escapar(d.motivo || 'não informado') + '.'}</div>`
+    : d.status === 'aguardando_pagamento' ? blocoDoPix(d)
     : `<ol class="pd-etapas">${caminho.map((e, i) => `<li class="${i < aqui ? 'feito' : i === aqui ? 'agora' : ''}">
           <span class="pd-bola">${i < aqui ? '✓' : i + 1}</span>
           <span>${e === 'entregue' && d.entrega === 'retirada' ? 'Retirado'
@@ -6817,7 +6898,8 @@ function desenharAcompanhar(){
       <div class="pd-linha pd-total"><span>Total</span><b>${real(Number(d.total))}</b></div>
       <p class="pista">${d.entrega === 'entrega' ? 'Entrega' + (d.bairro ? ' — ' + escapar(d.bairro) : '')
         : d.entrega === 'mesa' ? 'Mesa ' + escapar(d.mesa || '') : 'Retirada no local'}
-        · ${escapar(PAGAMENTOS_PEDIDO[d.pagamento] || d.pagamento || '')}${
+        · ${d.pixOnline ? (d.pagoEm ? '<b class="pago-online">✓ Pago pelo Pix</b>' : 'Pix online')
+                        : escapar(PAGAMENTOS_PEDIDO[d.pagamento] || d.pagamento || '')}${
         d.troco ? ' (troco para ' + real(Number(d.troco)) + ')' : ''}</p>
     </div>
     ${d.status === 'entregue' ? blocoDeAvaliar() : ''}
