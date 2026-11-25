@@ -838,6 +838,9 @@ span.ajuda{display:block;margin-top:5px}
       <label class="check pedido-chave" title="Liga só NESTE aparelho (o computador do balcão). Para imprimir sem a janela de confirmação, abra o Chrome com --kiosk-printing.">
         <input type="checkbox" id="pdAutoImprimir" onchange="alternarAutoImprimir(this.checked)">
         <span>Imprimir sozinho</span></label>
+      <label class="check pedido-chave" title="Cada etapa com a sua cor: novos, em preparo, a caminho e concluídos. Vale só neste aparelho.">
+        <input type="checkbox" id="pdCores" onchange="alternarCoresEtapa(this.checked)">
+        <span>Cores por etapa</span></label>
       <button class="btn" onclick="carregarPedidos()">Atualizar</button>
       <button class="btn" onclick="abrirAcertoEntregadores('hoje')">Entregadores</button>
       <button class="btn" onclick="abrirConfigPedidos()">Entrega e pagamento</button>
@@ -2261,7 +2264,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.50d569';
+const VERSAO_APP = 'v9.f135cc';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23541,6 +23544,18 @@ function tocarSomDePedido(){
    aviso "Toque para ativar o som". */
 const CHAVE_ALARME = 'pedihub.alarme';
 let alarmeRelogio = null;
+/* CORES POR ETAPA (teste): cada etapa do pedido com a sua cor — borda grossa
+   à esquerda e um fundo clarinho. Ligado por padrão; desmarcar volta ao de
+   antes. Vale só neste aparelho, como o som e a impressão. */
+const CHAVE_CORES_ETAPA = 'pedihub.pedidos.cores';
+function coresEtapaLigadas(){
+  try{ return localStorage.getItem(CHAVE_CORES_ETAPA) !== '0'; }catch(e){ return true; }
+}
+function alternarCoresEtapa(ligar){
+  try{ localStorage.setItem(CHAVE_CORES_ETAPA, ligar ? '1' : '0'); }catch(e){}
+  desenharPedidos();
+}
+
 function alarmeLigado(){
   try{ return localStorage.getItem(CHAVE_ALARME) !== '0'; }catch(e){ return true; }
 }
@@ -23628,7 +23643,7 @@ function cartaoDePedido(p){
     : (p.status === 'saiu' || p.status === 'pronto') ? [['entregue', servido, 'btn-p']] : [];
   const vivo = !['entregue', 'cancelado'].includes(p.status);
   const atrasados = (p.itens || []).filter(i => i.atrasado).length;
-  return `<div class="card pedido-cartao${pedidosNovos.has(p.id) ? ' pedido-novo' : ''}${atrasados ? ' pedido-atrasado' : ''}" data-pedido="${p.id}">
+  return `<div class="card pedido-cartao st-${escapar(p.status)}${pedidosNovos.has(p.id) ? ' pedido-novo' : ''}${atrasados ? ' pedido-atrasado' : ''}" data-pedido="${p.id}">
     <div class="pedido-topo">
       <b>#${escapar(String(p.numero))}</b>
       <span class="tag ${p.status === 'cancelado' ? 't-canc' : p.status === 'entregue' ? 't-conc' : p.status === 'recebido' ? 't-pend' : 't-conf'}">${etapaDoPedido(p)}</span>
@@ -23675,6 +23690,9 @@ function desenharPedidos(){
   if(alarme) alarme.checked = alarmeLigado();
   const rot = document.getElementById('pdRecebendoTxt');
   if(rot) rot.textContent = c.aceitando ? 'Recebendo pedidos' : 'Pedidos pausados';
+  const cores = document.getElementById('pdCores');
+  if(cores) cores.checked = coresEtapaLigadas();
+  alvo.classList.toggle('cores-etapa', coresEtapaLigadas());
   if(!NA_NUVEM){
     alvo.innerHTML = `<div class="aviso info">Os pedidos ficam gravados no servidor. Nesta
       demonstração não há servidor: ligado no Supabase, os pedidos feitos no seu link aparecem aqui.</div>`;
@@ -23688,7 +23706,7 @@ function desenharPedidos(){
   const novos = grupo(['recebido']), preparo = grupo(['em_preparo']), caminho = grupo(['saiu', 'pronto']);
   const fim = grupo(['entregue', 'cancelado']).reverse();
   const entregues = fim.filter(p => p.status === 'entregue');
-  const bloco = (titulo, lista, vazio) => `<h3 class="secao" style="margin-top:18px">${titulo}
+  const bloco = (titulo, lista, vazio, etapa) => `<h3 class="secao etapa-tit etapa-${etapa}" style="margin-top:18px">${titulo}
       <span class="pedido-conta">${lista.length}</span></h3>
     ${lista.length ? `<div class="pedido-grade">${lista.map(cartaoDePedido).join('')}</div>`
       : `<p class="secao-sub">${vazio}</p>`}`;
@@ -23717,11 +23735,11 @@ function desenharPedidos(){
     ${pedidosErro ? `<div class="aviso">${escapar(pedidosErro)}</div>` : ''}
     ${!c.aceitando ? `<div class="aviso">Os pedidos pelo link estão <b>pausados</b>. A cliente vê o cardápio,
       mas não consegue pedir. Ligue "Recebendo pedidos" quando quiser voltar.</div>` : ''}
-    ${bloco('Novos', novos, 'Nenhum pedido esperando. Os pedidos feitos no seu link aparecem aqui sozinhos.')}
-    ${bloco('Em preparo', preparo, 'Nada no fogo agora.')}
-    ${bloco('Saiu para entrega / pronto para retirar', caminho, 'Nenhum a caminho.')}
+    ${bloco('Novos', novos, 'Nenhum pedido esperando. Os pedidos feitos no seu link aparecem aqui sozinhos.', 'recebido')}
+    ${bloco('Em preparo', preparo, 'Nada no fogo agora.', 'em_preparo')}
+    ${bloco('Saiu para entrega / pronto para retirar', caminho, 'Nenhum a caminho.', 'saiu')}
     <details class="pedido-fim" style="margin-top:18px">
-      <summary><b>Concluídos nas últimas 24 horas</b> — ${entregues.length} entregue(s), ${real(entregues.reduce((s, p) => s + Number(p.total || 0), 0))}${
+      <summary class="etapa-tit etapa-entregue"><b>Concluídos nas últimas 24 horas</b> — ${entregues.length} entregue(s), ${real(entregues.reduce((s, p) => s + Number(p.total || 0), 0))}${
         fim.length - entregues.length ? ` · ${fim.length - entregues.length} cancelado(s)` : ''}</summary>
       ${fim.length ? `<div class="pedido-grade">${fim.map(cartaoDePedido).join('')}</div>` : '<p class="secao-sub">Nenhum ainda.</p>'}
     </details>`;

@@ -5766,3 +5766,46 @@ label.pedido-chave{ font-weight:600 }
 @media (prefers-reduced-motion: reduce){ .pix-girando{ animation:none } }
 .pago-online{ color:var(--su-500) }
 .mp-ok{ color:var(--su-500); font-weight:700; margin:0 0 6px }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CORES POR ETAPA na tela de Pedidos (teste, liga/desliga na própria tela)
+   Uma cor por etapa, bem diferentes entre si; a cor vai na borda grossa da
+   esquerda e num fundo clarinho, e o nome da etapa continua escrito. O
+   vermelho fica só para "atrasado" — continua sendo o alarme.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root{
+  --etapa-novo:#F59E0B;      /* âmbar: chegou, alguém precisa olhar */
+  --etapa-preparo:#2563EB;   /* azul: no fogo */
+  --etapa-caminho:#7C3AED;   /* roxo: saiu para entrega / pronto para retirar */
+  --etapa-fim:#16A34A;       /* verde: entregue */
+  --etapa-cancelado:#9CA3AF; /* cinza: cancelado */
+}
+.cores-etapa .pedido-cartao{ border-left-width:6px; border-left-style:solid }
+.cores-etapa .pedido-cartao.st-recebido{ border-left-color:var(--etapa-novo);
+  background:color-mix(in srgb, var(--etapa-novo) 7%, var(--painel)) }
+.cores-etapa .pedido-cartao.st-em_preparo{ border-left-color:var(--etapa-preparo);
+  background:color-mix(in srgb, var(--etapa-preparo) 6%, var(--painel)) }
+.cores-etapa .pedido-cartao.st-saiu,
+.cores-etapa .pedido-cartao.st-pronto{ border-left-color:var(--etapa-caminho);
+  background:color-mix(in srgb, var(--etapa-caminho) 6%, var(--painel)) }
+.cores-etapa .pedido-cartao.st-entregue{ border-left-color:var(--etapa-fim);
+  background:color-mix(in srgb, var(--etapa-fim) 6%, var(--painel)) }
+.cores-etapa .pedido-cartao.st-cancelado{ border-left-color:var(--etapa-cancelado); opacity:.85 }
+/* O atrasado continua vermelho, por cima da cor da etapa. */
+.cores-etapa .pedido-cartao.pedido-atrasado{ border-left-color:var(--erro) }
+/* O título de cada grupo ganha a bolinha da cor. */
+.cores-etapa .etapa-tit::before{ content:''; display:inline-block; width:12px; height:12px; border-radius:50%;
+  margin-right:8px; vertical-align:-1px; background:var(--etapa-cor, transparent) }
+.cores-etapa summary.etapa-tit::before{ vertical-align:-1px }
+.cores-etapa .etapa-recebido{ --etapa-cor:var(--etapa-novo) }
+.cores-etapa .etapa-em_preparo{ --etapa-cor:var(--etapa-preparo) }
+.cores-etapa .etapa-saiu{ --etapa-cor:var(--etapa-caminho) }
+.cores-etapa .etapa-entregue{ --etapa-cor:var(--etapa-fim) }
+/* A etiqueta da etapa (ao lado do número) com a mesma cor da borda. */
+.cores-etapa .pedido-cartao.st-em_preparo .tag.t-conf{
+  background:color-mix(in srgb, var(--etapa-preparo) 14%, transparent) !important; color:var(--etapa-preparo) !important }
+.cores-etapa .pedido-cartao.st-saiu .tag.t-conf,
+.cores-etapa .pedido-cartao.st-pronto .tag.t-conf{
+  background:color-mix(in srgb, var(--etapa-caminho) 14%, transparent) !important; color:var(--etapa-caminho) !important }
+.cores-etapa .pedido-cartao.st-entregue .tag.t-conc{
+  background:color-mix(in srgb, var(--etapa-fim) 14%, transparent) !important; color:var(--etapa-fim) !important }
