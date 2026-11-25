@@ -424,6 +424,8 @@ viewBox='0 0 24 24' fill='none' stroke='%239AA1B2' stroke-width='2' stroke-linec
            agora e' vitrine com foto e preco. Bloco de texto atras da equipe
            ninguem le'; vitrine atras da equipe e' vitrine que ninguem ve'. -->
       <div id="capaLoja"></div>
+      <!-- O que dizem os clientes (80): a media e os comentarios bons. -->
+      <div id="capaAvaliacoes"></div>
       <!-- Os atalhos de quem ja' e' cliente, DEPOIS da vitrine: quem chega
            pela primeira vez tem que ver o que a casa faz antes de qualquer
            outra coisa, e quem ja' e' cliente rola dois dedos e acha. -->
@@ -5782,8 +5784,28 @@ function desenharPromoNaCapa(){
   if(window.aplicarIcones) aplicarIcones(alvo);
 }
 
+/* O QUE DIZEM OS CLIENTES. Aparece com pelo menos 3 avaliações e média de 4
+   para cima — são as boas notas que vão para o link —, com os comentários
+   de 4 e 5 estrelas que a gestão não tirou. */
+function desenharAvaliacoesNaCapa(){
+  const alvo = document.getElementById('capaAvaliacoes');
+  if(!alvo) return;
+  const a = avaliacoesCasa;
+  const media = a ? Number(a.media) : 0, total = a ? Number(a.total) : 0;
+  if(!modoPedidos() || !a || total < 3 || !(media >= 4)){ alvo.innerHTML = ''; return; }
+  const recentes = (a.recentes || []).slice(0, 6);
+  alvo.innerHTML = `<div class="av-capa">
+      <div class="av-capa-tit"><span class="cat" style="margin:0">O que dizem os clientes</span>
+        <span class="av-capa-media"><b>★ ${String(media.toFixed(1)).replace('.', ',')}</b> · ${total} avaliações</span></div>
+      ${recentes.length ? `<div class="av-capa-trilho">${recentes.map(r => `<div class="av-capa-cartao">
+          <span class="av-est">${'★'.repeat(Number(r.nota))}${'☆'.repeat(5 - Number(r.nota))}</span>
+          <p>“${escapar(r.comentario)}”</p><small>${escapar(r.nome || 'Cliente')}</small></div>`).join('')}</div>` : ''}
+    </div>`;
+}
+
 function desenharLojaNaCapa(){
   desenharPromoNaCapa();
+  desenharAvaliacoesNaCapa();
   const alvo = document.getElementById('capaLoja');
   if(!alvo) return;
   const lista = produtosDaLoja();
@@ -6335,6 +6357,8 @@ function avisoDoPedidoLoja(){
    `const` ainda não alcançado estoura até num `typeof`. Declaração de função
    e `var` existem desde a primeira linha. */
 var pedidosCasa = null;      // o que pedidos_da_casa() devolveu
+var avaliacoesCasa = null;   // avaliacoes_da_casa(): a média e os comentários bons (80)
+var pedidoParaAvaliar = null; // o último pedido entregue deste aparelho, ainda sem nota
 var pedidoAcomp = null;      // { token, dados } — o pedido na tela de acompanhar
 var ultimoPedido = null;     // o mais recente deste aparelho, para o aviso da capa
 var pedidoEnviando = false;
@@ -6449,11 +6473,19 @@ async function carregarPedidosDaCasa(){
   lerCarrinhoOpcoes();
   try{ casaTemCupom = !!(await Dados.chamar('casa_tem_cupom', { p_slug: salao.slug })); }
   catch(e){ casaTemCupom = false; }
+  try{ avaliacoesCasa = await Dados.chamar('avaliacoes_da_casa', { p_slug: salao.slug }) || null; }
+  catch(e){ avaliacoesCasa = null; }
+  pedidoParaAvaliar = null;
   const ult = meusPedidosGuardados()[0];
   if(ult){
     try{
       const d = await Dados.chamar('meu_pedido', { p_token: ult.token });
       if(d && d.status !== 'entregue' && d.status !== 'cancelado') ultimoPedido = { token: ult.token, dados: d };
+      // Entregue e ainda sem nota: a capa convida a avaliar (80).
+      if(d && d.status === 'entregue'){
+        const a = await Dados.chamar('avaliacao_do_pedido', { p_token: ult.token });
+        if(a && a.pode && !a.nota) pedidoParaAvaliar = { token: ult.token, numero: d.numero };
+      }
     }catch(e){ /* sem rede: o aviso só não aparece */ }
   }
   if(['capa', 'loja', 'produto', 'pedido'].includes(tela)) desenhar();
@@ -6714,6 +6746,7 @@ async function confirmarPedido(){
 
 function abrirAcompanhar(token){
   pedidoAcomp = { token, dados: null };
+  avNota = 0; avTexto = ''; avEditando = false; avErro = '';
   irPara('acompanhar');
 }
 
@@ -6723,6 +6756,11 @@ async function lerPedidoAcompanhado(){
     const d = await Dados.chamar('meu_pedido', { p_token: pedidoAcomp.token });
     if(!pedidoAcomp) return;
     pedidoAcomp.dados = d || { perdido: true };
+    // A avaliação (80): só existe depois de entregue.
+    if(d && d.status === 'entregue' && pedidoAcomp.avaliacao === undefined){
+      try{ pedidoAcomp.avaliacao = await Dados.chamar('avaliacao_do_pedido', { p_token: pedidoAcomp.token }) || null; }
+      catch(e){ pedidoAcomp.avaliacao = null; }
+    }
     if(ultimoPedido && ultimoPedido.token === pedidoAcomp.token){
       ultimoPedido = d && d.status !== 'entregue' && d.status !== 'cancelado'
         ? { token: pedidoAcomp.token, dados: d } : null;
@@ -6782,12 +6820,68 @@ function desenharAcompanhar(){
         · ${escapar(PAGAMENTOS_PEDIDO[d.pagamento] || d.pagamento || '')}${
         d.troco ? ' (troco para ' + real(Number(d.troco)) + ')' : ''}</p>
     </div>
+    ${d.status === 'entregue' ? blocoDeAvaliar() : ''}
     ${d.fidelidade ? `<div class="recado fid-cartao" style="margin:12px 0">${d.fidelidade.temDesconto
         ? `🎉 <b>Você ganhou ${Number(d.fidelidade.desconto)}% de desconto</b> no próximo pedido (sai sozinho).`
         : cartaoFidelidade(d)}</div>` : ''}
     ${zapUrl ? `<a class="link" href="${zapUrl}" target="_blank" rel="noopener">Falar com o restaurante no WhatsApp</a>` : ''}
     ${d.status === 'recebido' ? `<p style="margin-top:14px">
         <button class="link" style="color:var(--erro)" onclick="cancelarPedidoDaCliente()">Cancelar este pedido</button></p>` : ''}`;
+}
+
+/* ── A AVALIAÇÃO DO PEDIDO (80) ──────────────────────────────────────────
+   Depois de entregue: de 1 a 5 estrelas e um comentário, se quiser. Uma por
+   pedido; dá para trocar em até 15 dias. Tocar na estrela só pinta (não
+   redesenha a tela: o comentário que ela está escrevendo não some). */
+let avNota = 0, avTexto = '', avEditando = false, avEnviando = false, avErro = '';
+function blocoDeAvaliar(){
+  const a = pedidoAcomp && pedidoAcomp.avaliacao;
+  if(!a) return '';
+  if(a.nota && !avEditando){
+    return `<div class="av-caixa av-feita"><b>Obrigado pela avaliação!</b>
+      <span class="av-est" aria-label="${a.nota} de 5 estrelas">${'★'.repeat(a.nota)}${'☆'.repeat(5 - a.nota)}</span>
+      ${a.comentario ? `<p>“${escapar(a.comentario)}”</p>` : ''}
+      ${a.pode ? '<button class="link" onclick="editarAvaliacao()">Mudar minha avaliação</button>' : ''}</div>`;
+  }
+  if(!a.pode) return '';
+  return `<div class="av-caixa" id="avCaixa">
+    <b>Como foi o seu pedido?</b>
+    <div class="av-estrelas" role="radiogroup" aria-label="Sua nota">${[1, 2, 3, 4, 5].map(n =>
+      `<button type="button" class="av-estrela${n <= avNota ? ' on' : ''}" data-n="${n}" role="radio"
+         aria-checked="${n === avNota}" aria-label="${n} estrela${n > 1 ? 's' : ''}" onclick="escolherNota(${n})">★</button>`).join('')}</div>
+    <textarea id="avTexto" rows="3" maxlength="500" placeholder="Conte o que achou (opcional)"
+      oninput="avTexto = this.value">${escapar(avTexto)}</textarea>
+    ${avErro ? `<p class="pd-alerta">${escapar(avErro)}</p>` : ''}
+    <button type="button" class="btn btn-p av-enviar" id="avEnviar" onclick="enviarAvaliacao()"${avNota && !avEnviando ? '' : ' disabled'}>
+      ${avEnviando ? 'Enviando…' : 'Enviar avaliação'}</button>
+  </div>`;
+}
+function escolherNota(n){
+  avNota = n; avErro = '';
+  document.querySelectorAll('#avCaixa .av-estrela').forEach(b => {
+    const k = Number(b.dataset.n);
+    b.classList.toggle('on', k <= n);
+    b.setAttribute('aria-checked', String(k === n));
+  });
+  const bt = document.getElementById('avEnviar');
+  if(bt) bt.disabled = false;
+}
+function editarAvaliacao(){
+  const a = pedidoAcomp && pedidoAcomp.avaliacao || {};
+  avNota = a.nota || 0; avTexto = a.comentario || ''; avEditando = true; avErro = '';
+  desenhar();
+}
+async function enviarAvaliacao(){
+  if(!pedidoAcomp || !avNota || avEnviando) return;
+  avEnviando = true; avErro = ''; desenhar();
+  try{
+    const r = await Dados.chamar('avaliar_pedido', { p_token: pedidoAcomp.token, p_nota: avNota, p_comentario: avTexto || null });
+    pedidoAcomp.avaliacao = { pode: true, nota: r.nota, comentario: r.comentario };
+    avEditando = false; avTexto = ''; avNota = 0;
+    pedidoParaAvaliar = null;
+  }catch(e){ avErro = e.message || 'Não consegui enviar. Tente de novo.'; }
+  avEnviando = false;
+  desenhar();
 }
 
 async function cancelarPedidoDaCliente(){
@@ -6807,6 +6901,13 @@ function desenharPedidoNaCapa(){
   const outros = guardados.length > (ultimoPedido ? 1 : 0);
   const verTodos = outros ? `<button class="link" style="margin-top:6px" onclick="abrirFolha('meuspedidos')">
       Ver meus pedidos (${guardados.length})</button>` : '';
+  if(!ultimoPedido && pedidoParaAvaliar){
+    alvo.innerHTML = `<button class="pd-aviso" onclick="abrirAcompanhar('${escapar(pedidoParaAvaliar.token)}')">
+        <span><b>⭐ Como foi o pedido #${escapar(String(pedidoParaAvaliar.numero || ''))}?</b>
+          <span>Dê sua nota em um toque</span></span>
+        <span class="pd-aviso-ir">Avaliar ›</span></button>${verTodos}`;
+    return;
+  }
   if(!ultimoPedido){
     alvo.innerHTML = guardados.length ? `<button class="pd-aviso" onclick="abrirFolha('meuspedidos')">
         <span><b>Meus pedidos</b><span>Veja o que pediu e como está cada um</span></span>

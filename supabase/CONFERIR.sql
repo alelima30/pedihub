@@ -1784,6 +1784,15 @@ with conferencia(ordem, item, veredito, detalhe) as (
          case when to_regprocedure('public.preco_vigente(numeric,numeric,date,text)') is null
               then 'cole o 98_modulos.sql (79_promocao)' else '' end
   union all
+  /* PediHub (80): avaliação do pedido. */
+  select 96, 'Avaliação do pedido (estrelas e comentário depois de entregue)',
+         case when to_regclass('public.avaliacoes') is null
+                or to_regprocedure('public.avaliar_pedido(uuid,integer,text)') is null
+                or to_regprocedure('public.avaliacoes_da_casa(text)') is null
+              then 'FALTA' else 'certo' end,
+         case when to_regclass('public.avaliacoes') is null
+              then 'cole o 98_modulos.sql (80_avaliacoes)' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um

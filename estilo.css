@@ -5695,3 +5695,52 @@ label.pedido-chave{ font-weight:600 }
 /* O cartão fidelidade no acompanhamento do pedido: os selos já ganhos e os que faltam. */
 .fid-selos{ display:flex; flex-wrap:wrap; gap:3px; margin:6px 0; font-size:18px; line-height:1; color:var(--txt3) }
 .fid-selos .on{ color:var(--ac-600, var(--acao)) }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AVALIAÇÃO DO PEDIDO (80): as estrelas no link, os comentários na capa e a
+   aba Avaliações do painel. A estrela é sempre dourada: é o sinal que todo
+   mundo conhece, e não acompanha a cor do restaurante.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root{ --estrela:#F59E0B }
+.av-est{ color:var(--estrela); letter-spacing:1px; white-space:nowrap }
+.av-caixa{ margin:14px 0; padding:14px; border:1px solid var(--borda); border-radius:var(--r, 14px); background:var(--painel) }
+.av-caixa > b{ display:block; margin-bottom:6px }
+.av-estrelas{ display:flex; gap:4px; margin:4px 0 10px }
+.av-estrela{ font-size:34px; line-height:1; width:48px; height:48px; border:0; background:none; cursor:pointer;
+  color:var(--borda-forte, #D6D3D1); padding:0; transition:transform .12s }
+.av-estrela.on{ color:var(--estrela) }
+.av-estrela:active{ transform:scale(.9) }
+.av-caixa textarea{ width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--borda);
+  border-radius:10px; background:var(--fundo, transparent); color:inherit; font:inherit; resize:vertical }
+.av-enviar{ width:100%; margin-top:10px; min-height:46px }
+.av-feita .av-est{ display:block; font-size:22px; margin:2px 0 4px }
+.av-feita p{ margin:4px 0; color:var(--txt2) }
+.av-capa{ margin:18px 0 6px }
+.av-capa-tit{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:8px }
+.av-capa-media{ font-size:13px; color:var(--txt2) }
+.av-capa-media b{ color:var(--estrela) }
+.av-capa-trilho{ display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; scroll-snap-type:x mandatory; scrollbar-width:none }
+.av-capa-trilho::-webkit-scrollbar{ display:none }
+.av-capa-cartao{ flex:0 0 72%; max-width:260px; scroll-snap-align:start; padding:12px 13px; border:1px solid var(--borda);
+  border-radius:var(--r, 14px); background:var(--painel); box-shadow:var(--sombra) }
+.av-capa-cartao p{ margin:6px 0; font-size:13.5px; line-height:1.4; overflow-wrap:anywhere }
+.av-capa-cartao small{ color:var(--txt3); font-weight:600 }
+/* O painel */
+.av-resumo{ display:flex; gap:22px; align-items:center; flex-wrap:wrap; margin-bottom:12px }
+.av-media{ display:flex; flex-direction:column; align-items:flex-start; min-width:120px }
+.av-media > b{ font-size:40px; line-height:1 }
+.av-media .av-est{ font-size:18px; margin:4px 0 }
+.av-media small{ color:var(--txt3) }
+.av-barras{ flex:1; min-width:200px; display:flex; flex-direction:column; gap:5px }
+.av-barra{ display:grid; grid-template-columns:34px 1fr 28px; gap:8px; align-items:center; font-size:12.5px }
+.av-barra i{ height:8px; border-radius:6px; background:var(--painel2); overflow:hidden }
+.av-barra em{ display:block; height:100%; background:var(--estrela); border-radius:6px }
+.av-barra b{ text-align:right; color:var(--txt2) }
+.av-item{ margin-bottom:10px }
+.av-item.av-ruim{ border-left:4px solid var(--erro) }
+.av-topo{ display:flex; gap:8px; align-items:baseline; flex-wrap:wrap }
+.av-topo small{ color:var(--txt3) }
+.av-txt{ margin:6px 0 2px; overflow-wrap:anywhere }
+.av-sem{ color:var(--txt3); font-style:italic }
+.av-itens{ margin:2px 0 0; font-size:12.5px; color:var(--txt3) }
+.av-acoes{ margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap }

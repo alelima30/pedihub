@@ -759,6 +759,17 @@ span.ajuda{display:block;margin-top:5px}
     <p class="nota" id="notaAgenda"></p>
   </section>
 
+  <!-- ══════════ AVALIACOES (80) ══════════ -->
+  <section class="tela" id="tela-avaliacoes">
+    <div class="barra">
+      <div class="mesas-pracas" id="avFiltros"></div>
+      <span class="espaco"></span>
+      <button class="btn" onclick="carregarAvaliacoes()">Atualizar</button>
+    </div>
+    <div id="avResumo"></div>
+    <div id="avLista"></div>
+  </section>
+
   <!-- ══════════ CLIENTES ══════════ -->
   <!-- ══════════ ANIVERSARIANTES ══════════ -->
   <section class="tela" id="tela-aniversarios">
@@ -1980,6 +1991,10 @@ const TELAS = [
      dinheiro da casa inteira. */
   ['dashboard','Dashboard',       'painel',     'Dia a dia', GESTAO],
   ['relatorios','Relatórios',      'grafico',    'Dia a dia', GESTAO],
+  /* Avaliações (80): as estrelas e os comentários de quem recebeu o pedido.
+     GESTÃO, como o banco (`avaliacoes_do_restaurante` pede `e_gestor`): a
+     crítica é assunto do dono, e às vezes é sobre alguém da equipe. */
+  ['avaliacoes','Avaliações',      'estrela',    'Dia a dia', GESTAO],
   /* O Ranking (60_dashboard.sql): quem mais marca, quem mais atende, quem é
      nova, quem volta, quantos abrem o link. A gestão vê o restaurante inteiro; quem
      atende vê SÓ os próprios números (o banco filtra pela ficha dela). A
@@ -2246,7 +2261,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.ee81b3';
+const VERSAO_APP = 'v9.e73325';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -10907,6 +10922,7 @@ function pintar(){
   if(telaAtual === 'pedidosloja') pintarPedidosLoja();
   if(telaAtual === 'clientes') pintarClientes();
   if(telaAtual === 'aniversarios') pintarAniversarios();
+  if(telaAtual === 'avaliacoes') pintarAvaliacoes();
   if(telaAtual === 'servicos') pintarServicos();
   if(telaAtual === 'procedimentos') pintarProcedimentos();
   if(telaAtual === 'produtos') pintarProdutos();
@@ -23916,6 +23932,68 @@ let mesasLista = [];          // o mapa: mesas com conta aberta (mesas_abertas)
 let mesasPraca = null;        // a praça escolhida (índice), ou null = todas
 let mesasRelogio = null;
 const CHAVE_PRACA = 'pedihub.praca';
+
+/* ═══ AVALIAÇÕES (80) ══════════════════════════════════════════════════
+   O que o cliente achou, depois de receber. A média e as estrelas por nota
+   no alto; embaixo cada avaliação com o que veio no pedido — a ruim também,
+   que é a que ensina. O comentário bom vai para o link; a gestão pode tirar
+   um de lá (palavrão, nome de alguém da equipe), sem apagar a nota. */
+let avDados = null, avFiltro = 'todas';
+const estrelasTxt = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+async function carregarAvaliacoes(){
+  if(!NA_NUVEM){ avDados = { total: 0, media: null, estrelas: {}, lista: [] }; desenharAvaliacoes(); return; }
+  try{ avDados = await Dados.chamar('avaliacoes_do_restaurante', { p_salao: salaoAtual }); }
+  catch(e){ avDados = { erro: e.message }; }
+  desenharAvaliacoes();
+}
+function pintarAvaliacoes(){ desenharAvaliacoes(); carregarAvaliacoes(); }
+function filtrarAvaliacoes(f){ avFiltro = f; desenharAvaliacoes(); }
+function desenharAvaliacoes(){
+  const filtros = document.getElementById('avFiltros'), resumo = document.getElementById('avResumo'),
+        lista = document.getElementById('avLista');
+  if(!filtros || !resumo || !lista) return;
+  filtros.innerHTML = [['todas', 'Todas'], ['ruins', 'Para melhorar (1 a 3)'], ['boas', 'Boas (4 e 5)']]
+    .map(([k, r]) => `<button type="button" class="btn btn-peq ${avFiltro === k ? 'btn-p' : ''}"
+       onclick="filtrarAvaliacoes('${k}')">${r}</button>`).join('');
+  const d = avDados;
+  if(!d){ resumo.innerHTML = '<p class="secao-sub">Carregando…</p>'; lista.innerHTML = ''; return; }
+  if(d.erro){ resumo.innerHTML = `<div class="recado erro">${escapar(d.erro)}</div>`; lista.innerHTML = ''; return; }
+  const total = Number(d.total) || 0;
+  if(!total){
+    resumo.innerHTML = `<div class="vazio"><b>Nenhuma avaliação ainda</b>
+      Depois que o pedido é entregue, o cliente pode dar de 1 a 5 estrelas e deixar um comentário,
+      pela tela de acompanhamento do pedido. Elas aparecem aqui, e as boas aparecem também no seu link.</div>`;
+    lista.innerHTML = ''; return;
+  }
+  const est = d.estrelas || {};
+  const maior = Math.max(1, ...[1, 2, 3, 4, 5].map(n => Number(est[n]) || 0));
+  resumo.innerHTML = `<div class="card av-resumo">
+      <div class="av-media"><b>${Number(d.media).toFixed(1).replace('.', ',')}</b><span class="av-est">${estrelasTxt(Math.round(Number(d.media)))}</span>
+        <small>${total} ${total === 1 ? 'avaliação' : 'avaliações'}</small></div>
+      <div class="av-barras">${[5, 4, 3, 2, 1].map(n => `<div class="av-barra"><span>${n} ★</span>
+          <i><em style="width:${Math.round((Number(est[n]) || 0) / maior * 100)}%"></em></i><b>${Number(est[n]) || 0}</b></div>`).join('')}</div>
+    </div>`;
+  const itens = (d.lista || []).filter(a => avFiltro === 'todas' || (avFiltro === 'ruins' ? a.nota <= 3 : a.nota >= 4));
+  lista.innerHTML = itens.length ? itens.map(a => `<div class="card av-item${a.nota <= 3 ? ' av-ruim' : ''}">
+      <div class="av-topo"><span class="av-est">${estrelasTxt(a.nota)}</span>
+        <b>${escapar(a.nome || 'Cliente')}</b>
+        <small>pedido #${escapar(String(a.numero))} · ${escapar(new Date(a.quando).toLocaleDateString('pt-BR'))}${
+          a.mesa ? ' · mesa ' + escapar(a.mesa) : a.entrega === 'entrega' ? ' · entrega' : a.entrega === 'retirada' ? ' · retirada' : ''}</small></div>
+      ${a.comentario ? `<p class="av-txt">“${escapar(a.comentario)}”</p>` : '<p class="av-txt av-sem">Sem comentário.</p>'}
+      ${a.itens ? `<p class="av-itens">${escapar(a.itens)}</p>` : ''}
+      ${a.nota >= 4 && a.comentario ? `<div class="av-acoes">${a.oculta
+          ? `<span class="tag">fora do link</span> <button class="btn btn-peq" onclick="ocultarAvaliacao('${a.id}', false)">Mostrar no link</button>`
+          : `<span class="tag t-conf">aparece no link</span> <button class="btn btn-peq" onclick="ocultarAvaliacao('${a.id}', true)">Tirar do link</button>`}</div>` : ''}
+    </div>`).join('')
+    : '<p class="secao-sub">Nenhuma avaliação neste filtro.</p>';
+}
+async function ocultarAvaliacao(id, oculta){
+  try{ await Dados.chamar('ocultar_avaliacao', { p_avaliacao: id, p_oculta: oculta }); }
+  catch(e){ alert(e.message); return; }
+  const a = ((avDados || {}).lista || []).find(x => x.id === id);
+  if(a) a.oculta = oculta;
+  desenharAvaliacoes();
+}
 
 async function carregarMesas(){
   if(!NA_NUVEM){ mesasLista = []; desenharMesas(); return; }
