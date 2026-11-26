@@ -6074,6 +6074,8 @@ function desenharLoja(){
   lojaSecoes = !!(cfgC.fixar && pedidos && lojaCatsAtuais.length);
   if(lojaSecoes){ filtroLoja = null; if(catMarcada && !lojaCatsAtuais.some(c => c.k === catMarcada)) catMarcada = null; }
   const marcada = lojaSecoes ? catMarcada : filtroLoja;
+  // Na fileira presa, tocar leva até a seção; solta, filtra (o de sempre).
+  const acaoChip = lojaSecoes ? 'irParaCategoria' : 'escolherCategoriaLoja';
   const fileira = document.getElementById('lojaCats');
   if(fileira){
     fileira.style.display = lojaCatsAtuais.length ? '' : 'none';
@@ -6081,7 +6083,7 @@ function desenharLoja(){
     fileira.innerHTML = !lojaCatsAtuais.length ? '' : [{ k: null, rot: 'Todos' }, ...lojaCatsAtuais]
       .map((c, i) => `<button type="button" class="loja-cat${marcada === c.k ? ' on' : ''}"
           aria-pressed="${marcada === c.k}" data-k="${escapar(c.k || '')}"
-          onclick="${lojaSecoes ? 'irParaCategoria' : 'escolherCategoriaLoja'}(${i - 1})">${escapar(c.rot)}</button>`).join('');
+          onclick="${acaoChip}(${i - 1})">${escapar(c.rot)}</button>`).join('');
   }
 
   const lista = todos.filter(p => (lojaSecoes || !filtroLoja || (filtroLoja === '__promo' ? emPromocao(p) : chaveCategoria(p.categoria) === filtroLoja))
