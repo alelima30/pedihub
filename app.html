@@ -846,6 +846,9 @@ span.ajuda{display:block;margin-top:5px}
       <button class="btn" onclick="abrirConfigPedidos()">Entrega e pagamento</button>
       <button class="btn btn-p" onclick="abrirNovoPedido()">+ Novo pedido</button>
     </div>
+    <!-- O TEMPO DE ENTREGA, num toque: vale para todos os pedidos e aparece
+         para a cliente no link. (pintarTempoEntrega) -->
+    <div class="tempo-entrega-barra" id="pdTempoBarra"></div>
     <div id="listaPedidos"></div>
   </section>
 
@@ -2264,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.4f0f6e';
+const VERSAO_APP = 'v9.8181c4';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23603,6 +23606,39 @@ async function desconectarMercadoPago(){
   setTimeout(() => alert(frase), 1200);
 })();
 
+/* ── O TEMPO DE ENTREGA ─────────────────────────────────────────────────
+   "Quando pedi o lanche não tinha tempo de entrega." Um só, para todos os
+   pedidos: o dono troca num toque na tela de Pedidos (sexta à noite vira 1
+   hora), e a cliente vê na capa, no cardápio, ao escolher Entrega e no
+   acompanhamento, com a hora prevista. Mora em cfg.pedidos.tempo (texto),
+   que o banco já devolve no pedidos_da_casa() e no meu_pedido(). */
+const TEMPOS_ENTREGA = ['30 min', '40 min', '1 hora'];
+function pintarTempoEntrega(){
+  const alvo = document.getElementById('pdTempoBarra');
+  if(!alvo) return;
+  const t = cfgPedidosDoSalao().tempo || '';
+  const outro = t && !TEMPOS_ENTREGA.includes(t);
+  if(!souGestor()){
+    alvo.innerHTML = `<span class="tempo-rot">🛵 Tempo de entrega:</span> <b>${t ? escapar(t) : 'não definido'}</b>`;
+    return;
+  }
+  alvo.innerHTML = `<span class="tempo-rot">🛵 Tempo de entrega:</span>
+    ${TEMPOS_ENTREGA.map(x => `<button type="button" class="btn btn-peq${t === x ? ' btn-p' : ''}" data-t="${x}"
+        aria-pressed="${t === x}" onclick="escolherTempoEntrega(this.dataset.t)">${x}</button>`).join('')}
+    <button type="button" class="btn btn-peq${outro ? ' btn-p' : ''}" aria-pressed="${!!outro}"
+        onclick="outroTempoEntrega()">${outro ? escapar(t) + ' ✎' : 'Outro'}</button>
+    ${t ? '' : '<span class="tempo-aviso">Escolha um: o cliente vê no link.</span>'}`;
+}
+function escolherTempoEntrega(t){
+  gravarCfgPedidos({ tempo: String(t || '').trim().slice(0, 40) });
+  pintarTempoEntrega();
+}
+function outroTempoEntrega(){
+  const t = prompt('Tempo de entrega (ex.: 50 min, 40 a 60 min):', cfgPedidosDoSalao().tempo || '');
+  if(t === null) return;
+  escolherTempoEntrega(t);
+}
+
 function gravarCfgPedidos(mudancas){
   const sl = acharSalao(salaoAtual);
   if(!sl) return;
@@ -23835,6 +23871,7 @@ function desenharPedidos(){
   if(rot) rot.textContent = c.aceitando ? 'Recebendo pedidos' : 'Pedidos pausados';
   const cores = document.getElementById('pdCores');
   if(cores) cores.checked = coresEtapaLigadas();
+  pintarTempoEntrega();
   alvo.classList.toggle('cores-etapa', coresEtapaLigadas());
   if(!NA_NUVEM){
     alvo.innerHTML = `<div class="aviso info">Os pedidos ficam gravados no servidor. Nesta
@@ -24023,8 +24060,11 @@ function abrirConfigPedidos(){
     <div class="dupla">
       <div class="campo"><label for="pcMinimo">Pedido mínimo (R$)</label>
         <input id="pcMinimo" type="number" min="0" step="1" value="${c.minimo || ''}" placeholder="sem mínimo"></div>
-      <div class="campo"><label for="pcTempo">Tempo estimado</label>
-        <input id="pcTempo" maxlength="40" value="${escapar(c.tempo)}" placeholder="40 a 60 min"></div>
+      <div class="campo"><label for="pcTempo">Tempo de entrega</label>
+        <input id="pcTempo" maxlength="40" value="${escapar(c.tempo)}" placeholder="40 min">
+        <div class="tempo-atalhos">${TEMPOS_ENTREGA.map(x => `<button type="button" class="btn btn-peq" data-t="${x}"
+          onclick="document.getElementById('pcTempo').value = this.dataset.t">${x}</button>`).join('')}</div>
+        <p class="ajuda">Vale para todos os pedidos. O cliente vê no link e no acompanhamento.</p></div>
     </div>
     <div class="campo"><label>Formas de pagamento (na entrega ou na retirada)</label>
       <label class="check"><input type="checkbox" class="pcPag" value="pix" ${marcado(c.pagamentos.includes('pix'))}> <span>Pix</span></label>

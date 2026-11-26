@@ -985,6 +985,32 @@ function segmentoDaCasa(){
         Frase: k => ({ do: 'Do restaurante', no: 'No restaurante', este: 'Este restaurante', ao: 'Ao restaurante' })[k] || 'O restaurante' };
 }
 const casa = k => segmentoDaCasa().frase(k);
+/* O tempo de entrega que o dono escolheu (cfg.pedidos.tempo): "40 min",
+   "1 hora", "40 a 60 min". `minutosDoTempo` acha os minutos (o maior, num
+   intervalo) para dizer a hora prevista; texto que não dá para ler fica só
+   como está escrito. */
+function tempoDaCasa(){
+  const t = typeof pedidosCasa !== 'undefined' && pedidosCasa && pedidosCasa.tempo;
+  return t ? String(t).trim() : '';
+}
+function minutosDoTempo(t){
+  const s = String(t || '').toLowerCase().replace(',', '.').trim();
+  // "1h30", "1 hora e 30", "1h", "2 horas", "1 hora e meia"
+  const h = s.match(/(\d+(?:\.\d+)?)\s*h(?:oras?|rs?)?\b\s*(?:e\s*)?(\d{1,2}|meia)?/) || s.match(/(\d+(?:\.\d+)?)\s*h(\d{1,2})?/);
+  if(h){
+    const extra = h[2] === 'meia' ? 30 : Number(h[2] || 0);
+    return Math.round(Number(h[1]) * 60 + extra);
+  }
+  if(/\bhora\b/.test(s) && !/\d/.test(s)) return 60;   // "uma hora"
+  // "40 min", "40 a 60 min": o maior (a promessa que dá para cumprir)
+  const nums = [...s.matchAll(/\d+/g)].map(m => Number(m[0]));
+  return nums.length ? Math.max(...nums) : null;
+}
+function horaPrevista(desde, t){
+  const min = minutosDoTempo(t), d = new Date(desde);
+  if(min == null || !(min > 0) || isNaN(d)) return '';
+  return new Date(d.getTime() + min * 60000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
 const Casa = k => segmentoDaCasa().Frase(k);
 
 const NA_NUVEM = !!(window.Dados && window.Dados.ligado);
@@ -5323,7 +5349,8 @@ function desenharInfoDaCasa(){
     botoes.splice(i < 0 ? botoes.length : i, 0, ['duvidas', 'duvida', 'Dúvidas']);
   }
 
-  alvo.innerHTML = !botoes.length ? '' : `
+  // O #statusCasa vem sempre: sem botão nenhum, ele ainda leva o tempo de entrega.
+  alvo.innerHTML = !botoes.length ? '<div id="statusCasa"></div>' : `
     <div class="recursos${botoes.length >= 4 ? ' recursos-4' : ''}" style="--n:${botoes.length}">
       ${botoes.map(([qual, ico, rot]) => `
         <button type="button" class="recurso"
@@ -5350,7 +5377,10 @@ function desenharStatusDaCasa(){
   if(!alvo) return;
   const func = funcionamentoDoSalao();
   const est = func ? Funcionamento.estado(func, Funcionamento.agora(fusoDoSalao())) : null;
-  alvo.innerHTML = !est ? '' : `
+  // O tempo de entrega vem mesmo sem horário cadastrado (sem o cartão ABERTO).
+  const tempo = modoPedidos() && tempoDaCasa() && pedidosCasa.entrega !== false
+    ? `<div class="tempo-casa">🛵 Entrega em cerca de <b>${escapar(tempoDaCasa())}</b></div>` : '';
+  alvo.innerHTML = !est ? tempo : `
     <button type="button" class="status-casa ${est.aberto ? 'aberto' : 'fechado'}"
             onclick="abrirFolha('horarios', this)"
             aria-label="${est.aberto ? 'Aberto' : 'Fechado'}. ${escapar(est.detalhe)}. Ver os horários">
@@ -5359,7 +5389,7 @@ function desenharStatusDaCasa(){
       <span class="status-sep" aria-hidden="true"></span>
       <span class="status-txt">${escapar(est.detalhe)}</span>
       <span class="status-seta" data-ico="direita" aria-hidden="true"></span>
-    </button>`;
+    </button>${tempo}`;
   if(window.aplicarIcones) aplicarIcones(alvo);
 }
 
@@ -6069,7 +6099,9 @@ function desenharLoja(){
   const aviso = document.getElementById('lojaAviso');
   if(aviso) aviso.innerHTML = pedidos
     ? (!pedidosAbertos()
-       ? '<div class="recado erro"><b>Fechado agora.</b> Você pode ver o cardápio; os pedidos voltam quando abrir.</div>' : '')
+       ? '<div class="recado erro"><b>Fechado agora.</b> Você pode ver o cardápio; os pedidos voltam quando abrir.</div>'
+       : tempoDaCasa() && pedidosCasa.entrega !== false
+         ? `<div class="tempo-casa">🛵 Entrega em cerca de <b>${escapar(tempoDaCasa())}</b></div>` : '')
     : avisoDoPedidoLoja();
   const busca0 = document.getElementById('buscaProduto');
   if(busca0) busca0.placeholder = pedidos ? 'Buscar no cardápio…' : 'Buscar produto…';
@@ -6812,6 +6844,8 @@ function desenharPedido(){
 
     <div class="cat">Como vai receber</div>
     <div class="pd-ops">${modos.map(([v, r]) => opcao('entrega', v, r)).join('')}</div>
+    ${c.tempo && (f.entrega === 'entrega' || f.entrega === 'retirada') ? `<p class="pista tempo-pista">🛵 ${
+      f.entrega === 'entrega' ? 'A entrega leva' : 'Fica pronto em'} cerca de <b>${escapar(c.tempo)}</b>.</p>` : ''}
     ${f.entrega === 'entrega' ? `
       ${campo('pdRua', 'Rua <span class="obrig">*</span>', 'rua', 'autocomplete="address-line1"')}
       <div class="pd-dupla">${linhaDoNumero}</div>
@@ -6850,7 +6884,6 @@ function desenharPedido(){
 
     ${campoDoCupomHtml()}
     <div class="pd-bloco" id="pedidoConta">${contaDoPedidoHtml()}</div>
-    ${c.tempo ? `<p class="pista">Tempo estimado: ${escapar(c.tempo)}.</p>` : ''}
     ${c.fidelidade && c.fidelidade.ligado ? `<p class="pista">⭐ Fidelidade: a cada ${Number(c.fidelidade.pedidos)} pedidos
       entregues, o próximo sai com ${Number(c.fidelidade.desconto)}% de desconto — sozinho, pelo seu WhatsApp.</p>` : ''}
     ${pedidoErro ? `<div class="recado erro" role="alert">${escapar(pedidoErro)}</div>` : ''}`;
@@ -7052,7 +7085,11 @@ function desenharAcompanhar(){
                 : e === 'entregue' && d.entrega === 'mesa' ? 'Servido'
                 : e === 'pronto' && d.entrega === 'mesa' ? 'Pronto, já vai para a mesa' : ETAPAS_PEDIDO[e]}${
             i === aqui && e === 'recebido' ? `<small>Esperando ${casa('o')} confirmar.</small>` : ''}${
-            i === aqui && e === 'em_preparo' && d.tempo ? '<small>Previsão: ' + escapar(d.tempo) + '.</small>' : ''}</span>
+            i === aqui && ['recebido', 'em_preparo', 'saiu'].includes(e) && d.tempo && d.entrega !== 'mesa'
+              ? '<small class="tempo-prev">🛵 ' + (horaPrevista(d.criado_em, d.tempo)
+                  ? (d.entrega === 'retirada' ? 'Pronto por volta das ' : 'Chega por volta das ') + horaPrevista(d.criado_em, d.tempo)
+                    + ' (' + escapar(d.tempo) + ')'
+                  : 'Previsão: ' + escapar(d.tempo)) + '.</small>' : ''}</span>
         </li>`).join('')}</ol>`}
     <div class="pd-bloco">
       ${(d.itens || []).map(i => `<div class="pd-linha"><span>${i.quantidade}× ${escapar(i.nome)}${

@@ -5904,3 +5904,14 @@ body.tem-fundo #capaLoja > .cat, body.tem-fundo #capaServicos > .cat{
 body.tem-fundo .rodape-legal{ background:color-mix(in srgb, var(--painel) 92%, transparent);
   backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-radius:var(--r, 12px);
   margin-left:12px; margin-right:12px; padding:10px 14px }
+
+/* ── O TEMPO DE ENTREGA ──────────────────────────────────────────────────── */
+.tempo-entrega-barra{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 12px }
+.tempo-entrega-barra .tempo-rot{ font-weight:700 }
+.tempo-entrega-barra .tempo-aviso{ font-size:13px; color:var(--alerta, #B45309); font-weight:600 }
+.tempo-atalhos{ display:flex; gap:6px; flex-wrap:wrap; margin-top:6px }
+.tempo-casa{ margin:10px 0 0; padding:10px 14px; border-radius:var(--r, 12px); background:var(--painel);
+  border:1px solid var(--borda); font-size:15px; color:var(--txt); text-align:center }
+.tempo-casa b{ color:var(--txt) }
+#lojaAviso .tempo-casa{ margin:0 0 12px; text-align:left }
+.tempo-prev{ color:var(--txt2) }
