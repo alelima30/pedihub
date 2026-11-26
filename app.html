@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.8181c4';
+const VERSAO_APP = 'v9.bdc0d6';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -4802,13 +4802,29 @@ function pintarProdutos(){
      "Na loja" dizendo "à venda" enquanto a página esconde tudo era a tela
      afirmando o contrário do que a cliente vê. Ver porqueALojaNaoAparece(). */
   const porque = souGestor() ? porqueALojaNaoAparece() : '';
+  /* A BUSCA, para quem tem 50 itens: pelo nome, pelo número ou pela
+     categoria. Filtra as linhas sem redesenhar (o cursor não sai do campo). */
+  const cats = [...new Set(lista.map(p => limparCategoria(p.categoria)).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const filtro = `<div class="prod-filtro">
+      <input type="search" id="buscaProdPainel" placeholder="🔎 Buscar no cardápio (nome ou número)"
+             value="${escapar(filtroProdPainel.q)}" oninput="filtroProdPainel.q = this.value; filtrarProdutosPainel()">
+      ${cats.length ? `<select id="catProdPainel" onchange="filtroProdPainel.cat = this.value; filtrarProdutosPainel()">
+        <option value="">Todas as categorias</option>
+        ${cats.map(c => `<option value="${escapar(c)}" ${filtroProdPainel.cat === c ? 'selected' : ''}>${escapar(c)}</option>`).join('')}
+      </select>` : ''}
+      <span class="prod-filtro-conta" id="contaProdPainel"></span>
+    </div>`;
   alvo.innerHTML = estilo + (porque
       ? `<div class="aviso atencao" id="avisoLojaLink"
               style="margin-bottom:12px">${porque}</div>` : '')
+    + filtro
     + `<table class="tabela"><thead><tr>
       <th>Item</th><th>Preço</th><th>Estoque</th>
       <th>No cardápio</th><th></th>
-    </tr></thead><tbody>` + lista.map(p => `<tr>
+    </tr></thead><tbody>` + lista.map(p => `<tr data-busca="${escapar(semAcentoPainel((numeroDoItem(p) || '') + ' '
+        + (numeroDoItem(p) ? rotuloNumero(numeroDoItem(p)) + ' ' : '') + p.nome + ' ' + (limparCategoria(p.categoria) || '')))}"
+        data-cat="${escapar(limparCategoria(p.categoria) || '')}">
       <td>${cd.estilo === 'lista' && !p.foto ? '' : `<span class="sv-mini">${p.foto
           ? `<img src="${escapar(p.foto)}" alt="" loading="lazy">`
           : `<span data-ico="presente"></span>`}</span
@@ -4837,6 +4853,23 @@ function pintarProdutos(){
   // cabeçalho. O `pintar()` já faz uma passada geral; esta é para quando a
   // lista é redesenhada sozinha, sem passar por lá.
   rotularTabelas(alvo);
+  filtrarProdutosPainel();
+}
+const filtroProdPainel = { q: '', cat: '' };
+function filtrarProdutosPainel(){
+  const q = semAcentoPainel(filtroProdPainel.q || '').trim();
+  const linhas = [...document.querySelectorAll('#listaProdutos table.tabela tbody tr')];
+  let vistos = 0;
+  for(const tr of linhas){
+    const vale = (!q || (tr.dataset.busca || '').includes(q))
+      && (!filtroProdPainel.cat || tr.dataset.cat === filtroProdPainel.cat);
+    tr.style.display = vale ? '' : 'none';
+    if(vale) vistos++;
+  }
+  const conta = document.getElementById('contaProdPainel');
+  if(conta) conta.textContent = (q || filtroProdPainel.cat)
+    ? (vistos ? vistos + ' de ' + linhas.length + ' itens' : 'Nenhum item com essa busca')
+    : linhas.length + (linhas.length === 1 ? ' item' : ' itens');
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -10260,25 +10293,25 @@ function desenharGrupos(){
             ${REGRAS_GRUPO.map(([v, r]) => `<option value="${v}" ${g.regra === v ? 'selected' : ''}>${r}</option>`).join('')}
           </select></div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;margin-bottom:8px">
-        O cliente escolhe de
-        <input type="number" min="0" max="20" value="${Number(g.min || 0)}" style="width:64px"
-               oninput="mudarGrupo(${i},'min',this.value)"> até
-        <input type="number" min="1" max="20" value="${Number(g.max || 1)}" style="width:64px"
+      <div class="grp-minmax">
+        <span>O cliente escolhe de</span>
+        <input type="number" min="0" max="20" value="${Number(g.min || 0)}" aria-label="Mínimo"
+               oninput="mudarGrupo(${i},'min',this.value)"> <span>até</span>
+        <input type="number" min="1" max="20" value="${Number(g.max || 1)}" aria-label="Máximo"
                oninput="mudarGrupo(${i},'max',this.value)">
-        <span style="color:var(--txt2)">(de 0 = opcional; 1 até 1 = escolha obrigatória)</span>
+        <small>0 = opcional · 1 até 1 = escolha obrigatória</small>
       </div>
       ${(g.opcoes || []).map((o, j) => `
-        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
-          <input value="${escapar(o.nome || '')}" maxlength="60" placeholder="Opção" style="flex:1;min-width:0"
-                 oninput="mudarOpcao(${i},${j},'nome',this.value)">
-          <span style="font-size:12px;color:var(--txt2)">+ R$</span>
-          <input type="number" min="0" step="0.01" value="${Number(o.preco || 0)}" style="width:86px"
-                 oninput="mudarOpcao(${i},${j},'preco',this.value)">
-          <label title="Desmarque quando acabar" style="font-size:12px;display:flex;gap:4px;align-items:center">
+        <div class="op-ed">
+          <input class="op-ed-nome" value="${escapar(o.nome || '')}" maxlength="60" placeholder="Nome da opção (ex.: Bacon)"
+                 aria-label="Nome da opção" oninput="mudarOpcao(${i},${j},'nome',this.value)">
+          <span class="op-ed-rs">+ R$</span>
+          <input class="op-ed-preco" type="number" min="0" step="0.01" inputmode="decimal" value="${Number(o.preco || 0)}"
+                 aria-label="Preço a mais" oninput="mudarOpcao(${i},${j},'preco',this.value)">
+          <label class="op-ed-tem" title="Desmarque quando acabar">
             <input type="checkbox" ${o.ativo === false ? '' : 'checked'}
                    onchange="mudarOpcao(${i},${j},'ativo',this.checked)">tem</label>
-          <button type="button" class="btn btn-peq" aria-label="Tirar esta opção"
+          <button type="button" class="btn btn-peq op-ed-x" aria-label="Tirar esta opção"
                   onclick="tirarOpcao(${i},${j})">✕</button>
         </div>`).join('')}
       <div style="display:flex;gap:6px;flex-wrap:wrap">
