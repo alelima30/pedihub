@@ -461,7 +461,9 @@ secao('8 · Gradiente de três cores');
      caso do print. Na seção 3 o restaurante ainda tinha um papel escolhido, e o
      papel sozinho já tirava a coluna da frente: a mutação que esquecia o
      gradiente nessa regra sobreviveu por isso. */
-  igual('sem cor sólida salva, nada de papel escolhido', (await cfgDe()).cores || {}, {});
+  /* (O "Garantir leitura" pode ter clareado a letra para o roxo: o que
+     importa aqui é que nenhum PAPEL foi escolhido.) */
+  igual('sem cor sólida salva, nada de papel escolhido', ((await cfgDe()).cores || {}).papel, undefined);
   verdade('e o gradiente aparece atrás do conteúdo, no celular — não só nas margens',
     /linear-gradient/.test(pg.atras.imagem || ''), JSON.stringify(pg.atras));
 

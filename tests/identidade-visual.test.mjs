@@ -200,8 +200,11 @@ verdade('a tela de Aparência ganhou o seletor de modo', daTela.temModo);
 // Ver produtos e o carrinho). Cada uma uma vez só.
 // 35: a última a entrar foi a do "Agende seu horário" (aparencia-link.test.mjs).
 // 35 + o botão de baixo e a letra dele + a cor de dentro dos serviços e a dos produtos.
-igual('as trinta e nove cores aparecem uma a uma', daTela.temCores, 39);
-igual('nenhuma repetida', daTela.chavesUnicas, 39);
+// 39 no total; a lanchonete não mostra as nove de serviço e de equipe
+// (títulos, nome, descrição, preço e duração do serviço, Ver todos os
+// serviços, equipe e a cor de dentro dos serviços): não existem no link dela.
+igual('as trinta cores da lanchonete aparecem uma a uma', daTela.temCores, 30);
+igual('nenhuma repetida', daTela.chavesUnicas, 30);
 verdade('e a cor do papel fica junto das outras perguntas sobre fundo',
   daTela.papelJuntoDoFundo && daTela.papelForaDaLista,
   'ela ficou na lista das onze, longe de onde se pergunta pelo fundo');

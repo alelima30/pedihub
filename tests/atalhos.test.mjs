@@ -604,7 +604,7 @@ await porCfg({});
     ajuda: document.getElementById('atFundoAjuda').textContent,
     herdar: document.getElementById('atFundoHerdar').style.display }));
   igual('o painel tem "Cor de dentro", herdando a dos cartões',
-    f0, { existe: true, ajuda: 'a mesma dos cartões de serviço, nos três', herdar: 'none' });
+    f0, { existe: true, ajuda: 'a mesma dos cartões, nos três', herdar: 'none' });
   const prev0 = await naPrevia(p);
   igual('sem escolha, a prévia não ganha o atributo',
     await p.evaluate(() => document.querySelector('#previaFone .fone').hasAttribute('data-at-fundo')), false);

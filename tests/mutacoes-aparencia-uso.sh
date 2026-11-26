@@ -63,9 +63,9 @@ troca app.html \
 
 echo "3. a tela não repinta a barra"
 troca app.html \
-  "    k in FRASE_HERDA_DE || k === 'legenda' || k === 'verTodosProdutos')) det.open = true;
+  "    && !(ehRest && CORES_SEM_RESTAURANTE.includes(k)))) det.open = true;
   pintarBarraAp();" \
-  "    k in FRASE_HERDA_DE || k === 'legenda' || k === 'verTodosProdutos')) det.open = true;" \
+  "    && !(ehRest && CORES_SEM_RESTAURANTE.includes(k)))) det.open = true;" \
   && rodar "mudou e a barra não veio"
 
 echo "4. salvar não tira a barra"
@@ -113,8 +113,8 @@ troca app.html \
 
 echo "10. as frases escolhidas continuam recolhidas"
 troca app.html \
-  "    k in FRASE_HERDA_DE || k === 'legenda' || k === 'verTodosProdutos')) det.open = true;" \
-  "    k in FRASE_HERDA_DE || k === 'legenda' || k === 'verTodosProdutos')) det.open = false;" \
+  "    && !(ehRest && CORES_SEM_RESTAURANTE.includes(k)))) det.open = true;" \
+  "    && !(ehRest && CORES_SEM_RESTAURANTE.includes(k)))) det.open = false;" \
   && rodar "o que ele escolheu escondido"
 
 echo "11. o personalizado de antes fica sem botão aceso"

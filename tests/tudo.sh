@@ -208,6 +208,8 @@ rodar "aviso no celular: de ponta a ponta" node "$AQUI/push-tela.test.mjs"
 rodar "textos no celular" node "$AQUI/textos-celular.test.mjs"
 rodar "modelos prontos"       node "$AQUI/modelos.test.mjs"
 rodar "aparência na mão de quem chega" node "$AQUI/aparencia-uso.test.mjs"
+# A lanchonete: sem cor de serviço, o slide das fotos do cardápio e a leitura garantida ao salvar.
+rodar "aparência da lanchonete" node "$AQUI/aparencia-lanchonete.test.mjs"
 rodar "abertura do link"   node "$AQUI/intro-link.test.mjs"
 rodar "loja na moldura curvada" node "$AQUI/loja-curvada.test.mjs"
 rodar "categoria dos produtos" node "$AQUI/produto-categoria.test.mjs"

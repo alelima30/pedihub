@@ -2817,9 +2817,13 @@ function montarSlides(servicos){
   if(slideTimer){ clearInterval(slideTimer); slideTimer = null; }
 
   const cfg = salao.cfg || {};
-  const daGaleria = ((salao.slideDe || cfg.slideDe) === 'galeria');
+  const de = salao.slideDe || cfg.slideDe;
+  const daGaleria = de === 'galeria';
+  /* 'cardapio' (restaurante): as fotos dos itens do cardápio, com o nome. */
   const itens = daGaleria
     ? ((salao.galeria || cfg.galeria || []).filter(m => m && m.url))
+    : de === 'cardapio'
+      ? produtosDaLoja().filter(p => p.foto).map(p => ({ url: p.foto, tipo: 'foto', legenda: p.nome }))
     : (servicos || []).filter(s => s.foto)
         .map(s => ({ url: s.foto, tipo: 'foto', legenda: s.nome }));
 

@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.bdc0d6';
+const VERSAO_APP = 'v9.ff0a0a';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -11806,8 +11806,8 @@ function pintarSalao(){
     <div class="sub-tela" data-sub="aparencia">
     <div class="card">
       <h3 class="secao">Aparência do link do cliente</h3>
-      <p class="secao-sub">Deixe a página que a cliente abre com a cara do seu
-        restaurante, em <b>3 passos</b>. Tudo o que você mudar aparece na prévia — ao
+      <p class="secao-sub">Deixe a página que o cliente abre com a cara ${sl.tipo === 'restaurante'
+        ? escapar(segmentoDoPainel().frase('do')) : 'do seu restaurante'}, em <b>3 passos</b>. Tudo o que você mudar aparece na prévia — ao
         lado, no computador; no celular, no botão <b>Ver prévia</b>. No fim,
         toque em <b>Salvar</b>.</p>
       <!-- O AVISO DE LEITURA, NO TOPO. O de sempre mora em Cores das letras,
@@ -11838,9 +11838,12 @@ function pintarSalao(){
         'Aparece no topo da página do cliente e na lista de restaurantes dele.',
         'Quadrada. JPG, PNG ou WEBP.')}
       <div class="linha-fina"></div>
-      ${cartao('capa', 'Foto do restaurante',
-        'A foto grande da vitrine. A da equipe funciona melhor que a da '
-      + 'fachada vazia — o cliente quer ver quem vai atender.',
+      ${cartao('capa', sl.tipo === 'restaurante' ? 'Foto ' + segmentoDoPainel().frase('do') : 'Foto do restaurante',
+        sl.tipo === 'restaurante'
+        ? 'A foto grande da vitrine: a fachada, o balcão ou o lanche mais '
+        + 'pedido — o que dá vontade de pedir.'
+        : 'A foto grande da vitrine. A da equipe funciona melhor que a da '
+        + 'fachada vazia — o cliente quer ver quem vai atender.',
         'Deitada, tipo 3 por 2. JPG, PNG ou WEBP.')}
       </section>
 
@@ -11852,7 +11855,7 @@ function pintarSalao(){
       <section class="ap-sec ap-passo" id="apModelos">
         <h4 class="ap-sec-t"><span class="ap-passo-n" aria-hidden="true">2</span>Escolha um modelo pronto</h4>
         <p class="ap-sec-sub">Toque num modelo para ver na prévia. Se gostar, use; se não,
-          volte ao que era. Suas fotos, serviços e produtos continuam os seus.</p>
+          volte ao que era. Suas fotos e o seu cardápio continuam os seus.</p>
         <div id="modeloBarra" class="modelo-barra" style="display:none" role="status"></div>
         <!-- AS CORES DA LOGO. "Tem que estar bem facil para qualquer um
              conseguir fazer uma aparencia bonita no link." Um toque le as
@@ -11975,9 +11978,13 @@ function pintarSalao(){
       ${galeriaDoSalao(sl)}
       </div>
 
+      <!-- Preços na capa: é dos SERVIÇOS da capa. O cardápio sempre mostra o
+           preço, então no restaurante a pergunta some. (Sem crase.) -->
+      <div ${sl.tipo === 'restaurante' ? 'style="display:none"' : ''}>
       <div class="rot" style="margin:18px 0 8px">Preços na capa</div>
       <div class="regua" id="reguaPreco" style="justify-content:flex-start"></div>
       <p class="secao-sub" id="explicaPreco" style="margin-top:9px"></p>
+      </div>
 
       </section>
 
@@ -12096,19 +12103,25 @@ function pintarSalao(){
       <summary>Mudar a cor de cada frase, uma por uma</summary>
       <p class="secao-sub" style="margin:6px 0 8px">Sem escolha, cada frase segue
         a cor de cima. Escolha uma cor e só aquela frase muda. Dica: toque na
-        frase, na prévia, para cair direto na cor dela. A letra do Agendar
-        horário e do Ver produtos fica em <b>Botões e atalhos</b>.</p>
+        frase, na prévia, para cair direto na cor dela. A letra do ${sl.tipo === 'restaurante' ? 'Faça seu pedido e do Ver o cardápio' : 'Agendar horário e do Ver produtos'}
+        fica em <b>Botões e atalhos</b>.</p>
       <div class="ap-sub">Cada frase do topo, com a sua cor</div>
       <div id="coresFrases" class="cores-grupo"></div>
-      <div class="ap-sub">Slide e serviços</div>
+      <div class="ap-sub">${sl.tipo === 'restaurante' ? 'Slide' : 'Slide e serviços'}</div>
       <div id="coresFrasesServicos" class="cores-grupo"></div>
-      <div class="ap-sub">Produtos</div>
+      <div class="ap-sub">${sl.tipo === 'restaurante' ? 'Cardápio' : 'Produtos'}</div>
       <div id="coresFrasesProdutos" class="cores-grupo"></div>
-      <div class="ap-sub">Quem atende</div>
-      <div id="coresFrasesEquipe" class="cores-grupo"></div>
+      ${sl.tipo === 'restaurante' ? '' : `<div class="ap-sub">Quem atende</div>
+      <div id="coresFrasesEquipe" class="cores-grupo"></div>`}
       </details>
       <p class="secao-sub" id="avisoLegibilidade" style="margin-top:9px"></p>
       <p class="secao-sub" id="leituraArrumadaSec" style="margin-top:6px"></p>
+      <!-- LEITURA GARANTIDA: ao salvar, a cor que ficar dificil de ler sobre o
+           fundo e ajustada sozinha (com Desfazer). Ligada por padrao. -->
+      <label class="check" style="margin-top:10px"><input type="checkbox" id="apLeituraAuto"
+          ${(sl.cfg || {}).leituraAuto === false ? '' : 'checked'}>
+        <span><b>Garantir leitura:</b> ao salvar, ajustar sozinho a cor de letra que ficar
+          difícil de ler sobre o fundo</span></label>
       
 
       </section>
@@ -12314,7 +12327,7 @@ function pintarSalao(){
 
 <section class="ap-sec" id="apBordas">
         <h4 class="ap-sec-t"><span class="ap-sec-ic" aria-hidden="true">🎨</span>Bordas e molduras</h4>
-        <p class="ap-sec-sub">Linhas, contornos, a moldura da logo e a dos serviços.</p>
+        <p class="ap-sec-sub">Linhas, contornos, a moldura da logo e a dos ${sl.tipo === 'restaurante' ? 'itens do cardápio' : 'serviços'}.</p>
       <div id="coresBordas" class="cores-grupo"></div>
       <div class="rot" style="margin:18px 0 8px">Espessura da moldura do logo</div>
       <div class="regua" id="reguaLogoBorda" style="justify-content:flex-start"></div>
@@ -12328,7 +12341,7 @@ function pintarSalao(){
            (vidro × opaco). Este decide a FORMA do cartão de serviço. São
            perguntas diferentes, e juntá-las num controle só tornaria
            impossível pedir "moldura elegante com fundo de vidro". -->
-      <div class="rot" style="margin:18px 0 8px">Moldura dos serviços</div>
+      <div class="rot" style="margin:18px 0 8px">Moldura dos ${sl.tipo === 'restaurante' ? 'itens do cardápio' : 'serviços'}</div>
       <div class="regua" id="reguaMoldura" style="justify-content:flex-start"></div>
       <p class="secao-sub" id="explicaMoldura" style="margin-top:9px"></p>
       <!-- A COR DE DENTRO DOS CARTOES, junto da moldura deles. "Nao estou
@@ -13012,8 +13025,8 @@ const MOLDURAS = [
                          + 'o que funciona com qualquer foto.'],
   ['elegante', 'Curvada',  'A foto fica quadrada e termina numa curva suave, '
                          + 'com botão redondo no canto. Mostra também a '
-                         + 'descrição do serviço — vale preencher esse campo '
-                         + 'antes de escolher esta.'],
+                         + 'descrição — vale preencher esse campo antes de '
+                         + 'escolher esta.'],
 ];
 
 const LETRAS = [
@@ -13033,6 +13046,22 @@ const SLIDES = [
    'Você escolhe o que aparece e em que ordem, em Identidade visual. '
  + 'Para quem tem material de divulgação e não quer depender do cadastro.'],
 ];
+
+/* No restaurante não há serviço: o slide vem das FOTOS DO CARDÁPIO, das
+   fotos dele mesmo, ou não vem ("servicos" ali não tem o que mostrar, e é o
+   valor de quem nunca escolheu — por isso ele vira "Sem slide"). */
+const SLIDES_RESTAURANTE = [
+  ['cardapio', 'Fotos do cardápio',
+   'O slide monta sozinho com as fotos dos itens do cardápio. Cadastrou o item '
+ + 'com foto, ele entra.'],
+  ['galeria',  'Minhas fotos e vídeos',
+   'Você escolhe o que aparece e em que ordem, logo abaixo. Para quem tem '
+ + 'material de divulgação.'],
+  ['servicos', 'Sem slide', 'A capa abre direto no nome, nos botões e no cardápio.'],
+];
+function slidesDoSalao(){
+  return (acharSalao(salaoAtual) || {}).tipo === 'restaurante' ? SLIDES_RESTAURANTE : SLIDES;
+}
 
 const BRILHOS = [
   [true,  'Ligado'],
@@ -13263,7 +13292,7 @@ function lerAparencia(cfg){
     // da cliente, para a prévia não discordar dela.
     letra: c.letra || ({ barbearia:'marcante', tatuagem:'marcante',
       estetica:'elegante', clinica:'elegante' })[sl.tipo] || 'moderno',
-    slideDe: c.slideDe === 'galeria' ? 'galeria' : 'servicos',
+    slideDe: ['galeria', 'cardapio'].includes(c.slideDe) ? c.slideDe : 'servicos',
     // 50 = centro, que é o que o navegador faz sozinho. 84 = o véu de antes.
     capaFoco: Number.isFinite(Number(c.capaFoco)) ? Number(c.capaFoco) : 50,
     /* Onde a foto de capa encontra o fundo. Ausente vale `curva`, o arco que
@@ -13452,6 +13481,23 @@ const CORES_SOLTAS = [
   ['tituloEquipe',     'Título da equipe',        'O "Quem atende", em cima da equipe.'],
   ['nomeEquipe',       'Nome de quem atende',     'O nome de cada pessoa da equipe.'],
 ];
+/* O restaurante não tem serviço nem "quem atende" no link: essas cores não
+   mudariam nada e saem da tela dele. As outras ganham o nome do cardápio. */
+const CORES_SEM_RESTAURANTE = ['tituloServicos', 'nomeServico', 'descServico', 'precoServico',
+  'duracao', 'verTodosServicos', 'tituloEquipe', 'nomeEquipe', 'fundoServico'];
+const ROTULO_RESTAURANTE = {
+  titulo:           ['Títulos', 'O nome do estabelecimento e o nome de cada item do cardápio.'],
+  card:             ['Cartões', 'O fundo dos cartões do cardápio, que ficam sobre a página — e o de Pagamentos, Horários e Informações, enquanto não tiverem cor de dentro própria.'],
+  subtitulo:        ['Frase de baixo do nome', 'O "Faça seu pedido" embaixo do nome.'],
+  tituloProdutos:   ['Título do cardápio', 'O "Do cardápio", em cima da lista da capa.'],
+  nomeProduto:      ['Nome do item', 'O nome de cada item do cardápio.'],
+  precoProduto:     ['Preço do item', 'O valor de cada item do cardápio.'],
+  verTodosProdutos: ['Ver o cardápio completo', 'O botão embaixo da lista da capa.'],
+  fundoProduto:     ['Cor de dentro dos itens', 'O fundo de cada item do cardápio.'],
+  produtos:         ['Cor do cardápio', 'O carrinho de cada item e o "Ver o cardápio completo".'],
+  letraProdutos:    ['Letra do Ver o cardápio', 'A letra do botão "Ver o cardápio completo".'],
+  letraAgendar:     ['Letra do Faça seu pedido', 'A letra do botão "Faça seu pedido" do Bem-vindo.'],
+};
 /* De quem cada frase herda enquanto não tiver cor própria: a mesma cor que a
    pintava antes de poder ser escolhida sozinha. */
 const FRASE_HERDA_DE = { nomeSalao:'titulo', rua:'texto', lugar:'discreto', subtitulo:'texto',
@@ -13633,9 +13679,14 @@ function pintarAparencia(){
       if(el) acertarLinha(el, item);
     }
   };
+  /* No restaurante: sem as cores de serviço e de equipe (não existem no
+     link dele) e com o nome de cada uma no vocabulário do cardápio. */
+  const rest = (acharSalao(salaoAtual) || {}).tipo === 'restaurante';
   for(const [caixa, chaves] of GRUPOS_DE_COR)
     montarLinhas(document.getElementById(caixa),
-                 chaves.map(k => CORES_SOLTAS.find(x => x[0] === k)));
+                 chaves.filter(k => !rest || !CORES_SEM_RESTAURANTE.includes(k))
+                   .map(k => CORES_SOLTAS.find(x => x[0] === k))
+                   .map(x => rest && ROTULO_RESTAURANTE[x[0]] ? [x[0], ...ROTULO_RESTAURANTE[x[0]]] : x));
   conferirLegibilidade();
 
   /* ── O TIPO DE FUNDO ──────────────────────────────────────────────────
@@ -13801,7 +13852,7 @@ function pintarAparencia(){
   const FORMAS_SLIDE = [
     ['panoramico', 'Panorâmico',
      'Bem deitado (16:8). É o formato de hoje, e o que deixa mais tela para '
-     + 'os serviços aparecerem logo abaixo.'],
+     + 'o resto da página aparecer logo abaixo.'],
     ['paisagem', 'Paisagem',
      'Deitado (16:9), o formato de foto de celular na horizontal. Um pouco '
      + 'mais alto que o panorâmico.'],
@@ -13868,7 +13919,7 @@ function pintarAparencia(){
   ], 'botaoProdutos', 'explicaBotaoProdutos');
   regua('reguaMoldura', MOLDURAS, 'moldura', 'explicaMoldura');
   regua('reguaLetra', LETRAS, 'letra', 'explicaLetra');
-  regua('reguaSlide', SLIDES, 'slideDe', 'explicaSlide');
+  regua('reguaSlide', slidesDoSalao(), 'slideDe', 'explicaSlide');
 
   document.getElementById('reguaBrilho').innerHTML = BRILHOS.map(([v, rot]) =>
     `<button type="button" class="${aparencia.brilho === v ? 'on' : ''}"
@@ -13878,10 +13929,14 @@ function pintarAparencia(){
   pintarPreviaFone();
   pintarModelos();
   ligarHex();
-  // Quem já deu cor a uma frase acha as frases abertas.
+  /* Quem já deu cor a uma frase acha as frases abertas. Só conta a frase
+     que aparece NESTE negócio: a cor de serviço que ficou guardada de antes
+     não aparece na lanchonete, e abria a lista sem nada mudado à vista. */
   const det = document.getElementById('frasesDetalhe');
+  const ehRest = (acharSalao(salaoAtual) || {}).tipo === 'restaurante';
   if(det && !det.open && Object.keys(aparencia.cores || {}).some(k =>
-    k in FRASE_HERDA_DE || k === 'legenda' || k === 'verTodosProdutos')) det.open = true;
+    (k in FRASE_HERDA_DE || k === 'legenda' || k === 'verTodosProdutos')
+    && !(ehRest && CORES_SEM_RESTAURANTE.includes(k)))) det.open = true;
   pintarBarraAp();
 }
 
@@ -14484,7 +14539,7 @@ function conferirLegibilidade(){
   olhar('nomeSalao', 'o nome do estabelecimento', 3,   'topo');
   olhar('rua',       'a rua',                     4.5, 'topo');
   olhar('lugar',     'o bairro e a cidade',       2,   'topo');
-  olhar('subtitulo', 'o "Agende seu horário"',    4.5, 'topo');
+  olhar('subtitulo', 'a frase embaixo do nome',  4.5, 'topo');
   olhar('horario',   'o horário de hoje',         4.5, 'quadro');
   olhar('bemVindo',  'o Bem-vindo',               3,   'quadro');
   olhar('convite',   'a frase do Bem-vindo',      4.5, 'quadro');
@@ -15022,7 +15077,7 @@ function pintarAtalhos(){
     contrasteEntre(corValida(at.cores[k]) ? at.cores[k] : nomeAtalho, at.fundo) < 3);
   document.getElementById('atFundoAjuda').textContent = !comCartao
     ? 'só nos estilos “Com contorno” e “Com sombra”'
-    : !temFun ? 'a mesma dos cartões de serviço, nos três'
+    : !temFun ? 'a mesma dos cartões, nos três'
     : poucoFun ? 'escolhida por você · pouco contraste com o nome, mude a cor dos atalhos abaixo'
     : 'escolhida por você · a mesma nos três';
   const herdarFun = document.getElementById('atFundoHerdar');
@@ -15043,15 +15098,20 @@ function pintarAtalhos(){
    "minhas fotos" sem ver o que muda é escolher no escuro. */
 function previaDoSlide(sl){
   const daGaleria = aparencia.slideDe === 'galeria';
+  const doCardapio = aparencia.slideDe === 'cardapio';
   // O slide "dos serviços" não existe sem serviços no link — nem o aviso dele.
-  if(!daGaleria && !usaServicosNoLink(sl)) return '';
+  if(!daGaleria && !doCardapio && !usaServicosNoLink(sl)) return '';
   const itens = daGaleria
     ? listaGaleria(sl)
+    : doCardapio
+      ? doSalao(bd.produtos || []).filter(p => p.foto && p.ativo !== false && p.vendaOnline !== false)
+          .map(p => ({ url: p.foto, tipo: 'foto', legenda: p.nome }))
     : (bd.servicos || []).filter(s => s.foto && s.ativo !== false)
         .map(s => ({ url: s.foto, tipo: 'foto' }));
   if(!itens.length){
     return `<div class="fone-slide vazio">${daGaleria
       ? 'Nenhuma foto ou vídeo ainda — adicione em Identidade visual.'
+      : doCardapio ? 'Nenhum item do cardápio com foto ainda.'
       : 'Nenhum serviço com foto ainda.'}</div>`;
   }
   /* ⚠ COMO NA PÁGINA: a forma escolhida em "Formato do slide", a foto inteira
@@ -15060,7 +15120,7 @@ function previaDoSlide(sl){
      prévia era outro objeto. */
   const m = itens[0];
   const FORMA = { panoramico:'16 / 8', paisagem:'16 / 9', quadrado:'1 / 1', retrato:'4 / 5' };
-  const legenda = daGaleria ? (m.legenda || '')
+  const legenda = daGaleria || doCardapio ? (m.legenda || '')
     : ((bd.servicos || []).find(s => s.foto === m.url) || {}).nome || '';
   return `<div class="fone-slide" data-cfg="slide"
                style="aspect-ratio:${FORMA[aparencia.slideForma] || '16 / 8'}">
@@ -15628,18 +15688,36 @@ function salvarAparencia(){
   const sl = acharSalao(salaoAtual);
   // Mesmo cuidado da janela da agenda: `cfg` guarda mais coisa com o tempo, e
   // sobrescrever o objeto inteiro apagaria o que outra tela puser lá.
+  /* LEITURA GARANTIDA (ligada por padrão): antes de gravar, a cor de letra
+     que ficou difícil de ler sobre o fundo vai para o tom legível mais
+     perto — o mesmo "Arrumar para mim" de um toque, com o Desfazer. Fora do
+     cfgDaAparencia() de propósito: é preferência do painel, e a página da
+     cliente não tem o que fazer com ela. */
+  const auto = (document.getElementById('apLeituraAuto') || {}).checked !== false;
+  let arrumadas = 0;
+  if(auto){
+    conferirLegibilidade();
+    arrumadas = consertosDeLeitura.length;
+    if(arrumadas) arrumarLeitura();
+  }
   sl.cfg = Object.assign({}, sl.cfg, cfgDaAparencia());
+  sl.cfg.leituraAuto = auto;
   salvar();
   // Sai o "Nada foi salvo ainda" dos modelos: agora foi.
   pintarModelos();
   pintarBarraAp();
   const aviso = document.getElementById('salvouAparencia');
   if(aviso){
-    aviso.textContent = 'Salvo';
-    setTimeout(() => {
+    aviso.textContent = arrumadas
+      ? 'Salvo · arrumei a leitura de ' + arrumadas + (arrumadas === 1 ? ' cor' : ' cores')
+      : 'Salvo';
+    /* Um relógio só: o de um Salvar anterior apagava o aviso deste
+       (dois Salvar em menos de 3 segundos, e o "arrumei" sumia na hora). */
+    clearTimeout(salvarAparencia.relogio);
+    salvarAparencia.relogio = setTimeout(() => {
       const ainda = document.getElementById('salvouAparencia');
       if(ainda) ainda.textContent = '';
-    }, 2600);
+    }, arrumadas ? 6000 : 2600);
   }
 }
 
@@ -17133,9 +17211,9 @@ function galeriaDoSalao(sl){
   return `
     <div class="foto-txt" style="min-width:0">
       <b>Slide da capa · minhas fotos e vídeos</b>
-      <p>Aparece no lugar das fotos dos serviços quando você escolhe
+      <p>Aparecem no slide da capa quando você escolhe
         <b>Minhas fotos e vídeos</b> em Slide da capa, logo acima${daGaleria ? '' :
-        ' — hoje está usando as fotos dos serviços'}.</p>
+        ' — hoje o slide não está usando estas fotos'}.</p>
       <p class="fmt">Fotos em JPG, PNG ou WEBP. Vídeo em MP4, até
         ${Math.round(Imagens.TETO_VIDEO / 1024 / 1024)} MB — uns 10 segundos
         contam a história, e vídeo pesado faz a página da cliente demorar.</p>
@@ -23555,6 +23633,15 @@ async function lancarNovoPedido(){
 }
 
 // A configuração dos pedidos, com os mesmos padrões do `cfg_pedidos()` do banco.
+/* O tipo do estabelecimento (Lanchonete, Pizzaria…), para as frases do
+   painel: "Foto da lanchonete", "a cara da pizzaria". */
+function segmentoDoPainel(){
+  const cod = ((acharSalao(salaoAtual) || {}).cfg || {}).pedidos;
+  return window.Funcionamento
+    ? Funcionamento.segmento(cod && cod.segmento)
+    : { cod: 'restaurante', rotulo: 'Restaurante', frase: k => ({ o:'o restaurante', do:'do restaurante',
+        no:'no restaurante', este:'este restaurante', ao:'ao restaurante' })[k] || 'o restaurante' };
+}
 function cfgPedidosDoSalao(){
   const p = ((acharSalao(salaoAtual) || {}).cfg || {}).pedidos || {};
   return {
