@@ -1746,7 +1746,10 @@ input.ruim, select.ruim{border-color:var(--er-500) !important}
 /* Na capa, a barra do topo se apaga e sobra só o botão de "meus horários":
    quem carrega a identidade ali é o selo grande, logo abaixo. Nos outros
    passos a barra volta inteira, porque aí ela é a única âncora do restaurante. */
-body[data-passo="capa"] .cabeca{ background:transparent; border-bottom:none; padding-bottom:0 }
+/* ⚠ COM !important: o `.cabeca` chapado (lá em cima) tem `!important`, e sem
+   ele aqui a barra ficava BRANCA por cima da foto de fundo — uma faixa vazia
+   no alto da capa de quem usa fundo sem foto de capa. */
+body[data-passo="capa"] .cabeca{ background:transparent !important; border-bottom:none; padding-bottom:0 }
 body[data-passo="capa"] .cabeca .avatar-salao,
 body[data-passo="capa"] .cabeca h1,
 body[data-passo="capa"] .cabeca #subSalao{ display:none }
