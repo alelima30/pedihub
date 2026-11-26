@@ -16937,7 +16937,8 @@ begin
 end
 $conserto$;
 revoke all on function public.consertar_fichas_da_equipe() from public, anon, authenticated;
-select public.consertar_fichas_da_equipe();
+-- Roda uma vez agora, calado: quem cola o arquivo não precisa de uma tabela com "0".
+do $roda$ begin perform public.consertar_fichas_da_equipe(); end $roda$;
 
 -- ── 3. O ANIVERSÁRIO DO PEDIDO ──────────────────────────────────────────────
 /* Chamado pelo link logo depois do fazer_pedido(), com o token que só quem

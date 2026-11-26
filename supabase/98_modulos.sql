@@ -15077,7 +15077,7 @@ begin
 end
 $conserto$;
 revoke all on function public.consertar_fichas_da_equipe() from public, anon, authenticated;
-select public.consertar_fichas_da_equipe();
+do $roda$ begin perform public.consertar_fichas_da_equipe(); end $roda$;
 create or replace function public.aniversario_do_pedido(p_token uuid, p_nascimento date)
 returns boolean language plpgsql security definer set search_path = public as $$
 declare
