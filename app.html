@@ -2264,7 +2264,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.c096bf';
+const VERSAO_APP = 'v9.5ef654';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -16804,7 +16804,10 @@ function sinalDoBanco(){
 function pintarSinal(){
   const bloco = document.getElementById('campoSinal');
   if(!bloco || !window.Funcionamento) return;
-  bloco.style.display = (pagEscolhidas || []).includes('pix') ? '' : 'none';
+  /* Restaurante não marca horário: o sinal "para garantir o horário" é do
+     agendamento e não tem o que fazer aqui ("não tem horário, não é salão"). */
+  const restaurante = (acharSalao(salaoAtual) || {}).tipo === 'restaurante';
+  bloco.style.display = !restaurante && (pagEscolhidas || []).includes('pix') ? '' : 'none';
   const gravado = sinalDoBanco();
   if(sinalTipo === null || !sinalCampos){
     sinalTipo = gravado ? gravado.tipo : '';
