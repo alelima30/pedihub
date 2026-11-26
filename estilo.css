@@ -5957,3 +5957,23 @@ body.tem-fundo .av-capa{ padding:12px; border-radius:var(--r-lg, 16px);
 /* O cartão da promoção sem foto (cardápio em lista): mais largo, para o nome
    caber numa linha ("HOT-DOG" quebrava no hífen). */
 .promo-cartao.promo-sem-foto{ flex:0 0 62%; max-width:260px }
+
+/* ── O ENDEREÇO SOBRE A FOTO ──────────────────────────────────────────────
+   Com a foto forte (pouco véu), a rua e o bairro ficavam direto sobre ela:
+   na Paivas, "Bairro Cidade Nova" em marrom-claro sobre laranja. A sombra
+   curta segura o nome (letra grande), não uma linha de 13px. Uma faixa de
+   vidro atrás do endereço e da frase garante a leitura em qualquer foto, e
+   o bairro deixa de ser o cinza mais apagado. A prévia faz o mesmo. */
+body.fundo-forte .marca-end,
+body.fundo-forte .marca-salao .sub{
+  width:fit-content; max-width:min(34ch, 100%); padding:4px 12px; border-radius:12px;
+  background:color-mix(in srgb, var(--painel) 82%, transparent);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  text-shadow:none;
+}
+body.fundo-forte .marca-end .lugar{ color:var(--cor-lugar, var(--txt2)) }
+.fone.pouco-veu .fone-topo > span,
+.fone.pouco-veu .fone-topo > i{
+  width:fit-content; margin-left:auto; margin-right:auto; padding:1px 8px; border-radius:8px;
+  background:color-mix(in srgb, var(--fone-card, var(--painel)) 82%, transparent);
+}
