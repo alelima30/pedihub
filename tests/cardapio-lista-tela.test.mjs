@@ -252,6 +252,31 @@ await pd.fill('#npBusca', '99');
 await pd.waitForTimeout(200);
 igual('e o garçom acha o item pelo número', await pd.$$eval('#npCardapio .garcom-item', e => e.filter(x => x.style.display !== 'none')
   .map(x => x.querySelector('b').textContent.replace(/\s+/g, ' ').trim())), ['99Hot-dog']);
+await pd.evaluate(() => fecharModal());
+
+/* ══════════════════════════════════════════════════════════════════════════
+   7 — O TIPO DO ESTABELECIMENTO (83)
+   ══════════════════════════════════════════════════════════════════════════ */
+secao('7. "Não é restaurante, é lanchonete": o tipo do estabelecimento');
+await pd.reload();
+await pd.waitForFunction(() => typeof irPara === 'function' && bd && Array.isArray(bd.produtos) && bd.produtos.length >= 16, null, { timeout: 20000 });
+await pd.evaluate(() => { if(typeof pdFechar === 'function') pdFechar(true); irPara('salao'); trocarAbaSalao('dados'); });
+await pd.waitForSelector('#cSegmento');
+igual('Meu negócio → Dados tem o tipo, e de saída é Restaurante', await pd.$eval('#cSegmento', e => e.value), 'restaurante');
+await pd.selectOption('#cSegmento', 'pizzaria');
+await pd.evaluate(() => salvarCadastroSalao());
+await pd.waitForTimeout(1500);
+igual('salvou: a pizzaria vai para o banco', (await um(`select cfg->'pedidos'->>'segmento' s from public.saloes where id = $1`, [salaoId])).s, 'pizzaria');
+verdade('e o resto da configuração dos pedidos continua (a lista)', (await cfgCardapio() || {}).estilo === 'lista');
+const c7 = await (await nav.newContext({ viewport:{ width:412, height:780 }, isMobile:true, hasTouch:true })).newPage();
+c7.on('pageerror', e => erros.push('tipo: ' + e.message));
+await c7.goto(BASE + '/cardapio.html?salao=' + SLUG);
+await c7.waitForSelector('#capaLoja .lista-item', { timeout: 15000 });
+await c7.waitForFunction(() => document.getElementById('subSalao').textContent === 'Pizzaria', null, { timeout: 8000 }).catch(() => {});
+igual('o link diz "Pizzaria" embaixo do nome', await c7.textContent('#subSalao'), 'Pizzaria');
+igual('e as frases do pedido também', await c7.evaluate(() => [Casa('o'), casa('do'), Casa('este')]),
+  ['A pizzaria', 'da pizzaria', 'Esta pizzaria']);
+await c7.close();
 await ctxP.close();
 
 const ctx375 = await nav.newContext({ viewport:{ width:375, height:812 }, isMobile:true, hasTouch:true });

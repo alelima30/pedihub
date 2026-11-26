@@ -2264,7 +2264,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.01c9c2';
+const VERSAO_APP = 'v9.4f0f6e';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -11353,6 +11353,11 @@ function pintarSalao(){
           </select>
           <span class="ajuda">Define o vocabulário do sistema: barbearia diz
             "barbeiro", esmalteria diz "manicure".</span></div>
+        ${sl.tipo === 'restaurante' && window.Funcionamento ? `<div class="campo"><label for="cSegmento">Tipo do estabelecimento</label>
+          <select id="cSegmento">${Funcionamento.SEGMENTOS.map(([k, rot]) =>
+            `<option value="${k}" ${cfgPedidosDoSalao().segmento === k ? 'selected' : ''}>${escapar(rot)}</option>`).join('')}</select>
+          <span class="ajuda">Aparece no seu link, embaixo do nome, e nas frases do pedido
+            ("a lanchonete confirma…").</span></div>` : ''}
       </div>
 
       <div class="dupla">
@@ -17041,6 +17046,10 @@ function salvarCadastroSalao(){
     instagram: instagramLimpo(v('cInsta')) || null,
     tetoOnlinePct:    aparar(v('cTetoPct'),    10, 100, 70),
     tetoOnlineRajada: aparar(v('cTetoRajada'),  1, 100, 10),
+    /* 83: o tipo do estabelecimento mora em `pedidos`, junto do resto que o
+       link lê pelo pedidos_da_casa(). Sem o campo na tela, fica o que estava. */
+    ...(document.getElementById('cSegmento') ? { pedidos: Object.assign({}, (sl.cfg || {}).pedidos || {},
+        { segmento: v('cSegmento') || 'restaurante' }) } : {}),
   });
   if(window.Funcionamento)
     levarHorarioParaEquipe(funcAntes, Funcionamento.normalizar(sl.cfg.funcionamento));
@@ -23534,6 +23543,8 @@ function cfgPedidosDoSalao(){
       // A fileira das categorias presa no alto do link, acompanhando a rolagem. Ligada por padrão.
       fixar: !(p.cardapio && p.cardapio.fixar === false),
     },
+    // 83: o tipo do estabelecimento que a cliente vê (Lanchonete, Pizzaria…).
+    segmento: window.Funcionamento ? Funcionamento.segmento(p.segmento).cod : 'restaurante',
   };
 }
 /* ── O PIX ONLINE (81) ─────────────────────────────────────────────────

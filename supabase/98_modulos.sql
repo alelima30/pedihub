@@ -14918,6 +14918,63 @@ end $$;
 revoke all on function public.pedidos_da_casa(text) from public;
 grant execute on function public.pedidos_da_casa(text) to anon, authenticated;
 
+create or replace function public.cfg_pedidos(p_salao uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'aceitando', coalesce((p->>'aceitando')::boolean, true),
+    'entrega',   coalesce((p->>'entrega')::boolean, true),
+    'retirada',  coalesce((p->>'retirada')::boolean, true),
+    'taxaPadrao', greatest(coalesce(case when p->>'taxaPadrao' ~ '^[0-9]+([.][0-9]+)?$'
+                                         then (p->>'taxaPadrao')::numeric end, 0), 0),
+    'taxas', coalesce((select jsonb_agg(jsonb_build_object(
+                         'bairro', btrim(t->>'bairro'),
+                         'taxa', greatest(coalesce(case when t->>'taxa' ~ '^[0-9]+([.][0-9]+)?$'
+                                                        then (t->>'taxa')::numeric end, 0), 0)))
+                         from jsonb_array_elements(case when jsonb_typeof(p->'taxas') = 'array'
+                                                        then p->'taxas' else '[]'::jsonb end) t
+                        where coalesce(btrim(t->>'bairro'), '') <> ''), '[]'::jsonb),
+    'minimo', greatest(coalesce(case when p->>'minimo' ~ '^[0-9]+([.][0-9]+)?$'
+                                     then (p->>'minimo')::numeric end, 0), 0),
+    'tempo', nullif(left(btrim(coalesce(p->>'tempo', '')), 40), ''),
+    'pagamentos', coalesce((select jsonb_agg(x) from jsonb_array_elements_text(
+                              case when jsonb_typeof(p->'pagamentos') = 'array'
+                                   then p->'pagamentos' else '[]'::jsonb end) x
+                             where x in ('pix','dinheiro','debito','credito','cartao')),
+                           '["pix","dinheiro","debito","credito"]'::jsonb),
+    'pixOnline', coalesce(case when p->>'pixOnline' in ('true','false') then (p->>'pixOnline')::boolean end, false),
+    'cardapio', jsonb_build_object(
+       'estilo',  case when p->'cardapio'->>'estilo' = 'lista' then 'lista' else 'fotos' end,
+       'numerar', coalesce(case when p->'cardapio'->>'numerar' in ('true','false')
+                                then (p->'cardapio'->>'numerar')::boolean end, false),
+       'fixar',   coalesce(case when p->'cardapio'->>'fixar' in ('true','false')
+                                then (p->'cardapio'->>'fixar')::boolean end, true)),
+    'segmento', case when p->>'segmento' in ('restaurante','lanchonete','hamburgueria','pizzaria',
+                        'acaiteria','pastelaria','padaria','cafeteria','doceria','sorveteria',
+                        'marmitaria','espetaria','bar','adega','food_truck')
+                     then p->>'segmento' else 'restaurante' end,
+    'avisarCliente', coalesce((p->>'avisarCliente')::boolean, true),
+    'avisarCasa',    coalesce((p->>'avisarCasa')::boolean, true),
+    'mesas', least(greatest(coalesce(case when p->>'mesas' ~ '^[0-9]{1,3}$' then (p->>'mesas')::int end, 0), 0), 200),
+    'entregadores', coalesce((select jsonb_agg(left(btrim(e), 40)) from jsonb_array_elements_text(
+                       case when jsonb_typeof(p->'entregadores') = 'array' then p->'entregadores' else '[]'::jsonb end) e
+                      where btrim(e) <> ''), '[]'::jsonb),
+    'motoboy', jsonb_build_object(
+       'modo',   case when p->'motoboy'->>'modo' = 'fixo' then 'fixo' else 'taxa' end,
+       'valor',  least(greatest(coalesce(case when p->'motoboy'->>'valor' ~ '^[0-9]{1,4}([.][0-9]+)?$'
+                                              then (p->'motoboy'->>'valor')::numeric end, 0), 0), 1000),
+       'diaria', least(greatest(coalesce(case when p->'motoboy'->>'diaria' ~ '^[0-9]{1,4}([.][0-9]+)?$'
+                                              then (p->'motoboy'->>'diaria')::numeric end, 0), 0), 5000)),
+    'fidelidade', jsonb_build_object(
+       'ligado',   coalesce((p->'fidelidade'->>'ligado')::boolean, false),
+       'pedidos',  least(greatest(coalesce(case when p->'fidelidade'->>'pedidos' ~ '^[0-9]{1,2}$'
+                                                then (p->'fidelidade'->>'pedidos')::int end, 10), 2), 50),
+       'desconto', least(greatest(coalesce(case when p->'fidelidade'->>'desconto' ~ '^[0-9]{1,2}([.][0-9]+)?$'
+                                                then (p->'fidelidade'->>'desconto')::numeric end, 10), 1), 50)))
+  from (select case when jsonb_typeof(s.cfg->'pedidos') = 'object'
+                    then s.cfg->'pedidos' else '{}'::jsonb end as p
+          from public.saloes s where s.id = p_salao) x
+$$;
+
 alter table public.agendamentos
   add column if not exists gerenciar_token uuid not null default gen_random_uuid();
 alter table public.lista_espera

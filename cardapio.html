@@ -971,9 +971,21 @@ const VOCABULARIO = {
                acao:'Fazer reserva',    oferecemos:'Reservas' },
 };
 function voc(chave){
+  // 83: no restaurante, a "casa" é o tipo que o dono escolheu (Lanchonete…).
+  if(chave === 'casa' && salao && salao.tipo === 'restaurante') return segmentoDaCasa().rotulo;
   const v = VOCABULARIO[(salao && salao.tipo) || 'salao'] || VOCABULARIO.salao;
   return v[chave] || VOCABULARIO.salao[chave];
 }
+/* O tipo do estabelecimento (83): "a lanchonete", "o restaurante"… Chega pelo
+   pedidos_da_casa(); antes dele (ou sem o módulo 83), é restaurante. */
+function segmentoDaCasa(){
+  const cod = typeof pedidosCasa !== 'undefined' && pedidosCasa && pedidosCasa.segmento;
+  return window.Funcionamento ? Funcionamento.segmento(cod || 'restaurante')
+    : { rotulo: 'Restaurante', frase: k => ({ do: 'do restaurante', no: 'no restaurante', este: 'este restaurante', ao: 'ao restaurante' })[k] || 'o restaurante',
+        Frase: k => ({ do: 'Do restaurante', no: 'No restaurante', este: 'Este restaurante', ao: 'Ao restaurante' })[k] || 'O restaurante' };
+}
+const casa = k => segmentoDaCasa().frase(k);
+const Casa = k => segmentoDaCasa().Frase(k);
 
 const NA_NUVEM = !!(window.Dados && window.Dados.ligado);
 
@@ -5518,7 +5530,8 @@ function conviteComoFunciona(){
   return `
     <div class="ficha-convite">
       <b>Primeira vez aqui?</b>
-      <p>${svs.length ? 'Conheça nossos serviços e tire suas dúvidas antes de agendar.'
+      <p>${modoPedidos() ? 'Tire suas dúvidas antes de pedir.'
+          : svs.length ? 'Conheça nossos serviços e tire suas dúvidas antes de agendar.'
                       : 'Tire suas dúvidas antes de agendar.'}</p>
       <div class="ficha-chips">${chips}</div>
       <button type="button" class="ficha-ver" onclick="abrirFolha('duvidas', this)">
@@ -5551,7 +5564,7 @@ function folhaDuvidas(aberta){
     return !vistos.has(k) && vistos.add(k);
   });
   const partes = [cabecaDaFolha('duvida', 'Dúvidas',
-                                'Tudo o que você precisa saber antes de agendar')];
+                                'Tudo o que você precisa saber antes de ' + (modoPedidos() ? 'pedir' : 'agendar'))];
   if(duv.length) partes.push(`<div class="duv-lista">${duv.map((d, i) => `
       <details class="duv-moldura"${i === abrir ? ' open' : ''}>
         <summary><span class="duv-titulo">${escapar(d.p)}</span>
@@ -6037,7 +6050,7 @@ function desenharProduto(){
       ${p.marca ? `<div class="prod-marca">${escapar(p.marca)}</div>` : ''}
       <div class="prod-preco">${precoDoProduto(p)}</div>
       ${p.descricao ? `<p class="prod-desc">${escapar(p.descricao)}</p>`
-                    : '<p class="prod-desc prod-sem">O restaurante ainda não escreveu sobre este produto.</p>'}
+                    : `<p class="prod-desc prod-sem">${Casa('o')} ainda não escreveu sobre este produto.</p>`}
       <div class="prod-qtd">${botaoDoProduto(p, qtdDoProduto(p.id))}</div>
     </div>`;
   if(window.aplicarIcones) aplicarIcones(alvo);
@@ -6095,7 +6108,7 @@ function desenharLoja(){
     alvo.innerHTML = `<div class="recado">${busca
       ? (filtroLoja ? 'Nenhum produto com esse nome nesta categoria.' : 'Nenhum produto com esse nome.')
       : modoPedidos() ? 'O cardápio ainda está sendo montado.'
-      : 'Este restaurante ainda não tem produtos à venda.'}</div>`;
+      : Casa('este') + ' ainda não tem produtos à venda.'}</div>`;
     return;
   }
 
@@ -6640,6 +6653,8 @@ async function carregarPedidosDaCasa(){
       }
     }catch(e){ /* sem rede: o aviso só não aparece */ }
   }
+  const sub = document.getElementById('subSalao');
+  if(sub && salao) sub.textContent = voc('casa');
   if(['capa', 'loja', 'produto', 'pedido'].includes(tela)) desenhar();
 }
 
@@ -6824,7 +6839,7 @@ function desenharPedido(){
     <div class="cat">Pagamento</div>
     <div class="pd-ops">${pags.map(v => opcao('pagamento', v, PAGAMENTOS_PEDIDO[v] || v)).join('')}</div>
     ${f.pagamento === 'dinheiro' ? campo('pdTroco', 'Troco para quanto?', 'troco', 'inputmode="decimal" placeholder="Deixe em branco se não precisar"') : ''}
-    ${f.pagamento === 'pix' ? '<p class="pista">O restaurante passa a chave Pix quando confirmar.</p>' : ''}
+    ${f.pagamento === 'pix' ? `<p class="pista">${Casa('o')} passa a chave Pix quando confirmar.</p>` : ''}
     ${f.pagamento === 'pix_online' ? '<p class="pista">Na próxima tela aparece o Pix para pagar. Pagou, o pedido vai direto para a cozinha.</p>' : ''}
 
     <div class="campo" style="margin-top:14px">
@@ -7036,7 +7051,7 @@ function desenharAcompanhar(){
           <span>${e === 'entregue' && d.entrega === 'retirada' ? 'Retirado'
                 : e === 'entregue' && d.entrega === 'mesa' ? 'Servido'
                 : e === 'pronto' && d.entrega === 'mesa' ? 'Pronto, já vai para a mesa' : ETAPAS_PEDIDO[e]}${
-            i === aqui && e === 'recebido' ? '<small>Esperando o restaurante confirmar.</small>' : ''}${
+            i === aqui && e === 'recebido' ? `<small>Esperando ${casa('o')} confirmar.</small>` : ''}${
             i === aqui && e === 'em_preparo' && d.tempo ? '<small>Previsão: ' + escapar(d.tempo) + '.</small>' : ''}</span>
         </li>`).join('')}</ol>`}
     <div class="pd-bloco">
@@ -7057,14 +7072,14 @@ function desenharAcompanhar(){
     ${d.fidelidade ? `<div class="recado fid-cartao" style="margin:12px 0">${d.fidelidade.temDesconto
         ? `🎉 <b>Você ganhou ${Number(d.fidelidade.desconto)}% de desconto</b> no próximo pedido (sai sozinho).`
         : cartaoFidelidade(d)}</div>` : ''}
-    ${zapUrl ? `<a class="link" href="${zapUrl}" target="_blank" rel="noopener">Falar com o restaurante no WhatsApp</a>` : ''}
+    ${zapUrl ? `<a class="link" href="${zapUrl}" target="_blank" rel="noopener">Falar com ${casa('o')} no WhatsApp</a>` : ''}
     ${d.status === 'recebido' ? `<p style="margin-top:14px">
         <button class="link" style="color:var(--erro)" onclick="cancelarPedidoDaCliente()">Cancelar este pedido</button></p>` : ''}`;
 }
 
 /* ── A AVALIAÇÃO DO PEDIDO (80) ──────────────────────────────────────────
    Depois de entregue: de 1 a 5 estrelas e um comentário, se quiser. Uma por
-   pedido; dá para trocar em até 15 dias. Tocar na estrela só pinta (não
+   pedido, e a tela não oferece trocar depois de enviada. Tocar na estrela só pinta (não
    redesenha a tela: o comentário que ela está escrevendo não some). */
 let avNota = 0, avTexto = '', avEditando = false, avEnviando = false, avErro = '';
 function blocoDeAvaliar(){
@@ -7073,8 +7088,9 @@ function blocoDeAvaliar(){
   if(a.nota && !avEditando){
     return `<div class="av-caixa av-feita"><b>Obrigado pela avaliação!</b>
       <span class="av-est" aria-label="${a.nota} de 5 estrelas">${'★'.repeat(a.nota)}${'☆'.repeat(5 - a.nota)}</span>
-      ${a.comentario ? `<p>“${escapar(a.comentario)}”</p>` : ''}
-      ${a.pode ? '<button class="link" onclick="editarAvaliacao()">Mudar minha avaliação</button>' : ''}</div>`;
+      ${a.comentario ? `<p>“${escapar(a.comentario)}”</p>` : ''}</div>`;
+    /* Sem "Mudar minha avaliação": deu a nota, ficou. O pedido do dono foi
+       tirar o link (o banco ainda aceitaria a troca em 15 dias). */
   }
   if(!a.pode) return '';
   return `<div class="av-caixa" id="avCaixa">
@@ -7121,7 +7137,7 @@ async function cancelarPedidoDaCliente(){
   if(!pedidoAcomp || !confirm('Cancelar este pedido?')) return;
   let ok = false;
   try{ ok = await Dados.chamar('cancelar_meu_pedido', { p_token: pedidoAcomp.token }); }catch(e){}
-  if(!ok) alert('Não deu para cancelar: o restaurante já confirmou o pedido. Fale com ele pelo WhatsApp.');
+  if(!ok) alert('Não deu para cancelar: ' + casa('o') + ' já confirmou o pedido. Fale pelo WhatsApp.');
   await lerPedidoAcompanhado();
 }
 

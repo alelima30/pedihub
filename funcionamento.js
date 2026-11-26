@@ -274,7 +274,36 @@ function sinalDoPix(cru){
   return Object.assign(base, { prazoMin }, titular ? { titular } : {}, regra ? { regra } : {});
 }
 
+/* ── O TIPO DO ESTABELECIMENTO (83) ──────────────────────────────────────
+   "O Paivas não é restaurante, é lanchonete." O sistema continua sendo um só
+   (tipo 'restaurante' no banco); isto é só o NOME que a cliente vê embaixo do
+   nome da casa e nas frases do pedido ("a lanchonete passa a chave Pix…").
+   Por isso cada um vem com o artigo: a frase muda de "o" para "a".
+   A lista é a mesma do banco (83_segmento.sql): valor de fora vira restaurante. */
+const SEGMENTOS = [
+  ['restaurante',  'Restaurante',  'o'], ['lanchonete',  'Lanchonete',  'a'],
+  ['hamburgueria', 'Hamburgueria', 'a'], ['pizzaria',    'Pizzaria',    'a'],
+  ['acaiteria',    'Açaiteria',    'a'], ['pastelaria',  'Pastelaria',  'a'],
+  ['padaria',      'Padaria',      'a'], ['cafeteria',   'Cafeteria',   'a'],
+  ['doceria',      'Doceria',      'a'], ['sorveteria',  'Sorveteria',  'a'],
+  ['marmitaria',   'Marmitaria',   'a'], ['espetaria',   'Espetaria',   'a'],
+  ['bar',          'Bar',          'o'], ['adega',       'Adega',       'a'],
+  ['food_truck',   'Food truck',   'o'],
+];
+/* "a lanchonete", "da lanchonete", "na lanchonete", "esta lanchonete" —
+   e com maiúscula quando abre a frase. */
+function segmento(cod){
+  const s = SEGMENTOS.find(x => x[0] === cod) || SEGMENTOS[0];
+  const [, rotulo, art] = s, nome = rotulo.toLowerCase().replace('food truck', 'food truck');
+  const f = art === 'a';
+  const frases = { o: (f ? 'a ' : 'o ') + nome, do: (f ? 'da ' : 'do ') + nome,
+                   no: (f ? 'na ' : 'no ') + nome, este: (f ? 'esta ' : 'este ') + nome,
+                   ao: (f ? 'à ' : 'ao ') + nome };
+  return { cod: s[0], rotulo, f, frase: k => frases[k] || frases.o,
+           Frase: k => { const t = frases[k] || frases.o; return t.charAt(0).toUpperCase() + t.slice(1); } };
+}
+
 global.Funcionamento = { ORDEM, NOMES, NA_FRASE, PAGAMENTOS, minutos, hhmm,
-  normalizar, validar, agora, estado, periodosDoDia, pagamentos, PRAZOS_SINAL };
+  normalizar, validar, agora, estado, periodosDoDia, pagamentos, PRAZOS_SINAL, SEGMENTOS, segmento };
 
 })(typeof window !== 'undefined' ? window : globalThis);
