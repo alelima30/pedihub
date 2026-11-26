@@ -5960,20 +5960,26 @@ body.tem-fundo .av-capa{ padding:12px; border-radius:var(--r-lg, 16px);
 
 /* ── O ENDEREÇO SOBRE A FOTO ──────────────────────────────────────────────
    Com a foto forte (pouco véu), a rua e o bairro ficavam direto sobre ela:
-   na Paivas, "Bairro Cidade Nova" em marrom-claro sobre laranja. A sombra
-   curta segura o nome (letra grande), não uma linha de 13px. Uma faixa de
-   vidro atrás do endereço e da frase garante a leitura em qualquer foto, e
-   o bairro deixa de ser o cinza mais apagado. A prévia faz o mesmo. */
+   na Paivas, "Bairro Cidade Nova" em marrom-claro sobre laranja. A faixa de
+   vidro atrás resolvia a leitura mas "não ficou legal" — virou uma caixa no
+   meio da capa. Agora é um halo na cor dos cartões em volta de cada letra:
+   sem caixa, e a letra se descola de qualquer foto (letra escura ganha halo
+   claro; no tema escuro, o contrário). A prévia faz o mesmo. */
 body.fundo-forte .marca-end,
 body.fundo-forte .marca-salao .sub{
-  width:fit-content; max-width:min(34ch, 100%); padding:4px 12px; border-radius:12px;
-  background:color-mix(in srgb, var(--painel) 82%, transparent);
-  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-  text-shadow:none;
+  text-shadow:0 0 2px var(--painel), 0 0 6px var(--painel),
+              0 0 14px color-mix(in srgb, var(--painel) 75%, transparent);
 }
-body.fundo-forte .marca-end .lugar{ color:var(--cor-lugar, var(--txt2)) }
+body.fundo-forte .marca-end .rua{ font-weight:600 }
+body.fundo-forte .marca-end .lugar{ color:var(--cor-lugar, var(--txt2)); font-weight:600 }
 .fone.pouco-veu .fone-topo > span,
 .fone.pouco-veu .fone-topo > i{
-  width:fit-content; margin-left:auto; margin-right:auto; padding:1px 8px; border-radius:8px;
-  background:color-mix(in srgb, var(--fone-card, var(--painel)) 82%, transparent);
+  text-shadow:0 0 2px var(--fone-card, var(--painel)), 0 0 5px var(--fone-card, var(--painel));
+}
+/* "Meus pedidos" / "Seu pedido #12" na capa: o fundo era um tom suave e
+   transparente da cor da marca, e sobre a foto a frase sumia. */
+body.tem-fundo .pd-aviso{
+  background:color-mix(in srgb, var(--painel) 95%, transparent);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 8px 24px -14px rgba(0,0,0,.45);
 }
