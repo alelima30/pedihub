@@ -14975,6 +14975,186 @@ returns jsonb language sql stable security definer set search_path = public as $
           from public.saloes s where s.id = p_salao) x
 $$;
 
+create or replace function public.ficha_do_cliente(
+  p_salao uuid, p_nome text, p_tel text
+) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_perfil  uuid := case when public.e_equipe(p_salao) then null else auth.uid() end;
+  v_cliente uuid;
+begin
+  p_tel := nullif(public.so_digitos(p_tel), '');
+  if length(p_tel) >= 12 and left(p_tel, 2) = '55' then p_tel := substr(p_tel, 3); end if;
+  if v_perfil is not null then
+    select c.id into v_cliente from public.clientes c
+     where c.salao_id = p_salao and c.perfil_id = v_perfil;
+  end if;
+  if v_cliente is null and p_tel is not null then
+    select c.id into v_cliente from public.clientes c
+     where c.salao_id = p_salao and c.telefone = p_tel;
+    if v_cliente is null then
+      select c.id into v_cliente from public.clientes c
+       where c.salao_id = p_salao and c.telefone = '55' || p_tel
+       limit 1;
+    end if;
+  end if;
+  if v_cliente is null then
+    insert into public.clientes (salao_id, perfil_id, nome, telefone)
+         values (p_salao, v_perfil, p_nome, p_tel)
+      returning clientes.id into v_cliente;
+    return v_cliente;
+  end if;
+  update public.clientes c
+     set perfil_id = case
+           when c.perfil_id is not null then c.perfil_id
+           when v_perfil is null then null
+           when public.mesmo_primeiro_nome(c.nome, p_nome) then v_perfil
+           else null end,
+         telefone  = case
+           when p_tel is null or p_tel = c.telefone then c.telefone
+           when exists (select 1 from public.clientes o
+                         where o.salao_id = p_salao
+                           and o.telefone = p_tel
+                           and o.id <> c.id) then c.telefone
+           else p_tel end
+   where c.id = v_cliente;
+  return v_cliente;
+end $$;
+revoke all on function public.ficha_do_cliente(uuid, text, text) from public;
+create or replace function public.consertar_fichas_da_equipe()
+returns int language plpgsql security definer set search_path = public as $conserto$
+declare
+  n       int := 0;
+  f       record;
+  p       record;
+  v_certo text;
+  v_outra uuid;
+begin
+  for f in
+    select c.id, c.salao_id, c.nome, c.telefone from public.clientes c
+     where c.perfil_id is not null
+       and exists (select 1 from public.vinculos v
+                    where v.salao_id = c.salao_id and v.perfil_id = c.perfil_id
+                      and v.papel in ('dono','admin','recepcao','profissional'))
+       and exists (select 1 from public.pedidos q where q.cliente_id = c.id)
+  loop
+    select q.telefone into v_certo from public.pedidos q
+     where q.cliente_id = f.id and coalesce(q.telefone, '') <> ''
+       and public.mesmo_primeiro_nome(q.nome, f.nome)
+     order by q.criado_em limit 1;
+    if v_certo is not null and v_certo is distinct from f.telefone
+       and not exists (select 1 from public.clientes o
+                        where o.salao_id = f.salao_id and o.telefone = v_certo and o.id <> f.id) then
+      update public.clientes set telefone = v_certo where id = f.id;
+      f.telefone := v_certo;
+    end if;
+    update public.clientes set perfil_id = null where id = f.id;
+    n := n + 1;
+    for p in
+      select q.id, q.nome, q.telefone, q.comanda_id from public.pedidos q
+       where q.cliente_id = f.id and coalesce(q.telefone, '') <> ''
+         and q.telefone is distinct from f.telefone
+       order by q.criado_em
+    loop
+      v_outra := null;
+      select o.id into v_outra from public.clientes o
+       where o.salao_id = f.salao_id and o.id <> f.id
+         and (o.telefone = p.telefone or o.telefone = '55' || p.telefone)
+       limit 1;
+      if v_outra is null then
+        insert into public.clientes (salao_id, nome, telefone)
+             values (f.salao_id, coalesce(nullif(btrim(p.nome), ''), 'Cliente'), p.telefone)
+          returning id into v_outra;
+      end if;
+      update public.pedidos set cliente_id = v_outra where id = p.id;
+      if p.comanda_id is not null then
+        update public.comandas set cliente_id = v_outra
+         where id = p.comanda_id and cliente_id = f.id;
+      end if;
+    end loop;
+  end loop;
+  return n;
+end
+$conserto$;
+revoke all on function public.consertar_fichas_da_equipe() from public, anon, authenticated;
+select public.consertar_fichas_da_equipe();
+create or replace function public.aniversario_do_pedido(p_token uuid, p_nascimento date)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare
+  v_cli uuid;
+begin
+  if p_token is null or p_nascimento is null then return false; end if;
+  if p_nascimento > current_date or p_nascimento < date '1900-01-01' then
+    raise exception 'Confira a data do aniversário.' using errcode = 'check_violation';
+  end if;
+  select q.cliente_id into v_cli from public.pedidos q
+   where q.token = p_token and q.criado_em > now() - interval '1 day';
+  if v_cli is null then return false; end if;
+  update public.clientes set nascimento = p_nascimento
+   where id = v_cli and nascimento is null;
+  return found;
+end $$;
+revoke all on function public.aniversario_do_pedido(uuid, date) from public;
+grant execute on function public.aniversario_do_pedido(uuid, date) to anon, authenticated;
+create or replace function public.cfg_pedidos(p_salao uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'aceitando', coalesce((p->>'aceitando')::boolean, true),
+    'entrega',   coalesce((p->>'entrega')::boolean, true),
+    'retirada',  coalesce((p->>'retirada')::boolean, true),
+    'taxaPadrao', greatest(coalesce(case when p->>'taxaPadrao' ~ '^[0-9]+([.][0-9]+)?$'
+                                         then (p->>'taxaPadrao')::numeric end, 0), 0),
+    'taxas', coalesce((select jsonb_agg(jsonb_build_object(
+                         'bairro', btrim(t->>'bairro'),
+                         'taxa', greatest(coalesce(case when t->>'taxa' ~ '^[0-9]+([.][0-9]+)?$'
+                                                        then (t->>'taxa')::numeric end, 0), 0)))
+                         from jsonb_array_elements(case when jsonb_typeof(p->'taxas') = 'array'
+                                                        then p->'taxas' else '[]'::jsonb end) t
+                        where coalesce(btrim(t->>'bairro'), '') <> ''), '[]'::jsonb),
+    'minimo', greatest(coalesce(case when p->>'minimo' ~ '^[0-9]+([.][0-9]+)?$'
+                                     then (p->>'minimo')::numeric end, 0), 0),
+    'tempo', nullif(left(btrim(coalesce(p->>'tempo', '')), 40), ''),
+    'pagamentos', coalesce((select jsonb_agg(x) from jsonb_array_elements_text(
+                              case when jsonb_typeof(p->'pagamentos') = 'array'
+                                   then p->'pagamentos' else '[]'::jsonb end) x
+                             where x in ('pix','dinheiro','debito','credito','cartao')),
+                           '["pix","dinheiro","debito","credito"]'::jsonb),
+    'pixOnline', coalesce(case when p->>'pixOnline' in ('true','false') then (p->>'pixOnline')::boolean end, false),
+    'cardapio', jsonb_build_object(
+       'estilo',  case when p->'cardapio'->>'estilo' = 'lista' then 'lista' else 'fotos' end,
+       'numerar', coalesce(case when p->'cardapio'->>'numerar' in ('true','false')
+                                then (p->'cardapio'->>'numerar')::boolean end, false),
+       'fixar',   coalesce(case when p->'cardapio'->>'fixar' in ('true','false')
+                                then (p->'cardapio'->>'fixar')::boolean end, true)),
+    'segmento', case when p->>'segmento' in ('restaurante','lanchonete','hamburgueria','pizzaria',
+                        'acaiteria','pastelaria','padaria','cafeteria','doceria','sorveteria',
+                        'marmitaria','espetaria','bar','adega','food_truck')
+                     then p->>'segmento' else 'restaurante' end,
+    'aniversario', coalesce(case when p->>'aniversario' in ('true','false')
+                                 then (p->>'aniversario')::boolean end, true),
+    'avisarCliente', coalesce((p->>'avisarCliente')::boolean, true),
+    'avisarCasa',    coalesce((p->>'avisarCasa')::boolean, true),
+    'mesas', least(greatest(coalesce(case when p->>'mesas' ~ '^[0-9]{1,3}$' then (p->>'mesas')::int end, 0), 0), 200),
+    'entregadores', coalesce((select jsonb_agg(left(btrim(e), 40)) from jsonb_array_elements_text(
+                       case when jsonb_typeof(p->'entregadores') = 'array' then p->'entregadores' else '[]'::jsonb end) e
+                      where btrim(e) <> ''), '[]'::jsonb),
+    'motoboy', jsonb_build_object(
+       'modo',   case when p->'motoboy'->>'modo' = 'fixo' then 'fixo' else 'taxa' end,
+       'valor',  least(greatest(coalesce(case when p->'motoboy'->>'valor' ~ '^[0-9]{1,4}([.][0-9]+)?$'
+                                              then (p->'motoboy'->>'valor')::numeric end, 0), 0), 1000),
+       'diaria', least(greatest(coalesce(case when p->'motoboy'->>'diaria' ~ '^[0-9]{1,4}([.][0-9]+)?$'
+                                              then (p->'motoboy'->>'diaria')::numeric end, 0), 0), 5000)),
+    'fidelidade', jsonb_build_object(
+       'ligado',   coalesce((p->'fidelidade'->>'ligado')::boolean, false),
+       'pedidos',  least(greatest(coalesce(case when p->'fidelidade'->>'pedidos' ~ '^[0-9]{1,2}$'
+                                                then (p->'fidelidade'->>'pedidos')::int end, 10), 2), 50),
+       'desconto', least(greatest(coalesce(case when p->'fidelidade'->>'desconto' ~ '^[0-9]{1,2}([.][0-9]+)?$'
+                                                then (p->'fidelidade'->>'desconto')::numeric end, 10), 1), 50)))
+  from (select case when jsonb_typeof(s.cfg->'pedidos') = 'object'
+                    then s.cfg->'pedidos' else '{}'::jsonb end as p
+          from public.saloes s where s.id = p_salao) x
+$$;
+
 alter table public.agendamentos
   add column if not exists gerenciar_token uuid not null default gen_random_uuid();
 alter table public.lista_espera

@@ -6862,7 +6862,7 @@ function desenharPedido(){
           <p class="pista">Entregamos nestes bairros.</p></div>`
         : campo('pdBairro', 'Bairro <span class="obrig">*</span>', 'bairro')}
       ${campo('pdReferencia', 'Ponto de referência', 'referencia', 'placeholder="Portão azul, perto da praça"')}`
-    : f.entrega === 'retirada' ? `<p class="pista">Você retira no ${escapar(salao.nome)}${
+    : f.entrega === 'retirada' ? `<p class="pista">Você retira em ${escapar(salao.nome)}${
         Endereco.linha(salao.endereco) ? ' — ' + escapar(Endereco.linha(salao.endereco)) : ''}.</p>` : ''}
 
     <div class="cat">Seus dados</div>
@@ -6873,6 +6873,12 @@ function desenharPedido(){
              value="${escapar(f.tel || '')}" oninput="mascaraTelefone(this); anotarPedido('tel', this.value)">
       <p class="pista">É por aqui que chega a confirmação do pedido.</p>
     </div>
+    ${pedeAniversarioNoPedido() ? `<div class="campo" id="campoPdNasc">
+      <label for="pdNasc">Aniversário <small>(opcional)</small></label>
+      <input id="pdNasc" type="date" autocomplete="bday" value="${escapar(f.nasc || '')}"
+             oninput="anotarPedido('nasc', this.value)" onchange="anotarPedido('nasc', this.value)">
+      <p class="pista">Se quiser, ${casa('o')} fica sabendo e pode lembrar de você no seu dia.</p>
+    </div>` : ''}
 
     <div class="cat">Pagamento</div>
     <div class="pd-ops">${pags.map(v => opcao('pagamento', v, PAGAMENTOS_PEDIDO[v] || v)).join('')}</div>
@@ -6891,6 +6897,22 @@ function desenharPedido(){
     ${c.fidelidade && c.fidelidade.ligado ? `<p class="pista">⭐ Fidelidade: a cada ${Number(c.fidelidade.pedidos)} pedidos
       entregues, o próximo sai com ${Number(c.fidelidade.desconto)}% de desconto — sozinho, pelo seu WhatsApp.</p>` : ''}
     ${pedidoErro ? `<div class="recado erro" role="alert">${escapar(pedidoErro)}</div>` : ''}`;
+  const pn = document.getElementById('pdNasc');
+  if(pn && window.Documento) Documento.dataDigitavel(pn);
+}
+
+/* O ANIVERSÁRIO NO PEDIDO (84). Opcional para o cliente, e o dono escolhe se
+   pergunta (Entrega e pagamento). Não aparece na mesa (o telefone é opcional
+   lá, e sem ele não há ficha) nem para quem entrou com a conta e já deu a
+   data. Vai para a ficha só se ela ainda não tiver uma. */
+function pedeAniversarioNoPedido(){
+  const c = pedidosCasa || {};
+  if(c.aniversario === false || mesaDoLink()) return false;
+  return !(sessao && sessao.nascimento);
+}
+function nascDoPedido(){
+  const f = formDoPedido();
+  return pedeAniversarioNoPedido() ? String(f.nasc || '').trim() : '';
 }
 
 /* A conferência daqui é só para poupar uma ida e volta: quem recusa de
@@ -6904,6 +6926,12 @@ function faltaNoPedido(){
   const d = (f.tel || '').replace(/\D/g, '');
   if((f.entrega !== 'mesa' || d) && (d.length < 10 || d.length > 11)) return 'Confira o WhatsApp: precisa do DDD.';
   if(f.entrega === 'mesa' && !f.pagamento) return 'Escolha como vai pagar.';
+  // O aniversário é opcional; escrito pela metade, ou impossível, avisa.
+  const pn = document.getElementById('pdNasc');
+  if(pn && !pn.value && window.Documento && Documento.dataIncompleta(pn))
+    return 'Confira a data do aniversário: dia, mês e ano, como 04/10/1990. Ou deixe em branco.';
+  const nasc = nascDoPedido();
+  if(nasc && (nasc > hoje() || nasc < '1900-01-01')) return 'Confira o ano do aniversário. Ou deixe em branco.';
   if(!f.pagamento) return 'Escolha como vai pagar.';
   /* O mínimo também, com a mesma conta do aviso da conta logo acima: sem
      isto o botão ia ao banco só para voltar com a recusa — que o banco
@@ -6939,8 +6967,17 @@ async function confirmarPedido(){
     return;
   }
   pedidoEnviando = false;
+  /* O aniversário vai numa chamada à parte, com o token do pedido: é
+     opcional, e não pode derrubar o pedido que já entrou. Banco sem o 84
+     ainda: fica sem, calado. */
+  const nasc = nascDoPedido();
+  if(nasc && r && r.token){
+    Dados.chamar('aniversario_do_pedido', { p_token: r.token, p_nascimento: nasc })
+      .catch(e => console.info('[PediHub] aniversário do pedido:', e && e.message));
+  }
   try{ localStorage.setItem('pedihub.pedido.eu', JSON.stringify({ nome: f.nome.trim(), tel: f.tel,
-    rua: f.rua, numero: f.numero, complemento: f.complemento, bairro: f.bairro, referencia: f.referencia })); }catch(e){}
+    rua: f.rua, numero: f.numero, complemento: f.complemento, bairro: f.bairro, referencia: f.referencia,
+    nasc: nasc || f.nasc || '' })); }catch(e){}
   guardarPedido(r.token, r.numero);
   carrinho = {}; gravarCarrinho();
   pedidoForm = null;

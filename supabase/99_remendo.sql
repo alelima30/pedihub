@@ -505,7 +505,7 @@ create or replace function public.ficha_do_cliente(
 ) returns uuid
 language plpgsql security definer set search_path = public as $$
 declare
-  v_perfil  uuid := auth.uid();
+  v_perfil  uuid := case when public.e_equipe(p_salao) then null else auth.uid() end;
   v_cliente uuid;
 begin
   p_tel := nullif(public.so_digitos(p_tel), '');
@@ -1997,6 +1997,12 @@ alter table public.servicos add column if not exists procedimento text;
 alter table public.servicos add column if not exists ficha jsonb;
 
 alter table public.produtos add column if not exists tempo_preparo smallint;
+
+alter table public.produtos add column if not exists preco_promo numeric(10,2);
+
+alter table public.produtos add column if not exists promo_ate date;
+
+alter table public.produtos add column if not exists numero smallint;
 
 create or replace function public.vitrine(p_slug text)
 returns jsonb

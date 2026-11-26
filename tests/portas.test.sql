@@ -83,6 +83,7 @@ insert into porta_aberta values
   ('entregas_do_entregador',  'o link do entregador: as entregas com ELE, pelo token secreto (75)'),
   ('entregador_entregou',     'o entregador marca "Entregue" pelo token — só pedido com ele, a caminho (75)'),
   ('avaliar_pedido',          'a cliente avalia o PRÓPRIO pedido, pelo token, só depois de entregue (80)'),
+  ('aniversario_do_pedido',   'o aniversário opcional do PRÓPRIO pedido, pelo token, no dia; só preenche ficha sem data (84)'),
   ('avaliacao_do_pedido',     'a nota que ela já deu, pelo token do pedido (80)'),
   ('avaliacoes_da_casa',      'a média e os comentários bons — o que a página mostra (80)'),
   ('cupom_do_pedido_previa',  'a prévia do cupom no link: sem telefone e sem o id do cupom (68)'),

@@ -4,12 +4,18 @@
      bash tests/bancada/subir.sh          (deixe rodando noutro terminal)
      node tests/aniversario-lanchonete.test.mjs
 
-   "Data de nascimento está funcionando?" Numa lanchonete (modo Pedidos):
+   "Data de nascimento está funcionando?" e "é pelo WhatsApp que sabe quem
+   é o cliente?". Numa lanchonete (modo Pedidos):
      1. no link, o cliente cria a conta com o aniversário: a data vai para a
         conta E para a ficha da lanchonete;
      2. o pedido dele, depois, cai na MESMA ficha — a data não se perde;
      3. o painel mostra o aniversariante (aba Aniversariantes e cartão do Hoje);
-     4. o dono cadastra um cliente à mão com a data, e ela fica gravada.
+     4. o dono cadastra um cliente à mão com a data, e ela fica gravada;
+     5. no pedido sem conta, o aniversário é opcional (84): pela metade avisa,
+        inteiro vai para a ficha, e no pedido seguinte já vem preenchido;
+     6. quem pula pede do mesmo jeito;
+     7. o dono pode desligar a pergunta;
+     8. pedidos lançados pelo dono: cada cliente na ficha do seu WhatsApp.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -151,6 +157,78 @@ await pd.evaluate(() => { irPara('aniversarios'); escolherMesNiver(3); });
 await pd.waitForTimeout(500);
 verdade('e ele aparece em Aniversariantes de março', /Carlos/.test(limpo(await pd.textContent('#listaNiver').catch(() => ''))),
   limpo(await pd.textContent('#listaNiver').catch(() => '')));
+
+secao('5. No pedido, sem conta: o aniversário opcional');
+const tel2 = '119' + String(60000000 + (Date.now() % 9999999)).padStart(8, '0');
+const fmt = t => `(${t.slice(0, 2)}) ${t.slice(2, 7)}-${t.slice(7)}`;
+const ctxP = await nav.newContext({ viewport:{ width:412, height:870 }, isMobile:true, hasTouch:true });
+const q = await ctxP.newPage();
+q.on('pageerror', e => erros.push('pedido: ' + e.message));
+const abrirPedido = async () => {
+  await q.goto(BASE + '/cardapio.html?salao=' + SLUG);
+  await q.waitForFunction(() => typeof mudarNoCarrinho === 'function' && typeof pedidosCasa !== 'undefined' && pedidosCasa, null, { timeout: 15000 });
+  await q.evaluate(id => { mudarNoCarrinho(id, 1); irPara('pedido'); }, xId);
+  await q.waitForTimeout(500);
+  await q.evaluate(() => { escolherNoPedido('entrega', 'retirada'); escolherNoPedido('pagamento', 'dinheiro'); });
+  await q.waitForTimeout(300);
+};
+await abrirPedido();
+const rot = limpo(await q.textContent('#campoPdNasc label').catch(() => ''));
+igual('o campo aparece, marcado como opcional', rot, 'Aniversário (opcional)');
+await q.fill('#pdNome', 'Gabi Sem Conta');
+await q.fill('#pdTel', fmt(tel2));
+// Escrito pela metade: avisa, e o pedido não vai.
+await q.fill('#pdNascTxt', '15/07').catch(() => {});
+await q.evaluate(() => confirmarPedido());
+await q.waitForTimeout(600);
+verdade('data pela metade: a tela pede para conferir', /Confira a data do aniversário/.test(limpo(await q.textContent('#pedidoCorpo'))),
+  limpo(await q.textContent('#pedidoCorpo')).slice(-200));
+await q.fill('#pdNascTxt', '15/07/1995').catch(async () => { await q.fill('#pdNasc', '1995-07-15'); });
+await q.waitForTimeout(200);
+await q.evaluate(() => confirmarPedido());
+await q.waitForTimeout(2500);
+const gabi = await um(`select nascimento from public.clientes where salao_id = $1 and telefone = $2`, [salaoId, tel2]);
+igual('o pedido entra e a ficha dela ganha a data', data(gabi && gabi.nascimento), '1995-07-15');
+await abrirPedido();
+igual('no próximo pedido, a data já vem preenchida', await q.inputValue('#pdNasc').catch(() => ''), '1995-07-15');
+
+secao('6. Quem pula o campo pede do mesmo jeito');
+const tel3 = '119' + String(50000000 + (Date.now() % 9999999)).padStart(8, '0');
+const q2 = await (await nav.newContext({ viewport:{ width:412, height:870 }, isMobile:true, hasTouch:true })).newPage();
+q2.on('pageerror', e => erros.push('pedido 2: ' + e.message));
+await q2.goto(BASE + '/cardapio.html?salao=' + SLUG);
+await q2.waitForFunction(() => typeof mudarNoCarrinho === 'function' && typeof pedidosCasa !== 'undefined' && pedidosCasa, null, { timeout: 15000 });
+await q2.evaluate(id => { mudarNoCarrinho(id, 1); irPara('pedido'); escolherNoPedido('entrega', 'retirada'); escolherNoPedido('pagamento', 'dinheiro'); }, xId);
+await q2.waitForTimeout(400);
+await q2.fill('#pdNome', 'Hugo Sem Data');
+await q2.fill('#pdTel', fmt(tel3));
+await q2.evaluate(() => confirmarPedido());
+await q2.waitForTimeout(2000);
+const hugo = await um(`select nascimento from public.clientes where salao_id = $1 and telefone = $2`, [salaoId, tel3]);
+verdade('o pedido entra e a ficha nasce', !!hugo);
+igual('sem data', hugo && hugo.nascimento, null);
+
+secao('7. O dono desliga a pergunta');
+await pd.evaluate(() => { irPara('pedidos'); });
+await pd.waitForTimeout(500);
+await pd.evaluate(() => abrirConfigPedidos());
+await pd.waitForSelector('#pcAniversario', { timeout: 8000 }).catch(() => {});
+igual('"Perguntar o aniversário" vem ligado', await pd.isChecked('#pcAniversario').catch(() => null), true);
+await pd.uncheck('#pcAniversario');
+await pd.evaluate(() => salvarConfigPedidos());
+await pd.waitForTimeout(1500);
+igual('no banco, desligado', (await um(`select cfg->'pedidos'->>'aniversario' a from public.saloes where id = $1`, [salaoId])).a, 'false');
+await abrirPedido();
+igual('e o pedido não pergunta mais', await q.$('#pdNasc') ? 'tem' : 'não tem', 'não tem');
+
+secao('8. Pedidos lançados pelo dono: cada cliente na sua ficha');
+for(const [nome, t] of [['Iara', '11921110001'], ['Jonas', '11921110002']])
+  await dono.chamar('lancar_pedido', { p_salao: salaoId, p_pedido: { origem:'balcao', nome, telefone: t, entrega:'retirada',
+    pagamento:'dinheiro', itens:[{ produto: xId, quantidade: 1 }] } });
+const fichas = (await banco.query(`select nome, telefone, perfil_id from public.clientes
+  where salao_id = $1 and telefone in ('11921110001', '11921110002') order by telefone`, [salaoId])).rows;
+igual('duas fichas, cada uma com o seu WhatsApp', fichas.map(f => f.nome + ' ' + f.telefone), ['Iara 11921110001', 'Jonas 11921110002']);
+igual('nenhuma presa à conta do dono', fichas.filter(f => f.perfil_id).length, 0);
 
 igual('nenhum erro de JavaScript', erros, []);
 await nav.close();

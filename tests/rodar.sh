@@ -149,6 +149,7 @@ preparar() {
   carregar "$RAIZ/supabase/81_pix_online.sql"
   carregar "$RAIZ/supabase/82_cardapio_lista.sql"
   carregar "$RAIZ/supabase/83_segmento.sql"
+  carregar "$RAIZ/supabase/84_cliente_whatsapp.sql"
   carregar "$AQUI/00_ajuda.sql"
 }
 

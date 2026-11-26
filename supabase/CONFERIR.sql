@@ -1820,6 +1820,15 @@ with conferencia(ordem, item, veredito, detalhe) as (
          case when pg_get_functiondef(to_regprocedure('public.cfg_pedidos(uuid)')) not like '%segmento%'
               then 'cole o 83_segmento.sql' else '' end
   union all
+  /* PediHub (84): o cliente é o WhatsApp (pedido da equipe) e o aniversário no pedido. */
+  select 100, 'Cliente pelo WhatsApp e aniversário no pedido',
+         case when to_regprocedure('public.aniversario_do_pedido(uuid,date)') is null
+                or pg_get_functiondef(to_regprocedure('public.ficha_do_cliente(uuid,text,text)')) not like '%e_equipe%'
+              then 'FALTA' else 'certo' end,
+         case when to_regprocedure('public.aniversario_do_pedido(uuid,date)') is null
+                or pg_get_functiondef(to_regprocedure('public.ficha_do_cliente(uuid,text,text)')) not like '%e_equipe%'
+              then 'cole o 84_cliente_whatsapp.sql' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um

@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.1869c4';
+const VERSAO_APP = 'v9.c41610';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23668,6 +23668,8 @@ function cfgPedidosDoSalao(){
     },
     // 83: o tipo do estabelecimento que a cliente vê (Lanchonete, Pizzaria…).
     segmento: window.Funcionamento ? Funcionamento.segmento(p.segmento).cod : 'restaurante',
+    // 84: perguntar o aniversário no pedido do link (o cliente pode pular). Ligado por padrão.
+    aniversario: p.aniversario !== false,
   };
 }
 /* ── O PIX ONLINE (81) ─────────────────────────────────────────────────
@@ -24192,6 +24194,12 @@ function abrirConfigPedidos(){
       <label class="check"><input type="checkbox" class="pcPag" value="debito" ${marcado(c.pagamentos.includes('debito'))}> <span>Cartão de débito</span></label>
       <label class="check"><input type="checkbox" class="pcPag" value="credito" ${marcado(c.pagamentos.includes('credito'))}> <span>Cartão de crédito</span></label>
     </div>
+    <!-- O ANIVERSARIO NO PEDIDO (84): opcional para o cliente; vai para a ficha
+         dele e aparece em Aniversariantes. -->
+    <div class="campo"><label>Aniversário do cliente</label>
+      <label class="check"><input type="checkbox" id="pcAniversario" ${marcado(c.aniversario)}>
+        <span>Perguntar o aniversário no pedido. O cliente pode pular; quem responde aparece em <b>Aniversariantes</b>.</span></label>
+    </div>
     <!-- O PIX ONLINE (81): pago na hora, na conta do Mercado Pago do restaurante.
          O estado vem do banco depois que a janela abre (pintarMpConfig). -->
     <div class="campo mp-caixa"><label>Pix online, pago na hora do pedido</label>
@@ -24259,6 +24267,7 @@ function salvarConfigPedidos(){
   gravarCfgPedidos({ entrega, retirada, taxaPadrao: num('pcTaxa'), taxas, minimo: num('pcMinimo'),
     tempo: String(v('pcTempo').value || '').trim().slice(0, 40), pagamentos,
     avisarCliente: !!v('pcAvisaCliente').checked, avisarCasa: !!v('pcAvisaCasa').checked,
+    aniversario: !!v('pcAniversario').checked,
     // 81: sem a caixa (Mercado Pago desconectado), fica como estava.
     pixOnline: document.getElementById('pcPixOnline') ? !!v('pcPixOnline').checked : cfgPedidosDoSalao().pixOnline,
     mesas: Math.min(200, Math.floor(num('pcMesas'))),

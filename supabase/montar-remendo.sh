@@ -43,7 +43,11 @@ def recortar_ate(fonte, cabeca, rodape):
     i = fonte.index(cabeca)
     return fonte[i:fonte.index(rodape, i) + len(rodape)]
 
-ficha = recortar(fonte05, 'create or replace function public.ficha_do_cliente')
+# A ficha_do_cliente() boa é a do 84 (a equipe não prende a ficha à própria
+# conta: o cliente é o WhatsApp). Ela usa e_equipe(), do 02, que toda
+# instalação tem.
+fonte84 = open('supabase/84_cliente_whatsapp.sql', encoding='utf-8').read()
+ficha = recortar(fonte84, 'create or replace function public.ficha_do_cliente')
 # `so_digitos` é a régua do telefone, e a migração logo abaixo chama ela. Vem
 # junto para o remendo não depender de a instalação já ter a versão certa.
 digitos = recortar(fonte05, 'create or replace function public.so_digitos(')
