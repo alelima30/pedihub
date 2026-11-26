@@ -70,8 +70,9 @@ const cond = await dona.inserir('produtos', { salaoId: SALAO, nome:'Condicionado
 await dona.inserir('produtos', { salaoId: SALAO, nome:'Perfume ok', categoria:'Perfumes',
   preco:20, custo:5, estoque:5, comissaoPct:0, ativo:true, vendaOnline:true });
 const SEMANA = [0,1,2,3,4,5,6].reduce((o, d) => (o[d] = [['00:00','00:00']], o), {});
+// A fileira solta (82): este teste toca no PRIMEIRO cartão da lista corrida, pelo nome.
 await dona.atualizar('saloes', SALAO, { whatsapp:'11988887777',
-  cfg:{ diasLiberados:30, cor:'#B8356B', funcionamento: SEMANA, pularComQuem:false } });
+  cfg:{ diasLiberados:30, cor:'#B8356B', funcionamento: SEMANA, pularComQuem:false, pedidos:{ cardapio:{ fixar:false } } } });
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];

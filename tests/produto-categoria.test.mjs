@@ -67,8 +67,11 @@ await novo('Máscara de hidratação', 'Tratamento de cabelo');
 await novo('Óleo reparador', ' tratamento de  CABELO ');
 await novo('Perfume ok', 'Perfumaria');
 const shampoo = await novo('Shampoo', null);
+/* A fileira SOLTA, de propósito: este teste é o do toque que FILTRA. A
+   fileira presa no alto (82, ligada por padrão) tem o teste dela, o
+   cardapio-lista-tela.test.mjs. */
 await dona.atualizar('saloes', SALAO, { whatsapp:'11988887777',
-  cfg:{ diasLiberados:30, cor:'#B8356B', cores:{ botao:'#8E2457' } } });
+  cfg:{ diasLiberados:30, cor:'#B8356B', cores:{ botao:'#8E2457' }, pedidos:{ cardapio:{ fixar:false } } } });
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
