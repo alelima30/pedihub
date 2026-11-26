@@ -58,7 +58,7 @@ troca cardapio.html \
 
 echo "2. o filtro não filtra"
 troca cardapio.html \
-  "(!filtroLoja || (filtroLoja === '__promo' ? emPromocao(p) : chaveCategoria(p.categoria) === filtroLoja))" \
+  "(lojaSecoes || !filtroLoja || (filtroLoja === '__promo' ? emPromocao(p) : chaveCategoria(p.categoria) === filtroLoja))" \
   "(true)" \
   && rodar "tocar e ver tudo igual"
 
@@ -82,8 +82,8 @@ troca cardapio.html \
 
 echo "6. o nome da categoria sai cru"
 troca cardapio.html \
-  "onclick=\"escolherCategoriaLoja(\${i - 1})\">\${escapar(c.rot)}</button>" \
-  "onclick=\"escolherCategoriaLoja(\${i - 1})\">\${c.rot}</button>" \
+  "(\${i - 1})\">\${escapar(c.rot)}</button>" \
+  "(\${i - 1})\">\${c.rot}</button>" \
   && rodar "HTML do dono na página da cliente"
 
 echo "7. o painel não grava"

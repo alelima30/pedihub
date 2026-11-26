@@ -259,6 +259,8 @@ const VAZIO_E_NULO = new Set([
   'tempo_preparo',
   'preco_promo',
   'promo_ate',
+  /* O número do item no cardápio (82): em branco é "sem número". */
+  'numero',
   /* As duas do 27_pacotes.sql, cobradas pelo `colunas.test.js` no minuto em
      que o módulo entrou.
 

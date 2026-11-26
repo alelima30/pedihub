@@ -4893,7 +4893,7 @@ function gravarCarrinho(){
    parar com "Cannot read properties of null".
 
    Uma linha, custo zero, e o caminho deixa de depender de sorte. */
-const produtosDaLoja = () => (!salao || !casaVendeProdutos() ? []
+const produtosDaLoja = () => ordenarDoCardapio(!salao || !casaVendeProdutos() ? []
   : (bd.produtos || []).filter(p => p.salaoId === salao.id
       /* No modo Pedidos o item sem preço não entra no cardápio: o banco
          recusaria o pedido com ele, e "sob consulta" não cabe num pedido
@@ -5770,11 +5770,12 @@ function desenharPromoNaCapa(){
         <button type="button" class="link" onclick="filtroLoja = '__promo'; irPara('loja')">Ver todas</button></div>
       <div class="promo-trilho">${lista.map(p => {
         const n = qtdDoProduto(p.id);
-        return `<div class="pr-cartao promo-cartao abre-produto" onclick="abrirProduto('${p.id}', event)">
-          <span class="pr-foto"${p.foto ? ` style="--pr-foto:url('${escapar(p.foto)}')"` : ''}>
-            ${p.foto ? '' : '<span data-ico="presente"></span>'}${seloPromo(p)}</span>
+        const semFoto = cardapioCfg().estilo === 'lista';
+        return `<div class="pr-cartao promo-cartao abre-produto${semFoto ? ' promo-sem-foto' : ''}" onclick="abrirProduto('${p.id}', event)">
+          ${semFoto ? seloPromo(p) : `<span class="pr-foto"${p.foto ? ` style="--pr-foto:url('${escapar(p.foto)}')"` : ''}>
+            ${p.foto ? '' : '<span data-ico="presente"></span>'}${seloPromo(p)}</span>`}
           <div class="pr-pe">
-            <span class="pr-txt"><b>${escapar(p.nome)}</b><span>${precoDoProduto(p)}</span></span>
+            <span class="pr-txt"><b>${seloNumero(p)}${escapar(p.nome)}</b><span>${precoDoProduto(p)}</span></span>
             <button class="pr-add${n ? ' tem' : ''}" onclick="mudarNoCarrinho('${p.id}', 1)"
                     aria-label="Adicionar ${escapar(p.nome)} ao pedido">
               <span data-ico="carrinho"></span>${n ? `<span class="pr-n">${n}</span>` : ''}</button>
@@ -5812,11 +5813,12 @@ function desenharLojaNaCapa(){
   const lista = produtosDaLoja();
   if(!lista.length || !lojaTemSaida()){ alvo.innerHTML = ''; return; }
 
-  const mostrar = lista.slice(0, 4);
+  const emLista = cardapioCfg().estilo === 'lista';
+  const mostrar = lista.slice(0, emLista ? 5 : 4);
 
   alvo.innerHTML = `
     <div class="cat">${modoPedidos() ? 'Do cardápio' : 'Produtos em destaque'}</div>
-    <div class="pr-grade">${mostrar.map(p => {
+    ${emLista ? `<div class="lista-cardapio">${mostrar.map(p => cartaoLista(p)).join('')}</div>` : `<div class="pr-grade">${mostrar.map(p => {
       const n = qtdDoProduto(p.id);
       return `<div class="pr-cartao abre-produto" onclick="abrirProduto('${p.id}', event)">
         <!-- ⚠ A URL VAI NA VARIAVEL --pr-foto, E NAO EM background-image.
@@ -5834,7 +5836,7 @@ function desenharLojaNaCapa(){
           ${p.foto ? '' : '<span data-ico="presente"></span>'}${seloPromo(p)}</span>
         <div class="pr-pe">
           <span class="pr-txt">
-            <b>${escapar(p.nome)}</b>
+            <b>${seloNumero(p)}${escapar(p.nome)}</b>
             <span>${p.preco == null ? 'sob consulta' : precoDoProduto(p)}</span>
           </span>
           <button class="pr-add${n ? ' tem' : ''}"
@@ -5844,7 +5846,7 @@ function desenharLojaNaCapa(){
             ${n ? `<span class="pr-n">${n}</span>` : ''}</button>
         </div>
       </div>`;
-    }).join('')}</div>
+    }).join('')}</div>`}
     <!-- ⚠ O LINK APARECE SEMPRE, e nao so' quando sobra produto.
 
          Os cartoes daqui so' SOMAM: tocar poe mais um no carrinho e nao ha
@@ -5894,8 +5896,79 @@ function categoriasDaLoja(lista){
   }
   return [...formas.entries()]
     .map(([k, f]) => ({ k, rot: Object.entries(f).sort((a, b) => b[1] - a[1])[0][0] }))
-    .sort((a, b) => a.rot.localeCompare(b.rot, 'pt'));
+    .sort((a, b) => {
+      /* (82) Com números, a categoria vem na ordem do menor número dela — a
+         ordem do cardápio impresso. Sem número, a de sempre: alfabética. */
+      if(cardapioCfg().numerar){
+        const menor = k => Math.min(...lista.filter(p => chaveCategoria(p.categoria) === k)
+          .map(p => numeroDoItem(p) == null ? Infinity : numeroDoItem(p)));
+        const ma = menor(a.k), mb = menor(b.k);
+        if(ma !== mb) return ma - mb;
+      }
+      return a.rot.localeCompare(b.rot, 'pt');
+    });
 }
+/* ── A FILEIRA PRESA NO ALTO (82) ────────────────────────────────────────
+   "Isto teria que ficar congelado e aí vai rolando para baixo todo o
+   cardápio, e vai mudar de Todos para Lanches, Bebidas, Combos." Com
+   `cardapio.fixar` (ligado se o dono não disser nada), o cardápio vem
+   inteiro, dividido por categoria; a fileira fica presa no alto, a categoria
+   marcada acompanha o que está na tela, e tocar numa leva até ela. Desligado,
+   tocar filtra, como sempre foi. */
+let lojaSecoes = false;       // o cardápio está dividido por categoria (fileira presa)?
+let catMarcada = null;        // a categoria marcada na fileira presa (nulo = Todos)
+function irParaCategoria(i){
+  const c = i < 0 ? null : lojaCatsAtuais[i];
+  const alvo = c ? [...document.querySelectorAll('#listaProdutos .loja-secao')].find(s => s.dataset.k === c.k) : null;
+  if(c && !alvo) return;
+  const fileira = document.getElementById('lojaCats');
+  const topo = alvo || document.getElementById('listaProdutos');
+  const folga = (fileira ? fileira.getBoundingClientRect().height : 0) + topoDaFileira() + 6;
+  const y = topo.getBoundingClientRect().top + window.scrollY - (alvo ? folga : folga + 80);
+  marcarCategoria(c ? c.k : null);
+  espiaPausada = Date.now() + 900;
+  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+}
+let espiaPausada = 0;
+function topoDaFileira(){
+  const f = document.getElementById('lojaCats');
+  return f ? (parseFloat(getComputedStyle(f).top) || 0) : 0;
+}
+function marcarCategoria(k){
+  catMarcada = k;
+  const fileira = document.getElementById('lojaCats');
+  if(!fileira) return;
+  let on = null;
+  fileira.querySelectorAll('.loja-cat').forEach(b => {
+    const sim = (b.dataset.k || null) === (k || null);
+    b.classList.toggle('on', sim); b.setAttribute('aria-pressed', String(sim));
+    if(sim) on = b;
+  });
+  // A escolhida sempre à vista na fileira, que rola de lado.
+  if(on && (on.offsetLeft < fileira.scrollLeft || on.offsetLeft + on.offsetWidth > fileira.scrollLeft + fileira.clientWidth))
+    fileira.scrollTo({ left: Math.max(0, on.offsetLeft - 12), behavior: 'smooth' });
+}
+function espiarCategorias(){
+  if(!lojaSecoes || tela !== 'loja' || Date.now() < espiaPausada) return;
+  const fileira = document.getElementById('lojaCats');
+  if(!fileira) return;
+  const limite = fileira.getBoundingClientRect().bottom + 12;
+  let atual = null;
+  const secoes = [...document.querySelectorAll('#listaProdutos .loja-secao')];
+  for(const s of secoes){
+    if(s.getBoundingClientRect().top <= limite) atual = s.dataset.k || null; else break;
+  }
+  // No fim da página a última categoria nunca sobe até a fileira: é ela.
+  if(secoes.length && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4)
+    atual = secoes[secoes.length - 1].dataset.k || null;
+  if(atual !== catMarcada) marcarCategoria(atual);
+}
+let espiaQuadro = 0;
+document.addEventListener('scroll', () => {
+  if(espiaQuadro) return;
+  espiaQuadro = requestAnimationFrame(() => { espiaQuadro = 0; espiarCategorias(); });
+}, { passive: true, capture: true });
+
 function escolherCategoriaLoja(i){
   const c = i < 0 ? null : ((lojaCatsAtuais[i] || {}).k || null);
   // Tocar de novo na escolhida desmarca: volta a "Todos".
@@ -5954,13 +6027,13 @@ function desenharProduto(){
   if(!p){ alvo.innerHTML = '<div class="recado">Este produto não está mais à venda.</div>'; return; }
   const cat = String(p.categoria || '').trim();
   alvo.innerHTML = `
-    <div class="pr-foto prod-grande"${p.foto ? ` style="--pr-foto:url('${escapar(p.foto)}')"` : ''}
-         role="img" aria-label="${escapar(p.nome)}">${p.foto ? '' : '<span data-ico="presente"></span>'}</div>
+    ${!p.foto && cardapioCfg().estilo === 'lista' ? '' : `<div class="pr-foto prod-grande"${p.foto ? ` style="--pr-foto:url('${escapar(p.foto)}')"` : ''}
+         role="img" aria-label="${escapar(p.nome)}">${p.foto ? '' : '<span data-ico="presente"></span>'}</div>`}
     <div class="prod-corpo">
       ${cat ? `<span class="prod-cat">${escapar(cat)}</span>` : ''}
       ${emPromocao(p) ? `<div class="prod-promo">${seloPromo(p)}${p.promoAte
           ? `<span>até ${escapar(String(p.promoAte).slice(8, 10) + '/' + String(p.promoAte).slice(5, 7))}</span>` : ''}</div>` : ''}
-      <h2 class="prod-nome">${escapar(p.nome)}</h2>
+      <h2 class="prod-nome">${seloNumero(p)}${escapar(p.nome)}</h2>
       ${p.marca ? `<div class="prod-marca">${escapar(p.marca)}</div>` : ''}
       <div class="prod-preco">${precoDoProduto(p)}</div>
       ${p.descricao ? `<p class="prod-desc">${escapar(p.descricao)}</p>`
@@ -5997,16 +6070,21 @@ function desenharLoja(){
   // As promoções viram a primeira "categoria", para achar de uma vez.
   if(todos.some(emPromocao)) lojaCatsAtuais.unshift({ k: '__promo', rot: '🔥 Promoções' });
   if(filtroLoja && !lojaCatsAtuais.some(c => c.k === filtroLoja)) filtroLoja = null;
+  const cfgC = cardapioCfg();
+  lojaSecoes = !!(cfgC.fixar && pedidos && lojaCatsAtuais.length);
+  if(lojaSecoes){ filtroLoja = null; if(catMarcada && !lojaCatsAtuais.some(c => c.k === catMarcada)) catMarcada = null; }
+  const marcada = lojaSecoes ? catMarcada : filtroLoja;
   const fileira = document.getElementById('lojaCats');
   if(fileira){
     fileira.style.display = lojaCatsAtuais.length ? '' : 'none';
+    fileira.classList.toggle('fixa', lojaSecoes);
     fileira.innerHTML = !lojaCatsAtuais.length ? '' : [{ k: null, rot: 'Todos' }, ...lojaCatsAtuais]
-      .map((c, i) => `<button type="button" class="loja-cat${filtroLoja === c.k ? ' on' : ''}"
-          aria-pressed="${filtroLoja === c.k}"
-          onclick="escolherCategoriaLoja(${i - 1})">${escapar(c.rot)}</button>`).join('');
+      .map((c, i) => `<button type="button" class="loja-cat${marcada === c.k ? ' on' : ''}"
+          aria-pressed="${marcada === c.k}" data-k="${escapar(c.k || '')}"
+          onclick="${lojaSecoes ? 'irParaCategoria' : 'escolherCategoriaLoja'}(${i - 1})">${escapar(c.rot)}</button>`).join('');
   }
 
-  const lista = todos.filter(p => (!filtroLoja || (filtroLoja === '__promo' ? emPromocao(p) : chaveCategoria(p.categoria) === filtroLoja))
+  const lista = todos.filter(p => (lojaSecoes || !filtroLoja || (filtroLoja === '__promo' ? emPromocao(p) : chaveCategoria(p.categoria) === filtroLoja))
     && (!busca
       || plano(p.nome).includes(busca)
       || plano(p.marca).includes(busca)));
@@ -6038,34 +6116,35 @@ function desenharLoja(){
      aqui só se escolhe a estrutura (grade ou fileira), porque as duas são
      HTML diferente. */
   const curva = (salao.moldura || (salao.cfg || {}).moldura) === 'elegante';
-  const cartoes = curva
-    ? `<div class="pr-grade loja-grade">${lista.map(p => `<div class="pr-cartao loja-cartao abre-produto"
+  const umCurvo = p => `<div class="pr-cartao loja-cartao abre-produto"
         onclick="abrirProduto('${p.id}', event)">
         <span class="pr-foto"${p.foto
           ? ` style="--pr-foto:url('${escapar(p.foto)}')"` : ''}>
           ${p.foto ? '' : '<span data-ico="presente"></span>'}${seloPromo(p)}</span>
         <div class="loja-corpo">
-          <b class="loja-nome">${escapar(p.nome)}</b>
+          <b class="loja-nome">${seloNumero(p)}${escapar(p.nome)}</b>
           ${p.marca ? `<span class="loja-marca">${escapar(p.marca)}</span>` : ''}
           ${p.descricao ? `<span class="loja-desc">${escapar(p.descricao)}</span>` : ''}
           <b class="loja-preco">${preco(p)}</b>
           ${botaoDe(p, qtdDoProduto(p.id))}
         </div>
-      </div>`).join('')}</div>`
-    : lista.map(p => {
+      </div>`;
+  const umClassico = p => {
     const n = qtdDoProduto(p.id);
+    /* (82) Item sem foto fica só com o nome e o preço: o quadrado com o
+       ícone no lugar da foto, repetido em 50 lanches, parecia defeito. */
     return `<div class="bloco abre-produto" style="display:flex;gap:12px;align-items:flex-start"
       onclick="abrirProduto('${p.id}', event)">
-      <div style="flex:0 0 64px;width:64px;height:64px;border-radius:9px;position:relative;
+      ${p.foto ? `<div style="flex:0 0 64px;width:64px;height:64px;border-radius:9px;position:relative;
                   overflow:hidden;background:var(--fundo2,rgba(0,0,0,.05));
                   display:flex;align-items:center;justify-content:center">
-        ${p.foto ? `<img src="${escapar(p.foto)}" alt="" loading="lazy"
-                        style="width:100%;height:100%;object-fit:cover">`
-                 : `<span data-ico="presente"></span>`}
+        <img src="${escapar(p.foto)}" alt="" loading="lazy"
+                        style="width:100%;height:100%;object-fit:cover">
         ${emPromocao(p) ? '<span class="selo-promo selo-mini">PROMO</span>' : ''}
-      </div>
+      </div>` : ''}
       <div style="flex:1;min-width:0">
-        <div class="rot" style="margin:0;overflow-wrap:anywhere">${escapar(p.nome)}</div>
+        <div class="rot" style="margin:0;overflow-wrap:anywhere">${seloNumero(p)}${escapar(p.nome)}${
+          !p.foto && emPromocao(p) ? ' <span class="selo-promo selo-linha">PROMO</span>' : ''}</div>
         ${p.marca ? `<div style="font-size:12.5px;color:var(--txt3);overflow-wrap:anywhere">${escapar(p.marca)}</div>` : ''}
         ${p.descricao ? `<p style="font-size:13px;color:var(--txt2);margin:5px 0 0;overflow-wrap:anywhere">
             ${escapar(p.descricao)}</p>` : ''}
@@ -6076,7 +6155,22 @@ function desenharLoja(){
         </div>
       </div>
     </div>`;
-  }).join('');
+  };
+  const bloco = itens => cfgC.estilo === 'lista'
+    ? `<div class="lista-cardapio">${itens.map(p => cartaoLista(p)).join('')}</div>`
+    : curva ? `<div class="pr-grade loja-grade">${itens.map(umCurvo).join('')}</div>`
+    : itens.map(umClassico).join('');
+  let cartoes;
+  if(lojaSecoes){
+    /* Uma seção por categoria, na ordem da fileira; as promoções primeiro.
+       O item sem categoria fica no fim, em "Outros". */
+    const secoes = lojaCatsAtuais.map(c => ({ k: c.k, rot: c.rot,
+      itens: c.k === '__promo' ? lista.filter(emPromocao) : lista.filter(p => chaveCategoria(p.categoria) === c.k) }));
+    const soltos = lista.filter(p => !chaveCategoria(p.categoria));
+    if(soltos.length) secoes.push({ k: '', rot: 'Outros', itens: soltos });
+    cartoes = secoes.filter(s => s.itens.length).map(s => `<section class="loja-secao" data-k="${escapar(s.k)}">
+        <h3 class="loja-secao-tit">${escapar(s.rot)}</h3>${bloco(s.itens)}</section>`).join('');
+  } else cartoes = bloco(lista);
 
   alvo.innerHTML = cartoes + (itensNoCarrinho() ? blocoDoCupomLoja() : '') + (itensNoCarrinho() ? `
     <div class="recado" style="margin-top:14px">
@@ -6090,6 +6184,7 @@ function desenharLoja(){
     </div>` : '');
 
   if(window.aplicarIcones) aplicarIcones(alvo);
+  if(lojaSecoes) requestAnimationFrame(espiarCategorias);
   // O carrinho mudou com um cupom aceito: a prévia é de outro pedido. Pergunta
   // de novo com o mesmo código (o desconto pode ter mudado, ou deixado de valer).
   if(cupomLoja && !cupomLojaVale() && mostraCupomLoja() && !cupomLojaConferindo)
@@ -6437,6 +6532,59 @@ function aplicarPromocoes(){
   }
 }
 const emPromocao = p => !!(p && p.precoCheio != null && Number(p.precoCheio) > Number(p.preco));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   O CARDÁPIO EM LISTA, O NÚMERO DE CADA ITEM E A FILEIRA PRESA (82)
+
+   O dono escolhe no painel (Cardápio → "Como o cardápio aparece no link"), e
+   chega aqui pelo pedidos_da_casa(): `cardapio` = { estilo, numerar, fixar }
+   e `numeros` = [{ id, numero }]. Sem isso (banco antigo, ou a loja do
+   WhatsApp), tudo fica como sempre foi: fotos, sem número, filtro.
+   ═══════════════════════════════════════════════════════════════════════════ */
+function cardapioCfg(){
+  const c = typeof pedidosCasa !== 'undefined' && pedidosCasa && pedidosCasa.cardapio;
+  if(!c || typeof c !== 'object') return { estilo: 'fotos', numerar: false, fixar: false };
+  return { estilo: c.estilo === 'lista' ? 'lista' : 'fotos', numerar: c.numerar === true, fixar: c.fixar !== false };
+}
+function aplicarNumeros(){
+  const lista = pedidosCasa && Array.isArray(pedidosCasa.numeros) ? pedidosCasa.numeros : null;
+  if(!lista) return;
+  const m = new Map(lista.map(x => [x.id, Number(x.numero)]));
+  for(const p of ((bd && bd.produtos) || [])) p.numero = m.has(p.id) ? m.get(p.id) : null;
+}
+function numeroDoItem(p){ const n = parseInt(p && p.numero, 10); return n >= 1 ? n : null; }
+function seloNumero(p){
+  const n = numeroDoItem(p);
+  return cardapioCfg().numerar && n != null ? `<span class="num-item">${String(n).padStart(2, '0')}</span>` : '';
+}
+// Com números: pelo número; quem não tem vai para o fim, pelo nome.
+function ordemDoCardapio(a, b){
+  const na = numeroDoItem(a), nb = numeroDoItem(b);
+  if(na != null && nb != null && na !== nb) return na - nb;
+  if((na == null) !== (nb == null)) return na == null ? 1 : -1;
+  return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+}
+function ordenarDoCardapio(lista){
+  return cardapioCfg().numerar ? lista.slice().sort(ordemDoCardapio) : lista;
+}
+/* O item no cardápio em LISTA, como o impresso: o número, o nome em
+   destaque, o que vem embaixo e o preço do lado. Tocar abre o item. */
+function cartaoLista(p){
+  const n = qtdDoProduto(p.id);
+  const num = cardapioCfg().numerar ? numeroDoItem(p) : null;
+  return `<div class="lista-item abre-produto${n ? ' tem' : ''}" onclick="abrirProduto('${p.id}', event)">
+      ${num != null ? `<span class="lista-num">${String(num).padStart(2, '0')}</span>` : ''}
+      <div class="lista-txt">
+        <b class="lista-nome">${escapar(p.nome)}${emPromocao(p) ? ' <span class="selo-promo selo-linha">PROMO</span>' : ''}</b>
+        ${p.descricao ? `<span class="lista-desc">${escapar(p.descricao)}</span>` : ''}
+      </div>
+      <div class="lista-dir">
+        <span class="lista-preco">${p.preco == null ? 'sob consulta'
+          : emPromocao(p) ? `<s>${real(Number(p.precoCheio))}</s>${real(Number(p.preco))}` : real(Number(p.preco))}</span>
+        ${botaoDoProduto(p, n)}
+      </div>
+    </div>`;
+}
 function seloPromo(p){
   if(!emPromocao(p)) return '';
   const pct = Math.round((1 - Number(p.preco) / Number(p.precoCheio)) * 100);
@@ -6469,6 +6617,7 @@ async function carregarPedidosDaCasa(){
   try{ pedidosCasa = await Dados.chamar('pedidos_da_casa', { p_slug: salao.slug }); }
   catch(e){ console.info('[PediHub] pedidos_da_casa:', e.message); pedidosCasa = { ligado: false }; }
   aplicarPromocoes();
+  aplicarNumeros();
   try{ opcoesCasa = await Dados.chamar('opcoes_da_casa', { p_slug: salao.slug }) || {}; }
   catch(e){ console.info('[PediHub] opcoes_da_casa:', e.message); opcoesCasa = {}; }
   lerCarrinhoOpcoes();

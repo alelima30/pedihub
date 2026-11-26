@@ -11,8 +11,9 @@
         já usa o preço da promoção;
      3. no link (celular): a faixa 🔥 PROMOÇÃO logo na entrada, com o selo
         −17% e o preço cheio riscado; o + põe no carrinho a R$ 24,90;
-     4. na tela do cardápio, a categoria "🔥 Promoções" mostra só ela; a tela
-        do item mostra o selo; nada vaza para o lado a 375px.
+     4. na tela do cardápio, a seção "🔥 Promoções" vem primeiro e tem só ela
+        (a fileira das categorias fica presa no alto e tocar leva até a seção,
+        82); a tela do item mostra o selo; nada vaza para o lado a 375px.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -166,9 +167,10 @@ const chips = await c.$$eval('#lojaCats .loja-cat', e => e.map(x => x.textConten
 verdade('a categoria "🔥 Promoções" vem logo depois de "Todos"', chips[0] === 'Todos' && chips[1] === '🔥 Promoções',
   JSON.stringify(chips));
 await c.click('#lojaCats .loja-cat:has-text("Promoções")');
-await c.waitForTimeout(400);
-const so = await c.evaluate(() => document.getElementById('listaProdutos').innerText);
-verdade('tocando nela, só o X-Bacon', /X-Bacon/.test(so) && !/Suco/.test(so), so.slice(0, 200));
+await c.waitForTimeout(1200);
+const so = await c.evaluate(() => (document.querySelector('#listaProdutos .loja-secao[data-k="__promo"]') || {}).innerText || '');
+verdade('a seção 🔥 Promoções tem só o X-Bacon', /X-Bacon/.test(so) && !/Suco/.test(so), so.slice(0, 200));
+igual('e tocar nela a deixa marcada na fileira', limpo(await c.textContent('#lojaCats .loja-cat.on')), '🔥 Promoções');
 await c.evaluate(id => abrirProduto(id), xId);
 await c.waitForTimeout(500);
 verdade('a tela do item mostra o selo e o preço riscado',

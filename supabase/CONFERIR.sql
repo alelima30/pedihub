@@ -1802,6 +1802,17 @@ with conferencia(ordem, item, veredito, detalhe) as (
          case when to_regclass('public.mp_contas') is null
               then 'cole o 98_modulos.sql (81_pix_online)' else '' end
   union all
+  /* PediHub (82): o cardápio do link só em lista, e o número de cada item. */
+  select 98, 'Cardápio em lista e número do item',
+         case when not exists (select 1 from information_schema.columns
+                                where table_schema = 'public' and table_name = 'produtos' and column_name = 'numero')
+                or pg_get_functiondef(to_regprocedure('public.pedidos_da_casa(text)')) not like '%numeros%'
+                or pg_get_functiondef(to_regprocedure('public.cfg_pedidos(uuid)')) not like '%numerar%'
+              then 'FALTA' else 'certo' end,
+         case when not exists (select 1 from information_schema.columns
+                                where table_schema = 'public' and table_name = 'produtos' and column_name = 'numero')
+              then 'cole o 98_modulos.sql (82_cardapio_lista)' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um

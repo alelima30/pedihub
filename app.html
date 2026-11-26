@@ -2264,7 +2264,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.f135cc';
+const VERSAO_APP = 'v9.5a41bc';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -4770,9 +4770,12 @@ function pintarProdutos(){
 
   const bt = document.getElementById('btNovoProduto');
   if(bt) bt.style.display = souGestor() ? '' : 'none';
+  const estilo = souGestor() ? cartaoEstiloDoCardapio(lista) : '';
+  const cd = cardapioDoSalao();
+  if(cd.numerar) lista.sort(ordemDoCardapio);
 
   if(!lista.length){
-    alvo.innerHTML = `<div class="vazio"><b>Nenhum produto cadastrado</b>
+    alvo.innerHTML = estilo + `<div class="vazio"><b>Nenhum produto cadastrado</b>
       ${souGestor()
         ? 'Cadastre o que o restaurante vende — shampoo, pomada, esmalte. '
           + (usaComanda() ? 'Eles aparecem na comanda na hora de fechar a conta.'
@@ -4796,17 +4799,17 @@ function pintarProdutos(){
      "Na loja" dizendo "à venda" enquanto a página esconde tudo era a tela
      afirmando o contrário do que a cliente vê. Ver porqueALojaNaoAparece(). */
   const porque = souGestor() ? porqueALojaNaoAparece() : '';
-  alvo.innerHTML = (porque
+  alvo.innerHTML = estilo + (porque
       ? `<div class="aviso atencao" id="avisoLojaLink"
               style="margin-bottom:12px">${porque}</div>` : '')
     + `<table class="tabela"><thead><tr>
       <th>Item</th><th>Preço</th><th>Estoque</th>
       <th>No cardápio</th><th></th>
     </tr></thead><tbody>` + lista.map(p => `<tr>
-      <td><span class="sv-mini">${p.foto
+      <td>${cd.estilo === 'lista' && !p.foto ? '' : `<span class="sv-mini">${p.foto
           ? `<img src="${escapar(p.foto)}" alt="" loading="lazy">`
           : `<span data-ico="presente"></span>`}</span
-        ><b>${escapar(p.nome)}</b>${p.ativo ? '' : ' <span class="tag t-canc">esgotado</span>'}${
+        >`}${seloNumero(p)}<b>${escapar(p.nome)}</b>${p.ativo ? '' : ' <span class="tag t-canc">esgotado</span>'}${
           limparCategoria(p.categoria)
             ? `<span class="tag-cat"><span data-ico="etiqueta"></span>${escapar(limparCategoria(p.categoria))}</span>`
             : ''}</td>
@@ -4831,6 +4834,100 @@ function pintarProdutos(){
   // cabeçalho. O `pintar()` já faz uma passada geral; esta é para quando a
   // lista é redesenhada sozinha, sem passar por lá.
   rotularTabelas(alvo);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   O CARDÁPIO EM LISTA, E O NÚMERO DE CADA ITEM (82)
+
+   "Tem lanchonete que tem 50 lanches e não tem foto de tudo." Duas escolhas,
+   separadas, em cfg.pedidos.cardapio:
+
+     estilo   'fotos' (o de sempre) ou 'lista' — o link mostra só nome, o que
+              vem e o preço, como o cardápio impresso, sem quadrado vazio;
+     numerar  cada item mostra o número dele (01, 02…) e a lista segue essa
+              ordem, nos dois estilos. O número é do item (produtos.numero),
+              escolhido no Editar — ou todos de uma vez, no "Numerar tudo";
+     fixar    a fileira das categorias fica presa no alto do link: a cliente
+              rola o cardápio inteiro, dividido por categoria, e a marcada
+              acompanha a rolagem. Ligada se o dono não disser nada.
+
+   Vale no link da cliente, na lista desta tela, no pedido do balcão e no
+   cardápio do garçom.
+   ═══════════════════════════════════════════════════════════════════════════ */
+function cardapioDoSalao(){ return cfgPedidosDoSalao().cardapio; }
+function numeroDoItem(p){ const n = parseInt(p && p.numero, 10); return n >= 1 ? n : null; }
+function rotuloNumero(n){ return String(n).padStart(2, '0'); }
+// Com números: pelo número; quem não tem vai para o fim, pelo nome.
+function ordemDoCardapio(a, b){
+  const na = numeroDoItem(a), nb = numeroDoItem(b);
+  if(na != null && nb != null && na !== nb) return na - nb;
+  if((na == null) !== (nb == null)) return na == null ? 1 : -1;
+  return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+}
+function seloNumero(p){
+  const n = numeroDoItem(p);
+  return cardapioDoSalao().numerar && n != null ? `<span class="num-item">${rotuloNumero(n)}</span>` : '';
+}
+function cartaoEstiloDoCardapio(lista){
+  const cd = cardapioDoSalao();
+  const semNumero = lista.filter(p => numeroDoItem(p) == null).length;
+  return `<div class="card cardapio-estilo" id="cardapioEstilo">
+      <b>Como o cardápio aparece no link</b>
+      <div class="regua" role="group" aria-label="Como o cardápio aparece">
+        <button type="button" class="${cd.estilo === 'fotos' ? 'on' : ''}" aria-pressed="${cd.estilo === 'fotos'}"
+                onclick="escolherEstiloCardapio('fotos')">📷 Com fotos</button>
+        <button type="button" class="${cd.estilo === 'lista' ? 'on' : ''}" aria-pressed="${cd.estilo === 'lista'}"
+                onclick="escolherEstiloCardapio('lista')">📋 Só a lista</button>
+      </div>
+      <p class="ajuda">${cd.estilo === 'lista'
+        ? 'O link mostra o nome, o que vem e o preço de cada item, como o cardápio impresso. Bom para quem tem muitos itens e poucas fotos.'
+        : 'Cada item aparece com a foto. Item sem foto fica só com o nome e o preço. Tem muitos itens e poucas fotos? Escolha <b>Só a lista</b>.'}</p>
+      <label class="check"><input type="checkbox" id="cdNumerar" ${cd.numerar ? 'checked' : ''}
+          onchange="alternarNumerosCardapio(this.checked)">
+        <span>Mostrar o número de cada item (01, 02, 03…), como no cardápio impresso</span></label>
+      <label class="check"><input type="checkbox" id="cdFixar" ${cd.fixar ? 'checked' : ''}
+          onchange="alternarFixarCategorias(this.checked)">
+        <span>Categorias presas no alto: o cliente rola o cardápio inteiro e a categoria
+          (Lanches, Bebidas, Porções…) acompanha o que está na tela</span></label>
+      ${cd.numerar ? `<p class="ajuda">${semNumero
+          ? semNumero + (semNumero === 1 ? ' item ainda não tem número e vai para o fim da lista.' : ' itens ainda não têm número e vão para o fim da lista.')
+          : 'Todos os itens têm número. Para mudar um, toque em Editar.'}
+        <button type="button" class="btn btn-peq" id="btNumerarTudo" onclick="numerarTudo()">Numerar tudo em ordem</button></p>` : ''}
+    </div>`;
+}
+function escolherEstiloCardapio(estilo){
+  gravarCfgPedidos({ cardapio: Object.assign({}, cardapioDoSalao(), { estilo: estilo === 'lista' ? 'lista' : 'fotos' }) });
+  pintar();
+}
+function alternarFixarCategorias(ligar){
+  gravarCfgPedidos({ cardapio: Object.assign({}, cardapioDoSalao(), { fixar: !!ligar }) });
+  pintar();
+}
+function alternarNumerosCardapio(ligar){
+  gravarCfgPedidos({ cardapio: Object.assign({}, cardapioDoSalao(), { numerar: !!ligar }) });
+  if(ligar && !doSalao(bd.produtos || []).some(p => numeroDoItem(p) != null)
+     && confirm('Nenhum item tem número ainda.\n\nNumerar todos agora (01, 02, 03…), na ordem do cardápio? Depois dá para mudar o número de qualquer um em Editar.')){
+    numerarTudo(true);
+    return;
+  }
+  pintar();
+}
+/* Um número para cada item, de 1 em diante. Quem já tem número mantém a
+   ordem; os outros vêm depois, por categoria e nome. */
+function numerarTudo(semPerguntar){
+  const itens = doSalao(bd.produtos || []);
+  if(!itens.length) return;
+  if(!semPerguntar && !confirm('Dar um número a cada item, de 01 a ' + rotuloNumero(itens.length)
+      + ', na ordem em que estão?\n\nQuem já tem número mantém a ordem; os outros entram depois, por categoria e nome.')) return;
+  const ordem = itens.slice().sort((a, b) => {
+    const na = numeroDoItem(a), nb = numeroDoItem(b);
+    if(na != null || nb != null) return ordemDoCardapio(a, b);
+    return String(limparCategoria(a.categoria) || 'zz').localeCompare(String(limparCategoria(b.categoria) || 'zz'), 'pt-BR')
+        || String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+  });
+  ordem.forEach((p, i) => { p.numero = i + 1; });
+  salvar();
+  pintar();
 }
 
 /* "Esgotado" com um toque (69_esgotado.sql): na nuvem pela função que deixa
@@ -10256,8 +10353,15 @@ function abrirProduto(pid){
       </div>
     </div>
     <input type="hidden" id="pFoto" value="${p && p.foto ? p.foto : ''}">
-    <div class="campo"><label>Nome</label>
-      <input id="pNome" value="${escapar(p ? p.nome : '')}" placeholder="X-Bacon, Pizza grande, Açaí 500ml"></div>
+    <div class="dupla dupla-numero">
+      <div class="campo campo-numero"><label for="pNumero">Número</label>
+        <input type="number" id="pNumero" min="1" max="9999" step="1" inputmode="numeric" placeholder="ex.: 14"
+               value="${p && p.numero != null ? escapar(String(p.numero)) : ''}"></div>
+      <div class="campo"><label>Nome</label>
+        <input id="pNome" value="${escapar(p ? p.nome : '')}" placeholder="X-Bacon, Pizza grande, Açaí 500ml"></div>
+    </div>
+    <p class="ajuda" style="margin:-6px 0 12px">O número é opcional: com <b>Mostrar o número de cada item</b>
+      ligado (na tela do Cardápio), ele aparece antes do nome, como no cardápio impresso, e põe a lista nessa ordem.</p>
     <div class="campo" style="display:none"><label>Marca</label>
       <input id="pMarca" value="${escapar(p ? (p.marca||'') : '')}" placeholder="opcional"></div>
     <!-- A categoria vira etiqueta aqui na lista e o filtro da loja do link.
@@ -10547,8 +10651,22 @@ async function salvarProduto(pid){
     alert('O preço da promoção precisa ser MENOR que o preço normal do item.\n\nPara tirar a promoção, deixe o campo em branco.');
     return;
   }
+  /* O número do item no cardápio (82): em branco é "sem número". Repetido
+     não é erro do banco — dois "14" só confundem a cliente —, então a tela
+     pergunta antes. */
+  const numTxt = (document.getElementById('pNumero') || {}).value || '';
+  const numero = (n => n >= 1 && n <= 9999 ? n : null)(parseInt(numTxt, 10));
+  if(numTxt.trim() !== '' && numero == null){
+    alert('O número do item vai de 1 a 9999. Para tirar o número, deixe o campo em branco.');
+    return;
+  }
+  if(numero != null){
+    const outro = doSalao(bd.produtos || []).find(x => x.id !== pid && numeroDoItem(x) === numero);
+    if(outro && !confirm('O número ' + rotuloNumero(numero) + ' já é do item "' + outro.nome + '".\n\nUsar o mesmo número assim mesmo?')) return;
+  }
   const dados = {
     nome,
+    numero,
     marca: document.getElementById('pMarca').value || '',
     // Vazio vira nulo: "sem categoria", e o produto aparece só em "Todos".
     categoria: limparCategoria(document.getElementById('pCat').value) || null,
@@ -10582,6 +10700,10 @@ async function salvarProduto(pid){
     precoVisivel: document.getElementById('pPrecoVisivel').checked,
     foto,
   };
+  /* O número só viaja quando existe (ou quando está sendo apagado): banco sem
+     o módulo 82 não tem a coluna, e mandar `numero: null` derrubaria a
+     gravação de QUALQUER item. */
+  if(dados.numero == null && !(pid && acharProduto(pid) && acharProduto(pid).numero != null)) delete dados.numero;
   if(pid) Object.assign(acharProduto(pid), dados);
   else (bd.produtos = bd.produtos || []).push({id:alvoId, salaoId:salaoAtual, ...dados});
 
@@ -23181,9 +23303,9 @@ function abrirNovoPedido(){
     <div class="campo"><label for="npBusca">Itens</label>
       <input id="npBusca" placeholder="Buscar no cardápio..." oninput="npFiltrar(this.value)" autocomplete="off">
       <div id="npCardapio" class="np-cardapio">${itens.map(x => `
-        <button type="button" class="np-prod" data-nome="${escapar(semAcentoPainel(x.nome))}"
+        <button type="button" class="np-prod" data-nome="${escapar(semAcentoPainel((numeroDoItem(x) || '') + ' ' + x.nome))}"
                 onclick="npAdicionar('${x.id}')">
-          <span>${escapar(x.nome)}${promoValendo(x) ? ' <span class="tag t-promo">promoção</span>' : ''}</span><b>${real(precoAgora(x))}</b></button>`).join('')
+          <span>${seloNumero(x)}${escapar(x.nome)}${promoValendo(x) ? ' <span class="tag t-promo">promoção</span>' : ''}</span><b>${real(precoAgora(x))}</b></button>`).join('')
         || '<p class="secao-sub">Cadastre itens no Cardápio primeiro.</p>'}</div>
       <div id="npEscolha"></div>
       <div id="npLista" class="np-lista"></div>
@@ -23402,6 +23524,13 @@ function cfgPedidosDoSalao(){
     // 75: quanto o motoboy ganha — a taxa de cada entrega, ou um valor fixo; mais a diária.
     motoboy: Object.assign({ modo:'taxa', valor:0, diaria:0 }, p.motoboy || {}),
     fidelidade: Object.assign({ ligado:false, pedidos:10, desconto:10 }, p.fidelidade || {}),
+    // 82: o cardápio do link com fotos ou só em lista, e se mostra o número de cada item.
+    cardapio: {
+      estilo: p.cardapio && p.cardapio.estilo === 'lista' ? 'lista' : 'fotos',
+      numerar: !!(p.cardapio && p.cardapio.numerar === true),
+      // A fileira das categorias presa no alto do link, acompanhando a rolagem. Ligada por padrão.
+      fixar: !(p.cardapio && p.cardapio.fixar === false),
+    },
   };
 }
 /* ── O PIX ONLINE (81) ─────────────────────────────────────────────────
@@ -23717,7 +23846,9 @@ function desenharPedidos(){
       <h3 class="secao" style="margin-top:0">Primeiros passos</h3>
       <p class="secao-sub">Três coisas e o seu link já recebe pedido:</p>
       <ol>
-        <li><b>Monte o cardápio.</b> Cada item com nome, preço e foto.
+        <li><b>Monte o cardápio.</b> Cada item com nome, o que vem e o preço. Foto é opcional:
+          escolha se o link mostra o cardápio <b>com fotos</b> ou <b>só a lista</b>, e se cada item
+          tem <b>número</b> (01, 02, 03…), como no cardápio impresso.
           <button class="btn btn-peq btn-p" onclick="irPara('produtos')">Abrir o Cardápio</button></li>
         <li><b>Diga como entrega.</b> Taxa por bairro, pedido mínimo, formas de pagamento.
           <button class="btn btn-peq" onclick="abrirConfigPedidos()">Entrega e pagamento</button></li>
@@ -24170,19 +24301,23 @@ async function liberarMesa(mesa){
 /* O cardápio do garçom: foto grande, nome, preço; tocar na foto amplia. */
 function abrirLancarNaMesa(mesa){
   npItens = []; npEscolha = null;
+  const cd = cardapioDoSalao();
   const itens = doSalao(bd.produtos || []).filter(x => x.ativo !== false)
-    .sort((a, b) => String(limparCategoria(a.categoria) || 'zz').localeCompare(String(limparCategoria(b.categoria) || 'zz'), 'pt-BR')
+    .sort(cd.numerar ? ordemDoCardapio
+      : (a, b) => String(limparCategoria(a.categoria) || 'zz').localeCompare(String(limparCategoria(b.categoria) || 'zz'), 'pt-BR')
                     || String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
   const cats = [...new Set(itens.map(x => limparCategoria(x.categoria)).filter(Boolean))];
+  // 82: no cardápio "só a lista", o garçom também vê uma lista, sem as fotos.
+  const emLista = cd.estilo === 'lista';
   abrirModal('Mesa ' + mesa + ' — lançar itens', `
     <input id="npBusca" placeholder="Buscar no cardápio..." oninput="npFiltrar(this.value)" autocomplete="off" style="margin-bottom:8px">
     ${cats.length ? `<div class="mesas-pracas" style="margin-bottom:8px">${['Todos'].concat(cats).map((c, i) =>
       `<button type="button" class="btn btn-peq ${i ? '' : 'btn-p'}" onclick="garcomCategoria(this, ${i ? `'${escapar(c)}'` : 'null'})">${escapar(c)}</button>`).join('')}</div>` : ''}
-    <div id="npCardapio" class="garcom-cardapio">${itens.map(x => `
-      <div class="garcom-item np-prod" data-nome="${escapar(semAcentoPainel(x.nome))}" data-cat="${escapar(limparCategoria(x.categoria) || '')}">
-        <button type="button" class="garcom-foto" onclick="verFotoDoItem('${x.id}')" aria-label="Ver a foto de ${escapar(x.nome)}"
-          ${x.foto ? `style="background-image:url('${escapar(x.foto)}')"` : ''}>${x.foto ? '' : '<span data-ico="presente"></span>'}</button>
-        <div class="garcom-txt"><b>${escapar(x.nome)}</b><span>${promoValendo(x) ? '🔥 ' : ''}${real(precoAgora(x))}</span></div>
+    <div id="npCardapio" class="garcom-cardapio${emLista ? ' garcom-lista' : ''}">${itens.map(x => `
+      <div class="garcom-item np-prod" data-nome="${escapar(semAcentoPainel((numeroDoItem(x) || '') + ' ' + x.nome))}" data-cat="${escapar(limparCategoria(x.categoria) || '')}">
+        ${emLista ? '' : `<button type="button" class="garcom-foto" onclick="verFotoDoItem('${x.id}')" aria-label="Ver a foto de ${escapar(x.nome)}"
+          ${x.foto ? `style="background-image:url('${escapar(x.foto)}')"` : ''}>${x.foto ? '' : '<span data-ico="presente"></span>'}</button>`}
+        <div class="garcom-txt"><b>${seloNumero(x)}${escapar(x.nome)}</b><span>${promoValendo(x) ? '🔥 ' : ''}${real(precoAgora(x))}</span></div>
         <button type="button" class="btn btn-p btn-peq" onclick="npAdicionar('${x.id}')">+ Pôr</button>
       </div>`).join('') || '<p class="secao-sub">Cadastre itens no Cardápio primeiro.</p>'}</div>
     <div id="npEscolha"></div>
