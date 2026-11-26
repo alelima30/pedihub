@@ -5875,20 +5875,32 @@ body.tem-cor-produtos .num-item{ background:var(--prod-cor); color:var(--prod-tx
   color:var(--txt) }
 .loja-secao:first-child .loja-secao-tit{ margin-top:6px }
 
-/* ── TEXTO SOLTO SOBRE A FOTO DE FUNDO ─────────────────────────────────────
-   "Mudar a cor, porque está numa cor que não dá para enxergar direito." O
-   subtítulo de cada tela (o "Escolha o que vai pedir…" do cardápio) e as
-   etiquetas da capa ("DO CARDÁPIO") ficavam direto sobre a foto, em cinza —
-   sobre uma foto laranja, cinza some. Com fundo, ganham o mesmo vidro claro
-   dos cartões e a letra escura do texto. */
-body.tem-fundo .passo > p.sub{
-  background:color-mix(in srgb, var(--painel) 90%, transparent);
-  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-  padding:10px 14px; border-radius:var(--r, 12px); color:var(--txt);
+/* ── COM FOTO DE FUNDO, LETRA NENHUMA SOLTA SOBRE A FOTO ───────────────────
+   "As letras não podem ficar sem enxergar." O subtítulo do cardápio, os
+   nomes dos campos do pedido (Rua, Número, Bairro, Pagamento) e as frases de
+   ajuda ficavam direto sobre a foto, em cinza — numa foto laranja, somem. Uma
+   regra por elemento sempre deixaria um de fora; então, com fundo, cada tela
+   DE DENTRO (cardápio, item, pedido, acompanhamento…) fica inteira num painel
+   claro, e a foto aparece em volta, como moldura. A capa continua com a foto
+   em cheio: lá tudo já mora em cartões, e as etiquetas soltas ganham um vidro. */
+body.tem-fundo .passo.on:not(#p-capa):not(#p-abrindo):not(#p-saloes){
+  background:color-mix(in srgb, var(--painel) 94%, transparent);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border-radius:var(--r-lg, 16px); padding:16px 14px 18px; margin:0 -6px;
+  box-shadow:0 10px 30px -14px rgba(0,0,0,.45);
 }
-body.fundo-forte .passo > p.sub{ background:color-mix(in srgb, var(--painel) 97%, transparent) }
+body.fundo-forte .passo.on:not(#p-capa):not(#p-abrindo):not(#p-saloes){
+  background:color-mix(in srgb, var(--painel) 97%, transparent);
+}
+/* A fileira presa no alto, dentro do painel. */
+body.tem-fundo .loja-cats.fixa{ margin:0 -14px 6px; padding:10px 14px;
+  background:color-mix(in srgb, var(--painel) 97%, transparent) }
 body.tem-fundo #capaLoja > .cat, body.tem-fundo #capaServicos > .cat{
   display:inline-block; padding:4px 11px; border-radius:999px;
   background:color-mix(in srgb, var(--painel) 94%, transparent);
   backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
 }
+/* O rodapé legal, embaixo de tudo, também não fica solto sobre a foto. */
+body.tem-fundo .rodape-legal{ background:color-mix(in srgb, var(--painel) 92%, transparent);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-radius:var(--r, 12px);
+  margin-left:12px; margin-right:12px; padding:10px 14px }
