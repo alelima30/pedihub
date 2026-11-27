@@ -144,11 +144,12 @@ await p.waitForSelector('#npFolha .np-escolha', { timeout: 5000 });
 const folha = await p.evaluate(() => {
   const f = document.getElementById('npFolha'), r = f.querySelector('.np-folha-pe .btn-p').getBoundingClientRect();
   return { dentroDaJanela: !!f.closest('.modal'), botaoNaTela: r.top >= 0 && r.bottom <= innerHeight,
-           ops: [...f.querySelectorAll('.np-ops button')].map(b => b.textContent.replace(/\s+/g, ' ').trim()) };
+           ops: [...f.querySelectorAll('.np-op')].map(b => b.querySelector('.np-op-nome').textContent.trim()
+             + ' ' + b.querySelector('.np-op-preco').textContent.replace(/\s+/g, ' ').trim()) };
 });
 igual('fora da janela (nada a esconde)', folha.dentroDaJanela, false);
 verdade('o "Pôr no pedido" está na tela do celular', folha.botaoNaTela);
-igual('os adicionais, com o preço', folha.ops, ['Bacon +R$ 4,00', 'Cheddar +R$ 3,00']);
+igual('os adicionais, cada um numa linha com o preço', folha.ops, ['Bacon + R$ 4,00', 'Cheddar + R$ 3,00']);
 await p.click('#npFolha .np-ops button:has-text("Bacon")');
 if(process.env.SAIDA){ await p.waitForTimeout(300); await p.screenshot({ path: process.env.SAIDA + '/np-adicionais.png' }); }
 await p.click('#npFolha button:has-text("Pôr no pedido")');

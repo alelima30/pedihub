@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.dce20f';
+const VERSAO_APP = 'v9.537ea4';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23512,7 +23512,7 @@ function abrirNovoPedido(){
     alert('Na demonstração não há servidor: o pedido lançado precisa do sistema ligado ao banco.');
     return;
   }
-  npItens = []; npEscolha = null; npCat = null;
+  npItens = []; npEscolha = null; npCat = null; npClienteSel = null; npClienteInfo = null;
   const c = cfgPedidosDoSalao();
   const itens = doSalao(bd.produtos || []).filter(x => x.ativo !== false);
   abrirModal('Novo pedido', `
@@ -23521,11 +23521,15 @@ function abrirNovoPedido(){
       <label class="check"><input type="radio" name="npOrigem" value="balcao"> <span>Balcão</span></label>
     </div>
     <div class="dupla">
-      <div class="campo"><label for="npNome">Nome do cliente</label>
-        <input id="npNome" maxlength="80" placeholder="Ex.: Carlos"></div>
+      <div class="campo np-cli-campo"><label for="npNome">Nome do cliente</label>
+        <input id="npNome" maxlength="80" placeholder="Digite para buscar, ou um nome novo" autocomplete="off"
+               oninput="npBuscarCliente(this.value)">
+        <div id="npSugestoes" class="np-sug" hidden></div></div>
       <div class="campo"><label for="npTel">WhatsApp (opcional no balcão)</label>
-        <input id="npTel" inputmode="tel" placeholder="(11) 99999-8888"></div>
+        <input id="npTel" inputmode="tel" placeholder="(11) 99999-8888" autocomplete="off"
+               oninput="npTelDigitado(this.value)"></div>
     </div>
+    <div id="npCliente" class="np-cli"></div>
 
     <div class="campo"><label for="npBusca">Itens</label>
       <input id="npBusca" placeholder="Buscar no cardápio (nome ou número)..." oninput="npFiltrar(this.value)" autocomplete="off">
@@ -23575,6 +23579,101 @@ function abrirNovoPedido(){
 }
 
 function semAcentoPainel(t){ return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+
+/* ── O CLIENTE NO NOVO PEDIDO ────────────────────────────────────────────
+   "Não posso achar o cliente já cadastrado? Nem cadastrar na hora?"
+   - Digitando o nome (ou parte do WhatsApp), aparecem as fichas da casa;
+     um toque preenche o nome e o WhatsApp.
+   - Digitado o WhatsApp de quem já tem ficha, ela é reconhecida sozinha.
+   - Reconhecido: "✓ Cliente cadastrado · 12 pedidos · último em 20/11", e o
+     último endereço de entrega já vai para os campos (cliente_para_pedido, 87).
+   - WhatsApp novo: "Cliente novo — o cadastro é criado com o pedido" (o banco
+     cria a ficha pelo WhatsApp), com o aniversário opcional. */
+let npClienteSel = null, npClienteInfo = null;
+const soDigitosTel = t => { const d = String(t || '').replace(/\D/g, ''); return d.length >= 12 && d.startsWith('55') ? d.slice(2) : d; };
+function npFichas(){ return doSalao(bd.clientes || []).filter(c => c && c.nome); }
+function npBuscarCliente(q){
+  if(npClienteSel && q.trim() !== npClienteSel.nome){ npClienteSel = null; npClienteInfo = null; npPintarCliente(); }
+  const alvo = document.getElementById('npSugestoes'); if(!alvo) return;
+  const b = semAcentoPainel(q).trim(), dig = String(q || '').replace(/\D/g, '');
+  const lista = b.length < 2 ? [] : npFichas().filter(c => semAcentoPainel(c.nome).includes(b)
+    || (dig.length >= 4 && soDigitosTel(c.telefone).includes(dig))).slice(0, 6);
+  alvo.innerHTML = lista.map(c => `<button type="button" class="np-sug-item" data-id="${c.id}"
+      onmousedown="event.preventDefault()" onclick="npEscolherCliente(this.dataset.id)">
+      <b>${escapar(c.nome)}</b><span>${c.telefone ? escapar(telefoneNaTela(soDigitosTel(c.telefone))) : 'sem WhatsApp'}</span></button>`).join('');
+  alvo.hidden = !lista.length;
+}
+function npEscolherCliente(id){
+  const c = acharCliente(id); if(!c) return;
+  const nome = document.getElementById('npNome'), tel = document.getElementById('npTel');
+  if(nome) nome.value = c.nome;
+  if(tel && c.telefone) tel.value = telefoneNaTela(soDigitosTel(c.telefone));
+  const s = document.getElementById('npSugestoes'); if(s){ s.hidden = true; s.innerHTML = ''; }
+  npClienteSel = c; npClienteInfo = null;
+  npPintarCliente();
+  npCarregarCliente(c.telefone);
+}
+function npTelDigitado(v){
+  const d = soDigitosTel(v);
+  if(d.length < 10){ if(npClienteSel && !(npClienteSel.telefone)){ /* ficha sem WhatsApp: fica */ } else npClienteSel = null;
+    npClienteInfo = null; npPintarCliente(); return; }
+  const c = npFichas().find(x => soDigitosTel(x.telefone) === d);
+  if(c){
+    npClienteSel = c;
+    const nome = document.getElementById('npNome'); if(nome && !nome.value.trim()) nome.value = c.nome;
+  } else npClienteSel = null;
+  npClienteInfo = null;
+  npPintarCliente();
+  npCarregarCliente(d);
+}
+// O histórico e o último endereço, pelo WhatsApp. Banco sem o 87: fica sem, calado.
+function npCarregarCliente(tel){
+  const d = soDigitosTel(tel);
+  if(d.length < 10 || !NA_NUVEM) return;
+  Dados.chamar('cliente_para_pedido', { p_salao: salaoAtual, p_telefone: d }).then(r => {
+    if(soDigitosTel((document.getElementById('npTel') || {}).value) !== d) return;   // já digitou outro
+    npClienteInfo = Array.isArray(r) ? r[0] : r;
+    npPreencherEndereco();
+    npPintarCliente();
+  }).catch(() => {});
+}
+// O último endereço vai para os campos de entrega que estiverem vazios.
+function npPreencherEndereco(){
+  const ent = npClienteInfo && npClienteInfo.entrega;
+  if(!ent || !ent.endereco) return;
+  const e = ent.endereco;
+  const por = (id, v) => { const el = document.getElementById(id); if(el && !el.value.trim() && v) el.value = v; };
+  por('npRua', e.rua); por('npNum', e.numero); por('npBairro', ent.bairro || e.bairro); por('npRef', e.referencia);
+  if(typeof npTaxaDoBairro === 'function') npTaxaDoBairro();
+}
+function npTrocarCliente(){
+  npClienteSel = null; npClienteInfo = null;
+  ['npNome', 'npTel'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  npPintarCliente();
+  const n = document.getElementById('npNome'); if(n) n.focus();
+}
+function npPintarCliente(){
+  const alvo = document.getElementById('npCliente'); if(!alvo) return;
+  const info = npClienteInfo || {};
+  const dig = soDigitosTel((document.getElementById('npTel') || {}).value);
+  const quando = info.ultimo ? new Date(info.ultimo).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '';
+  if(npClienteSel){
+    const c = npClienteSel, hj = hoje().slice(5);
+    const niver = c.nascimento && String(c.nascimento).slice(5, 10) === hj;
+    const ent = info.entrega && info.entrega.endereco;
+    alvo.innerHTML = `<div class="np-cli-ok">
+        <span>✓ <b>Cliente cadastrado:</b> ${escapar(c.nome)}${Number(info.pedidos) ? ' · ' + Number(info.pedidos)
+          + (Number(info.pedidos) === 1 ? ' pedido' : ' pedidos') : ''}${quando ? ' · último em ' + quando : ''}${niver ? ' · 🎂 <b>faz aniversário hoje</b>' : ''}</span>
+        <button type="button" class="link" onclick="npTrocarCliente()">Trocar</button></div>
+      ${ent ? `<div class="np-cli-end">📍 Último endereço: ${escapar([ent.rua && ent.rua + (ent.numero ? ', ' + ent.numero : ''),
+          info.entrega.bairro || ent.bairro].filter(Boolean).join(' — '))} <small>(já vai para a entrega)</small></div>` : ''}`;
+    return;
+  }
+  alvo.innerHTML = dig.length >= 10 ? `<div class="np-cli-novo">
+      <span>🆕 <b>Cliente novo</b> — o cadastro é criado com o pedido (nome e WhatsApp).</span>
+      <label class="np-cli-niver">Aniversário <small>(opcional)</small>
+        <input type="date" id="npNasc" max="${hoje()}"></label></div>` : '';
+}
 /* ── OS ITENS DO NOVO PEDIDO, COMO NA LISTA DO LINK ──────────────────────
    "Os itens aparecerem como aparece a lista do link, não assim" (eram
    bolinhas soltas, em ordem alfabética, sem o que vem no lanche). Agora:
@@ -23638,6 +23737,7 @@ function npPintarEntrega(){
   const modo = (document.querySelector('input[name="npModo"]:checked') || {}).value;
   const ent = modo === 'entrega';
   const e = document.getElementById('npEntrega'); if(e) e.style.display = ent ? '' : 'none';
+  if(ent) npPreencherEndereco();
   const m = document.getElementById('npMesaCampo'); if(m) m.style.display = modo === 'mesa' ? '' : 'none';
   // "Paga na mesa, no fim" só existe na mesa.
   const naMesa = document.querySelector('#npPag option[data-mesa]');
@@ -23672,7 +23772,7 @@ async function npAdicionar(pid){
     npAvisarQueEntrou(prod.nome);
     return;
   }
-  npEscolha = { pid, grupos, sel: {} };
+  npEscolha = { pid, grupos, sel: {}, qtd: 1, obs: '' };
   npPintarEscolha();
 }
 
@@ -23714,22 +23814,42 @@ function npPintarEscolha(){
   const prod = acharProduto(e.pid) || {}, calc = npCalcular();
   const aviso = document.getElementById('npEntrou'); if(aviso) aviso.classList.remove('on');
   const rolou = (f.querySelector('.np-folha-corpo') || {}).scrollTop || 0;
+  const qtd = Math.max(1, Number(e.qtd) || 1);
+  /* "Tem que melhorar": eram botões soltos, quebrando linha de qualquer
+     jeito. Agora cada adicional é uma LINHA — a marcação à esquerda (caixinha
+     quando dá para escolher vários; bolinha quando é um só), o nome e o preço
+     alinhado à direita —, cada grupo com quantos já foram escolhidos, a
+     observação do item ("sem cebola") e a quantidade no pé. */
   f.innerHTML = `<div class="np-folha-caixa card np-escolha" role="dialog" aria-modal="true" aria-label="Adicionais">
     <div class="np-folha-topo">
-      <div><b>${seloNumero(prod)}${escapar(prod.nome)}</b><small>Escolha os adicionais e toque em Pôr no pedido</small></div>
+      <div><b>${seloNumero(prod)}${escapar(prod.nome)}</b><small>${real(precoAgora(prod))} · escolha os adicionais e toque em Pôr no pedido</small></div>
       <button type="button" class="btn btn-peq" aria-label="Fechar" onclick="npEscolha=null;npPintarEscolha()">✕</button>
     </div>
     <div class="np-folha-corpo">
-    ${e.grupos.map(g => `<div class="np-grupo"><div class="np-grupo-t">${escapar(g.nome)}
-        <span>${Number(g.min) ? 'obrigatório' : 'opcional'} · até ${g.max}</span></div>
+    ${e.grupos.map(g => {
+      const um = Number(g.max) === 1, sel = (e.sel[g.id] || []).length;
+      return `<div class="np-grupo"><div class="np-grupo-t"><b>${escapar(g.nome)}</b>
+        <span>${Number(g.min) ? 'obrigatório' : 'opcional'} · ${um ? 'escolha 1' : 'até ' + g.max}</span>
+        ${sel ? `<em>${sel} ${sel === 1 ? 'escolhido' : 'escolhidos'}</em>` : ''}</div>
       <div class="np-ops">${(g.opcoes || []).filter(o => o.ativo !== false).map(o => {
         const on = (e.sel[g.id] || []).includes(o.id);
-        return `<button type="button" class="btn btn-peq ${on ? 'btn-p' : ''}" aria-pressed="${on}" onclick="npMarcar('${g.id}','${o.id}')">${on ? '✓ ' : ''}${escapar(o.nome)}${
-          Number(o.preco) ? ' <small>+' + real(Number(o.preco)) + '</small>' : ''}</button>`; }).join('')}</div></div>`).join('')}
+        return `<button type="button" class="np-op${on ? ' on' : ''}${um ? ' um' : ''}" role="${um ? 'radio' : 'checkbox'}" aria-checked="${on}"
+            onclick="npMarcar('${g.id}','${o.id}')"><span class="np-op-marca" aria-hidden="true"></span>
+          <span class="np-op-nome">${escapar(o.nome)}</span>
+          <span class="np-op-preco">${Number(o.preco) ? '+ ' + real(Number(o.preco)) : 'grátis'}</span></button>`; }).join('')}</div></div>`;
+    }).join('')}
+      <div class="np-grupo"><label class="np-grupo-t" for="npObsItem"><b>Observação do item</b><span>opcional</span></label>
+        <textarea id="npObsItem" rows="2" maxlength="160" placeholder="Ex.: sem cebola, bem passado"
+                  oninput="if(npEscolha) npEscolha.obs = this.value">${escapar(e.obs || '')}</textarea></div>
     </div>
     <div class="np-folha-pe">
       ${calc.falta ? `<span class="np-falta">${escapar(calc.falta)}</span>` : ''}
-      <button type="button" class="btn btn-p" ${calc.falta ? 'disabled' : ''} onclick="npConfirmarEscolha()">Pôr no pedido · ${real(calc.preco)}</button>
+      <div class="np-pe-linha">
+        <span class="np-qtd" role="group" aria-label="Quantidade">
+          <button type="button" aria-label="Menos um" onclick="npQtdEscolha(-1)">−</button><b>${qtd}</b>
+          <button type="button" aria-label="Mais um" onclick="npQtdEscolha(1)">+</button></span>
+        <button type="button" class="btn btn-p" ${calc.falta ? 'disabled' : ''} onclick="npConfirmarEscolha()">Pôr no pedido · ${real(calc.preco * qtd)}</button>
+      </div>
     </div></div>`;
   const corpo = f.querySelector('.np-folha-corpo'); if(corpo) corpo.scrollTop = rolou;
 }
@@ -23744,17 +23864,27 @@ function npAvisarQueEntrou(nome){
 }
 function npMarcar(gid, oid){
   const g = npEscolha.grupos.find(x => x.id === gid); if(!g) return;
+  const o = document.getElementById('npObsItem'); if(o) npEscolha.obs = o.value;
   let sel = npEscolha.sel[gid] || [];
   if(sel.includes(oid)) sel = sel.filter(x => x !== oid);
   else if(Number(g.max) === 1) sel = [oid];
   else if(sel.length < Number(g.max)) sel = sel.concat(oid);
   npEscolha.sel[gid] = sel; npPintarEscolha();
 }
+function npQtdEscolha(d){
+  if(!npEscolha) return;
+  const o = document.getElementById('npObsItem'); if(o) npEscolha.obs = o.value;
+  npEscolha.qtd = Math.min(99, Math.max(1, (Number(npEscolha.qtd) || 1) + d));
+  npPintarEscolha();
+}
 function npConfirmarEscolha(){
   const calc = npCalcular(); if(calc.falta) return;
   const prod = acharProduto(npEscolha.pid) || {};
-  npItens.push({ pid: npEscolha.pid, nome: prod.nome + (calc.texto ? ' — ' + calc.texto : ''), qtd: 1,
-                 opcoes: calc.ids, texto: calc.texto, preco: calc.preco });
+  const o = document.getElementById('npObsItem');
+  const obs = String(o ? o.value : npEscolha.obs || '').trim().slice(0, 160);
+  npItens.push({ pid: npEscolha.pid, nome: prod.nome + (calc.texto ? ' — ' + calc.texto : '') + (obs ? ' (' + obs + ')' : ''),
+                 qtd: Math.max(1, Number(npEscolha.qtd) || 1), opcoes: calc.ids, texto: calc.texto, preco: calc.preco,
+                 observacao: obs });
   npEscolha = null; npPintarEscolha(); npPintarLista();
   npAvisarQueEntrou(prod.nome || 'Item');
 }
@@ -23808,14 +23938,19 @@ async function lancarNovoPedido(){
     taxa: modo === 'entrega' ? v('npTaxa') : '',
     mesa: modo === 'mesa' ? v('npMesa') : '',
     endereco: modo === 'entrega' ? { rua: v('npRua'), numero: v('npNum'), bairro: v('npBairro'), referencia: v('npRef') } : null,
-    itens: npItens.map(x => ({ produto: x.pid, quantidade: x.qtd, opcoes: x.opcoes })),
+    itens: npItens.map(x => ({ produto: x.pid, quantidade: x.qtd, opcoes: x.opcoes, observacao: x.observacao || '' })),
   };
+  const nasc = v('npNasc');
   const bt = document.querySelector('.modal .btn-p');
   if(bt){ bt.disabled = true; bt.textContent = 'Lançando…'; }
   try{
     const r = await Dados.chamar('lancar_pedido', { p_salao: salaoAtual, p_pedido: pedido });
+    // O aniversário do cliente novo vai para a ficha que o pedido acabou de criar (84).
+    if(nasc && r && r.token) Dados.chamar('aniversario_do_pedido', { p_token: r.token, p_nascimento: nasc }).catch(() => {});
     fecharModal();
     await carregarPedidos();
+    // A ficha nova aparece em Clientes sem esperar a próxima volta.
+    try{ sincronizarAgenda(); }catch(e){}
     if(r && r.numero) setTimeout(() => alert('Pedido #' + r.numero + ' lançado: ' + real(Number(r.total)) + ', já em preparo.'), 50);
   }catch(e){
     alert('Não consegui lançar o pedido:\n\n' + limparRecusa(e.message));
@@ -24938,7 +25073,7 @@ async function lancarNaMesa(mesa){
   try{
     await Dados.chamar('lancar_pedido', { p_salao: salaoAtual, p_pedido: {
       origem: 'mesa', nome: 'Mesa ' + mesa, entrega: 'mesa', mesa: String(mesa), pagamento: 'na_mesa',
-      observacao: obs, itens: npItens.map(x => ({ produto: x.pid, quantidade: x.qtd, opcoes: x.opcoes })) } });
+      observacao: obs, itens: npItens.map(x => ({ produto: x.pid, quantidade: x.qtd, opcoes: x.opcoes, observacao: x.observacao || '' })) } });
   }catch(e){
     alert('Não consegui mandar: ' + limparRecusa(e.message));
     if(bt){ bt.disabled = false; bt.textContent = 'Mandar para a cozinha'; }

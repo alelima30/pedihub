@@ -152,6 +152,7 @@ preparar() {
   carregar "$RAIZ/supabase/84_cliente_whatsapp.sql"
   carregar "$RAIZ/supabase/85_endereco_estilo.sql"
   carregar "$RAIZ/supabase/86_link_do_pedido.sql"
+  carregar "$RAIZ/supabase/87_cliente_no_pedido.sql"
   carregar "$AQUI/00_ajuda.sql"
 }
 
