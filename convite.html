@@ -37,7 +37,15 @@
   display:inline-block; margin-top:10px; padding:5px 12px; border-radius:999px;
   background:var(--az-soft); color:var(--marca); font-size:13px; font-weight:700;
 }
-.conv .campo{ margin-bottom:12px }
+/* OS CAMPOS, COMO NA TELA DE ENTRAR: o rótulo em cima, a caixa na largura
+   toda, todas da mesma altura. Esta página não tinha regra de campo: o
+   rótulo ficava ao lado e cada caixa saía de uma largura ("tá bagunça"). */
+.conv .campo{ margin-bottom:16px }
+.conv .campo label{ display:block; font-size:13.5px; font-weight:600; margin-bottom:7px; color:var(--txt) }
+.conv .campo input{ display:block; width:100%; box-sizing:border-box; min-height:48px; padding:12px 13px;
+  font:inherit; font-size:16px; color:var(--txt); border:1px solid var(--borda); border-radius:var(--r-sm); background:var(--painel2) }
+.conv .campo input:focus{ outline:none; border-color:var(--marca) !important;
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--marca) 18%, transparent) }
 .conv .btn{ width:100% }
 .conv-troca{
   text-align:center; margin-top:14px; font-size:13px; color:var(--txt2);
@@ -178,7 +186,7 @@ function telaConfirmar(){
 function telaCriarConta(){
   $('convCorpo').innerHTML = `
     <div class="campo"><label for="cNome">Seu nome</label>
-      <input id="cNome" autocomplete="name" placeholder="Como as clientes te chamam"></div>
+      <input id="cNome" autocomplete="name" placeholder="Seu nome e sobrenome"></div>
     <div class="campo"><label for="cEmail">E-mail</label>
       <input id="cEmail" type="email" autocomplete="email" placeholder="voce@email.com"></div>
     <div class="campo"><label for="cTel">WhatsApp</label>
