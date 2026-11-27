@@ -7953,10 +7953,35 @@ function entrarNoSalao(slug){
 
   historico = [];
   irPara('capa', true);
-  tocarIntro(s);
+  // O link "Acompanhar pedido" (?pedido=<código>), que a lanchonete manda no
+  // WhatsApp: abre o pedido direto, sem intro, e guarda em "Meus pedidos".
+  const doLink = tokenDoPedidoNoLink();
+  if(doLink) abrirPedidoDoLink(doLink); else tocarIntro(s);
   // O restaurante pergunta ao banco como recebe pedido (taxas, mínimo,
   // aberto). Assíncrono: a capa já está na tela e se redesenha na resposta.
   carregarPedidosDaCasa();
+}
+
+/* ── O LINK DO PEDIDO (86) ─────────────────────────────────────────────────
+   "Se o cliente não tiver cadastro, ele consegue ver o pedido?" Antes, só no
+   celular em que pediu (o código fica guardado nele). Com o link que a
+   lanchonete manda no WhatsApp, em qualquer aparelho: o código do pedido vai
+   no endereço, e o meu_pedido() abre sem conta. */
+function tokenDoPedidoNoLink(){
+  try{
+    const t = String(new URLSearchParams(location.search).get('pedido') || '').trim();
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t) ? t.toLowerCase() : '';
+  }catch(e){ return ''; }
+}
+function abrirPedidoDoLink(token){
+  if(!meusPedidosGuardados().some(x => x && x.token === token)) guardarPedido(token, null);
+  abrirAcompanhar(token);
+  // O número entra em "Meus pedidos" quando o pedido chega do banco.
+  Dados.chamar('meu_pedido', { p_token: token }).then(d => {
+    if(!d || d.numero == null) return;
+    const l = meusPedidosGuardados().map(x => x && x.token === token && x.numero == null ? Object.assign({}, x, { numero: d.numero }) : x);
+    try{ localStorage.setItem(chaveDosPedidos(), JSON.stringify(l)); }catch(e){}
+  }).catch(() => {});
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

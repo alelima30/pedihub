@@ -15313,6 +15313,19 @@ language sql stable security definer set search_path = public as $$
   where s.slug = p_slug and s.status = 'ativo'
 $$;
 
+create or replace function public.token_do_pedido(p_pedido uuid)
+returns uuid language plpgsql stable security definer set search_path = public as $$
+declare v public.pedidos;
+begin
+  select * into v from public.pedidos where id = p_pedido;
+  if v.id is null or not public.e_equipe(v.salao_id) then
+    raise exception 'Sem permissão neste estabelecimento.' using errcode = 'insufficient_privilege';
+  end if;
+  return v.token;
+end $$;
+revoke all on function public.token_do_pedido(uuid) from public, anon;
+grant execute on function public.token_do_pedido(uuid) to authenticated;
+
 alter table public.agendamentos
   add column if not exists gerenciar_token uuid not null default gen_random_uuid();
 alter table public.lista_espera

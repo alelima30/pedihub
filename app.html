@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.9a192b';
+const VERSAO_APP = 'v9.46f7c2';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -24132,6 +24132,7 @@ function cartaoDePedido(p){
       · ${Number(p.desconto) ? 'cupom ' + escapar(p.cupom || '') + ' − ' + real(Number(p.desconto)) + ' · ' : ''}${
       Number(p.taxa) ? 'taxa ' + real(Number(p.taxa)) + ' · ' : ''}<b>Total ${real(Number(p.total))}</b></p>
     ${p.vendaErro ? `<p class="pedido-obs" style="color:var(--alerta)">${escapar(p.vendaErro)}</p>` : ''}
+    ${caixaZapDoPedido(p)}
     ${p.status === 'cancelado' ? `<p class="pedido-obs">${p.cancelado_por === 'cliente'
       ? 'Cancelado por quem pediu.' : 'Motivo: ' + escapar(p.motivo || 'não informado')}</p>` : ''}
     <div class="card-acoes">
@@ -24141,6 +24142,117 @@ function cartaoDePedido(p){
         onclick="mudarPedido('${p.id}', 'cancelado')">Cancelar</button>` : ''}
       <button class="btn" onclick="imprimirPedido('${p.id}')">Imprimir</button>
     </div>
+  </div>`;
+}
+
+/* ── AVISAR O CLIENTE PELO WHATSAPP DA LANCHONETE (86) ────────────────────
+   "Depois que a lanchonete confirma, aparecer no pedido uma moldura para
+   enviar no WhatsApp todos os dados do pedido e o link Acompanhar pedido."
+   Aceito o pedido, o cartão ganha a moldura "Avise o cliente no WhatsApp":
+   um toque abre o WhatsApp do próprio aparelho com a mensagem pronta — os
+   itens, o total, o pagamento (com a chave Pix, se for Pix), a entrega, a
+   previsão e o link para acompanhar. Grátis, sem a Meta no meio: sai do
+   WhatsApp da casa. Depois de enviado, a moldura vira "✓ Enviado" (lembrado
+   neste aparelho), com "Enviar de novo".
+   O link leva o código do pedido (token_do_pedido, só para a equipe): abre o
+   pedido em qualquer celular, sem conta. É um <a> de verdade, e não um
+   window.open depois de esperar o banco — no celular, janela aberta depois
+   de uma espera é barrada; por isso o código vem antes, ao desenhar. */
+const CHAVE_ZAP_ENVIADO = 'pedihub.pedidos.zap';
+const tokensDosPedidos = {};
+function zapEnviados(){
+  try{ return JSON.parse(localStorage.getItem(CHAVE_ZAP_ENVIADO) || '{}') || {}; }catch(e){ return {}; }
+}
+function marcarZapEnviado(id){
+  const m = zapEnviados(); m[id] = Date.now();
+  const n = {};
+  Object.keys(m).sort((a, b) => m[b] - m[a]).slice(0, 300).forEach(k => { n[k] = m[k]; });
+  try{ localStorage.setItem(CHAVE_ZAP_ENVIADO, JSON.stringify(n)); }catch(e){}
+  setTimeout(() => { if(telaAtual === 'pedidos') desenharPedidos(); }, 600);
+}
+function linkDoPedido(token){
+  return token ? pdLinkDoSalao() + '&pedido=' + encodeURIComponent(token) : '';
+}
+function minutosDoTempoPainel(t){
+  const s = String(t || '').toLowerCase().replace(',', '.').trim();
+  const h = s.match(/(\d+(?:\.\d+)?)\s*h(?:oras?|rs?)?\b\s*(?:e\s*)?(\d{1,2}|meia)?/) || s.match(/(\d+(?:\.\d+)?)\s*h(\d{1,2})?/);
+  if(h) return Math.round(Number(h[1]) * 60 + (h[2] === 'meia' ? 30 : Number(h[2] || 0)));
+  if(/\bhora\b/.test(s) && !/\d/.test(s)) return 60;
+  const nums = [...s.matchAll(/\d+/g)].map(m => Number(m[0]));
+  return nums.length ? Math.max(...nums) : null;
+}
+function mensagemDoPedidoZap(p, link){
+  const sl = acharSalao(salaoAtual) || {};
+  const c = cfgPedidosDoSalao();
+  const primeiro = String(p.nome || '').trim().split(/\s+/)[0] || '';
+  const L = [];
+  L.push(`Olá${primeiro ? ', ' + primeiro : ''}! 👋`);
+  /* Texto puro, para o WhatsApp (vai no link, codificado): montado com +, e
+     não com interpolação — a mesma regra da via da cozinha (imprimirPedido). */
+  const casa = '*' + (sl.nome || '') + '*', num = '*#' + p.numero + '*';
+  L.push(p.status === 'saiu' ? 'O seu pedido ' + num + ' do ' + casa + ' saiu para entrega.'
+    : p.status === 'pronto' ? 'O seu pedido ' + num + ' do ' + casa + ' está pronto para retirar.'
+    : 'O ' + casa + ' confirmou o seu pedido ' + num + '.');
+  L.push('', '🧾 *Seu pedido*');
+  (p.itens || []).forEach(i => L.push(i.quantidade + 'x ' + i.nome + (i.observacao ? ' (' + i.observacao + ')' : '')
+    + ' — ' + real(Number(i.preco) * i.quantidade)));
+  if(p.observacao) L.push('Obs.: ' + p.observacao);
+  L.push('');
+  if(Number(p.desconto)) L.push(`Desconto${p.cupom ? ' (' + p.cupom + ')' : ''}: − ${real(Number(p.desconto))}`);
+  if(Number(p.taxa)) L.push(`Taxa de entrega: ${real(Number(p.taxa))}`);
+  L.push(`💰 *Total: ${real(Number(p.total))}*`);
+  if(p.pagoOnline) L.push('✅ Pago pelo Pix');
+  else {
+    L.push(`💳 Pagamento: ${PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento || ''}${
+      p.troco ? ' — troco para ' + real(Number(p.troco)) : ''}`);
+    const pag = window.Funcionamento ? Funcionamento.pagamentos((sl.cfg || {}).pagamentos) : null;
+    if(p.pagamento === 'pix' && pag && pag.pix) L.push(`🔑 Chave Pix: ${pag.pix}`);
+  }
+  if(p.entrega === 'entrega') L.push(`🛵 Entrega: ${enderecoDoPedido(p)}`);
+  else if(p.entrega === 'mesa') L.push(`🍽️ Mesa ${p.mesa || ''}`);
+  else {
+    const end = window.Endereco ? Endereco.linha(sl.endereco) : '';
+    L.push(`🏪 Retirada${end ? ': ' + end : ' no balcão'}`);
+  }
+  if(c.tempo && p.status === 'em_preparo'){
+    const min = minutosDoTempoPainel(c.tempo), d = new Date(p.criado_em);
+    const hora = min > 0 && !isNaN(d) ? new Date(d.getTime() + min * 60000)
+      .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+    L.push(`⏱️ Previsão: ${c.tempo}${hora ? ' (por volta das ' + hora + ')' : ''}`);
+  }
+  if(link) L.push('', '📍 *Acompanhe seu pedido:*', link);
+  L.push('', 'Obrigado pela preferência!');
+  return L.join('\n');
+}
+function hrefZapDoPedido(p){
+  const tel = String(p.telefone || '').replace(/\D/g, '');
+  return 'https://wa.me/' + (tel.length > 11 ? tel : '55' + tel) + '?text='
+    + encodeURIComponent(mensagemDoPedidoZap(p, linkDoPedido(tokensDosPedidos[p.id])));
+}
+// O código do pedido vem antes do toque; ao chegar, o botão ganha o link.
+function buscarTokenDoPedido(id){
+  if(id in tokensDosPedidos) return;
+  tokensDosPedidos[id] = '';
+  Dados.chamar('token_do_pedido', { p_pedido: id }).then(t => {
+    tokensDosPedidos[id] = Array.isArray(t) ? t[0] : t;
+    const p = (pedidosLista || []).find(x => x.id === id);
+    if(p) document.querySelectorAll(`.pd-zap a[data-id="${id}"]`).forEach(a => { a.href = hrefZapDoPedido(p); });
+  }).catch(() => {});   // banco sem o 86: a mensagem vai sem o link, com o resto
+}
+function caixaZapDoPedido(p){
+  const tel = String(p.telefone || '').replace(/\D/g, '');
+  if(!tel || !['em_preparo', 'saiu', 'pronto'].includes(p.status)) return '';
+  if(NA_NUVEM) buscarTokenDoPedido(p.id);
+  const feito = !!zapEnviados()[p.id];
+  return `<div class="pd-zap${feito ? ' feito' : ''}">
+    ${feito
+      ? `<span>✓ <b>Enviado no WhatsApp</b> — o cliente tem o resumo e o link para acompanhar.</span>
+         <a class="pd-zap-de-novo" href="${escapar(hrefZapDoPedido(p))}" target="_blank" rel="noopener"
+            data-id="${p.id}" onclick="marcarZapEnviado(this.dataset.id)">Enviar de novo</a>`
+      : `<div class="pd-zap-txt"><b>📲 Avise o cliente no WhatsApp</b>
+           <span>Vai o resumo do pedido e o link <b>Acompanhar pedido</b>, pelo seu WhatsApp.</span></div>
+         <a class="btn pd-zap-b" href="${escapar(hrefZapDoPedido(p))}" target="_blank" rel="noopener"
+            data-id="${p.id}" onclick="marcarZapEnviado(this.dataset.id)"><span data-ico="whatsapp"></span>Enviar no WhatsApp</a>`}
   </div>`;
 }
 
@@ -24212,6 +24324,8 @@ function desenharPedidos(){
         fim.length - entregues.length ? ` · ${fim.length - entregues.length} cancelado(s)` : ''}</summary>
       ${fim.length ? `<div class="pedido-grade">${fim.map(cartaoDePedido).join('')}</div>` : '<p class="secao-sub">Nenhum ainda.</p>'}
     </details>`;
+  // O ícone do WhatsApp na moldura "Avise o cliente".
+  if(window.aplicarIcones) aplicarIcones(alvo);
   // Viu a tela: o destaque de "novo" some na próxima volta.
   setTimeout(() => pedidosNovos.clear(), 15000);
 }

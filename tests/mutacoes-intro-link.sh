@@ -52,9 +52,8 @@ PY
 
 echo "1. o link não toca a abertura"
 troca cardapio.html \
-  "  irPara('capa', true);
-  tocarIntro(s);" \
-  "  irPara('capa', true);" \
+  "  if(doLink) abrirPedidoDoLink(doLink); else tocarIntro(s);" \
+  "  if(doLink) abrirPedidoDoLink(doLink);" \
   && rodar "escolhida e nunca vista"
 
 echo "2. toca a cada visita à capa"

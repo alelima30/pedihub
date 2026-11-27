@@ -1836,6 +1836,11 @@ with conferencia(ordem, item, veredito, detalhe) as (
          case when pg_get_functiondef(to_regprocedure('public.vitrine(text)')) not like '%enderecoEstilo%'
               then 'cole o 85_endereco_estilo.sql' else '' end
   union all
+  /* PediHub (86): o link do pedido, para a lanchonete mandar no WhatsApp. */
+  select 102, 'Link do pedido para o WhatsApp',
+         case when to_regprocedure('public.token_do_pedido(uuid)') is null then 'FALTA' else 'certo' end,
+         case when to_regprocedure('public.token_do_pedido(uuid)') is null then 'cole o 86_link_do_pedido.sql' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um

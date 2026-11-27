@@ -6077,3 +6077,18 @@ body.tem-fundo .pd-aviso{
    geral `.fone [data-cfg="precoProduto"]`, que pintava a letra da etiqueta. */
 .fone .fone-li .fone-li-preco{ color:var(--fone-marca-txt, #fff) }
 .fone .fone-li-txt b[data-cfg="nomeProduto"]{ color:var(--fone-precoProduto, var(--fone-ac, var(--ac-600))) }
+
+/* ── AVISAR O CLIENTE NO WHATSAPP (86): a moldura no cartão do pedido ────── */
+.pd-zap{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;
+  margin:10px 0 4px; padding:12px; border-radius:var(--r, 12px);
+  border:1.5px solid #25D366; background:color-mix(in srgb, #25D366 9%, var(--painel)) }
+.pd-zap-txt{ flex:1 1 220px; min-width:0 }
+.pd-zap-txt > b{ display:block; font-size:14.5px }
+.pd-zap-txt > span{ display:block; margin-top:2px; font-size:13px; color:var(--txt2) }
+.pd-zap-txt > span b{ color:var(--txt) }
+.pd-zap-b{ flex:0 0 auto; display:inline-flex; align-items:center; gap:8px; background:#25D366 !important;
+  border-color:#25D366 !important; color:#fff !important; font-weight:700; text-decoration:none }
+.pd-zap-b [data-ico]{ width:18px; height:18px }
+.pd-zap.feito{ border-style:dashed; background:transparent; padding:9px 12px; font-size:13px; color:var(--txt2) }
+.pd-zap.feito b{ color:#15803D }
+.pd-zap-de-novo{ font-size:13px; font-weight:600; color:var(--marca) }
