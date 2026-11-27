@@ -11,7 +11,10 @@
      3. a promoção mostra o preço cheio riscado e o de agora;
      4. a busca acha pelo número e pelo ingrediente; os botões das categorias
         mostram só a categoria; o título da categoria some quando fica vazia;
-     5. tocar na linha põe no pedido.
+     5. tocar na linha põe no pedido, com aviso e "1 no pedido" na linha;
+     6. item com adicionais: a escolha abre numa folha por cima (antes saía
+        embaixo da lista, fora da tela, e o pedido ficava sem item);
+     7. fechar a janela leva a folha junto.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -59,6 +62,9 @@ await item('HOT-DOG DUPLO', 2, 'Lanches individuais', 17, '2 salsichas, maionese
 await item('X-SALADA', 21, 'Lanches', 26, 'Hambúrguer, queijo, alface, tomate e maionese.');
 await item('AMERICANO', 20, 'Lanches', 32, 'Hambúrguer, queijo, presunto, ovo, alface e tomate.');
 await item('AÇAÍ 300 ML', 50, 'Açaí', 18, '');
+const americano = (await dono.lista('produtos', { salaoId })).find(x => x.nome === 'AMERICANO').id;
+await dono.chamar('salvar_opcoes_do_produto', { p_produto: americano, p_grupos: [
+  { nome:'Adicionais', min:0, max:3, regra:'soma', opcoes:[{ nome:'Bacon', preco:'4' }, { nome:'Cheddar', preco:'3' }] }] });
 await dono.atualizar('saloes', salaoId, { whatsapp:'(11) 98111-3300',
   cfg:{ pedidos:{ cardapio:{ estilo:'lista', numerar:true, fixar:true } } } });
 
@@ -126,10 +132,38 @@ if(process.env.SAIDA){
 }
 
 secao('5. Tocar na linha põe no pedido');
-await p.click('#npCardapio .np-item:has-text("AMERICANO")');
+await p.click('#npCardapio .np-item:has-text("X-SALADA")');
 await p.waitForTimeout(400);
-verdade('o Americano entra no pedido', /AMERICANO/.test(limpo(await p.textContent('#npLista'))), limpo(await p.textContent('#npLista')));
-verdade('e o total soma', /32,00/.test(limpo(await p.textContent('#npTotal'))), limpo(await p.textContent('#npTotal')));
+verdade('sem adicionais, entra na hora', /X-SALADA/.test(limpo(await p.textContent('#npLista'))), limpo(await p.textContent('#npLista')));
+verdade('com o aviso "✓ X-SALADA no pedido"', /X-SALADA no pedido/.test(limpo(await p.textContent('#npEntrou').catch(() => ''))));
+igual('e a linha mostra "1 no pedido"', limpo(await p.textContent('#npCardapio .np-item:has-text("X-SALADA") .np-tem')), '1 no pedido');
+
+secao('6. Com adicionais: a escolha abre por cima, à vista');
+await p.click('#npCardapio .np-item:has-text("AMERICANO")');
+await p.waitForSelector('#npFolha .np-escolha', { timeout: 5000 });
+const folha = await p.evaluate(() => {
+  const f = document.getElementById('npFolha'), r = f.querySelector('.np-folha-pe .btn-p').getBoundingClientRect();
+  return { dentroDaJanela: !!f.closest('.modal'), botaoNaTela: r.top >= 0 && r.bottom <= innerHeight,
+           ops: [...f.querySelectorAll('.np-ops button')].map(b => b.textContent.replace(/\s+/g, ' ').trim()) };
+});
+igual('fora da janela (nada a esconde)', folha.dentroDaJanela, false);
+verdade('o "Pôr no pedido" está na tela do celular', folha.botaoNaTela);
+igual('os adicionais, com o preço', folha.ops, ['Bacon +R$ 4,00', 'Cheddar +R$ 3,00']);
+await p.click('#npFolha .np-ops button:has-text("Bacon")');
+if(process.env.SAIDA){ await p.waitForTimeout(300); await p.screenshot({ path: process.env.SAIDA + '/np-adicionais.png' }); }
+await p.click('#npFolha button:has-text("Pôr no pedido")');
+await p.waitForTimeout(400);
+igual('a folha fecha', await p.$('#npFolha') ? 'aberta' : 'fechada', 'fechada');
+verdade('o Americano entra com o bacon', /AMERICANO — Adicionais: Bacon/.test(limpo(await p.textContent('#npLista'))), limpo(await p.textContent('#npLista')));
+verdade('e o total soma (26 + 32 + 4)', /62,00/.test(limpo(await p.textContent('#npTotal'))), limpo(await p.textContent('#npTotal')));
+verdade('a lista diz quantos itens', /No pedido · 2 itens/.test(limpo(await p.textContent('#npLista'))));
+
+secao('7. Fechar a janela com a escolha aberta não deixa a folha para trás');
+await p.click('#npCardapio .np-item:has-text("AMERICANO")');
+await p.waitForSelector('#npFolha');
+await p.evaluate(() => fecharModal());
+await p.waitForTimeout(200);
+igual('a folha sai junto', await p.$('#npFolha') ? 'ficou' : 'saiu', 'saiu');
 
 igual('nenhum erro de JavaScript', erros, []);
 await nav.close();

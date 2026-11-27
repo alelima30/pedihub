@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.46f7c2';
+const VERSAO_APP = 'v9.d496c3';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -7437,7 +7437,12 @@ function abrirModal(titulo, corpo, botoes){
      nenhum — "0", "—", "50" soltos, sem dizer o que era cada caixa. */
   rotularTabelas(document.getElementById('modalCorpo'), true);
 }
-function fecharModal(){ document.getElementById('fundo').classList.remove('on'); pdVoltarDaJanela(); }
+function fecharModal(){
+  document.getElementById('fundo').classList.remove('on'); pdVoltarDaJanela();
+  // A folha dos adicionais (Novo pedido, garçom) mora fora da janela: sai junto.
+  const f = document.getElementById('npFolha'); if(f) f.remove();
+  npEscolha = null;
+}
 document.addEventListener('keydown', e => { if(e.key === 'Escape') fecharModal(); });
 
 /* ── Novo agendamento ────────────────────────────────────────────────── */
@@ -23591,14 +23596,15 @@ function listaDoNovoPedido(itens){
   else cats = cats.filter(x => x !== SEM).concat(cats.includes(SEM) ? [SEM] : []);
   const linha = x => {
     const promo = promoValendo(x);
-    return `<button type="button" class="np-prod np-item" data-cat="${escapar(catDe(x))}"
+    return `<button type="button" class="np-prod np-item" data-pid="${x.id}" data-cat="${escapar(catDe(x))}"
         data-nome="${escapar(semAcentoPainel((numeroDoItem(x) || '') + ' ' + (numeroDoItem(x) ? rotuloNumero(numeroDoItem(x)) + ' ' : '')
           + x.nome + ' ' + (x.descricao || '')))}"
         onclick="npAdicionar('${x.id}')">
       ${cd.numerar && numeroDoItem(x) != null ? `<span class="np-num">${rotuloNumero(numeroDoItem(x))}</span>` : ''}
       <span class="np-txt"><b class="np-nome">${escapar(x.nome)}</b>${promo ? ' <span class="tag t-promo">promoção</span>' : ''}
         ${x.descricao ? `<small>${escapar(x.descricao)}</small>` : ''}</span>
-      <span class="np-preco">${promo ? `<s>${real(Number(x.preco || 0))}</s>` : ''}<b>${real(precoAgora(x))}</b></span>
+      <span class="np-preco">${promo ? `<s>${real(Number(x.preco || 0))}</s>` : ''}<b>${real(precoAgora(x))}</b>
+        <span class="np-tem" hidden></span></span>
     </button>`;
   };
   return `${cats.length > 1 ? `<div class="np-cats" role="group" aria-label="Categorias">${['Todos'].concat(cats).map((c, i) =>
@@ -23663,6 +23669,7 @@ async function npAdicionar(pid){
     if(ja) ja.qtd++;
     else npItens.push({ pid, nome: prod.nome, qtd: 1, opcoes: [], texto: '', preco: precoAgora(prod) });
     npPintarLista();
+    npAvisarQueEntrou(prod.nome);
     return;
   }
   npEscolha = { pid, grupos, sel: {} };
@@ -23686,24 +23693,54 @@ function npCalcular(){
   }
   return { preco: Math.round(preco * 100) / 100, texto: partes.join(' · '), ids, falta };
 }
+/* ⚠ OS ADICIONAIS NUMA FOLHA POR CIMA DE TUDO. "Tô selecionando e dá erro,
+   falta os adicionais": a escolha dos adicionais saía EMBAIXO da lista dos
+   itens, fora da tela do celular. Quem tocava num lanche com adicionais não
+   via nada acontecer, o item não entrava, e o "Lançar pedido" dizia "ponha
+   pelo menos um item". Agora ela abre por cima (fora da janela, no body: nada
+   dentro da janela a esconde), com o nome do item, os grupos e o "Pôr no
+   pedido" sempre à vista no pé. */
 function npPintarEscolha(){
-  const alvo = document.getElementById('npEscolha'); if(!alvo) return;
+  const velha = document.getElementById('npEscolha'); if(velha) velha.innerHTML = '';
+  let f = document.getElementById('npFolha');
   const e = npEscolha;
-  if(!e){ alvo.innerHTML = ''; return; }
+  if(!e){ if(f) f.remove(); return; }
+  if(!f){
+    f = document.createElement('div');
+    f.id = 'npFolha'; f.className = 'np-folha';
+    f.addEventListener('click', ev => { if(ev.target === f){ npEscolha = null; npPintarEscolha(); } });
+    document.body.appendChild(f);
+  }
   const prod = acharProduto(e.pid) || {}, calc = npCalcular();
-  alvo.innerHTML = `<div class="card np-escolha">
-    <b>${escapar(prod.nome)}</b>
-    ${e.grupos.map(g => `<div style="margin-top:8px"><div style="font-size:13px;font-weight:700">${escapar(g.nome)}
-        <span style="font-weight:500;color:var(--txt2)">(${Number(g.min) ? 'obrigatório' : 'opcional'}, até ${g.max})</span></div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px">${(g.opcoes || []).filter(o => o.ativo !== false).map(o => {
+  const aviso = document.getElementById('npEntrou'); if(aviso) aviso.classList.remove('on');
+  const rolou = (f.querySelector('.np-folha-corpo') || {}).scrollTop || 0;
+  f.innerHTML = `<div class="np-folha-caixa card np-escolha" role="dialog" aria-modal="true" aria-label="Adicionais">
+    <div class="np-folha-topo">
+      <div><b>${seloNumero(prod)}${escapar(prod.nome)}</b><small>Escolha os adicionais e toque em Pôr no pedido</small></div>
+      <button type="button" class="btn btn-peq" aria-label="Fechar" onclick="npEscolha=null;npPintarEscolha()">✕</button>
+    </div>
+    <div class="np-folha-corpo">
+    ${e.grupos.map(g => `<div class="np-grupo"><div class="np-grupo-t">${escapar(g.nome)}
+        <span>${Number(g.min) ? 'obrigatório' : 'opcional'} · até ${g.max}</span></div>
+      <div class="np-ops">${(g.opcoes || []).filter(o => o.ativo !== false).map(o => {
         const on = (e.sel[g.id] || []).includes(o.id);
-        return `<button type="button" class="btn btn-peq ${on ? 'btn-p' : ''}" onclick="npMarcar('${g.id}','${o.id}')">${escapar(o.nome)}${
-          Number(o.preco) ? ' +' + real(Number(o.preco)) : ''}</button>`; }).join('')}</div></div>`).join('')}
-    <div style="display:flex;gap:8px;align-items:center;margin-top:10px">
-      <button type="button" class="btn btn-p btn-peq" onclick="npConfirmarEscolha()">Pôr no pedido · ${real(calc.preco)}</button>
-      <button type="button" class="btn btn-peq" onclick="npEscolha=null;npPintarEscolha()">Cancelar</button>
-      ${calc.falta ? `<span style="font-size:12.5px;color:var(--alerta)">${escapar(calc.falta)}</span>` : ''}
+        return `<button type="button" class="btn btn-peq ${on ? 'btn-p' : ''}" aria-pressed="${on}" onclick="npMarcar('${g.id}','${o.id}')">${on ? '✓ ' : ''}${escapar(o.nome)}${
+          Number(o.preco) ? ' <small>+' + real(Number(o.preco)) + '</small>' : ''}</button>`; }).join('')}</div></div>`).join('')}
+    </div>
+    <div class="np-folha-pe">
+      ${calc.falta ? `<span class="np-falta">${escapar(calc.falta)}</span>` : ''}
+      <button type="button" class="btn btn-p" ${calc.falta ? 'disabled' : ''} onclick="npConfirmarEscolha()">Pôr no pedido · ${real(calc.preco)}</button>
     </div></div>`;
+  const corpo = f.querySelector('.np-folha-corpo'); if(corpo) corpo.scrollTop = rolou;
+}
+// O aviso curto de que entrou: "✓ HOT-DOG no pedido".
+function npAvisarQueEntrou(nome){
+  let a = document.getElementById('npEntrou');
+  if(!a){ a = document.createElement('div'); a.id = 'npEntrou'; a.className = 'np-entrou'; a.setAttribute('role', 'status'); document.body.appendChild(a); }
+  a.textContent = '✓ ' + nome + ' no pedido';
+  a.classList.add('on');
+  clearTimeout(npAvisarQueEntrou.relogio);
+  npAvisarQueEntrou.relogio = setTimeout(() => a.classList.remove('on'), 1600);
 }
 function npMarcar(gid, oid){
   const g = npEscolha.grupos.find(x => x.id === gid); if(!g) return;
@@ -23719,6 +23756,7 @@ function npConfirmarEscolha(){
   npItens.push({ pid: npEscolha.pid, nome: prod.nome + (calc.texto ? ' — ' + calc.texto : ''), qtd: 1,
                  opcoes: calc.ids, texto: calc.texto, preco: calc.preco });
   npEscolha = null; npPintarEscolha(); npPintarLista();
+  npAvisarQueEntrou(prod.nome || 'Item');
 }
 function npQtd(i, d){
   npItens[i].qtd += d;
@@ -23727,7 +23765,15 @@ function npQtd(i, d){
 }
 function npPintarLista(){
   const alvo = document.getElementById('npLista'); if(!alvo) return;
-  alvo.innerHTML = npItens.length ? npItens.map((x, i) => `<div class="np-linha">
+  // Na lista do cardápio, quantos de cada item já estão no pedido ("2 no pedido").
+  document.querySelectorAll('#npCardapio .np-item[data-pid]').forEach(el => {
+    const n = npItens.filter(x => x.pid === el.dataset.pid).reduce((s, x) => s + x.qtd, 0);
+    const t = el.querySelector('.np-tem');
+    el.classList.toggle('no-pedido', n > 0);
+    if(t){ t.hidden = !n; t.textContent = n ? n + ' no pedido' : ''; }
+  });
+  const qtd = npItens.reduce((s, x) => s + x.qtd, 0);
+  alvo.innerHTML = npItens.length ? `<div class="np-lista-t">🧾 No pedido · ${qtd} ${qtd === 1 ? 'item' : 'itens'}</div>` + npItens.map((x, i) => `<div class="np-linha">
       <span>${escapar(x.nome)}</span>
       <span class="pd-qtd"><button type="button" onclick="npQtd(${i},-1)">−</button><b>${x.qtd}</b>
         <button type="button" onclick="npQtd(${i},1)">+</button></span>
@@ -23753,7 +23799,8 @@ async function lancarNovoPedido(){
   const modo = (document.querySelector('input[name="npModo"]:checked') || {}).value || 'retirada';
   const origem = (document.querySelector('input[name="npOrigem"]:checked') || {}).value || 'balcao';
   if(!v('npNome')){ alert('Diga o nome do cliente (no balcão pode ser "Mesa 3" ou o primeiro nome).'); return; }
-  if(!npItens.length){ alert('Ponha pelo menos um item no pedido.'); return; }
+  if(!npItens.length){ alert(npEscolha ? 'Escolha os adicionais e toque em "Pôr no pedido".'
+    : 'Ponha pelo menos um item no pedido: toque no item na lista.'); return; }
   if(modo === 'mesa' && !v('npMesa')){ alert('Diga o número da mesa.'); return; }
   const pedido = {
     origem, nome: v('npNome'), telefone: v('npTel') || null, entrega: modo, pagamento: v('npPag'),
