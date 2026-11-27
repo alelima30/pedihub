@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.d496c3';
+const VERSAO_APP = 'v9.c5fe4c';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -24228,47 +24228,72 @@ function minutosDoTempoPainel(t){
   const nums = [...s.matchAll(/\d+/g)].map(m => Number(m[0]));
   return nums.length ? Math.max(...nums) : null;
 }
+/* A MENSAGEM, NO MODELO QUE O DONO MANDOU (o de pedir.delivery): os blocos com
+   "▶" e as linhas de traço, o total no alto e no fim, o link para
+   acompanhar logo depois do total, cada item com o subtotal e a observação,
+   os dados da entrega campo a campo, a janela de horário e o pagamento.
+   Texto puro para o WhatsApp (vai no link, codificado): montado com +, e não
+   com interpolação — a mesma regra da via da cozinha (imprimirPedido). */
+function janelaDaEntrega(tempo, desde){
+  const d = new Date(desde);
+  if(!tempo || isNaN(d)) return '';
+  const t = String(tempo).toLowerCase();
+  const hora = min => new Date(d.getTime() + min * 60000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  // "40 a 60 min" (sem hora): a janela das duas pontas; o resto, a conta de sempre.
+  const nums = [...t.matchAll(/\d+/g)].map(m => Number(m[0]));
+  if(!/h/.test(t.replace(/min/g, '')) && nums.length >= 2 && nums[0] < nums[1]) return hora(nums[0]) + ' a ' + hora(nums[1]);
+  const min = minutosDoTempoPainel(tempo);
+  return min > 0 ? hora(min) : '';
+}
 function mensagemDoPedidoZap(p, link){
   const sl = acharSalao(salaoAtual) || {};
   const c = cfgPedidosDoSalao();
-  const primeiro = String(p.nome || '').trim().split(/\s+/)[0] || '';
+  const TRACO = '-------------------------------';
   const L = [];
-  L.push(`Olá${primeiro ? ', ' + primeiro : ''}! 👋`);
-  /* Texto puro, para o WhatsApp (vai no link, codificado): montado com +, e
-     não com interpolação — a mesma regra da via da cozinha (imprimirPedido). */
-  const casa = '*' + (sl.nome || '') + '*', num = '*#' + p.numero + '*';
-  L.push(p.status === 'saiu' ? 'O seu pedido ' + num + ' do ' + casa + ' saiu para entrega.'
-    : p.status === 'pronto' ? 'O seu pedido ' + num + ' do ' + casa + ' está pronto para retirar.'
-    : 'O ' + casa + ' confirmou o seu pedido ' + num + '.');
-  L.push('', '🧾 *Seu pedido*');
-  (p.itens || []).forEach(i => L.push(i.quantidade + 'x ' + i.nome + (i.observacao ? ' (' + i.observacao + ')' : '')
-    + ' — ' + real(Number(i.preco) * i.quantidade)));
-  if(p.observacao) L.push('Obs.: ' + p.observacao);
+  const titulo = p.status === 'saiu' ? '🛵 *PEDIDO SAIU PARA ENTREGA*'
+    : p.status === 'pronto' ? '🏪 *PEDIDO PRONTO PARA RETIRAR*' : '✅ *PEDIDO CONFIRMADO*';
+  L.push(titulo);
+  if(sl.nome) L.push('*' + sl.nome + '*');
+  L.push(TRACO, '▶ *RESUMO DO PEDIDO*', '', 'Pedido #' + p.numero, TRACO,
+         '▶ *TOTAL* = *' + real(Number(p.total)) + '*', TRACO);
+  if(link) L.push('', 'Link para acompanhar status do pedido:', link);
   L.push('');
-  if(Number(p.desconto)) L.push(`Desconto${p.cupom ? ' (' + p.cupom + ')' : ''}: − ${real(Number(p.desconto))}`);
-  if(Number(p.taxa)) L.push(`Taxa de entrega: ${real(Number(p.taxa))}`);
-  L.push(`💰 *Total: ${real(Number(p.total))}*`);
+  (p.itens || []).forEach((i, k) => {
+    if(k) L.push('-  -  -  -  -  -  -  -  -  -  -', '');
+    L.push('*' + i.quantidade + 'x* _' + i.nome + '_ *(' + real(Number(i.preco)) + ')*', '');
+    L.push('*Subtotal do item: ' + real(Number(i.preco) * i.quantidade) + '*');
+    if(i.observacao) L.push('-- _Observações: ' + i.observacao + '_');
+    L.push('');
+  });
+  const e = p.endereco || {};
+  const tel = String(p.telefone || '').replace(/\D/g, '');
+  L.push('------------------------------------------');
+  if(p.entrega === 'entrega'){
+    L.push('▶ *Dados para entrega*', '', '*Nome:* ' + (p.nome || ''));
+    if(e.rua) L.push('*Endereço:* ' + e.rua + (e.numero ? ', nº: ' + e.numero : '') + (e.complemento ? ' — ' + e.complemento : ''));
+    if(e.bairro || p.bairro) L.push('*Bairro:* ' + (e.bairro || p.bairro));
+    if(e.referencia) L.push('*Ponto de Referência:* ' + e.referencia);
+  } else if(p.entrega === 'mesa'){
+    L.push('▶ *Dados do pedido*', '', '*Nome:* ' + (p.nome || ''), '*Mesa:* ' + (p.mesa || ''));
+  } else {
+    const end = window.Endereco ? Endereco.linha(sl.endereco) : '';
+    L.push('▶ *Dados para retirada*', '', '*Nome:* ' + (p.nome || ''), '*Retirar em:* ' + (end || 'no balcão'));
+  }
+  if(tel) L.push('*Telefone:* ' + tel);
+  if(p.observacao) L.push('*Observação:* ' + p.observacao);
+  L.push('');
+  if(Number(p.desconto)) L.push('*Desconto' + (p.cupom ? ' (' + p.cupom + ')' : '') + ':* − ' + real(Number(p.desconto)));
+  if(p.entrega === 'entrega') L.push('*Taxa de Entrega:* ' + (Number(p.taxa) ? real(Number(p.taxa)) : 'grátis'));
+  const janela = p.status === 'em_preparo' ? janelaDaEntrega(c.tempo, p.criado_em) : '';
+  if(janela) L.push('', '🕙 *Tempo de ' + (p.entrega === 'entrega' ? 'Entrega' : 'Preparo') + ':* aprox. ' + janela);
+  L.push('', TRACO, '▶ *TOTAL* = *' + real(Number(p.total)) + '*', TRACO, '', '▶ *PAGAMENTO*', '');
   if(p.pagoOnline) L.push('✅ Pago pelo Pix');
   else {
-    L.push(`💳 Pagamento: ${PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento || ''}${
-      p.troco ? ' — troco para ' + real(Number(p.troco)) : ''}`);
+    const forma = PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento || '';
+    L.push('Pagamento: ' + forma + (p.troco ? ' — troco para ' + real(Number(p.troco)) : ''));
     const pag = window.Funcionamento ? Funcionamento.pagamentos((sl.cfg || {}).pagamentos) : null;
-    if(p.pagamento === 'pix' && pag && pag.pix) L.push(`🔑 Chave Pix: ${pag.pix}`);
+    if(p.pagamento === 'pix' && pag && pag.pix) L.push('*Chave Pix:* ' + pag.pix);
   }
-  if(p.entrega === 'entrega') L.push(`🛵 Entrega: ${enderecoDoPedido(p)}`);
-  else if(p.entrega === 'mesa') L.push(`🍽️ Mesa ${p.mesa || ''}`);
-  else {
-    const end = window.Endereco ? Endereco.linha(sl.endereco) : '';
-    L.push(`🏪 Retirada${end ? ': ' + end : ' no balcão'}`);
-  }
-  if(c.tempo && p.status === 'em_preparo'){
-    const min = minutosDoTempoPainel(c.tempo), d = new Date(p.criado_em);
-    const hora = min > 0 && !isNaN(d) ? new Date(d.getTime() + min * 60000)
-      .toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-    L.push(`⏱️ Previsão: ${c.tempo}${hora ? ' (por volta das ' + hora + ')' : ''}`);
-  }
-  if(link) L.push('', '📍 *Acompanhe seu pedido:*', link);
-  L.push('', 'Obrigado pela preferência!');
   return L.join('\n');
 }
 function hrefZapDoPedido(p){

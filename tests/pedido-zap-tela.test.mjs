@@ -97,16 +97,23 @@ if(process.env.SAIDA){
 const href = await p.getAttribute('.pd-zap a.pd-zap-b', 'href');
 verdade('o botão abre o WhatsApp do cliente (com o 55)', href.startsWith('https://wa.me/5511977002002?text='), href.slice(0, 60));
 
-secao('3. A mensagem leva tudo');
+secao('3. A mensagem leva tudo, no modelo pedido');
 const msg = decodeURIComponent(href.split('?text=')[1]);
-verdade('o primeiro nome e a confirmação', /Olá, Joana!/.test(msg) && /confirmou o seu pedido \*#\d+\*/.test(msg), msg.slice(0, 120));
-verdade('os itens, com a observação do item ou do pedido', /2x X-Tudo — R\$\s*70,00/.test(msg) && /Obs\.: sem cebola/.test(msg), msg);
-verdade('o total', /\*Total: R\$\s*70,00\*/.test(msg), msg);
-verdade('o pagamento, com a chave Pix', /Pagamento: Pix/.test(msg) && /Chave Pix: pix@lanchonete\.com/.test(msg), msg);
-verdade('a entrega', /Entrega: Rua das Flores, 45/.test(msg), msg);
-verdade('a previsão, com a hora', /Previsão: 40 min \(por volta das \d\d:\d\d\)/.test(msg), msg);
+verdade('o título e o nome da casa', /^✅ \*PEDIDO CONFIRMADO\*\n\*Lanchonete do Zap/.test(msg), msg.slice(0, 80));
+verdade('o resumo: o número e o TOTAL no alto', /▶ \*RESUMO DO PEDIDO\*/.test(msg) && /Pedido #\d+/.test(msg)
+  && /▶ \*TOTAL\* = \*R\$\s*70,00\*/.test(msg), msg);
+verdade('o link logo depois do total', /Link para acompanhar status do pedido:\n\S+&pedido=/.test(msg), msg);
+verdade('o item: quantidade, nome, preço e subtotal', /\*2x\* _X-Tudo_ \*\(R\$\s*35,00\)\*/.test(msg)
+  && /\*Subtotal do item: R\$\s*70,00\*/.test(msg), msg);
+verdade('os dados para entrega, campo a campo', /▶ \*Dados para entrega\*/.test(msg) && /\*Nome:\* Joana Lima/.test(msg)
+  && /\*Endereço:\* Rua das Flores, nº: 45/.test(msg) && /\*Bairro:\* Centro/.test(msg) && /\*Telefone:\* 11977002002/.test(msg), msg);
+verdade('a observação do pedido', /\*Observação:\* sem cebola/.test(msg), msg);
+verdade('a taxa de entrega', /\*Taxa de Entrega:\* (grátis|R\$)/.test(msg), msg);
+verdade('o tempo de entrega com a hora', /🕙 \*Tempo de Entrega:\* aprox\. \d\d:\d\d/.test(msg), msg);
+verdade('o PAGAMENTO, com a chave Pix', /▶ \*PAGAMENTO\*/.test(msg) && /Pagamento: Pix/.test(msg) && /\*Chave Pix:\* pix@lanchonete\.com/.test(msg), msg);
+verdade('e o TOTAL de novo no fim', (msg.match(/▶ \*TOTAL\* = /g) || []).length === 2, msg);
 const link = (msg.match(/https?:\/\/\S+&pedido=[0-9a-f-]{36}/) || [])[0];
-verdade('e o link "Acompanhe seu pedido"', /Acompanhe seu pedido/.test(msg) && !!link, msg.slice(-200));
+verdade('e o link é o do pedido', !!link, msg.slice(-200));
 
 secao('4. O link abre o pedido em outro celular, sem conta');
 const c = await (await nav.newContext({ viewport:{ width:412, height:900 }, isMobile:true, hasTouch:true })).newPage();
