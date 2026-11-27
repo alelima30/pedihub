@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.6593af';
+const VERSAO_APP = 'v9.a1d4d8';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23410,10 +23410,9 @@ function abrirNovoPedido(){
     alert('Na demonstração não há servidor: o pedido lançado precisa do sistema ligado ao banco.');
     return;
   }
-  npItens = []; npEscolha = null;
+  npItens = []; npEscolha = null; npCat = null;
   const c = cfgPedidosDoSalao();
-  const itens = doSalao(bd.produtos || []).filter(x => x.ativo !== false)
-    .sort((a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+  const itens = doSalao(bd.produtos || []).filter(x => x.ativo !== false);
   abrirModal('Novo pedido', `
     <div class="pd-ops-painel" role="group" aria-label="Por onde chegou">
       <label class="check"><input type="radio" name="npOrigem" value="telefone" checked> <span>Telefone / WhatsApp</span></label>
@@ -23427,12 +23426,8 @@ function abrirNovoPedido(){
     </div>
 
     <div class="campo"><label for="npBusca">Itens</label>
-      <input id="npBusca" placeholder="Buscar no cardápio..." oninput="npFiltrar(this.value)" autocomplete="off">
-      <div id="npCardapio" class="np-cardapio">${itens.map(x => `
-        <button type="button" class="np-prod" data-nome="${escapar(semAcentoPainel((numeroDoItem(x) || '') + ' ' + x.nome))}"
-                onclick="npAdicionar('${x.id}')">
-          <span>${seloNumero(x)}${escapar(x.nome)}${promoValendo(x) ? ' <span class="tag t-promo">promoção</span>' : ''}</span><b>${real(precoAgora(x))}</b></button>`).join('')
-        || '<p class="secao-sub">Cadastre itens no Cardápio primeiro.</p>'}</div>
+      <input id="npBusca" placeholder="Buscar no cardápio (nome ou número)..." oninput="npFiltrar(this.value)" autocomplete="off">
+      ${listaDoNovoPedido(itens)}
       <div id="npEscolha"></div>
       <div id="npLista" class="np-lista"></div>
     </div>
@@ -23478,10 +23473,62 @@ function abrirNovoPedido(){
 }
 
 function semAcentoPainel(t){ return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+/* ── OS ITENS DO NOVO PEDIDO, COMO NA LISTA DO LINK ──────────────────────
+   "Os itens aparecerem como aparece a lista do link, não assim" (eram
+   bolinhas soltas, em ordem alfabética, sem o que vem no lanche). Agora:
+   por categoria, na ordem do cardápio (pelo número, quando numera), cada
+   item numa linha com o número, o nome, o que vem nele e o preço; e os
+   botões das categorias em cima, para ir direto. Tocar na linha põe no
+   pedido (com as opções, quando o item tem). */
+let npCat = null;
+function listaDoNovoPedido(itens){
+  if(!itens.length) return '<div id="npCardapio" class="np-cardapio"><p class="secao-sub">Cadastre itens no Cardápio primeiro.</p></div>';
+  const cd = cardapioDoSalao();
+  const SEM = 'Outros';
+  const catDe = x => limparCategoria(x.categoria) || SEM;
+  const ordenados = itens.slice().sort(cd.numerar ? ordemDoCardapio
+    : (a, b) => String(a.nome).localeCompare(String(b.nome), 'pt-BR'));
+  // A ordem das categorias: a do primeiro item de cada uma (pelo número); sem número, alfabética.
+  let cats = [...new Set(ordenados.map(catDe))];
+  if(!cd.numerar) cats.sort((a, b) => a === SEM ? 1 : b === SEM ? -1 : a.localeCompare(b, 'pt-BR'));
+  else cats = cats.filter(x => x !== SEM).concat(cats.includes(SEM) ? [SEM] : []);
+  const linha = x => {
+    const promo = promoValendo(x);
+    return `<button type="button" class="np-prod np-item" data-cat="${escapar(catDe(x))}"
+        data-nome="${escapar(semAcentoPainel((numeroDoItem(x) || '') + ' ' + (numeroDoItem(x) ? rotuloNumero(numeroDoItem(x)) + ' ' : '')
+          + x.nome + ' ' + (x.descricao || '')))}"
+        onclick="npAdicionar('${x.id}')">
+      ${cd.numerar && numeroDoItem(x) != null ? `<span class="np-num">${rotuloNumero(numeroDoItem(x))}</span>` : ''}
+      <span class="np-txt"><b class="np-nome">${escapar(x.nome)}</b>${promo ? ' <span class="tag t-promo">promoção</span>' : ''}
+        ${x.descricao ? `<small>${escapar(x.descricao)}</small>` : ''}</span>
+      <span class="np-preco">${promo ? `<s>${real(Number(x.preco || 0))}</s>` : ''}<b>${real(precoAgora(x))}</b></span>
+    </button>`;
+  };
+  return `${cats.length > 1 ? `<div class="np-cats" role="group" aria-label="Categorias">${['Todos'].concat(cats).map((c, i) =>
+      `<button type="button" class="btn btn-peq${i ? '' : ' btn-p'}" data-cat="${i ? escapar(c) : ''}"
+         onclick="npCategoria(this)">${escapar(c)}</button>`).join('')}</div>` : ''}
+    <div id="npCardapio" class="np-cardapio np-cardapio-lista">${cats.map(c => `
+      <div class="np-cat" data-cat="${escapar(c)}">${escapar(c)}</div>
+      ${ordenados.filter(x => catDe(x) === c).map(linha).join('')}`).join('')}</div>`;
+}
+function npCategoria(bt){
+  bt.parentElement.querySelectorAll('button').forEach(b => b.classList.toggle('btn-p', b === bt));
+  npCat = bt.dataset.cat || null;
+  const caixa = document.getElementById('npCardapio');
+  if(caixa) caixa.scrollTop = 0;
+  npFiltrar((document.getElementById('npBusca') || {}).value || '');
+}
 function npFiltrar(q){
-  const b = semAcentoPainel(q);
+  const b = semAcentoPainel(q).trim();
   document.querySelectorAll('#npCardapio .np-prod').forEach(el => {
-    el.style.display = !b || el.dataset.nome.includes(b) ? '' : 'none';
+    const naCat = !npCat || !el.dataset.cat || el.dataset.cat === npCat;
+    el.style.display = (!b || el.dataset.nome.includes(b)) && naCat ? '' : 'none';
+  });
+  // O título da categoria some junto quando nenhum item dela ficou à vista.
+  document.querySelectorAll('#npCardapio .np-cat').forEach(t => {
+    const algum = [...document.querySelectorAll('#npCardapio .np-item')]
+      .some(el => el.dataset.cat === t.dataset.cat && el.style.display !== 'none');
+    t.style.display = algum ? '' : 'none';
   });
 }
 function npPintarEntrega(){
@@ -24516,7 +24563,7 @@ async function liberarMesa(mesa){
 
 /* O cardápio do garçom: foto grande, nome, preço; tocar na foto amplia. */
 function abrirLancarNaMesa(mesa){
-  npItens = []; npEscolha = null;
+  npItens = []; npEscolha = null; npCat = null;
   const cd = cardapioDoSalao();
   const itens = doSalao(bd.produtos || []).filter(x => x.ativo !== false)
     .sort(cd.numerar ? ordemDoCardapio

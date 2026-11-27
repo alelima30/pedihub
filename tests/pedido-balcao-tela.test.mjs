@@ -88,7 +88,7 @@ await p.fill('#npNome', 'Carlos');
 await p.fill('#npTel', '(11) 97000-0030');
 await p.fill('#npBusca', 'burg');
 igual('a busca acha só o X-Burger', await p.$$eval('#npCardapio .np-prod', e =>
-  e.filter(x => x.style.display !== 'none').map(x => x.querySelector('span').textContent)), ['X-Burger']);
+  e.filter(x => x.style.display !== 'none').map(x => x.querySelector('.np-nome').textContent)), ['X-Burger']);
 await p.click('#npCardapio .np-prod:has-text("X-Burger")');
 await p.waitForSelector('.np-escolha');
 await p.click('.np-escolha button:has-text("Bacon")');
