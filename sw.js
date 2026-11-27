@@ -117,12 +117,15 @@ self.addEventListener('push', ev => {
   try{ r = ev.data ? ev.data.json() : {}; }catch(e){ r = {}; }
   const titulo = String(r.titulo || 'PediHub').slice(0, 80);
   ev.waitUntil(self.registration.showNotification(titulo, {
-    body: String(r.corpo || 'Novidade na sua agenda.').slice(0, 200),
+    body: String(r.corpo || 'Chegou novidade no PediHub.').slice(0, 200),
     icon: './icones/icone-192.png',
     badge: './icones/icone-192.png',
     tag: String(r.tag || 'pedihub'),
     data: { url: typeof r.url === 'string' && r.url.startsWith('./') ? r.url : './app.html' },
-    vibrate: [180, 80, 180],
+    /* Pedido novo não pode passar batido: o aviso fica na tela até alguém
+       tocar nele (no Android e no computador), e a vibração é mais longa. */
+    requireInteraction: true,
+    vibrate: [400, 150, 400, 150, 400],
   }));
 });
 
