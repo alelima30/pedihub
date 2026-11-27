@@ -1323,6 +1323,8 @@ function bdDaVitrine(v){
          caiu exatamente aqui, e quem pegou foi o `cartoes.test.mjs` —
          'auto' funcionava (é o padrão), 'vidro' e 'fechado' não. */
       cartoes: s.cartoes || null,
+      // 85: o destaque do endereço embaixo do nome.
+      enderecoEstilo: s.enderecoEstilo || null,
       // A forma do cartão de serviço. Ausente = `reta`, o de sempre.
       moldura: s.moldura || 'reta',
       // Os serviços que o dono pôs na capa. Lista vazia quer dizer "não
@@ -8203,6 +8205,13 @@ function aplicarAparencia(s){
   const fechar = cartoes === 'fechado'
               || (cartoes !== 'vidro' && veu < 35);
   document.body.classList.toggle('fundo-forte', !!fundo && fechar);
+
+  /* 85: O DESTAQUE DO ENDEREÇO (rua; bairro e cidade), escolhido em Aparência
+     → Topo e capa. "auto": o brilho em volta das letras só quando a foto de
+     fundo aparece forte; senão, o texto simples. */
+  const estEnd = s.enderecoEstilo || c.enderecoEstilo;
+  document.body.dataset.endereco = ['brilho', 'faixa', 'nenhum'].includes(estEnd) ? estEnd
+    : (fundo && fechar ? 'brilho' : 'nenhum');
 
   aplicarModo(s);
 

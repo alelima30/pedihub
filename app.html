@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.a1d4d8';
+const VERSAO_APP = 'v9.9a192b';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -11986,6 +11986,14 @@ function pintarSalao(){
       <p class="secao-sub" id="explicaPreco" style="margin-top:9px"></p>
       </div>
 
+      <!-- O ENDERECO EMBAIXO DO NOME (85): o destaque (brilho, faixa ou nada)
+           e, logo ao lado, o caminho para a cor da rua e do bairro. -->
+      <div class="rot" style="margin:18px 0 8px">Endereço embaixo do nome</div>
+      <div class="regua" id="reguaEndereco" style="justify-content:flex-start"></div>
+      <p class="secao-sub" id="explicaEndereco" style="margin-top:9px"></p>
+      <button type="button" class="btn btn-peq" style="margin-top:4px"
+              onclick="irParaConfig('rua')">🎨 Mudar a cor da rua e do bairro</button>
+
       </section>
 
 <section class="ap-sec" id="apFundo">
@@ -13050,6 +13058,17 @@ const SLIDES = [
 /* No restaurante não há serviço: o slide vem das FOTOS DO CARDÁPIO, das
    fotos dele mesmo, ou não vem ("servicos" ali não tem o que mostrar, e é o
    valor de quem nunca escolheu — por isso ele vira "Sem slide"). */
+/* 85: o destaque do endereço embaixo do nome, na capa. */
+const ENDERECOS = [
+  ['auto',   'Automático',
+   'Com a foto de fundo bem à mostra, um brilho em volta das letras; sem foto, o texto simples.'],
+  ['brilho', 'Brilho nas letras',
+   'Um brilho suave em volta de cada letra, na cor dos cartões. Sem caixa: o endereço se lê sobre qualquer foto.'],
+  ['faixa',  'Faixa clara',
+   'Uma faixa clara atrás da rua e do bairro, com os cantos arredondados.'],
+  ['nenhum', 'Sem destaque',
+   'O texto simples, direto sobre o fundo. Confira na prévia se dá para ler.'],
+];
 const SLIDES_RESTAURANTE = [
   ['cardapio', 'Fotos do cardápio',
    'O slide monta sozinho com as fotos dos itens do cardápio. Cadastrou o item '
@@ -13306,6 +13325,8 @@ function lerAparencia(cfg){
        antes disto existir. Não há o que migrar: o automático faz o que o
        limiar fixo fazia. */
     cartoes: ['vidro','fechado'].includes(c.cartoes) ? c.cartoes : 'auto',
+    // 85: o destaque do endereço embaixo do nome.
+    enderecoEstilo: ['brilho','faixa','nenhum'].includes(c.enderecoEstilo) ? c.enderecoEstilo : 'auto',
     /* Ausente vale `reta`, o cartão de sempre: restaurante criado antes disto
        existir não muda de aparência nem precisa de migração. */
     moldura: c.moldura === 'elegante' ? 'elegante' : 'reta',
@@ -13920,6 +13941,7 @@ function pintarAparencia(){
   regua('reguaMoldura', MOLDURAS, 'moldura', 'explicaMoldura');
   regua('reguaLetra', LETRAS, 'letra', 'explicaLetra');
   regua('reguaSlide', slidesDoSalao(), 'slideDe', 'explicaSlide');
+  regua('reguaEndereco', ENDERECOS, 'enderecoEstilo', 'explicaEndereco');
 
   document.getElementById('reguaBrilho').innerHTML = BRILHOS.map(([v, rot]) =>
     `<button type="button" class="${aparencia.brilho === v ? 'on' : ''}"
@@ -15373,14 +15395,79 @@ function previaDaInfo(sl){
   if(func) botoes.push(['relogio', 'Horários', 'horarios']);
   if(String(c.sobre || '').trim() || String(c.instagram || '').trim() || botoes.length)
     botoes.push(['info', 'Informações', 'informacoes']);
-  if(!botoes.length) return '';
+  /* "Dúvidas", como no link: quando o dono escreveu alguma, antes de
+     Informações (que fecha a fileira). */
+  if(duvidasDaPrevia(sl).length){
+    const i = botoes.findIndex(b => b[2] === 'informacoes');
+    botoes.splice(i < 0 ? botoes.length : i, 0, ['duvida', 'Dúvidas', 'duvidas']);
+  }
+  // O tempo de entrega, como o link mostra embaixo do ABERTO (vem mesmo sem botão nenhum).
+  const cp = restaurantePainel() ? cfgPedidosDoSalao() : {};
+  const tempo = cp.tempo && cp.entrega !== false
+    ? `<div class="fone-tempo" data-cfg="status">🛵 Entrega em cerca de <b>${escapar(cp.tempo)}</b></div>` : '';
+  if(!botoes.length) return tempo;
   const est = func ? Funcionamento.estado(func, Funcionamento.agora(sl.fuso)) : null;
   return `<div class="fone-recursos" data-cfg="atalhos" style="--n:${botoes.length}">${botoes.map(([ico, rot, qual]) =>
       `<span class="fone-recurso" data-recurso="${qual}"><span data-ico="${ico}"></span>${rot}</span>`
     ).join('')}</div>`
     + (est ? `<div class="fone-status ${est.aberto ? 'aberto' : 'fechado'}" data-cfg="status">
         <i></i><b>${est.aberto ? 'ABERTO' : 'FECHADO'}</b><span class="fone-status-sep"></span><span class="fone-status-txt" data-cfg="horario">${
-          escapar(est.detalhe)}</span><span class="fone-status-seta"></span></div>` : '');
+          escapar(est.detalhe)}</span><span class="fone-status-seta"></span></div>` : '')
+    + tempo;
+}
+// As dúvidas da casa que o link mostra (pergunta e resposta escritas).
+function duvidasDaPrevia(sl){
+  const d = ((sl && sl.cfg) || {}).duvidas;
+  return (Array.isArray(d) ? d : []).filter(x => x && String(x.p || '').trim() && String(x.r || '').trim());
+}
+/* ── O LINK DE PEDIDOS, NA PRÉVIA ──────────────────────────────────────────
+   "A prévia tá diferente do link real." No restaurante com cardápio, o link
+   não é a vitrine de loja (Produtos em destaque, Enviar pelo WhatsApp): é o
+   de pedidos. Os mesmos blocos, na mesma ordem e com as mesmas regras do
+   cardapio.html: o convite "Primeira vez aqui?" (com dúvidas escritas), a
+   faixa de PROMOÇÃO, o "Do cardápio" (em lista, como o cardápio impresso, ou
+   com fotos) com o "Ver o cardápio completo", e a fita com "Continuar". */
+function previaDoConvite(sl){
+  const duv = duvidasDaPrevia(sl);
+  if(!duv.length) return '';
+  return `<div class="fone-convite" data-cfg="boas">
+    <b>Primeira vez aqui?</b><p>Tire suas dúvidas antes de pedir.</p>
+    <div class="fone-chips">${duv.slice(0, 3).map(d => `<span>${escapar(String(d.p).slice(0, 40))}</span>`).join('')}</div>
+    <span class="fone-convite-ver">Ver as dúvidas ›</span></div>`;
+}
+function previaDaPromo(produtos){
+  const lista = produtos.filter(promoValendo);
+  if(!lista.length) return '';
+  const emLista = cardapioDoSalao().estilo === 'lista';
+  return `<div class="fone-promo" data-cfg="produtos">
+    <div class="fone-promo-tit"><span>🔥 PROMOÇÃO</span><i>Ver todas</i></div>
+    <div class="fone-promo-trilho">${lista.slice(0, 3).map(x => `<div class="fone-promo-c${emLista ? ' sem-foto' : ''}">
+      ${emLista ? '' : `<span class="fone-promo-foto"${x.foto ? ` style="background-image:url('${escapar(x.foto)}')"` : ''}></span>`}
+      <b data-cfg="nomeProduto">${seloNumero(x)}${escapar(x.nome)}</b>
+      <span><s>${real(Number(x.preco || 0))}</s> <b data-cfg="precoProduto">${real(precoAgora(x))}</b></span></div>`).join('')}</div>
+  </div>`;
+}
+function previaDoCardapio(produtos){
+  const cd = cardapioDoSalao();
+  const emLista = cd.estilo === 'lista';
+  const mostrar = produtos.slice(0, emLista ? 5 : 4);
+  return `<div class="fone-svs" data-cfg="produtos">
+    <div class="fone-rot" data-cfg="tituloProdutos">Do cardápio</div>
+    ${emLista ? `<div class="fone-lista">${mostrar.map(x => `<div class="fone-li">
+        ${cd.numerar && numeroDoItem(x) != null ? `<span class="fone-li-num">${rotuloNumero(numeroDoItem(x))}</span>` : ''}
+        <span class="fone-li-txt"><b data-cfg="nomeProduto">${escapar(x.nome)}${promoValendo(x) ? ' <i class="fone-li-promo">PROMO</i>' : ''}</b>${x.descricao ? `<small>${escapar(x.descricao)}</small>` : ''}</span>
+        <span class="fone-li-dir"><b class="fone-li-preco" data-cfg="precoProduto">${promoValendo(x) ? `<s>${real(Number(x.preco || 0))}</s>` : ''}${
+          x.preco == null ? 'sob consulta' : real(precoAgora(x))}</b><span class="fone-li-add"><span data-ico="carrinho"></span>Adicionar</span></span></div>`).join('')}</div>`
+    : `<div class="fone-grade">${mostrar.map(x => `
+        <div class="fone-cartao fone-pr${aparencia.moldura === 'elegante' ? '' : ' reta'}">
+          <div class="fone-cartao-foto"${x.foto ? ` style="background-image:url('${escapar(x.foto)}')"` : ''}>${
+            x.foto ? '' : '<span data-ico="presente"></span>'}</div>
+          <div class="fone-cartao-txt"><b data-cfg="nomeProduto">${seloNumero(x)}${escapar(x.nome)}</b>
+            <span class="fone-preco" data-cfg="precoProduto">${x.preco == null ? 'sob consulta' : real(precoAgora(x))}</span></div>
+          <span class="fone-pr-add"><span data-ico="carrinho"></span></span>
+        </div>`).join('')}</div>`}
+    <div class="fone-ver-todos" data-cfg="verTodosProdutos">Ver o cardápio completo <span>${produtos.length}</span></div>
+  </div>`;
 }
 
 function pintarPreviaFone(){
@@ -15409,6 +15496,10 @@ function pintarPreviaFone(){
     .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt'));
   const temPr = produtos.length > 0;
   const restaurante = sl.tipo === 'restaurante';
+  // O link de pedidos: restaurante com cardápio. Os itens na ordem do cardápio (pelo número, quando numera).
+  const pedidosNaPrevia = restaurante && temPr;
+  if(pedidosNaPrevia && cardapioDoSalao().numerar) produtos.sort(ordemDoCardapio);
+  /* 85: o destaque do endereço. "auto" = brilho quando a foto aparece forte. */
   const convite = (restaurante && temPr) ? 'Escolha no cardápio e faça seu pedido em poucos toques.'
     : (comServicos && temPr) ? 'Escolha o serviço, agende seu horário ou confira nossos produtos.'
     : comServicos ? 'Escolha o serviço e agende seu horário em poucos toques.'
@@ -15443,6 +15534,8 @@ function pintarPreviaFone(){
   const fotoNoFundo = !!imagemDoSalao(sl, 'fundo') && aparencia.fundoTipo === 'imagem';
   const cartoesFechados = fotoNoFundo && (aparencia.cartoes === 'fechado'
     || (aparencia.cartoes !== 'vidro' && aparencia.veu < 35));
+  const estiloEndereco = aparencia.enderecoEstilo !== 'auto' ? aparencia.enderecoEstilo
+    : (cartoesFechados ? 'brilho' : 'nenhum');
 
   alvo.innerHTML =
     `<div class="fone ${escuro ? 'fone-escuro' : ''}${
@@ -15451,7 +15544,7 @@ function pintarPreviaFone(){
           corValida((aparencia.cores || {}).papel) ? ' com-papel' : ''}${
           corValida((aparencia.cores || {}).fundoServico) ? ' com-fundo-servico' : ''}${
           corValida((aparencia.cores || {}).fundoProduto) ? ' com-fundo-produto' : ''}"
-          data-modo="${aparencia.modo}" data-logo="${aparencia.logoForma}"${
+          data-modo="${aparencia.modo}" data-logo="${aparencia.logoForma}" data-endereco="${estiloEndereco}"${
             corValida(aparencia.atalhos.fundo) ? ' data-at-fundo' : ''}
           data-atalhos="${aparencia.atalhos.estilo}" data-cfg="fundo"
           style="--fone-marca:${escapar(corDoBotaoNaPrevia())};--fone-marca-txt:${
@@ -15486,13 +15579,15 @@ function pintarPreviaFone(){
          <p class="fone-boas-sub" data-cfg="convite">${escapar(convite)}</p>
          ${htmlBotoes}
        </div>
+       ${pedidosNaPrevia ? previaDoConvite(sl) + previaDaPromo(produtos) : ''}
        ${previaDoSlide(sl)}
        ${comServicos ? `<div class="fone-svs" data-cfg="servicos">
          <div class="fone-rot" data-cfg="tituloServicos">${escapar(vocPrevia(sl, 'oferecemos'))}</div>
          ${svs.length ? previaDosServicos(svs)
          : '<p class="fone-nada">Cadastre serviços para vê-los aqui.</p>'}
        </div>` : ''}
-       ${temPr ? `<div class="fone-svs" data-cfg="produtos">
+       ${pedidosNaPrevia ? previaDoCardapio(produtos) : ''}
+       ${temPr && !pedidosNaPrevia ? `<div class="fone-svs" data-cfg="produtos">
          <div class="fone-rot" data-cfg="tituloProdutos">Produtos em destaque</div>
          <div class="fone-grade">${produtos.slice(0, 2).map(x => `
            <div class="fone-cartao fone-pr${aparencia.moldura === 'elegante' ? '' : ' reta'}">
@@ -15526,8 +15621,9 @@ function pintarPreviaFone(){
               ? `style="--fone-fita-cor:${escapar(aparencia.fitaCor)};--fone-fita-txt:${letraSobre(aparencia.fitaCor)}"` : ''}>
          <span class="fone-fita-saco">2</span>
          <span class="fone-fita-txt"><b>R$ 93,00</b>
-           <span>2 produtos · Ver meu pedido</span></span>
-         <span class="fone-fita-zap"><span data-ico="whatsapp"></span>Enviar</span>
+           <span>${pedidosNaPrevia ? '2 itens' : '2 produtos'} · Ver meu pedido</span></span>
+         ${pedidosNaPrevia ? '<span class="fone-fita-zap"><span data-ico="direita"></span>Continuar</span>'
+           : '<span class="fone-fita-zap"><span data-ico="whatsapp"></span>Enviar</span>'}
        </div>
        ${previaDoRodape(sl, comServicos, temPr)}
      </div>
@@ -15645,6 +15741,7 @@ function cfgDaAparencia(){
     botaoProdutos: aparencia.botaoProdutos,
     veu: aparencia.veu,
     cartoes: aparencia.cartoes,
+    enderecoEstilo: aparencia.enderecoEstilo,
     moldura: aparencia.moldura,
     /* ⚠ SÓ O QUE ELE TROCOU. Chave ausente quer dizer "calcule a partir da
        principal" — gravar as nove sempre congelaria dentro do restaurante as

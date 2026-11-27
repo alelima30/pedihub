@@ -5958,23 +5958,36 @@ body.tem-fundo .av-capa{ padding:12px; border-radius:var(--r-lg, 16px);
    caber numa linha ("HOT-DOG" quebrava no hífen). */
 .promo-cartao.promo-sem-foto{ flex:0 0 62%; max-width:260px }
 
-/* ── O ENDEREÇO SOBRE A FOTO ──────────────────────────────────────────────
-   Com a foto forte (pouco véu), a rua e o bairro ficavam direto sobre ela:
-   na Paivas, "Bairro Cidade Nova" em marrom-claro sobre laranja. A faixa de
-   vidro atrás resolvia a leitura mas "não ficou legal" — virou uma caixa no
-   meio da capa. Agora é um halo na cor dos cartões em volta de cada letra:
-   sem caixa, e a letra se descola de qualquer foto (letra escura ganha halo
-   claro; no tema escuro, o contrário). A prévia faz o mesmo. */
-body.fundo-forte .marca-end,
-body.fundo-forte .marca-salao .sub{
+/* ── O ENDEREÇO EMBAIXO DO NOME (85) ──────────────────────────────────────
+   Escolhido em Aparência → Topo e capa → "Endereço embaixo do nome". O link
+   põe a escolha em body[data-endereco]; a prévia, em .fone[data-endereco].
+     brilho  um halo na cor dos cartões em volta de cada letra (sem caixa);
+     faixa   uma faixa clara atrás da rua e do bairro;
+     nenhum  o texto simples.
+   "auto" (o padrão) vira brilho quando a foto de fundo aparece forte. */
+body[data-endereco="brilho"] .marca-end,
+body[data-endereco="brilho"] .marca-salao .sub{
   text-shadow:0 0 2px var(--painel), 0 0 6px var(--painel),
               0 0 14px color-mix(in srgb, var(--painel) 75%, transparent);
 }
-body.fundo-forte .marca-end .rua{ font-weight:600 }
-body.fundo-forte .marca-end .lugar{ color:var(--cor-lugar, var(--txt2)); font-weight:600 }
-.fone.pouco-veu .fone-topo > span,
-.fone.pouco-veu .fone-topo > i{
+body[data-endereco="faixa"] .marca-end,
+body[data-endereco="faixa"] .marca-salao .sub{
+  width:fit-content; max-width:min(34ch, 100%); padding:4px 12px; border-radius:12px;
+  background:color-mix(in srgb, var(--painel) 85%, transparent);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); text-shadow:none;
+}
+body[data-endereco="brilho"] .marca-end .rua,
+body[data-endereco="faixa"] .marca-end .rua{ font-weight:600 }
+body[data-endereco="brilho"] .marca-end .lugar,
+body[data-endereco="faixa"] .marca-end .lugar{ color:var(--cor-lugar, var(--txt2)); font-weight:600 }
+.fone[data-endereco="brilho"] .fone-topo > span,
+.fone[data-endereco="brilho"] .fone-topo > i{
   text-shadow:0 0 2px var(--fone-card, var(--painel)), 0 0 5px var(--fone-card, var(--painel));
+}
+.fone[data-endereco="faixa"] .fone-topo > span,
+.fone[data-endereco="faixa"] .fone-topo > i{
+  width:fit-content; margin-left:auto; margin-right:auto; padding:1px 8px; border-radius:8px; text-shadow:none;
+  background:color-mix(in srgb, var(--fone-card, var(--painel)) 85%, transparent);
 }
 /* "Meus pedidos" / "Seu pedido #12" na capa: o fundo era um tom suave e
    transparente da cor da marca, e sobre a foto a frase sumia. */
@@ -6006,3 +6019,61 @@ body.tem-fundo .pd-aviso{
 .np-preco{ flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end; gap:1px; white-space:nowrap }
 .np-preco b{ font-size:14.5px; color:var(--txt) }
 .np-preco s{ font-size:12px; color:var(--txt3, var(--txt2)) }
+
+/* ── A PRÉVIA DO LINK DE PEDIDOS ───────────────────────────────────────────
+   Os blocos que o link de pedidos tem e a prévia não tinha: o tempo de
+   entrega, o "Primeira vez aqui?", a faixa de PROMOÇÃO e o "Do cardápio" em
+   lista. Copiam os do link (.ficha-convite, .promo-faixa, .lista-cardapio),
+   na escala da prévia: as letras de 8,5 a 11px, como o resto dela. */
+.fone-tempo{ position:relative; z-index:1; margin:-4px 0 10px; padding:6px 8px; border-radius:9px; text-align:center;
+  font-size:10px; background:var(--fone-card, var(--painel)); border:1px solid var(--fone-borda, var(--borda));
+  color:var(--fone-texto, var(--txt)) }
+.fone-convite{ position:relative; z-index:1; margin:0 0 11px; padding:9px 10px; border-radius:11px;
+  border:1px solid var(--fone-ac-line, var(--ac-line, var(--ac-600))); background:var(--fone-ac-soft, var(--ac-soft));
+  color:var(--fone-texto, var(--txt)) }
+.fone-convite b{ display:block; font-size:11px }
+.fone-convite p{ margin:2px 0 6px; font-size:9.5px; color:var(--fone-discreto, var(--txt2)) }
+.fone-chips{ display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px }
+.fone-chips span{ padding:3px 7px; border-radius:99px; font-size:8.5px; background:var(--fone-card, var(--painel));
+  border:1px solid var(--fone-borda, var(--borda)) }
+.fone-convite-ver{ display:block; padding:5px; border-radius:8px; text-align:center; font-size:9.5px; font-weight:650;
+  color:var(--fone-ac, var(--ac-600)); border:1px solid var(--fone-ac, var(--ac-600)) }
+.fone-promo{ position:relative; z-index:1; margin:0 0 11px; padding:8px 0 8px; border-radius:11px;
+  background:linear-gradient(135deg, rgba(225,29,72,.10), rgba(249,115,22,.08)); border:1px solid rgba(225,29,72,.12) }
+.fone-promo-tit{ display:flex; justify-content:space-between; align-items:center; padding:0 8px 6px;
+  font-size:10px; font-weight:900; letter-spacing:.05em; color:#E11D48 }
+.fone-promo-tit i{ font-style:normal; font-weight:700; font-size:9px; letter-spacing:0; text-decoration:underline;
+  color:var(--fone-texto, var(--txt)) }
+.fone-promo-trilho{ display:flex; gap:6px; overflow:hidden; padding:0 8px }
+.fone-promo-c{ flex:0 0 46%; display:flex; flex-direction:column; gap:2px; padding:6px; border-radius:9px;
+  background:var(--fone-card, var(--painel)); color:var(--fone-texto, var(--txt)); font-size:9px;
+  box-shadow:0 4px 10px -6px rgba(0,0,0,.35) }
+.fone-promo-c.sem-foto{ flex-basis:62% }
+.fone-promo-foto{ display:block; height:42px; border-radius:6px; background:var(--fone-papel, var(--painel2)) center/cover no-repeat }
+.fone-promo-c s{ color:var(--fone-discreto, var(--txt3)) }
+.fone-promo-c b[data-cfg="precoProduto"]{ color:#E11D48 }
+.fone-lista{ display:flex; flex-direction:column; padding:0 8px; border-radius:11px;
+  background:var(--fone-card, var(--painel)); border:1px solid var(--fone-borda, var(--borda)) }
+.fone-li{ display:flex; align-items:flex-start; gap:6px; padding:7px 0; border-bottom:1px dashed var(--fone-borda, var(--borda)) }
+.fone-li:last-child{ border-bottom:0 }
+.fone-li-num{ flex:none; display:inline-grid; place-items:center; width:17px; height:17px; border-radius:50%;
+  background:var(--fone-marca, var(--acao)); color:var(--fone-marca-txt, #fff);
+  font-size:8.5px; font-weight:800 }
+.fone-li-txt{ flex:1; min-width:0 }
+.fone-li-txt b{ display:block; font-size:10px; font-weight:800;
+  color:var(--fone-nomeProduto, var(--fone-precoProduto, var(--fone-ac, var(--ac-600)))) }
+.fone-li-promo{ font-style:normal; padding:0 3px; border-radius:4px; font-size:7px; background:#E11D48; color:#fff; vertical-align:1px }
+.fone-li-txt small{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  font-size:8.5px; line-height:1.3; font-style:italic; color:var(--fone-discreto, var(--txt2)) }
+.fone-li-dir{ flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:4px }
+.fone-li-preco{ display:inline-flex; align-items:baseline; gap:3px; padding:2px 5px; border-radius:5px; font-size:9.5px; font-weight:800;
+  background:var(--fone-marca, var(--acao)); color:var(--fone-marca-txt, #fff) }
+.fone-li-preco s{ font-size:7.5px; font-weight:600; opacity:.8 }
+.fone-li-add{ display:inline-flex; align-items:center; gap:3px; padding:3px 6px; border-radius:6px; font-size:8.5px; font-weight:700;
+  background:var(--fone-marca, var(--acao)); color:var(--fone-marca-txt, #fff) }
+.fone-li-add [data-ico]{ width:9px; height:9px }
+/* Como no link: o preço é a etiqueta na cor dos botões, com a letra dela; o
+   nome do item vai na cor do preço (.lista-nome). Mais forte que a regra
+   geral `.fone [data-cfg="precoProduto"]`, que pintava a letra da etiqueta. */
+.fone .fone-li .fone-li-preco{ color:var(--fone-marca-txt, #fff) }
+.fone .fone-li-txt b[data-cfg="nomeProduto"]{ color:var(--fone-precoProduto, var(--fone-ac, var(--ac-600))) }

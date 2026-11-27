@@ -1829,6 +1829,13 @@ with conferencia(ordem, item, veredito, detalhe) as (
                 or pg_get_functiondef(to_regprocedure('public.ficha_do_cliente(uuid,text,text)')) not like '%e_equipe%'
               then 'cole o 84_cliente_whatsapp.sql' else '' end
   union all
+  /* PediHub (85): o destaque do endereço na capa (brilho, faixa, nenhum). */
+  select 101, 'Destaque do endereço na capa',
+         case when pg_get_functiondef(to_regprocedure('public.vitrine(text)')) not like '%enderecoEstilo%'
+              then 'FALTA' else 'certo' end,
+         case when pg_get_functiondef(to_regprocedure('public.vitrine(text)')) not like '%enderecoEstilo%'
+              then 'cole o 85_endereco_estilo.sql' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um

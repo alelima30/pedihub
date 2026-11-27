@@ -113,6 +113,8 @@ language sql stable security definer set search_path = public as $$
          nesta lista fica preso no painel: o dono escolhe, o painel grava, a
          prévia obedece, e a página da cliente nunca fica sabendo. */
       'cartoes', s.cfg->>'cartoes',
+      -- 85: o destaque do endereço embaixo do nome (auto, brilho, faixa, nenhum).
+      'enderecoEstilo', s.cfg->>'enderecoEstilo',
 
       /* A FORMA do cartão de serviço: `reta` (o de sempre) ou
          `elegante`. Ausente vale `reta`, então restaurante criado antes

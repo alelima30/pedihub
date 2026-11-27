@@ -56,6 +56,7 @@ language sql stable security definer set search_path = public as $$
       'veu', case when s.cfg->>'veu' ~ '^[0-9]+$'
                   then (s.cfg->>'veu')::int end,
       'cartoes', s.cfg->>'cartoes',
+      'enderecoEstilo', s.cfg->>'enderecoEstilo',
       'moldura', coalesce(s.cfg->>'moldura', 'reta'),
       'cores',     coalesce(s.cfg->'cores', '{}'::jsonb),
       'modo',      coalesce(s.cfg->>'modo', 'atual'),
@@ -15153,6 +15154,163 @@ returns jsonb language sql stable security definer set search_path = public as $
   from (select case when jsonb_typeof(s.cfg->'pedidos') = 'object'
                     then s.cfg->'pedidos' else '{}'::jsonb end as p
           from public.saloes s where s.id = p_salao) x
+$$;
+
+create or replace function public.vitrine(p_slug text)
+returns jsonb
+language sql stable security definer set search_path = public as $$
+  select jsonb_build_object(
+    'salao', jsonb_build_object(
+      'id', s.id, 'slug', s.slug, 'nome', s.nome, 'tipo', s.tipo,
+      'selo', not coalesce(public.recurso_bool(s.id, 'aparencia'), false),
+      'logo', s.logo, 'capa', s.capa,
+      'telefone', s.telefone, 'whatsapp', s.whatsapp,
+      'endereco', s.endereco, 'fuso', s.fuso,
+      'diasLiberados', public.dias_liberados(s.id),
+      'cor',  c.cfg->>'cor',
+      'tema', c.cfg->>'tema',
+      'precoNaCapa', lower(btrim(coalesce(c.cfg->>'precoNaCapa', 'false')))
+                       in ('true', 't', '1', 'yes', 'sim'),
+      'fundo', c.cfg->>'fundo',
+      'brilho', lower(btrim(coalesce(c.cfg->>'brilho', 'true')))
+                  not in ('false', 'f', '0', 'no', 'nao', 'não'),
+      'letra', c.cfg->>'letra',
+      'slideDe', c.cfg->>'slideDe',
+      'galeria', coalesce(c.cfg->'galeria', '[]'::jsonb),
+      'capaFoco', case when c.cfg->>'capaFoco' ~ '^[0-9]+$'
+                       then (c.cfg->>'capaFoco')::int end,
+      'veu', case when c.cfg->>'veu' ~ '^[0-9]+$'
+                  then (c.cfg->>'veu')::int end,
+      'cartoes', c.cfg->>'cartoes',
+      'enderecoEstilo', c.cfg->>'enderecoEstilo',
+      'moldura', coalesce(c.cfg->>'moldura', 'reta'),
+      'loja', lower(btrim(coalesce(c.cfg->>'loja', 'true')))
+                not in ('false', 'f', '0', 'no', 'nao', 'não'),
+      'usaServicos', lower(btrim(coalesce(c.cfg->>'usaServicos', 'true')))
+                       not in ('false', 'f', '0', 'no', 'nao', 'não'),
+      'destaques', coalesce(c.cfg->'destaques', '[]'::jsonb),
+      'passoHorarios', case
+        when c.cfg->>'passoHorarios' in ('15','30','60')
+          then (c.cfg->>'passoHorarios')::int else 15 end,
+      'exigeSenha', lower(btrim(coalesce(c.cfg->>'exigeSenha', 'false')))
+                      in ('true', 't', '1', 'sim', 'yes'),
+      'cores',     coalesce(c.cfg->'cores', '{}'::jsonb),
+      'modo',      coalesce(c.cfg->>'modo', 'atual'),
+      'logoForma', coalesce(c.cfg->>'logoForma', 'circular'),
+      'logoBorda', coalesce(c.cfg->>'logoBorda', 'media'),
+      'slideForma', coalesce(c.cfg->>'slideForma', 'panoramico'),
+      'fitaMetal',  coalesce(c.cfg->>'fitaMetal', 'media'),
+      'fitaBrilho', lower(btrim(coalesce(c.cfg->>'fitaBrilho', 'true')))
+                      not in ('false', 'f', '0', 'no', 'nao', 'não'),
+      'fitaTempo',  coalesce(c.cfg->>'fitaTempo', 'media'),
+      'fitaCor',    c.cfg->>'fitaCor',
+      'fitaBorda',  coalesce(c.cfg->>'fitaBorda', 'reta'),
+      'fundoTipo', coalesce(c.cfg->>'fundoTipo', 'cor'),
+      'gradiente', c.cfg->>'gradiente'
+    )
+    || jsonb_build_object(
+      'funcionamento', case when jsonb_typeof(c.cfg->'funcionamento') = 'object'
+                            then c.cfg->'funcionamento' end,
+      'pagamentos',    case when jsonb_typeof(c.cfg->'pagamentos') = 'object'
+                            then c.cfg->'pagamentos' end,
+      'sobre',     nullif(left(btrim(coalesce(c.cfg->>'sobre', '')), 600), ''),
+      'instagram', nullif(left(regexp_replace(coalesce(c.cfg->>'instagram', ''),
+                                              '[^A-Za-z0-9._]', '', 'g'), 30), ''),
+      'capaForma', case when c.cfg->>'capaForma' = 'reta' then 'reta' end,
+      'atalhos', case when jsonb_typeof(c.cfg->'atalhos') = 'object'
+                      then c.cfg->'atalhos' end,
+      'rodape', case when jsonb_typeof(c.cfg->'rodape') = 'object'
+                     then c.cfg->'rodape' end,
+      'botaoProdutos', case when c.cfg->>'botaoProdutos' = 'metal' then 'metal' end,
+      'pularComQuem', lower(btrim(coalesce(c.cfg->>'pularComQuem', 'false')))
+                        in ('true', 't', '1', 'yes', 'sim'),
+      'intro', case when jsonb_typeof(c.cfg->'intro') = 'object'
+                    then c.cfg->'intro' end
+    ),
+    'produtos', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', pr.id, 'nome', pr.nome, 'marca', pr.marca,
+               'descricao', pr.descricao, 'foto', pr.foto,
+               'categoria', nullif(btrim(pr.categoria), ''),
+               'preco', case when pr.preco_visivel then pr.preco else null end)
+             order by pr.nome)
+        from public.produtos pr
+       where pr.salao_id = s.id and pr.ativo and pr.venda_online
+         and lower(btrim(coalesce(c.cfg->>'loja', 'true')))
+               not in ('false', 'f', '0', 'no', 'nao', 'não')), '[]'::jsonb),
+    'servicos', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', v.id, 'nome', v.nome, 'categoria', v.categoria,
+               'descricao', v.descricao, 'duracaoMin', v.duracao_min,
+               'preco', v.preco, 'foto', v.foto,
+               'dias', case when v.dias is null or cardinality(v.dias) = 0
+                            then null else to_jsonb(v.dias) end,
+               'precoPorProf', (
+                 select jsonb_object_agg(sp.profissional_id, sp.preco)
+                   from public.servicos_profissionais sp
+                   join public.profissionais p2 on p2.id = sp.profissional_id
+                  where sp.servico_id = v.id and sp.preco is not null
+                    and sp.preco <> v.preco and p2.ativo and p2.aceita_online),
+               'regras', (
+                 select jsonb_agg(jsonb_build_object(
+                          'profissionalId', r.profissional_id, 'preco', r.preco,
+                          'de', r.de, 'ate', r.ate,
+                          'dias', case when r.dias is null
+                                         or cardinality(r.dias) = 0
+                                       then null else to_jsonb(r.dias) end,
+                          'horaIni', r.hora_ini, 'horaFim', r.hora_fim)
+                        order by (case when r.profissional_id is not null then 8 else 0 end)
+                               + (case when r.dias is not null
+                                        and cardinality(r.dias) > 0 then 4 else 0 end)
+                               + (case when r.hora_ini is not null then 2 else 0 end)
+                               + (case when r.de is not null or r.ate is not null
+                                       then 1 else 0 end) desc,
+                                 r.criado_em desc, r.id desc)
+                   from public.precos_regras r
+                  where r.servico_id = v.id and r.ativo
+                    and (r.ate is null or r.ate >= public.hoje_no_salao(s.id))
+                    and (r.de  is null or r.de  <= public.hoje_no_salao(s.id)
+                                               + public.dias_liberados(s.id))),
+               'precoMin', least(
+                 v.preco,
+                 (select min(r2.preco) from public.precos_regras r2
+                   where r2.ativo and r2.servico_id = v.id
+                     and (r2.de  is null or r2.de  <= public.hoje_no_salao(s.id)
+                                                    + public.dias_liberados(s.id))
+                     and (r2.ate is null or r2.ate >= public.hoje_no_salao(s.id))),
+                 (select min(sp.preco) from public.servicos_profissionais sp
+                   join public.profissionais p3 on p3.id = sp.profissional_id
+                  where sp.servico_id = v.id and sp.preco is not null
+                    and p3.ativo and p3.aceita_online)))
+             order by v.categoria nulls last, v.nome)
+        from public.servicos v
+       where v.salao_id = s.id and v.ativo and v.aceita_online
+         and lower(btrim(coalesce(c.cfg->>'usaServicos', 'true')))
+               not in ('false', 'f', '0', 'no', 'nao', 'não')), '[]'::jsonb),
+    'profissionais', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'id', p.id, 'nome', coalesce(p.apelido, p.nome),
+               'foto', p.foto,
+               'servicos', (select coalesce(jsonb_agg(sp.servico_id), '[]'::jsonb)
+                              from public.servicos_profissionais sp
+                             where sp.profissional_id = p.id))
+             order by p.criado_em, p.id)
+        from public.profissionais p
+       where p.salao_id = s.id and p.ativo and p.aceita_online
+         and public.profissional_na_cota(p.id)), '[]'::jsonb)
+  )
+  from public.saloes s
+  cross join lateral (select
+      case when coalesce(public.recurso_bool(s.id, 'aparencia'), false) then coalesce(s.cfg, '{}'::jsonb)
+           else coalesce(s.cfg, '{}'::jsonb) - array[
+             'atalhos','botaoProdutos','brilho','capaFoco','capaForma','cartoes','cor','enderecoEstilo',
+             'cores','fitaBorda','fitaBrilho','fitaCor','fitaMetal','fitaTempo','fundo',
+             'fundoTipo','galeria','gradiente','intro','letra','logoBorda','logoForma',
+             'modo','moldura','rodape','slideDe','slideForma','tema','veu']
+      end
+      || case when coalesce(public.recurso_bool(s.id, 'loja'), false) then '{}'::jsonb
+              else '{"loja": "false"}'::jsonb end as cfg) c
+  where s.slug = p_slug and s.status = 'ativo'
 $$;
 
 alter table public.agendamentos
