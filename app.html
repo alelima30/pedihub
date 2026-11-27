@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.2f056f';
+const VERSAO_APP = 'v9.6593af';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -23817,7 +23817,9 @@ function ligarRelogioDosPedidos(){
 /* Um "plim" curto, gerado na hora — sem arquivo de som para baixar. O
    navegador só toca depois de a pessoa ter clicado na página, e é por isso
    que o selo e o destaque do cartão existem também: o som é a cereja. */
+let ultimoSomDePedido = 0;
 function tocarSomDePedido(){
+  ultimoSomDePedido = Date.now();
   try{
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if(!Ctx) return;
@@ -23876,12 +23878,31 @@ function liberarSom(){
 function conferirAlarme(){
   const esperando = (pedidosLista || []).some(p => p.status === 'recebido');
   if(esperando && alarmeLigado()){
-    if(!alarmeRelogio) alarmeRelogio = setInterval(() => {
-      if((pedidosLista || []).some(p => p.status === 'recebido') && alarmeLigado()) tocarSomDePedido();
-      else { clearInterval(alarmeRelogio); alarmeRelogio = null; }
-    }, 6000);
+    if(!alarmeRelogio) alarmeRelogio = setInterval(tocarAlarme, 6000);
   }else if(alarmeRelogio){ clearInterval(alarmeRelogio); alarmeRelogio = null; }
 }
+/* ⚠ ANTES DE CADA TOQUE, PERGUNTA AO SERVIDOR. Com o painel aberto em dois
+   aparelhos (o celular do dono e o computador do balcão), aceitar num deles
+   não calava o outro: ele tocava até a volta de 20 s da lista — ou bem mais,
+   com a aba em segundo plano. Agora cada toque confere antes: aceitou em
+   qualquer aparelho, o próximo toque não sai. Sem internet, a lista fica a
+   de antes e o alarme continua — pedido esperando não pode ficar mudo. */
+let alarmeConferindo = false;
+async function tocarAlarme(){
+  if(alarmeConferindo) return;
+  alarmeConferindo = true;
+  try{ if(NA_NUVEM && restaurantePainel()) await carregarPedidos(); }
+  catch(e){}
+  finally{ alarmeConferindo = false; }
+  if((pedidosLista || []).some(p => p.status === 'recebido') && alarmeLigado()){
+    // O carregarPedidos() acabou de tocar por um pedido que chegou agora: não dobra.
+    if(Date.now() - ultimoSomDePedido > 2000) tocarSomDePedido();
+  }else if(alarmeRelogio){ clearInterval(alarmeRelogio); alarmeRelogio = null; }
+}
+// Voltou para a tela (celular desbloqueado, aba de volta): confere na hora.
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && NA_NUVEM && pedidosLista !== null && restaurantePainel()) carregarPedidos();
+});
 // O primeiro toque em qualquer lugar da página já libera o som.
 document.addEventListener('pointerdown', function primeiroToque(){
   try{
@@ -24101,13 +24122,25 @@ async function mudarPedidoAgora(id, status){
   }
   pedidoMexendo = id;
   desenharPedidos();
+  let mudou = false;
   try{
     await Dados.chamar('mudar_status_pedido', { p_pedido: id, p_status: status, p_motivo: motivo });
+    mudou = true;
   }catch(e){
     alert('Não deu para mudar o pedido.\n\n' + (e.message || ''));
   }
   pedidoMexendo = null;
   pedidosNovos.delete(id);
+  /* ⚠ O ALARME PARA NA HORA DO ACEITE, e não na volta da lista. Antes ele só
+     parava quando a lista voltava do servidor: com a internet fraca a lista
+     não voltava, o pedido continuava "recebido" na memória e o painel tocava
+     para sempre — "já confirmei e continua fazendo barulho". */
+  if(mudou){
+    const lp = (pedidosLista || []).find(x => x.id === id);
+    if(lp) lp.status = status;
+    conferirAlarme();
+    pintarSeloDePedidos();
+  }
   await carregarPedidos();
 }
 
