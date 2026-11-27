@@ -178,6 +178,7 @@ rodar "tempo de entrega, do painel ao acompanhamento" node "$AQUI/tempo-entrega-
 rodar "o alarme para quando alguém aceita" node "$AQUI/alarme-pedido-tela.test.mjs"
 rodar "novo pedido com a lista do cardápio" node "$AQUI/novo-pedido-lista.test.mjs"
 rodar "avisar o cliente no WhatsApp, com o link do pedido" node "$AQUI/pedido-zap-tela.test.mjs"
+rodar "pedido atrasado pelo tempo de entrega" node "$AQUI/pedido-atrasado-tela.test.mjs"
 rodar "cartão fidelidade na tela" node "$AQUI/fidelidade-tela.test.mjs"
 rodar "avaliação do pedido" node "$AQUI/avaliacao-tela.test.mjs"
 rodar "Pix online no link" node "$AQUI/pix-online-tela.test.mjs"

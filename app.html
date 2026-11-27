@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.c5fe4c';
+const VERSAO_APP = 'v9.dce20f';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -24156,11 +24156,15 @@ function cartaoDePedido(p){
     : (p.status === 'saiu' || p.status === 'pronto') ? [['entregue', servido, 'btn-p']] : [];
   const vivo = !['entregue', 'cancelado'].includes(p.status);
   const atrasados = (p.itens || []).filter(i => i.atrasado).length;
-  return `<div class="card pedido-cartao st-${escapar(p.status)}${pedidosNovos.has(p.id) ? ' pedido-novo' : ''}${atrasados ? ' pedido-atrasado' : ''}" data-pedido="${p.id}">
+  const prazo = prazoDoPedido(p);
+  return `<div class="card pedido-cartao st-${escapar(p.status)}${pedidosNovos.has(p.id) ? ' pedido-novo' : ''}${atrasados ? ' pedido-atrasado' : ''}${
+      prazo && prazo.atraso > 0 ? ' pedido-fora-do-prazo' : ''}" data-pedido="${p.id}">
     <div class="pedido-topo">
       <b>#${escapar(String(p.numero))}</b>
       <span class="tag ${p.status === 'cancelado' ? 't-canc' : p.status === 'entregue' ? 't-conc' : p.status === 'recebido' ? 't-pend' : 't-conf'}">${etapaDoPedido(p)}</span>
       ${atrasados ? `<span class="tag t-atrasado">${atrasados} atrasado${atrasados > 1 ? 's' : ''}</span>` : ''}
+      ${prazo && prazo.atraso > 0 ? `<span class="tag t-fora-do-prazo">⏰ ATRASADO ${duracaoCurta(prazo.atraso)}</span>`
+        : prazo && prazo.atraso > -10 ? `<span class="tag t-vence">⏳ vence em ${-prazo.atraso || 1} min</span>` : ''}
       <span class="pedido-hora">${p.origem && p.origem !== 'link' ? `<span class="tag">${ORIGEM_DO_PEDIDO[p.origem] || 'balcão'}</span> ` : ''}${horaDoPedido(p.criado_em)}${vivo ? ' · ' + haQuanto(p.criado_em) : ''}</span>
     </div>
     <div class="pedido-quem"><b>${escapar(p.nome)}</b>${zap
@@ -24174,6 +24178,9 @@ function cartaoDePedido(p){
       ? '🛵 <b>Entrega</b> — ' + escapar(enderecoDoPedido(p)) + (p.entregador ? ' · com <b>' + escapar(p.entregador) + '</b>' : '')
       : p.entrega === 'mesa' ? '🍽️ <b>Mesa ' + escapar(p.mesa || '') + '</b>' + (p.garcom ? ' · garçom <b>' + escapar(p.garcom) + '</b>' : '')
       : '🏪 <b>Retirada</b> no balcão'}</p>
+    ${prazo ? `<p class="pedido-prazo${prazo.atraso > 0 ? ' pedido-prazo-fora' : ''}">${prazo.atraso > 0
+      ? `⏰ <b>Atrasado ${duracaoCurta(prazo.atraso)}</b> — o prometido ao cliente era até <b>${prazo.hora}</b> (${escapar(prazo.tempo)}).`
+      : `🕙 Prometido ao cliente até <b>${prazo.hora}</b> (${escapar(prazo.tempo)}).`}</p>` : ''}
     <p class="pedido-pag">${p.pagoOnline ? '<b class="pago-online">✓ PAGO · Pix online</b>' : escapar(PEDIDO_PAGAMENTO[p.pagamento] || p.pagamento)}${
       p.troco ? ' · troco para ' + real(Number(p.troco)) + ' (levar ' + real(Number(p.troco) - Number(p.total)) + ')' : ''}
       · ${Number(p.desconto) ? 'cupom ' + escapar(p.cupom || '') + ' − ' + real(Number(p.desconto)) + ' · ' : ''}${
@@ -24190,6 +24197,32 @@ function cartaoDePedido(p){
       <button class="btn" onclick="imprimirPedido('${p.id}')">Imprimir</button>
     </div>
   </div>`;
+}
+
+/* ── O PRAZO DO PEDIDO: ATRASADO PELO TEMPO DE ENTREGA ─────────────────────
+   "Se o tempo de entrega é de 1h, tem que aparecer que está atrasada a
+   entrega." O prazo é o que o cliente viu no link: a hora do pedido mais o
+   tempo de entrega escolhido em Pedidos (a mesma conta do "Chega por volta
+   das…" do acompanhamento). Vale até ser entregue — e, na retirada, até ficar
+   pronto. Na mesa não há prazo de entrega. Sem tempo escolhido, nada aparece.
+   Faltando 10 minutos: "vence em X min"; passou: "ATRASADO 35 min", o cartão
+   em vermelho e o aviso no alto da tela. A tela se redesenha a cada volta da
+   lista (20 s), e o relógio anda junto. */
+function prazoDoPedido(p){
+  if(!p || ['entregue', 'cancelado', 'aguardando_pagamento'].includes(p.status) || p.entrega === 'mesa') return null;
+  if(p.status === 'pronto' && p.entrega !== 'entrega') return null;   // pronto para retirar: cumprido
+  const tempo = cfgPedidosDoSalao().tempo;
+  const min = minutosDoTempoPainel(tempo);
+  const ini = new Date(p.criado_em);
+  if(!(min > 0) || isNaN(ini)) return null;
+  const limite = new Date(ini.getTime() + min * 60000);
+  // A hora no fuso do restaurante, como a do pedido no cartão (e não no do aparelho).
+  return { tempo, limite, atraso: Math.floor((Date.now() - limite.getTime()) / 60000),
+           hora: horaDoPedido(limite.toISOString()) };
+}
+function duracaoCurta(min){
+  const h = Math.floor(min / 60), m = min % 60;
+  return h ? h + ' h' + (m ? ' ' + m + ' min' : '') : min + ' min';
 }
 
 /* ── AVISAR O CLIENTE PELO WHATSAPP DA LANCHONETE (86) ────────────────────
@@ -24238,7 +24271,7 @@ function janelaDaEntrega(tempo, desde){
   const d = new Date(desde);
   if(!tempo || isNaN(d)) return '';
   const t = String(tempo).toLowerCase();
-  const hora = min => new Date(d.getTime() + min * 60000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const hora = min => horaDoPedido(new Date(d.getTime() + min * 60000).toISOString());
   // "40 a 60 min" (sem hora): a janela das duas pontas; o resto, a conta de sempre.
   const nums = [...t.matchAll(/\d+/g)].map(m => Number(m[0]));
   if(!/h/.test(t.replace(/min/g, '')) && nums.length >= 2 && nums[0] < nums[1]) return hora(nums[0]) + ' a ' + hora(nums[1]);
@@ -24386,6 +24419,9 @@ function desenharPedidos(){
       🔔 <b>O som dos pedidos está parado.</b> O navegador só toca depois de um toque na página.
       <button class="btn btn-p btn-peq" onclick="liberarSom()">Toque para ativar o som</button></div>` : ''}
     ${pedidosErro ? `<div class="aviso">${escapar(pedidosErro)}</div>` : ''}
+    ${(n => n ? `<div class="aviso pedido-aviso-prazo">⏰ <b>${n} ${n === 1 ? 'pedido atrasado' : 'pedidos atrasados'}</b>
+      — ${n === 1 ? 'passou' : 'passaram'} do tempo de entrega (${escapar(c.tempo)}). Estão marcados em vermelho.</div>` : '')(
+      pedidosLista.filter(p => { const z = prazoDoPedido(p); return z && z.atraso > 0; }).length)}
     ${!c.aceitando ? `<div class="aviso">Os pedidos pelo link estão <b>pausados</b>. A cliente vê o cardápio,
       mas não consegue pedir. Ligue "Recebendo pedidos" quando quiser voltar.</div>` : ''}
     ${bloco('Novos', novos, 'Nenhum pedido esperando. Os pedidos feitos no seu link aparecem aqui sozinhos.', 'recebido')}

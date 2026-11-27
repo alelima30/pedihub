@@ -6127,3 +6127,15 @@ body.tem-fundo .pd-aviso{
   box-shadow:0 8px 24px rgba(0,0,0,.25); opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; max-width:90vw;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 .np-entrou.on{ opacity:1; transform:translate(-50%, 0) }
+
+/* ── O PRAZO DO PEDIDO (tempo de entrega) ──────────────────────────────────── */
+.pedido-cartao.pedido-fora-do-prazo{ border-color:var(--erro) !important;
+  box-shadow:0 0 0 2px color-mix(in srgb, var(--erro) 30%, transparent) }
+.cores-etapa .pedido-cartao.pedido-fora-do-prazo{ border-left-color:var(--erro) !important;
+  background:color-mix(in srgb, var(--erro) 6%, var(--painel)) }
+.tag.t-fora-do-prazo{ background:var(--erro); color:#fff; font-weight:800 }
+.tag.t-vence{ background:#F59E0B; color:#111; font-weight:700 }
+.pedido-prazo{ margin:6px 0 0; font-size:14px; color:var(--txt2) }
+.pedido-prazo.pedido-prazo-fora{ color:var(--erro); font-weight:600 }
+.pedido-prazo.pedido-prazo-fora b{ color:var(--erro) }
+.pedido-aviso-prazo{ border-color:var(--erro); background:color-mix(in srgb, var(--erro) 8%, var(--painel)); color:var(--txt) }
