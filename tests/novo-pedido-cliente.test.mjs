@@ -14,7 +14,9 @@
      4. WhatsApp novo: "Cliente novo", com o aniversário opcional — lançado o
         pedido, a ficha nasce com o nome, o WhatsApp e o aniversário;
      5. os adicionais em linhas (marcação, nome, preço), a observação do item
-        e a quantidade — e o pedido grava os dois.
+        e a quantidade — e o pedido grava os dois;
+     6. o cadastro do cliente sem nada de salão (fórmula da cor, horário,
+        "a cliente"), com o campo das exigências e os lembretes de lanchonete.
    =========================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -77,6 +79,7 @@ const hojeSP = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
 await banco.query(`update public.clientes set nascimento = $2 where salao_id = $1 and telefone = $3`,
   [salaoId, '1990' + hojeSP.slice(4), TEL]);
 
+await banco.query(`update public.clientes set obs = 'alergia a amendoim' where salao_id = $1 and telefone = $2`, [salaoId, TEL]);
 const nav = await chromium.launch({ executablePath: CHROMIUM });
 const erros = [];
 const p = await (await nav.newContext({ viewport:{ width:412, height:900 }, isMobile:true, hasTouch:true })).newPage();
@@ -104,6 +107,8 @@ igual('um toque preenche o nome e o WhatsApp', [await p.inputValue('#npNome'), a
   ['Carlos Lima', '(11) 99730-1462']);
 const card = limpo(await p.textContent('#npCliente'));
 verdade('"✓ Cliente cadastrado", com os pedidos e o aniversário', /Cliente cadastrado: Carlos Lima · 1 pedido · último em \d\d\/\d\d · 🎂 faz aniversário hoje/.test(card), card);
+
+verdade('e as preferências e alergias dele, em destaque', /⚠ alergia a amendoim/.test(card), card);
 
 secao('2. A entrega já vem com o último endereço');
 await p.check('input[name="npModo"][value="entrega"]');
@@ -158,6 +163,20 @@ igual('a ficha da Bruna nasceu com o pedido, com o aniversário', ficha, { nome:
 const item = await um(`select i.quantidade, i.observacao from public.pedido_itens i join public.pedidos p on p.id = i.pedido_id
   where p.salao_id = $1 and p.nome = 'Bruna Nova'`, [salaoId]);
 igual('o item grava a quantidade e a observação', item, { quantidade: 2, observacao: 'sem cebola' });
+
+secao('6. O cadastro do cliente, sem nada de salão');
+await p.evaluate(() => { fecharModal(); irPara('clientes'); abrirCliente(); });
+await p.waitForSelector('#kObs');
+const form = await p.evaluate(() => {
+  const m = document.querySelector('#fundo .modal');
+  return { txt: m.innerText.replace(/\s+/g, ' '), obs: document.getElementById('kObs').placeholder,
+           marcas: [...document.querySelectorAll('#kMarcas button')].map(b => b.textContent.trim()) };
+});
+verdade('sem fórmula da cor, horário, "a cliente", conversar ou resultado',
+  !/f[óo]rmula da cor|hor[áa]rio|a cliente|conversar|resultado|atrasar/i.test(form.txt + ' ' + form.obs), form.txt + ' | ' + form.obs);
+verdade('o campo das exigências continua', /Preferências, exigências e alergias/.test(form.txt) && /alergia a amendoim/.test(form.obs));
+igual('os lembretes de quem entrega comida', form.marcas, ['Cliente frequente', 'Exigente com o pedido',
+  'Tem alergia (ver acima)', 'Atenção no pagamento', 'Endereço difícil de achar', 'Costuma pedir troco']);
 
 igual('nenhum erro de JavaScript', erros, []);
 await nav.close();

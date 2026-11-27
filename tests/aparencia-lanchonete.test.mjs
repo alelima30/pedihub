@@ -140,7 +140,7 @@ const pv = await p.evaluate(() => {
     fotos: s.querySelectorAll('.fone-slide-fundo, img').length } : null;
 });
 verdade('a prévia mostra as fotos dos itens', pv && !pv.vazio && pv.fotos >= 1, JSON.stringify(pv));
-igual('com o nome do primeiro item com foto', limpo(pv && pv.leg), 'X-Salada');
+igual('com o nome do primeiro item com foto, na ordem do link (pelo nome)', limpo(pv && pv.leg), 'X-Bacon');
 await p.evaluate(() => salvarAparencia());
 await p.waitForTimeout(1800);
 igual('no banco, slideDe = cardapio', (await cfgDe()).slideDe, 'cardapio');

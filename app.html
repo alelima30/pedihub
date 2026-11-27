@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.537ea4';
+const VERSAO_APP = 'v9.535468';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -8859,6 +8859,12 @@ function receber(comId){
 /* ── Cadastros ───────────────────────────────────────────────────────── */
 function abrirCliente(cid){
   const c = cid ? acharCliente(cid) : null;
+  /* No restaurante, nada de salão: sem "fórmula da cor", sem "horário dela",
+     sem a confirmação de horário — e os lembretes são os de quem entrega
+     comida. O campo das exigências do cliente continua (alergia, "sem
+     cebola", o ponto da carne). */
+  const rest = restaurantePainel();
+  const rotPref = rest ? 'Preferências, exigências e alergias' : 'Observações e alergias';
   abrirModal(c ? 'Editar cliente' : 'Novo cliente', `
     <div class="campo"><label>Nome</label>
       <input id="kNome" value="${escapar(c ? c.nome : '')}" placeholder="Nome completo"></div>
@@ -8889,31 +8895,35 @@ function abrirCliente(cid){
                placeholder="000.000.000-00"
                oninput="Documento.mascaraCpf(this)"></div>
     </div>
-    <div class="campo"><label>Observações e alergias</label>
-      <textarea id="kObs" rows="3" placeholder="Fórmula da cor, preferências, alergias">${escapar(c ? (c.obs||'') : '')}</textarea></div>
+    <div class="campo"><label>${rotPref}</label>
+      <textarea id="kObs" rows="3" placeholder="${rest ? 'Ex.: alergia a amendoim; não come cebola; carne bem passada; sempre pede maionese à parte'
+        : 'Fórmula da cor, preferências, alergias'}">${escapar(c ? (c.obs||'') : '')}</textarea></div>
     <!-- OS LEMBRETES DA EQUIPE (41_ficha_equipe.sql). Outra tabela, e nao o
          campo de cima: a cliente com conta le a propria ficha, e estes ela
          nao le. (Sem crase: template literal.) -->
     <div class="campo"><label>Lembretes da equipe
-        <span class="opcional">· a cliente não vê</span></label>
+        <span class="opcional">· ${rest ? 'o cliente não vê' : 'a cliente não vê'}</span></label>
       <div class="regua lembrete-marcas" id="kMarcas">${marcasParaEscolher(c ? c.id : null)}</div>
       <textarea id="kLembrete" rows="2" maxlength="1000" style="margin-top:8px"
-        placeholder="Outro lembrete. Ex.: prefere pagar no Pix; gosta de café sem açúcar">${
+        placeholder="${rest ? 'Outro lembrete. Ex.: prefere pagar no Pix; portão azul, tocar a campainha'
+          : 'Outro lembrete. Ex.: prefere pagar no Pix; gosta de café sem açúcar'}">${
         escapar(((c && lembreteDe(c.id)) || {}).texto || '')}</textarea>
-      <p class="ajuda" style="margin-top:5px">Aparece para a equipe no horário dela.
-        Diferente das observações acima, a cliente nunca vê, nem pelo link.</p></div>
+      <p class="ajuda" style="margin-top:5px">${rest
+        ? 'A equipe vê aqui e no Novo pedido, ao escolher o cliente. Diferente das preferências acima, o cliente nunca vê, nem pelo link.'
+        : 'Aparece para a equipe no horário dela. Diferente das observações acima, a cliente nunca vê, nem pelo link.'}</p></div>
     ${c && crediarioLiberado() && minhasTelas().some(t => t[0] === 'crediario')
       ? '<div id="kCrediario"></div>' : ''}
     <!-- A CLIENTE QUE PRECISA DE CONFIRMACAO. Mesmo com o salao confirmando
          sozinho, o horario que ela marca pelo link nasce pendente e espera o
          seu sim. Quem decide e o agendar() no banco (09_cliente.sql, 1c).
          (Sem crase: template literal.) -->
-    <label class="linha-check" style="display:flex;gap:10px;align-items:flex-start;margin-top:4px;cursor:pointer">
+    ${rest ? `<input type="checkbox" id="kExigeConf" hidden${c && c.exigeConfirmacao ? ' checked' : ''}>`
+    : `<label class="linha-check" style="display:flex;gap:10px;align-items:flex-start;margin-top:4px;cursor:pointer">
       <input type="checkbox" id="kExigeConf" style="width:auto;margin-top:3px"${c && c.exigeConfirmacao ? ' checked' : ''}>
       <span><b>Os horários desta cliente precisam da minha confirmação</b><br>
         <span style="font-size:13px;color:var(--txt2)">Mesmo com a confirmação automática
         ligada, o que ela marcar pelo link fica esperando você aceitar ou recusar.</span></span>
-    </label>
+    </label>`}
   `, [
     ['Cancelar','fecharModal()',''],
     ['Salvar', `salvarCliente(${c ? `'${c.id}'` : 'null'})`, 'btn-p'],
@@ -9008,9 +9018,14 @@ function resumoDoLembrete(cid){
   const texto = String(l.texto || '').replace(/\s+/g, ' ').trim();
   return marcasDe(cid).concat(texto ? [texto] : []).join(' · ');
 }
+/* As marcas de quem entrega comida. A marca antiga, de salão, que alguém já
+   tinha marcado, continua aparecendo para essa ficha (a lista abaixo junta). */
+const MARCAS_RESTAURANTE = ['Cliente frequente', 'Exigente com o pedido', 'Tem alergia (ver acima)',
+  'Atenção no pagamento', 'Endereço difícil de achar', 'Costuma pedir troco'];
+function marcasDoNegocio(){ return restaurantePainel() ? MARCAS_RESTAURANTE : MARCAS_CLIENTE; }
 function marcasParaEscolher(cid){
-  const tem = marcasDe(cid);
-  return MARCAS_CLIENTE.concat(tem.filter(m => !MARCAS_CLIENTE.includes(m)))
+  const tem = marcasDe(cid), base = marcasDoNegocio();
+  return base.concat(tem.filter(m => !base.includes(m)))
     .map(m => `<button type="button" class="${tem.includes(m) ? 'on' : ''}"
         aria-pressed="${tem.includes(m)}" data-marca="${escapar(m)}"
         onclick="this.classList.toggle('on');this.setAttribute('aria-pressed',this.classList.contains('on'))"
@@ -15131,7 +15146,11 @@ function previaDoSlide(sl){
   const itens = daGaleria
     ? listaGaleria(sl)
     : doCardapio
+      /* Na ordem do link: pelo nome (como a vitrine() entrega) e, quando numera,
+         pelo número. Na ordem do banco, a primeira foto da prévia mudava. */
       ? doSalao(bd.produtos || []).filter(p => p.foto && p.ativo !== false && p.vendaOnline !== false)
+          .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'))
+          .sort(cardapioDoSalao().numerar ? ordemDoCardapio : () => 0)
           .map(p => ({ url: p.foto, tipo: 'foto', legenda: p.nome }))
     : (bd.servicos || []).filter(s => s.foto && s.ativo !== false)
         .map(s => ({ url: s.foto, tipo: 'foto' }));
@@ -23661,12 +23680,15 @@ function npPintarCliente(){
     const c = npClienteSel, hj = hoje().slice(5);
     const niver = c.nascimento && String(c.nascimento).slice(5, 10) === hj;
     const ent = info.entrega && info.entrega.endereco;
+    const marcas = marcasDe(c.id), lem = (lembreteDe(c.id) || {}).texto || '';
+    const avisos = [marcas.join(' · '), lem, c.obs].map(x => String(x || '').trim()).filter(Boolean);
     alvo.innerHTML = `<div class="np-cli-ok">
         <span>✓ <b>Cliente cadastrado:</b> ${escapar(c.nome)}${Number(info.pedidos) ? ' · ' + Number(info.pedidos)
           + (Number(info.pedidos) === 1 ? ' pedido' : ' pedidos') : ''}${quando ? ' · último em ' + quando : ''}${niver ? ' · 🎂 <b>faz aniversário hoje</b>' : ''}</span>
         <button type="button" class="link" onclick="npTrocarCliente()">Trocar</button></div>
       ${ent ? `<div class="np-cli-end">📍 Último endereço: ${escapar([ent.rua && ent.rua + (ent.numero ? ', ' + ent.numero : ''),
-          info.entrega.bairro || ent.bairro].filter(Boolean).join(' — '))} <small>(já vai para a entrega)</small></div>` : ''}`;
+          info.entrega.bairro || ent.bairro].filter(Boolean).join(' — '))} <small>(já vai para a entrega)</small></div>` : ''}
+      ${avisos.length ? `<div class="np-cli-avisos">⚠ ${avisos.map(escapar).join(' · ')}</div>` : ''}`;
     return;
   }
   alvo.innerHTML = dig.length >= 10 ? `<div class="np-cli-novo">

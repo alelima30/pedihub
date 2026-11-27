@@ -6180,3 +6180,5 @@ body.tem-fundo .pd-aviso{
 .np-cli-niver{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600 }
 .np-cli-niver input{ width:auto; min-height:38px; padding:4px 8px }
 .np-cli-end{ margin-top:6px; padding:0 4px; font-size:13.5px; color:var(--txt2) }
+.np-cli-avisos{ margin-top:6px; padding:8px 12px; border-radius:10px; font-size:13.5px; font-weight:600;
+  background:color-mix(in srgb, #F59E0B 14%, var(--painel)); border:1px solid color-mix(in srgb, #F59E0B 45%, transparent); color:var(--txt) }
