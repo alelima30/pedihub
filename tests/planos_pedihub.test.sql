@@ -4,8 +4,9 @@
 -- Os outros testes de banco ainda conferem os planos do salão, de onde o
 -- PediHub nasceu. Este instala os planos do restaurante por cima e confere:
 --
---   1. a vitrine: Grátis, Teste, Essencial (R$ 69,90) e Profissional
---      (R$ 119,90); os do salão desligados;
+--   1. a vitrine: Grátis, Teste, Essencial (R$ 97) e Profissional
+--      (R$ 147); os do salão desligados; e o PRECOS.sql diz o mesmo preço
+--      que o 66 (senão a próxima colagem do 98_modulos volta o preço antigo);
 --   2. o que cada um libera: caixa e relatórios só no pago; WhatsApp
 --      automático e crediário só no Profissional;
 --   3. o Grátis aceita 50 pedidos no mês e recusa o 51º; o pago não tem teto.
@@ -33,7 +34,15 @@ $$;
 select t_texto('os planos à venda, na ordem',
   (select string_agg(nome || ' ' || preco_mes, ' | ' order by ordem, codigo)
      from public.planos where ativo),
-  'Grátis 0.00 | Teste grátis 0.00 | Essencial 69.90 | Profissional 119.90');
+  'Grátis 0.00 | Teste grátis 0.00 | Essencial 97.00 | Profissional 147.00');
+-- O PRECOS.sql aplica o mesmo preço do 66: rodado por cima, nada muda.
+\o /dev/null
+\ir ../supabase/PRECOS.sql
+\o
+select t_texto('o PRECOS.sql e o 66 dizem o mesmo preço',
+  (select string_agg(nome || ' ' || preco_mes, ' | ' order by ordem, codigo)
+     from public.planos where ativo),
+  'Grátis 0.00 | Teste grátis 0.00 | Essencial 97.00 | Profissional 147.00');
 select t_igual('os do salão estão desligados',
   (select count(*) from public.planos
     where codigo in ('basico','duo','equipe','salao') and ativo), 0);

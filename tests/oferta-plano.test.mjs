@@ -77,7 +77,7 @@ sql(`update public.assinaturas set plano='time', status='ativa',
      where salao_id='${SALAO}'`);
 sql(`insert into public.cobrancas
        (salao_id, plano, valor, metodo, status, vence_em, mp_id, pix_copia_cola)
-     values ('${SALAO}','time', 119.90, 'pix', 'pendente', now() + interval '2 days',
+     values ('${SALAO}','time', 147.00, 'pix', 'pendente', now() + interval '2 days',
              'mp-${marca}', '00020126580014BR.GOV.BCB.PIX-TESTE-${marca}')`);
 
 const nav = await chromium.launch({ executablePath: CHROMIUM });

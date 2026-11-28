@@ -10910,7 +10910,7 @@ update public.planos set
     'mensagens_mes', 0, 'lembrete_whatsapp', false)
  where codigo = 'gratuito';
 update public.planos set
-  nome = 'Essencial', preco_mes = 69.90, ordem = 2, ativo = true,
+  nome = 'Essencial', preco_mes = 97.00, ordem = 2, ativo = true,
   recursos = (recursos - 'pedidos_mes') || jsonb_build_object(
     'loja', true, 'max_produtos', 300, 'max_clientes', 5000,
     'caixa', true, 'relatorios', true, 'cupons', true, 'pacotes', false,
@@ -10918,7 +10918,7 @@ update public.planos set
     'mensagens_mes', 0, 'lembrete_whatsapp', false)
  where codigo = 'individual';
 update public.planos set
-  nome = 'Profissional', preco_mes = 119.90, ordem = 3, ativo = true,
+  nome = 'Profissional', preco_mes = 147.00, ordem = 3, ativo = true,
   recursos = (recursos - 'pedidos_mes') || jsonb_build_object(
     'loja', true, 'max_produtos', 1000, 'max_clientes', 20000,
     'caixa', true, 'relatorios', true, 'cupons', true, 'pacotes', false,

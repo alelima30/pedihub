@@ -151,6 +151,8 @@ h2{ font-size:clamp(26px, 3.4vw, 36px); line-height:1.15; letter-spacing:-.015em
 .plano li::before{ content:'✓'; position:absolute; left:0; color:var(--brasa); font-weight:800 }
 .plano li.fora{ color:var(--txt3) }
 .plano li.fora::before{ content:'—'; color:var(--txt3) }
+.plano li.breve{ color:var(--txt3); font-style:italic }
+.plano li.breve::before{ content:'⏳'; font-style:normal; font-weight:400 }
 .plano .btn{ width:100% }
 
 /* Perguntas */
@@ -261,7 +263,10 @@ footer a{ color:var(--txt2) }
         <div class="recurso"><div class="ic">🚫</div><div><b>Esgotado com um toque</b><span class="t">Acabou a massa? Some do cardápio na hora, e volta com outro toque.</span></div></div>
         <div class="recurso"><div class="ic">💰</div><div><b>Caixa e relatórios</b><span class="t">Pedido entregue já entra no caixa: faturamento, ticket médio e o que mais vende.</span></div></div>
         <div class="recurso"><div class="ic">🖨️</div><div><b>Impressão do pedido</b><span class="t">A comanda da cozinha com itens, complementos, endereço e troco.</span></div></div>
-        <div class="recurso"><div class="ic">💬</div><div><b>Avisos no WhatsApp</b><span class="t">"Pedido aceito", "saiu para entrega", "pronto para retirar" — automático.</span></div></div>
+        <div class="recurso"><div class="ic">💬</div><div><b>Pedido confirmado no WhatsApp</b><span class="t">Um toque manda ao cliente o pedido, o total, o Pix e o link para acompanhar a entrega.</span></div></div>
+        <div class="recurso"><div class="ic">💳</div><div><b>Pix no link</b><span class="t">O cliente paga na hora do pedido, o dinheiro cai na sua conta do Mercado Pago e a confirmação chega sozinha.</span></div></div>
+        <div class="recurso"><div class="ic">🍽️</div><div><b>Mesas e garçom</b><span class="t">QR Code em cada mesa, o garçom lança pelo celular e a conta da mesa sai pronta.</span></div></div>
+        <div class="recurso"><div class="ic">🛵</div><div><b>Entregadores</b><span class="t">Cada entregador com o próprio link das entregas, e o acerto do dinheiro no fim do dia.</span></div></div>
       </div>
     </div>
   </section>
@@ -303,7 +308,7 @@ footer a{ color:var(--txt2) }
         </div>
         <div class="plano destaque">
           <h3>Essencial</h3>
-          <div class="preco">R$ 69,90 <small>/mês</small></div>
+          <div class="preco">R$ 97 <small>/mês</small></div>
           <p class="quem">Para vender todo dia, sem limite.</p>
           <ul>
             <li>Pedidos ilimitados, sem comissão</li>
@@ -316,13 +321,13 @@ footer a{ color:var(--txt2) }
         </div>
         <div class="plano">
           <h3>Profissional</h3>
-          <div class="preco">R$ 119,90 <small>/mês</small></div>
-          <p class="quem">Para quem quer o cliente avisado sozinho.</p>
+          <div class="preco">R$ 147 <small>/mês</small></div>
+          <p class="quem">Para quem vende no fiado e tem equipe.</p>
           <ul>
             <li>Tudo do Essencial</li>
-            <li>Avisos automáticos no WhatsApp (1.000/mês)</li>
             <li>Crediário (venda no fiado)</li>
             <li>Equipe com o próprio login</li>
+            <li class="breve">Em breve: avisos automáticos no WhatsApp</li>
           </ul>
           <a class="btn btn-s" href="criar.html?origem=pagina">Testar 30 dias grátis</a>
         </div>
@@ -339,8 +344,9 @@ footer a{ color:var(--txt2) }
       <details><summary>O PediHub cobra alguma porcentagem das vendas?</summary>
         <p>Não. Você paga só a mensalidade do plano. Não há comissão por pedido nem taxa sobre o faturamento.</p></details>
       <details><summary>Como o cliente paga?</summary>
-        <p>Na entrega ou na retirada: Pix, dinheiro (com troco) ou cartão na maquininha. Você escolhe quais
-          aceitar. O valor entra no caixa do dia quando o pedido é entregue.</p></details>
+        <p>Pelo Pix no próprio link, na hora do pedido: o dinheiro cai na sua conta do Mercado Pago e a
+          confirmação chega sozinha. Ou na entrega e na retirada: Pix, dinheiro (com troco) ou cartão na
+          maquininha. Você escolhe quais aceitar. O valor entra no caixa do dia quando o pedido é entregue.</p></details>
       <details><summary>Dá para fazer pizza meio a meio?</summary>
         <p>Sim. No item você cria o grupo "Sabores" com até 2 (ou mais) escolhas e decide se cobra o sabor mais
           caro ou a média. Borda, tamanho e adicionais funcionam do mesmo jeito.</p></details>
@@ -370,7 +376,8 @@ footer a{ color:var(--txt2) }
   <div class="casca">
     <picture><source media="(prefers-color-scheme: dark)" srcset="icones/marca-linha.svg"><img src="icones/logotipo-escuro-linha.svg" alt="PediHub" style="height:26px;opacity:.85"></picture><br>
     Cardápio digital e pedidos para restaurante, lanchonete, pizzaria e delivery.<br>
-    <a href="entrar.html">Entrar</a> · <a href="criar.html?origem=pagina">Criar conta</a>
+    <a href="entrar.html">Entrar</a> · <a href="criar.html?origem=pagina">Criar conta</a><br>
+    <a href="termos.html">Termos de uso</a> · <a href="privacidade.html">Política de privacidade</a>
   </div>
 </footer>
 <script>

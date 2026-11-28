@@ -12,7 +12,7 @@
    adicionais.test.sql.
 
      1. o Essencial vê o Crediário, com o preço, e "Contratar";
-     2. contratar mostra a conta ANTES ("de R$ 69,90 para R$ 119,80"), e o
+     2. contratar mostra a conta ANTES ("de R$ 97,00 para R$ 146,90"), e o
         painel não manda preço nenhum; depois, "Ativo" e a soma da mensalidade;
      3. o Pix do mês diz o que cobra: "Essencial + Crediário";
      4. cancelar diz até quando vale e o que acontece com o fiado;
@@ -133,8 +133,8 @@ secao('2. Contratar: a conta antes, e o painel não manda preço');
 await p.click('#adicional-crediario button:has-text("Contratar")');
 await p.waitForSelector('#contaAdicional');
 const conta = await texto(p, '#contaAdicional');
-verdade('o dono vê antes: de R$ 69,90 para R$ 119,80, liberado agora',
-  /R\$\s?69,90/.test(conta) && /R\$\s?119,80/.test(conta) && /liberado agora/.test(conta), conta);
+verdade('o dono vê antes: de R$ 97,00 para R$ 146,90, liberado agora',
+  /R\$\s?97,00/.test(conta) && /R\$\s?146,90/.test(conta) && /liberado agora/.test(conta), conta);
 await p.click('#fundo button:has-text("Confirmar")');
 await p.waitForFunction(() => /Ativo\. Entra na sua mensalidade/.test(
   (document.getElementById('adicional-crediario') || {}).innerText || ''), null, { timeout: 15000 }).catch(() => {});
@@ -143,8 +143,8 @@ igual('o painel mandou só o restaurante, o módulo e a ação (nada de preço)'
 verdade('   com a sessão de quem pediu', /^Bearer .+/.test((p.pedidos[0] || {}).auth || ''));
 verdade('depois: "Ativo. Entra na sua mensalidade."',
   /Ativo\. Entra na sua mensalidade/.test(await texto(p, '#adicional-crediario')), await texto(p, '#adicional-crediario'));
-verdade('e a soma da mensalidade: Essencial + Crediário = R$ 119,80',
-  /Essencial R\$\s?69,90 \+ Crediário R\$\s?49,90 = R\$\s?119,80/.test(await texto(p, '#somaMensalidade')),
+verdade('e a soma da mensalidade: Essencial + Crediário = R$ 146,90',
+  /Essencial R\$\s?97,00 \+ Crediário R\$\s?49,90 = R\$\s?146,90/.test(await texto(p, '#somaMensalidade')),
   await texto(p, '#somaMensalidade'));
 igual('no banco, o Crediário vale', (await linha(
   `select public.recurso_bool($1, 'crediario') as v`, [ana.salao])).v, true);
@@ -154,8 +154,8 @@ secao('3. O Pix do mês diz o que cobra');
 await p.evaluate(() => assinar('individual', 'pix'));
 await p.waitForFunction(() => /por mês/.test((document.getElementById('pgtoCorpo') || {}).innerText || ''),
   null, { timeout: 15000 }).catch(() => {});
-verdade('"Essencial + Crediário · R$ 119,80 por mês"',
-  /Essencial \+ Crediário · R\$\s?119,80 por mês/.test(await texto(p, '#pgtoCorpo')), await texto(p, '#pgtoCorpo'));
+verdade('"Essencial + Crediário · R$ 146,90 por mês"',
+  /Essencial \+ Crediário · R\$\s?146,90 por mês/.test(await texto(p, '#pgtoCorpo')), await texto(p, '#pgtoCorpo'));
 await p.evaluate(() => fecharModal());
 
 /* ══════════════════════════════════════════════════════════════════════════ */
@@ -169,7 +169,7 @@ const vence = (await linha(`select to_char(vence_em, 'DD/MM/YYYY') as v from pub
 const aviso = await texto(p, '#contaAdicional');
 verdade('diz até quando vale, e que o fiado aberto continua (só não vende novo)',
   aviso.includes('continua valendo até ' + vence) && /só não dá para vender fiado novo/.test(aviso)
-  && /R\$\s?69,90/.test(aviso), aviso);
+  && /R\$\s?97,00/.test(aviso), aviso);
 await p.click('#fundo button:has-text("Cancelar o módulo")');
 await p.waitForFunction(() => /Cancelado/.test((document.getElementById('adicional-crediario') || {}).innerText || ''),
   null, { timeout: 15000 }).catch(() => {});
@@ -199,8 +199,8 @@ secao('5. No Básico');
   await pb.click('#fundo button:has-text("Pix")');
   await pb.waitForFunction(() => /por mês/.test((document.getElementById('pgtoCorpo') || {}).innerText || ''),
     null, { timeout: 15000 }).catch(() => {});
-  verdade('o Pix do Essencial já vem com o Crediário: R$ 119,80',
-    /Essencial \+ Crediário · R\$\s?119,80 por mês/.test(await texto(pb, '#pgtoCorpo')), await texto(pb, '#pgtoCorpo'));
+  verdade('o Pix do Essencial já vem com o Crediário: R$ 146,90',
+    /Essencial \+ Crediário · R\$\s?146,90 por mês/.test(await texto(pb, '#pgtoCorpo')), await texto(pb, '#pgtoCorpo'));
   await ctx.close();
 }
 
@@ -221,8 +221,8 @@ secao('6. Os planos do Crediário: a loja cresceu, troca para o de 500');
   await pc.click('#adicional-crediario_500 button:has-text("Trocar para o Crediário 500")');
   await pc.waitForSelector('#contaAdicional');
   const conta = await texto(pc, '#contaAdicional');
-  verdade('a conta antes: troca o Crediário pelo Crediário 500, de R$ 119,80 para R$ 149,80 (um só)',
-    /Você troca o Crediário pelo Crediário 500/.test(conta) && /R\$\s?119,80/.test(conta) && /R\$\s?149,80/.test(conta), conta);
+  verdade('a conta antes: troca o Crediário pelo Crediário 500, de R$ 146,90 para R$ 176,90 (um só)',
+    /Você troca o Crediário pelo Crediário 500/.test(conta) && /R\$\s?146,90/.test(conta) && /R\$\s?176,90/.test(conta), conta);
   verdade('   e o título diz que é troca', /Trocar para o Crediário 500/.test(await texto(pc, '#fundo .modal')));
   await pc.click('#fundo button:has-text("Confirmar")');
   await pc.waitForFunction(() => /Ativo\. Entra na sua mensalidade/.test(
@@ -231,8 +231,8 @@ secao('6. Os planos do Crediário: a loja cresceu, troca para o de 500');
     /Ativo\. Entra na sua mensalidade/.test(await texto(pc, '#adicional-crediario_500'))
     && /Trocar para o Crediário$|Trocar para o Crediário\b/.test(await texto(pc, '#adicional-crediario')),
     await texto(pc, '#adicional-crediario'));
-  verdade('a mensalidade: Essencial + Crediário 500 = R$ 149,80',
-    /Essencial R\$\s?69,90 \+ Crediário 500 R\$\s?79,90 = R\$\s?149,80/.test(await texto(pc, '#somaMensalidade')),
+  verdade('a mensalidade: Essencial + Crediário 500 = R$ 176,90',
+    /Essencial R\$\s?97,00 \+ Crediário 500 R\$\s?79,90 = R\$\s?176,90/.test(await texto(pc, '#somaMensalidade')),
     await texto(pc, '#somaMensalidade'));
   igual('no banco: 500 mensagens por mês, e o Crediário vale',
     await linha(`select public.crediario_teto_mensagens($1) t, public.recurso_bool($1, 'crediario') v`, [carla.salao]),

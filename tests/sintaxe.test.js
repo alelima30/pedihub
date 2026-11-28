@@ -27,7 +27,7 @@ const RAIZ = path.dirname(__dirname);
 const TELAS = ['app.html', 'cardapio.html', 'criar.html', 'entrar.html',
                'admin.html', 'index.html', 'nova-senha.html'];
 const AVULSOS = ['dados.js', 'demo.js', 'imagens.js', 'icones.js',
-                 'endereco.js', 'funcionamento.js', 'config.js', 'sw.js'];
+                 'endereco.js', 'funcionamento.js', 'config.js', 'sw.js', 'empresa.js'];
 
 let ok = 0, falhas = 0;
 const dizer = (bom, msg, extra) => {
@@ -324,7 +324,7 @@ console.log('\nO aviso de direitos autorais está em todas as telas');
     + 'por direitos autorais (Lei 9.610/98 e Lei 9.609/98). Reprodução, '
     + 'distribuição ou uso não autorizado são proibidos.';
 
-  const COM_AVISO = TELAS.concat(['convite.html', 'entregador.html']);
+  const COM_AVISO = TELAS.concat(['convite.html', 'entregador.html', 'termos.html', 'privacidade.html']);
   for(const tela of COM_AVISO){
     const caminho = path.join(RAIZ, tela);
     if(!fs.existsSync(caminho)){ dizer(false, tela + ' não existe'); continue; }

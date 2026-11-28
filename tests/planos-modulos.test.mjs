@@ -8,8 +8,8 @@
      Grátis        até 50 pedidos no mês pelo link, 40 itens no cardápio,
                    300 clientes; sem caixa, relatórios, cupons, aparência e
                    mensagens; o link sai simples (com o selo)
-     Essencial     R$ 69,90 — tudo, sem mensagens automáticas
-     Profissional  R$ 119,90 — o Essencial + 1.000 mensagens e o Crediário
+     Essencial     R$ 97 — tudo, sem mensagens automáticas
+     Profissional  R$ 147 — o Essencial + 1.000 mensagens e o Crediário
      Os planos que vieram do AgendaPro (Básico, Dupla, Equipe, Restaurante)
      estão desligados e não se vendem (76).
 
@@ -87,9 +87,9 @@ async function montar(nome, plano){
 secao('0) Os planos');
 const pl = Object.fromEntries((await banco.query(
   `select codigo, preco_mes, recursos, ativo from public.planos`)).rows.map(r => [r.codigo, r]));
-igual('à venda: Grátis, Essencial a R$ 69,90 e Profissional a R$ 119,90',
+igual('à venda: Grátis, Essencial a R$ 97 e Profissional a R$ 147',
   Object.values(pl).filter(p => p.ativo && p.codigo !== 'trial').map(p => p.codigo + ' ' + Number(p.preco_mes)).sort(),
-  ['gratuito 0', 'individual 69.9', 'time 119.9']);
+  ['gratuito 0', 'individual 97', 'time 147']);
 igual('os planos do AgendaPro estão desligados', ['basico', 'duo', 'equipe', 'salao'].map(k => pl[k] ? pl[k].ativo : false),
   [false, false, false, false]);
 const g = pl.gratuito.recursos;
@@ -234,10 +234,10 @@ verdade('a aba Caixa não aparece (sem comanda no Grátis)',
   !(await pg1.evaluate(() => !!document.querySelector('#abas .aba[data-chave="caixa"]'))));
 
 await pg1.evaluate(() => irPara('plano'));
-await pg1.waitForFunction(() => /119,90/.test((document.getElementById('tela-plano') || {}).innerText || ''), null, { timeout: 8000 }).catch(() => {});
+await pg1.waitForFunction(() => /147,00/.test((document.getElementById('tela-plano') || {}).innerText || ''), null, { timeout: 8000 }).catch(() => {});
 const planoTxt = await pg1.evaluate(() => (document.getElementById('tela-plano') || {}).innerText || '');
-verdade('tela do Plano: Essencial e o Profissional recomendado, a R$ 119,90',
-  /Essencial/.test(planoTxt) && /PLANO RECOMENDADO\s*Profissional/.test(planoTxt) && /119,90/.test(planoTxt), planoTxt.slice(0, 400));
+verdade('tela do Plano: Essencial e o Profissional recomendado, a R$ 147,00',
+  /Essencial/.test(planoTxt) && /PLANO RECOMENDADO\s*Profissional/.test(planoTxt) && /147,00/.test(planoTxt), planoTxt.slice(0, 400));
 verdade('o uso do plano fala de itens do cardápio, e não de serviços',
   /Itens no cardápio/.test(planoTxt) && !/Serviços no cardápio/.test(planoTxt), planoTxt.slice(0, 400));
 verdade('e nenhum plano do AgendaPro', !/Básico|Dupla|49,90/.test(planoTxt), planoTxt.slice(0, 400));

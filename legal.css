@@ -1,0 +1,64 @@
+/* PediHub — as páginas de Termos de uso e Política de privacidade.
+   Sozinhas, como a página de venda (conheca.html): não carregam o estilo.css
+   do painel, e as cores são as mesmas do sistema. */
+:root{
+  --brasa:#C2410C; --brasa-viva:#EA580C; --ouro:#F59E0B;
+  --carvao:#1C1917;
+  --papel:#FAF6EF; --branco:#FFFFFF; --borda:#ECE4DA;
+  --txt:#1C1917; --txt2:#57534E; --txt3:#78716C;
+  --destaque:#FFF4E8; --destaque-borda:#FBD5B0;
+  --grad:linear-gradient(96deg,#C2410C 0%,#EA580C 52%,#F59E0B 100%);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --papel:#141210; --branco:#1C1917; --borda:#302A26;
+    --txt:#F5F1EC; --txt2:#C9C0B7; --txt3:#9A9088;
+    --destaque:#2A1D14; --destaque-borda:#5A3A22; --brasa:#FB923C;
+  }
+}
+:root[data-theme="dark"]{
+  --papel:#141210; --branco:#1C1917; --borda:#302A26;
+  --txt:#F5F1EC; --txt2:#C9C0B7; --txt3:#9A9088;
+  --destaque:#2A1D14; --destaque-borda:#5A3A22; --brasa:#FB923C;
+}
+*{ box-sizing:border-box }
+html{ -webkit-text-size-adjust:100% }
+body{ margin:0; background:var(--papel); color:var(--txt);
+  font:16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif }
+a{ color:var(--brasa) }
+.topo{ border-bottom:1px solid var(--borda); background:var(--branco) }
+.topo .casca{ display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding-top:12px; padding-bottom:12px }
+.topo img{ height:26px; display:block }
+.topo nav{ display:flex; gap:14px; font-size:14px; flex-wrap:wrap; justify-content:flex-end }
+.topo nav a{ color:var(--txt2); text-decoration:none; font-weight:600 }
+.topo nav a[aria-current="page"]{ color:var(--brasa) }
+.casca{ max-width:780px; margin:0 auto; padding:0 16px }
+main.casca{ padding-top:28px; padding-bottom:40px }
+h1{ font-size:clamp(28px, 5vw, 38px); line-height:1.15; letter-spacing:-.015em; margin:0 0 6px }
+.data{ color:var(--txt3); font-size:14px; margin:0 0 22px }
+h2{ font-size:20px; line-height:1.3; margin:34px 0 8px; scroll-margin-top:16px }
+h3{ font-size:16px; margin:20px 0 4px }
+p, li{ color:var(--txt2) }
+p b, li b{ color:var(--txt) }
+ul{ padding-left:20px; margin:8px 0 }
+li{ margin:4px 0 }
+.resumo{ background:var(--destaque); border:1px solid var(--destaque-borda); border-radius:14px;
+  padding:14px 18px; margin:0 0 8px }
+.resumo b.tit{ display:block; color:var(--txt); margin-bottom:4px }
+.resumo ul{ margin:4px 0 0 }
+.indice{ columns:2 220px; column-gap:24px; padding-left:20px; margin:16px 0 0; font-size:15px }
+.indice li{ break-inside:avoid }
+.quem{ list-style:none; padding:14px 18px; margin:10px 0; border:1px solid var(--borda);
+  border-radius:14px; background:var(--branco) }
+.quem li{ margin:2px 0 }
+.quem [hidden]{ display:none }
+.rodape{ border-top:1px solid var(--borda); padding:18px 0 8px; font-size:14px; color:var(--txt3) }
+.rodape a{ color:var(--txt2) }
+.rodape-legal{ max-width:780px; margin:6px auto 28px; padding:0 16px; font-size:11px;
+  color:var(--txt3); text-align:center }
+.rodape-legal a{ color:var(--txt3) }
+@media print{
+  .topo nav, .indice{ display:none }
+  body{ background:#fff; color:#000 }
+}

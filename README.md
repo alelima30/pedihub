@@ -23,8 +23,9 @@ trava toda casa como restaurante (`64_so_restaurante.sql`).
 | **Plataforma** (`admin.html`) | Os restaurantes, as assinaturas e o check-up do sistema. |
 
 **Planos** (`66_planos_pedihub.sql`): Grátis (até 50 pedidos/mês), Essencial
-R$ 69,90 e Profissional R$ 119,90 (com WhatsApp automático e crediário). O
-preço muda com o `supabase/PRECOS.sql`.
+R$ 97 e Profissional R$ 147 (com crediário e, quando a Meta estiver ligada,
+WhatsApp automático). O preço muda no `supabase/PRECOS.sql` **e** no 66, os
+dois juntos (o `planos_pedihub.test.sql` confere).
 
 ## Os arquivos
 
@@ -34,6 +35,7 @@ preço muda com o `supabase/PRECOS.sql`.
 | `cardapio.html` | O cardápio e o pedido do cliente (`agendar.html` só redireciona, para links antigos) |
 | `criar.html`, `entrar.html`, `nova-senha.html`, `convite.html` | Cadastro, login, senha e convite da equipe |
 | `conheca.html` | A página de venda |
+| `termos.html`, `privacidade.html` | Os Termos de uso e a Política de privacidade (os dados da empresa ficam no `empresa.js`) |
 | `config.js` | **O único arquivo a editar** para ligar no Supabase |
 | `dados.js` | A camada de dados: demonstração (navegador) ou Supabase |
 | `demo.js` | A demonstração: Pizzaria Bella Massa e Hamburgueria do Zé (`?demo=1`) |

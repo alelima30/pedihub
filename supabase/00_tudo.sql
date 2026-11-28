@@ -23704,9 +23704,9 @@ create trigger pedido_entregue_vira_venda
 --
 --   Grátis        R$ 0       cardápio no link e até 50 pedidos por mês;
 --                            sem caixa, relatórios nem mensagens automáticas
---   Essencial     R$ 69,90   pedidos ilimitados, entrega, caixa, relatórios,
+--   Essencial     R$ 97      pedidos ilimitados, entrega, caixa, relatórios,
 --                            cupons e a aparência do link
---   Profissional  R$ 119,90  tudo do Essencial + avisos automáticos no
+--   Profissional  R$ 147     tudo do Essencial + avisos automáticos no
 --                            WhatsApp (1.000 por mês) e crediário (fiado)
 --
 -- O Teste grátis (30 dias, tudo liberado) continua como era. Os planos do
@@ -23716,6 +23716,13 @@ create trigger pedido_entregue_vira_venda
 -- Os códigos ficam os que o sistema já usa (`individual` é o Essencial,
 -- `time` é o Profissional): a cobrança, o cartão e o painel da plataforma
 -- já sabem lidar com eles. Preço muda com um UPDATE (PRECOS.sql).
+--
+-- ⚠ ESTE PREÇO E O DO PRECOS.sql SÃO O MESMO, SEMPRE. Este arquivo entra no
+-- 00_tudo e no 98_modulos, que são colados de novo a cada atualização, e grava
+-- o preço toda vez. Um preço mudado só no PRECOS.sql voltaria sozinho na
+-- colagem seguinte. Por isso preço muda nos DOIS arquivos juntos, e o
+-- planos_pedihub.test.sql confere que eles dizem o mesmo. (Os preços eram
+-- R$ 69,90 e R$ 119,90; desde 28/11/2026, R$ 97 e R$ 147.)
 --
 -- Pode rodar mais de uma vez.
 -- ===========================================================================
@@ -23730,7 +23737,7 @@ update public.planos set
  where codigo = 'gratuito';
 
 update public.planos set
-  nome = 'Essencial', preco_mes = 69.90, ordem = 2, ativo = true,
+  nome = 'Essencial', preco_mes = 97.00, ordem = 2, ativo = true,
   recursos = (recursos - 'pedidos_mes') || jsonb_build_object(
     'loja', true, 'max_produtos', 300, 'max_clientes', 5000,
     'caixa', true, 'relatorios', true, 'cupons', true, 'pacotes', false,
@@ -23739,7 +23746,7 @@ update public.planos set
  where codigo = 'individual';
 
 update public.planos set
-  nome = 'Profissional', preco_mes = 119.90, ordem = 3, ativo = true,
+  nome = 'Profissional', preco_mes = 147.00, ordem = 3, ativo = true,
   recursos = (recursos - 'pedidos_mes') || jsonb_build_object(
     'loja', true, 'max_produtos', 1000, 'max_clientes', 20000,
     'caixa', true, 'relatorios', true, 'cupons', true, 'pacotes', false,

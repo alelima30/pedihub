@@ -7,7 +7,7 @@
    É para onde vai o anúncio pago. O que tem de valer:
      1. a promessa num título só, e o que se vê ao compartilhar no WhatsApp e
         no Instagram (título, descrição e a imagem, que existe no site);
-     2. os planos do PediHub (R$ 69,90 e R$ 119,90), e nada do AgendaPro
+     2. os planos do PediHub (R$ 97 e R$ 147), e nada do AgendaPro
         (agenda, salão, barbearia, plano Básico);
      3. todo "Criar conta" leva ao cadastro — e LEVA A ORIGEM DO ANÚNCIO
         (utm_*, fbclid): o anúncio do Instagram chega no cadastro como
@@ -62,7 +62,7 @@ secao('1. A promessa, e o que aparece ao compartilhar');
 
   secao('2. Os planos do PediHub, e nada do AgendaPro');
   const texto = await p.evaluate(() => document.body.innerText);
-  verdade('Essencial R$ 69,90 e Profissional R$ 119,90', /69,90/.test(texto) && /119,90/.test(texto) && /Essencial/.test(texto) && /Profissional/.test(texto));
+  verdade('Essencial R$ 97 e Profissional R$ 147', /R\$ 97\b/.test(texto) && /R\$ 147\b/.test(texto) && /Essencial/.test(texto) && /Profissional/.test(texto));
   const ruins = (texto.match(/[^\n]{0,30}\b(agenda|agendamento|salão|barbearia|plano Básico)\b[^\n]{0,30}/gi) || []);
   igual('nenhuma palavra do salão', ruins, []);
 
