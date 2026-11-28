@@ -331,39 +331,33 @@ sql(`update public.assinaturas set mp_preapproval = null, cartao_desde = null,
 await abrirPlano(p, '?oferta=1');
 let pe = await p.evaluate(() => (document.getElementById('tela-plano') || {}).innerText || '');
 e('o Essencial aparece a R$ 1,00 para este restaurante', /R\$\s*1,00/.test(pe), pe.slice(0, 300));
-await p.click('#reguaPlanos button:has-text("Profissional")');
-await p.waitForTimeout(600);
+// O Profissional está "em breve" (WhatsApp automático ainda não pronto): o
+// preço dele aparece no cartão EM BREVE, e é o normal.
 const precoDupla = Number(sql(`select preco_mes from public.planos where codigo='time'`));
-pe = await p.evaluate(() => (document.getElementById('cartaoPlano') || {}).innerText || '');
+pe = await p.evaluate(() => (document.getElementById('planoEmBreve') || {}).innerText || '');
 e('e outro plano, no mesmo restaurante, pelo preço normal',
   pe.includes(precoDupla.toFixed(2).replace('.', ',')) && !/R\$\s*1,00/.test(pe), pe.slice(0, 200));
 sql(`update public.assinaturas set precos_especiais = '{}' where salao_id='${SALAO}'`);
 
-/* ── A RÉGUA ALCANÇA TODOS OS PLANOS ──────────────────────────────────────
-   Era 1…6 fixo, e o "6+" valia 6: o 5 e o 6+ mostravam os dois o Equipe, e
-   o Restaurante (até 12) não aparecia nunca — o dono viu na tela. Cada botão tem
-   de levar a um plano, e cada plano pago com mensagens a um botão. */
-console.log('\n── A RÉGUA DE PROFISSIONAIS ────────────────────────────────');
+/* ── OS PLANOS À VENDA ────────────────────────────────────────────────────
+   "Só o Grátis, o plano que usa sem WhatsApp e o plano que usa com WhatsApp
+   — que ainda não está pronto." Enquanto o WhatsApp automático não fica
+   pronto (WHATSAPP_AUTOMATICO_PRONTO), só o Essencial está à venda: sem
+   régua de escolher, e o Profissional num cartão "em breve", sem botão. Os
+   dois continuam ativos no banco (prontos). */
+console.log('\n── OS PLANOS À VENDA ───────────────────────────────────────');
 await abrirPlano(p, '?oferta=1');
-// PediHub: os planos pagos À VENDA (os do AgendaPro estão desligados).
-const comMensagem = sql(`select string_agg(nome, '|' order by preco_mes)
+const noBanco = sql(`select string_agg(nome, '|' order by preco_mes)
   from public.planos where codigo not in ('trial','gratuito') and ativo`).split('|');
-const rotulos = await p.evaluate(() =>
-  [...document.querySelectorAll('#reguaPlanos button')].map(b => b.textContent.trim()));
-const vistos = [];
-for(let i = 0; i < rotulos.length; i++){
-  await p.locator('#reguaPlanos button').nth(i).click();
-  await p.waitForTimeout(300);
-  vistos.push(await p.evaluate(() =>
-    ((document.querySelector('#cartaoPlano h3') || {}).textContent || '').trim()));
-}
-e('um botão por tamanho de plano — ' + rotulos.join(', '),
-  rotulos.length === comMensagem.length, JSON.stringify(rotulos));
-e('e cada botão leva a um plano diferente: ' + vistos.join(', '),
-  JSON.stringify(vistos) === JSON.stringify(comMensagem),
-  'esperava ' + JSON.stringify(comMensagem));
-e('Essencial e Profissional, nessa ordem', JSON.stringify(vistos) === JSON.stringify(['Essencial', 'Profissional']),
-  JSON.stringify([rotulos, vistos]));
+e('no banco, os dois prontos: Essencial e Profissional', JSON.stringify(noBanco) === JSON.stringify(['Essencial', 'Profissional']),
+  JSON.stringify(noBanco));
+const venda = await p.evaluate(() => ({
+  regua: document.querySelectorAll('#reguaPlanos button').length,
+  oferta: ((document.querySelector('#cartaoPlano h3') || {}).textContent || '').trim(),
+  breve: ((document.querySelector('#planoEmBreve h3') || {}).textContent || '').replace(/\s+/g, ' ').trim(),
+  botaoNoBreve: !!document.querySelector('#planoEmBreve button') }));
+e('na tela, só o Essencial à venda, sem régua', venda.regua === 0 && venda.oferta === 'Essencial', JSON.stringify(venda));
+e('e o Profissional "em breve", sem botão', /^Profissional/.test(venda.breve) && !venda.botaoNoBreve, JSON.stringify(venda));
 
 console.log('\n── ERROS ───────────────────────────────────────────────────');
 e('sem erro de JavaScript', erros.length === 0, erros.slice(0,3).join(' | '));
