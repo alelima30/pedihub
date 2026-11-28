@@ -6182,3 +6182,12 @@ body.tem-fundo .pd-aviso{
 .np-cli-end{ margin-top:6px; padding:0 4px; font-size:13.5px; color:var(--txt2) }
 .np-cli-avisos{ margin-top:6px; padding:8px 12px; border-radius:10px; font-size:13.5px; font-weight:600;
   background:color-mix(in srgb, #F59E0B 14%, var(--painel)); border:1px solid color-mix(in srgb, #F59E0B 45%, transparent); color:var(--txt) }
+
+/* ── OS ANIVERSARIANTES NA TELA DE PEDIDOS ───────────────────────────────── */
+.aviso.pedido-niver{ padding:12px 14px }
+.pedido-niver-tit{ font-size:15px }
+.pedido-niver-dica{ margin:2px 0 4px; font-size:13px; color:var(--txt2) }
+.pedido-niver .niver-linha{ border-top:1px solid var(--ac-line) }
+.pedido-niver-acoes{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px }
+.tag.t-niver{ background:var(--ac-soft); color:var(--ac-600); font-weight:700; border:1px solid var(--ac-line) }
+.tag.t-niver.t-niver-hoje{ background:var(--ac-600); color:#fff; border-color:var(--ac-600); font-weight:800 }

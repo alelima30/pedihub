@@ -181,6 +181,7 @@ rodar "novo pedido com a lista do cardápio" node "$AQUI/novo-pedido-lista.test.
 rodar "novo pedido: cliente cadastrado, cliente novo e adicionais" node "$AQUI/novo-pedido-cliente.test.mjs"
 rodar "avisar o cliente no WhatsApp, com o link do pedido" node "$AQUI/pedido-zap-tela.test.mjs"
 rodar "pedido atrasado pelo tempo de entrega" node "$AQUI/pedido-atrasado-tela.test.mjs"
+rodar "aniversariantes na tela de pedidos" node "$AQUI/pedido-aniversario-tela.test.mjs"
 rodar "cartão fidelidade na tela" node "$AQUI/fidelidade-tela.test.mjs"
 rodar "avaliação do pedido" node "$AQUI/avaliacao-tela.test.mjs"
 rodar "Pix online no link" node "$AQUI/pix-online-tela.test.mjs"

@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.c30483';
+const VERSAO_APP = 'v9.80880b';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -24305,6 +24305,68 @@ async function marcarItemPronto(pid, iid, pronto){
   carregarPedidos();
 }
 
+/* ── OS ANIVERSARIANTES NA TELA DE PEDIDOS ────────────────────────────────
+   "Caso tenha aniversariante, é bom aparecer na tela de pedidos dizendo: há um
+   aniversariante essa semana, ou hoje, ou amanhã." A tela de Pedidos é a que
+   fica aberta o dia inteiro; a de Aniversariantes, quase ninguém abre.
+
+   A conta é a mesma da tela de Aniversariantes (`aniversariantes()`, no fuso do
+   restaurante): hoje e os próximos 7 dias. O aviso só aparece quando há alguém
+   (aviso vazio todo dia ensina a não olhar), e "Ocultar hoje" o esconde até
+   amanhã, neste aparelho.
+
+   E no cartão do pedido: quem pediu e faz aniversário hoje, ou nos próximos
+   dias, ganha o selo 🎂 — é a hora do mimo, do bilhete na sacola. A ficha é
+   achada pelo WhatsApp do pedido (o pedido não traz o id da ficha). */
+const NIVER_NOS_PEDIDOS = 7;
+let niverDosPedidos = new Map();     // WhatsApp (só dígitos, sem o 55) → aniversariante
+
+function chaveNiverOculto(){ return 'pedihub.pedidos.niver.' + salaoAtual; }
+function niverOcultoHoje(){
+  try{ return localStorage.getItem(chaveNiverOculto()) === hoje(); }catch(e){ return false; }
+}
+function ocultarNiverDosPedidos(){
+  try{ localStorage.setItem(chaveNiverOculto(), hoje()); }catch(e){}
+  desenharPedidos();
+}
+function aniversariantesDosPedidos(){
+  try{ return aniversariantes(NIVER_NOS_PEDIDOS); }catch(e){ return []; }
+}
+function mapaDeAniversariosDosPedidos(lista){
+  const m = new Map();
+  for(const x of lista){
+    const tel = soDigitosTel((acharCliente(x.id) || {}).telefone);
+    if(tel && !m.has(tel)) m.set(tel, x);
+  }
+  return m;
+}
+function avisoDeAniversariosNosPedidos(lista){
+  if(!lista.length || niverOcultoHoje()) return '';
+  const hj = lista.filter(x => x.faltam === 0).length;
+  const am = lista.filter(x => x.faltam === 1).length;
+  const titulo = hj ? (hj === 1 ? 'Tem aniversariante hoje!' : hj + ' aniversariantes hoje!')
+    : am ? (am === 1 ? 'Tem aniversariante amanhã' : am + ' aniversariantes amanhã')
+    : (lista.length === 1 ? 'Tem aniversariante nesta semana' : lista.length + ' aniversariantes nesta semana');
+  const MAX = 5;
+  return `<div class="aviso pedido-niver" id="pedidoNiver">
+    <div class="pedido-niver-tit">🎂 <b>${titulo}</b></div>
+    ${hj ? '<p class="pedido-niver-dica">Um mimo, um bilhete na sacola ou um cupom no pedido de hoje faz o cliente voltar.</p>' : ''}
+    ${lista.slice(0, MAX).map(linhaNiver).join('')}
+    ${lista.length > MAX ? `<p class="pedido-niver-dica">E mais ${lista.length - MAX}.</p>` : ''}
+    <div class="pedido-niver-acoes">
+      <button type="button" class="btn btn-peq" onclick="irPara('aniversarios')">Ver aniversariantes</button>
+      <button type="button" class="btn btn-peq" onclick="ocultarNiverDosPedidos()">Ocultar hoje</button>
+    </div>
+  </div>`;
+}
+/* O selo do cartão: "🎂 Aniversário hoje", "amanhã" ou "sex, 05/12". */
+function seloDeNiverDoPedido(p){
+  const x = niverDosPedidos.get(soDigitosTel(p.telefone));
+  if(!x) return '';
+  return ` <span class="tag t-niver${x.faltam === 0 ? ' t-niver-hoje' : ''}">🎂 Aniversário ${
+    x.faltam === 0 ? 'hoje' : quandoNiver(x)}</span>`;
+}
+
 function cartaoDePedido(p){
   const tel = String(p.telefone || '').replace(/\D/g, '');
   const zap = tel ? 'https://wa.me/' + (tel.length > 11 ? tel : '55' + tel) : '';
@@ -24327,7 +24389,7 @@ function cartaoDePedido(p){
       <span class="pedido-hora">${p.origem && p.origem !== 'link' ? `<span class="tag">${ORIGEM_DO_PEDIDO[p.origem] || 'balcão'}</span> ` : ''}${horaDoPedido(p.criado_em)}${vivo ? ' · ' + haQuanto(p.criado_em) : ''}</span>
     </div>
     <div class="pedido-quem"><b>${escapar(p.nome)}</b>${zap
-      ? ` · <a href="${zap}" target="_blank" rel="noopener">${escapar(telefoneNaTela(tel))}</a>` : ''}</div>
+      ? ` · <a href="${zap}" target="_blank" rel="noopener">${escapar(telefoneNaTela(tel))}</a>` : ''}${seloDeNiverDoPedido(p)}</div>
     <ul class="pedido-itens">${(p.itens || []).map(i => `<li class="${i.atrasado ? 'item-atrasado' : ''}${i.pronto ? ' item-pronto' : ''}">${
       p.status === 'em_preparo' && i.id ? `<button type="button" class="item-check" title="${i.pronto ? 'Desmarcar' : 'Marcar este item pronto'}"
         aria-pressed="${i.pronto ? 'true' : 'false'}" onclick="marcarItemPronto('${p.id}', '${i.id}', ${!i.pronto})">✓</button>` : ''}<div class="pi-nome"><b>${i.quantidade}×</b> ${escapar(i.nome)}${
@@ -24572,6 +24634,8 @@ function desenharPedidos(){
       <p class="secao-sub" style="margin-bottom:0">Depois, mande o link para as clientes — ele está em
         <a href="#" onclick="irPara('publico'); return false">Ver como cliente</a>.</p>
     </div>`;
+  const nivers = aniversariantesDosPedidos();
+  niverDosPedidos = mapaDeAniversariosDosPedidos(nivers);
   alvo.innerHTML = `
     ${passos}
     ${alarmeLigado() && !somLiberado() ? `<div class="aviso atencao" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -24583,6 +24647,7 @@ function desenharPedidos(){
       pedidosLista.filter(p => { const z = prazoDoPedido(p); return z && z.atraso > 0; }).length)}
     ${!c.aceitando ? `<div class="aviso">Os pedidos pelo link estão <b>pausados</b>. A cliente vê o cardápio,
       mas não consegue pedir. Ligue "Recebendo pedidos" quando quiser voltar.</div>` : ''}
+    ${avisoDeAniversariosNosPedidos(nivers)}
     ${bloco('Novos', novos, 'Nenhum pedido esperando. Os pedidos feitos no seu link aparecem aqui sozinhos.', 'recebido')}
     ${bloco('Em preparo', preparo, 'Nada no fogo agora.', 'em_preparo')}
     ${bloco('Saiu para entrega / pronto para retirar', caminho, 'Nenhum a caminho.', 'saiu')}
