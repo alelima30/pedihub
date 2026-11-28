@@ -153,6 +153,10 @@ h2{ font-size:clamp(26px, 3.4vw, 36px); line-height:1.15; letter-spacing:-.015em
 .plano li.fora::before{ content:'—'; color:var(--txt3) }
 .plano li.breve{ color:var(--txt3); font-style:italic }
 .plano li.breve::before{ content:'⏳'; font-style:normal; font-weight:400 }
+.plano.em-breve{ position:relative }
+.plano .selo-breve{ position:absolute; top:-11px; left:24px; background:var(--carvao-2); color:#F5F1EC;
+  font-size:12px; font-weight:800; padding:4px 10px; border-radius:999px }
+.plano .btn-breve{ width:100%; text-align:center; opacity:.6; cursor:default }
 .plano .btn{ width:100% }
 
 /* Perguntas */
@@ -309,27 +313,28 @@ footer a{ color:var(--txt2) }
         <div class="plano destaque">
           <h3>Essencial</h3>
           <div class="preco">R$ 97 <small>/mês</small></div>
-          <p class="quem">Para vender todo dia, sem limite.</p>
+          <p class="quem">Tudo para vender todo dia, sem limite.</p>
           <ul>
             <li>Pedidos ilimitados, sem comissão</li>
             <li>Entrega por bairro e retirada</li>
-            <li>Pedido por telefone e balcão</li>
+            <li>Pedido por telefone, balcão e mesa</li>
+            <li>Garçom, entregadores e a equipe com o próprio login</li>
             <li>Caixa, relatórios e cupons</li>
             <li>Link com as suas cores e fotos</li>
           </ul>
           <a class="btn btn-p" href="criar.html?origem=pagina">Testar 30 dias grátis</a>
         </div>
-        <div class="plano">
+        <div class="plano em-breve" id="planoProfissional">
+          <span class="selo-breve">Em breve</span>
           <h3>Profissional</h3>
           <div class="preco">R$ 147 <small>/mês</small></div>
-          <p class="quem">Para quem vende no fiado e tem equipe.</p>
+          <p class="quem">Para quem quer o cliente avisado sozinho.</p>
           <ul>
             <li>Tudo do Essencial</li>
-            <li>Crediário (venda no fiado)</li>
-            <li>Equipe com o próprio login</li>
-            <li class="breve">Em breve: avisos automáticos no WhatsApp</li>
+            <li>Avisos automáticos no WhatsApp: "pedido aceito", "saiu para entrega", "pronto para retirar"</li>
+            <li>1.000 mensagens por mês</li>
           </ul>
-          <a class="btn btn-s" href="criar.html?origem=pagina">Testar 30 dias grátis</a>
+          <span class="btn btn-s btn-breve" aria-disabled="true">Em breve</span>
         </div>
       </div>
     </div>

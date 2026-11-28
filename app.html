@@ -2267,7 +2267,7 @@ function ligarViradaDoDia(){
 
    Sobe a cada correção publicada. É o mesmo número do `sw.js`, e é de
    propósito: se os dois discordassem, o carimbo mentiria. */
-const VERSAO_APP = 'v9.80880b';
+const VERSAO_APP = 'v9.44e935';
 
 function recarregarDeVerdade(){
   /* Recarregar com F5 pode devolver a mesma página do cache. Isto derruba o
@@ -17548,6 +17548,19 @@ function assinaturaAtual(){
 const VENDA_LIGADA = true;
 const OFERTA_DE_PLANO = ofertaNestaAba(VENDA_LIGADA);
 
+/* ── O PROFISSIONAL, "EM BREVE" ────────────────────────────────────────────
+   "De pedidos não precisa de diversos planos: só o Grátis, o plano que usa
+   sem WhatsApp e o plano que usa com WhatsApp — que ainda não está pronto,
+   mas pode deixar os planos prontos." O Profissional (`time`) está pronto no
+   banco (66), mas os avisos automáticos dependem da conta da Meta. Enquanto
+   ela não estiver ligada, a tela do Plano não o vende: mostra "em breve".
+   Quem já estiver nele continua vendo o seu plano e renovando.
+
+   Ligada a Meta (o check-up da plataforma diz "Função de envio: ok"), troque
+   para `true` — e tire o "em breve" do Profissional na página de venda
+   (conheca.html). Nada mais. */
+const WHATSAPP_AUTOMATICO_PRONTO = false;
+
 function ofertaNestaAba(padrao){
   try{
     const q = new URLSearchParams(location.search).get('oferta');
@@ -17799,7 +17812,7 @@ function oQueOPlanoInclui(){
     ['Entrega por bairro, retirada e acompanhamento do pedido', true],
     /* "Em breve" até a conta da Meta estar ligada (o check-up da plataforma
        diz quando): o plano já reserva as mensagens, mas nenhuma sai ainda. */
-    [msgs > 0 ? `Avisos automáticos ao cliente pelo WhatsApp (${msgs.toLocaleString('pt-BR')} mensagens no mês) — em breve`
+    [msgs > 0 ? `Avisos automáticos ao cliente pelo WhatsApp (${msgs.toLocaleString('pt-BR')} mensagens no mês)${WHATSAPP_AUTOMATICO_PRONTO ? '' : ' — em breve'}`
               : 'Avisos automáticos ao cliente pelo WhatsApp', msgs > 0],
     ['Relatórios de vendas', moduloLiberado('relatorios')],
     ['Cupons de desconto', moduloLiberado('cupons')],
@@ -18110,12 +18123,16 @@ function pintarPlano(){
      Profissional, e o outro fica a um toque. */
   const planos = (bd.planos||[])
                    .filter(x => x.ativo !== false && x.codigo !== 'trial' && x.codigo !== 'gratuito')
+                   // O Profissional só entra na venda com o WhatsApp automático pronto
+                   // (ou para quem já está nele).
+                   .filter(x => x.codigo !== 'time' || WHATSAPP_AUTOMATICO_PRONTO || (p && p.codigo === 'time'))
                    .sort((a,b) => Number(a.precoMes || 0) - Number(b.precoMes || 0));
   if(planoEscolhido === null || !planos.some(x => x.codigo === planoEscolhido)){
     planoEscolhido = (p && planos.some(x => x.codigo === p.codigo)) ? p.codigo
                    : (planos.find(x => x.codigo === 'time') || planos[planos.length-1] || {}).codigo;
   }
-  document.getElementById('reguaPlanos').innerHTML = `
+  // Um plano só à venda: a régua de escolher sai (escolher entre um não é escolha).
+  document.getElementById('reguaPlanos').innerHTML = planos.length < 2 ? '' : `
     <div class="regua">
       ${planos.map(x => `<button class="${x.codigo===planoEscolhido?'on':''}"
           onclick="planoEscolhido='${x.codigo}';pintarPlano()">${escapar(x.nome)}</button>`).join('')}
@@ -18123,9 +18140,22 @@ function pintarPlano(){
   const recomendado = planos.find(x => x.codigo === planoEscolhido) || planos[planos.length-1];
   const alternativa = null;
   const RESUMO_DO_PLANO = {
-    individual: 'Pedidos ilimitados, entrega por bairro, caixa, relatórios e cupons.',
-    time: 'Tudo do Essencial, mais crediário (venda no fiado) e mais itens e clientes. Em breve: avisos automáticos no WhatsApp (1.000 por mês).',
+    individual: 'Tudo para vender: pedidos ilimitados, entrega e retirada, mesas e garçom, entregadores, '
+      + 'caixa, relatórios e cupons.',
+    time: 'Tudo do Essencial, mais os avisos automáticos ao cliente no WhatsApp (1.000 por mês).',
   };
+  // O Profissional enquanto o WhatsApp automático não fica pronto: aparece, sem botão.
+  const planoEmBreve = !WHATSAPP_AUTOMATICO_PRONTO && !(p && p.codigo === 'time')
+    ? (bd.planos || []).find(x => x.codigo === 'time') : null;
+  const cartaoEmBreve = planoEmBreve ? `
+    <div class="card plano-em-breve" id="planoEmBreve" style="margin-top:14px">
+      <div style="font-size:12px;font-weight:800;color:var(--txt2);letter-spacing:.05em">EM BREVE</div>
+      <h3 style="font-size:18px;margin-top:4px">${escapar(planoEmBreve.nome)}
+        <span style="font-size:14px;font-weight:600;color:var(--txt2)">· ${real(precoDoPlano('time'))} /mês</span></h3>
+      <p style="margin-top:6px">Tudo do Essencial, mais os avisos automáticos ao cliente no WhatsApp:
+        "pedido aceito", "saiu para entrega", "pronto para retirar" — sem ninguém precisar tocar em nada.
+        Avisamos aqui quando estiver liberado.</p>
+    </div>` : '';
   /* O recomendado É o plano que ele já paga e está em dia: o cartão vira
      "seu plano atual", diz até quando, e só oferece renovar quando faltar
      pouco. Escolhendo outro tamanho na régua, volta a ser oferta normal. */
@@ -18184,6 +18214,7 @@ function pintarPlano(){
             + 'confirmação do banco — o dono não edita o próprio plano, '
             + 'senão assinaria o maior de graça.'}</p>
     </div>
+    ${cartaoEmBreve}
     ${alternativa && !atual ? cartaoAlternativo(alternativa, p, a, emDia, faltam) : ''}
     ${NA_NUVEM
       ? '<div id="cartaoAssinatura"></div><div id="cobrancaPendente"></div>' : ''}` : '';

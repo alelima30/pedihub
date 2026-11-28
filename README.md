@@ -23,8 +23,9 @@ trava toda casa como restaurante (`64_so_restaurante.sql`).
 | **Plataforma** (`admin.html`) | Os restaurantes, as assinaturas e o check-up do sistema. |
 
 **Planos** (`66_planos_pedihub.sql`): Grátis (até 50 pedidos/mês), Essencial
-R$ 97 e Profissional R$ 147 (com crediário e, quando a Meta estiver ligada,
-WhatsApp automático). O preço muda no `supabase/PRECOS.sql` **e** no 66, os
+R$ 97 (tudo, sem o WhatsApp automático) e Profissional R$ 147 (o Essencial +
+o WhatsApp automático; pronto no banco, "em breve" na tela até a Meta estar
+ligada — `WHATSAPP_AUTOMATICO_PRONTO` no `app.html`). O preço muda no `supabase/PRECOS.sql` **e** no 66, os
 dois juntos (o `planos_pedihub.test.sql` confere).
 
 ## Os arquivos

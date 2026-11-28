@@ -10903,14 +10903,30 @@ create trigger pedido_entregue_vira_venda
 -- por pedido pune quem vende mais, e "sem comissão" é o motivo de o
 -- restaurante sair do aplicativo grande. O que cresce com o uso e custa de
 -- verdade são as mensagens automáticas do WhatsApp (a Meta cobra por
--- mensagem) — por isso a diferença entre os planos está nelas.
+-- mensagem) — por isso a diferença entre os planos está SÓ nelas.
 --
 --   Grátis        R$ 0       cardápio no link e até 50 pedidos por mês;
 --                            sem caixa, relatórios nem mensagens automáticas
---   Essencial     R$ 97      pedidos ilimitados, entrega, caixa, relatórios,
---                            cupons e a aparência do link
---   Profissional  R$ 147     tudo do Essencial + avisos automáticos no
---                            WhatsApp (1.000 por mês) e crediário (fiado)
+--   Essencial     R$ 97      tudo para vender, sem o WhatsApp automático:
+--                            pedidos ilimitados, entrega, mesas, caixa,
+--                            relatórios, cupons, a aparência do link, 1.000
+--                            itens e 20.000 clientes — e o crediário pronto
+--                            (ele só vale quando o Crediário for posto à venda
+--                            na plataforma: ver o recurso_bool do 46)
+--   Profissional  R$ 147     o Essencial, igualzinho, + os avisos automáticos
+--                            no WhatsApp (1.000 por mês)
+--
+-- "De pedidos não precisa de diversos planos: só o Grátis, o plano que usa
+-- sem WhatsApp e o plano que usa com WhatsApp — que ainda não está pronto, mas
+-- pode deixar os planos prontos" (28/11/2026). Por isso o Essencial ganhou o
+-- crediário e os limites do Profissional. O Profissional fica PRONTO aqui; o
+-- painel e a página de venda o mostram como "em breve", sem venda, até a conta
+-- da Meta estar ligada (`WHATSAPP_AUTOMATICO_PRONTO`, no app.html).
+--
+-- Este arquivo pode ser colado de novo, sozinho, num banco já instalado: a
+-- única função dele (o teto do Grátis) não é refeita por nenhum outro, e os
+-- recursos são somados (||), não trocados — o que os módulos seguintes
+-- puseram nos planos continua lá.
 --
 -- O Teste grátis (30 dias, tudo liberado) continua como era. Os planos do
 -- salão (Básico, Dupla, Equipe, Restaurante grande) saem da vitrine: ficam
@@ -10942,9 +10958,9 @@ update public.planos set
 update public.planos set
   nome = 'Essencial', preco_mes = 97.00, ordem = 2, ativo = true,
   recursos = (recursos - 'pedidos_mes') || jsonb_build_object(
-    'loja', true, 'max_produtos', 300, 'max_clientes', 5000,
+    'loja', true, 'max_produtos', 1000, 'max_clientes', 20000,
     'caixa', true, 'relatorios', true, 'cupons', true, 'pacotes', false,
-    'aparencia', true, 'crediario', false,
+    'aparencia', true, 'crediario', true,
     'mensagens_mes', 0, 'lembrete_whatsapp', false)
  where codigo = 'individual';
 
@@ -10956,6 +10972,15 @@ update public.planos set
     'aparencia', true, 'crediario', true,
     'mensagens_mes', 1000, 'lembrete_whatsapp', true)
  where codigo = 'time';
+
+-- O Essencial é o Profissional sem o WhatsApp automático — em TUDO. Copiar
+-- daqui garante isso também para as chaves que vieram do AgendaPro (o
+-- `max_servicos`, que era 50 num e 200 no outro) e para as que um módulo
+-- futuro puser no Profissional.
+update public.planos e
+   set recursos = e.recursos || (t.recursos - 'mensagens_mes' - 'lembrete_whatsapp')
+  from public.planos t
+ where e.codigo = 'individual' and t.codigo = 'time';
 
 update public.planos set ativo = false
  where codigo in ('basico', 'duo', 'equipe', 'salao');

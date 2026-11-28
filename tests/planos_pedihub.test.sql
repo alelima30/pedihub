@@ -7,8 +7,9 @@
 --   1. a vitrine: Grátis, Teste, Essencial (R$ 97) e Profissional
 --      (R$ 147); os do salão desligados; e o PRECOS.sql diz o mesmo preço
 --      que o 66 (senão a próxima colagem do 98_modulos volta o preço antigo);
---   2. o que cada um libera: caixa e relatórios só no pago; WhatsApp
---      automático e crediário só no Profissional;
+--   2. o que cada um libera: caixa e relatórios só no pago; o crediário já
+--      no Essencial; e o Essencial e o Profissional iguais em tudo, menos o
+--      WhatsApp automático ("o plano que usa sem WhatsApp e o que usa com");
 --   3. o Grátis aceita 50 pedidos no mês e recusa o 51º; o pago não tem teto.
 -- ===========================================================================
 \set ON_ERROR_STOP on
@@ -62,6 +63,14 @@ select t_igual('Profissional: 1.000 mensagens por mês',
   ((select recursos->>'mensagens_mes' from public.planos where codigo = 'time'))::bigint, 1000);
 select t_verdade('Profissional: crediário incluso',
   ((select recursos->>'crediario' from public.planos where codigo = 'time'))::boolean);
+-- O plano já traz o crediário; ele só VALE quando o Crediário estiver à venda
+-- na plataforma (46: a chave de um adicional fora da venda não libera nada).
+select t_verdade('Essencial: crediário pronto no plano',
+  ((select recursos->>'crediario' from public.planos where codigo = 'individual'))::boolean);
+select t_igual('Essencial e Profissional: iguais em tudo, menos o WhatsApp automático',
+  (select count(*) from jsonb_each((select recursos from public.planos where codigo = 'individual')) e
+    where e.key not in ('mensagens_mes', 'lembrete_whatsapp')
+      and e.value is distinct from (select recursos from public.planos where codigo = 'time') -> e.key), 0);
 
 \echo ''
 \echo '3. O teto do Grátis'

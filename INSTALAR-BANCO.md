@@ -37,7 +37,7 @@ No painel do projeto, vá em **SQL Editor → New query**.
 
 **New query** → cole **`supabase/CONFERIR.sql`** → **Run**.
 
-Devem sair **103 linhas, todas com `certo`** na coluna do meio. Se alguma disser
+Devem sair **104 linhas, todas com `certo`** na coluna do meio. Se alguma disser
 `FALTA` ou `ERRADO`, cole o **`supabase/98_modulos.sql`** inteiro, rode, e
 confira de novo.
 
@@ -100,4 +100,4 @@ essa etapa.
 
 O banco foi instalado do zero num Postgres de teste antes de chegar até você:
 as duas partes rodaram sem erro, inclusive na segunda vez, o `CONFERIR.sql`
-deu 103 de 103 `certo`, e todos os testes de banco passaram.
+deu 104 de 104 `certo`, e todos os testes de banco passaram.

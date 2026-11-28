@@ -63,6 +63,11 @@ secao('1. A promessa, e o que aparece ao compartilhar');
   secao('2. Os planos do PediHub, e nada do AgendaPro');
   const texto = await p.evaluate(() => document.body.innerText);
   verdade('Essencial R$ 97 e Profissional R$ 147', /R\$ 97\b/.test(texto) && /R\$ 147\b/.test(texto) && /Essencial/.test(texto) && /Profissional/.test(texto));
+  const pro = await p.evaluate(() => { const c = document.getElementById('planoProfissional');
+    return c ? { breve: /Em breve/.test(c.innerText), links: c.querySelectorAll('a').length, preco: /R\$ 147/.test(c.innerText) } : null; });
+  igual('o Profissional "em breve", com o preço e sem botão de cadastro', pro, { breve: true, links: 0, preco: true });
+  verdade('o Essencial traz mesa, garçom e entregadores',
+    /mesa/.test(await p.evaluate(() => document.querySelector('.plano.destaque').innerText)));
   const ruins = (texto.match(/[^\n]{0,30}\b(agenda|agendamento|salão|barbearia|plano Básico)\b[^\n]{0,30}/gi) || []);
   igual('nenhuma palavra do salão', ruins, []);
 

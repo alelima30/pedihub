@@ -10912,9 +10912,9 @@ update public.planos set
 update public.planos set
   nome = 'Essencial', preco_mes = 97.00, ordem = 2, ativo = true,
   recursos = (recursos - 'pedidos_mes') || jsonb_build_object(
-    'loja', true, 'max_produtos', 300, 'max_clientes', 5000,
+    'loja', true, 'max_produtos', 1000, 'max_clientes', 20000,
     'caixa', true, 'relatorios', true, 'cupons', true, 'pacotes', false,
-    'aparencia', true, 'crediario', false,
+    'aparencia', true, 'crediario', true,
     'mensagens_mes', 0, 'lembrete_whatsapp', false)
  where codigo = 'individual';
 update public.planos set
@@ -10925,6 +10925,10 @@ update public.planos set
     'aparencia', true, 'crediario', true,
     'mensagens_mes', 1000, 'lembrete_whatsapp', true)
  where codigo = 'time';
+update public.planos e
+   set recursos = e.recursos || (t.recursos - 'mensagens_mes' - 'lembrete_whatsapp')
+  from public.planos t
+ where e.codigo = 'individual' and t.codigo = 'time';
 update public.planos set ativo = false
  where codigo in ('basico', 'duo', 'equipe', 'salao');
 create or replace function public.pedidos_limite_do_plano()

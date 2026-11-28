@@ -1846,6 +1846,21 @@ with conferencia(ordem, item, veredito, detalhe) as (
          case when to_regprocedure('public.cliente_para_pedido(uuid,text)') is null then 'FALTA' else 'certo' end,
          case when to_regprocedure('public.cliente_para_pedido(uuid,text)') is null then 'cole o 87_cliente_no_pedido.sql' else '' end
   union all
+  /* PediHub (66, de novo): três planos — o Essencial com tudo menos o
+     WhatsApp automático (crediário incluso), o Profissional com ele, R$ 97 e
+     R$ 147. */
+  select 104, 'Planos: Essencial sem WhatsApp, Profissional com',
+         case when (select (recursos->>'crediario')::boolean from public.planos where codigo = 'individual') is distinct from true
+                or (select (recursos->>'mensagens_mes')::int from public.planos where codigo = 'individual') is distinct from 0
+                or (select preco_mes from public.planos where codigo = 'individual') is distinct from 97.00
+                or (select preco_mes from public.planos where codigo = 'time') is distinct from 147.00
+              then 'FALTA' else 'certo' end,
+         case when (select (recursos->>'crediario')::boolean from public.planos where codigo = 'individual') is distinct from true
+                or (select (recursos->>'mensagens_mes')::int from public.planos where codigo = 'individual') is distinct from 0
+                or (select preco_mes from public.planos where codigo = 'individual') is distinct from 97.00
+                or (select preco_mes from public.planos where codigo = 'time') is distinct from 147.00
+              then 'cole o 66_planos_pedihub.sql de novo' else '' end
+  union all
   /* OS ACENTOS. Colado com a codificação errada, o banco fica com "Ã£" no
      lugar de "ã" — no nome do plano que o dono vê e em todo texto das
      funções, inclusive o que vai para a cliente. O padrão ("Ã" seguido de um
